@@ -303,6 +303,29 @@ function _ensureSheetHeaders_(sheet, requiredHeaders) {
   return getTrimmedHeaders_(sheet);
 }
 
+const COMMON_PIPELINE_HEADERS_ = [
+  "Kecamatan Pengampu",
+  "Kelurahan Pengampu",
+  "Puskesmas Pengampu",
+  "Kepala Puskesmas Pengampu",
+  "Email Kapus Pengampu",
+  "Petugas Surveilans Pengampu",
+  "Email Petugas Pengampu",
+  "SpreadsheetId Pengampu",
+  "SpreadsheetUrl Pengampu",
+  "Status Routing Pengampu",
+  "Status Notifikasi Pengampu",
+  "Notified At Pengampu",
+  "Notified To Pengampu",
+  "Status Sinkronisasi Pengampu",
+  "Synced At Pengampu",
+  "Sync Target Pengampu",
+  "Status Notifikasi Telegram",
+  "Telegram Notified At",
+  "Telegram Target",
+  "Telegram Retry Count"
+];
+
 // ─── saveDxRecord_ (Req 1.3, 10.1, 10.2) ────────────────────────────────────
 
 function saveDxRecord_(dx, data) {
@@ -312,49 +335,28 @@ function saveDxRecord_(dx, data) {
   const sheet = getSheetOrThrow_(dx + "_Raw");
   let headers = getTrimmedHeaders_(sheet);
   if (!headers.length) throw new Error("Header sheet tidak ditemukan.");
-  if (dx === "MR") {
-    headers = _ensureSheetHeaders_(sheet, [
-      "Nomor Rekam Medik",
-      "Tanggal meninggal",
-      "Penyebab kematian",
-      "Kecamatan Pengampu",
-      "Kelurahan Pengampu",
-      "Puskesmas Pengampu",
-      "Kepala Puskesmas Pengampu",
-      "Email Kapus Pengampu",
-      "Petugas Surveilans Pengampu",
-      "Email Petugas Pengampu",
-      "SpreadsheetId Pengampu",
-      "SpreadsheetUrl Pengampu",
-      "Status Routing Pengampu",
-      "Status Notifikasi Pengampu",
-      "Notified At Pengampu",
-      "Notified To Pengampu",
-      "Status Sinkronisasi Pengampu",
-      "Synced At Pengampu",
-      "Sync Target Pengampu",
-      "Status Notifikasi Telegram",
-      "Telegram Notified At",
-      "Telegram Target",
-      "Telegram Retry Count"
-    ]);
-  }
+  const mrOnlyHeaders = ["Nomor Rekam Medik", "Tanggal meninggal", "Penyebab kematian"];
+  headers = _ensureSheetHeaders_(sheet, dx === "MR"
+    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_)
+    : COMMON_PIPELINE_HEADERS_);
   data = _applyHeaderAliases_(dx, data || {}, headers);
 
-  if (dx === "MR") {
-    const pengampu = getPengampuByWilayah_(data["Kecamatan"], data["Kelurahan"], data["Kab/Kota"] || data["Kab/Kota Pasien"]);
-    data["Status Routing Pengampu"] = pengampu.status || "UNMAPPED";
-    if (pengampu.found) {
-      data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
-      data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
-      data["Puskesmas Pengampu"] = pengampu.pengampu || "";
-      data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
-      data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
-      data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
-      data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
-      data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
-      data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
-    }
+  const kecamatanVal = data["Kecamatan"] || data["Kecamatan domisili"] || "";
+  const kelurahanVal = data["Kelurahan"] || data["Kelurahan domisili"] || "";
+  const kabKotaVal = data["Kab/Kota"] || data["Kab/Kota Pasien"] || data["Kab/Kota domisili"] || "Kota Depok";
+
+  const pengampu = getPengampuByWilayah_(kecamatanVal, kelurahanVal, kabKotaVal);
+  data["Status Routing Pengampu"] = pengampu.status || "UNMAPPED";
+  if (pengampu.found) {
+    data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
+    data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
+    data["Puskesmas Pengampu"] = pengampu.pengampu || "";
+    data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
+    data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
+    data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
+    data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
+    data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
+    data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
   }
 
   const idxEpid = headers.indexOf("Nomor EPID");
