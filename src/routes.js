@@ -612,33 +612,69 @@ function _requireWriteAccessFromSession_(sess) {
   return role || "petugas";
 }
 
+function _buildPipelineFingerprint_(dx, savedRecord, saved) {
+  const payload = {
+    dx: String(dx || "").trim().toUpperCase(),
+    epid: String((saved && saved.epid) || "").trim(),
+    routing: String((savedRecord && savedRecord["Status Routing Pengampu"]) || "").trim(),
+    targetSpreadsheet: String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || "").trim(),
+    emailTargets: [
+      String((savedRecord && savedRecord["Email Petugas Pengampu"]) || "").trim(),
+      String((savedRecord && savedRecord["Email Kapus Pengampu"]) || "").trim()
+    ].join("|"),
+    printUrl: String(savedRecord && savedRecord["Link PDF"] || "").trim()
+  };
+  const raw = JSON.stringify(payload);
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
+  return digest.map(function(b) {
+    const v = (b + 256) % 256;
+    return (v < 16 ? "0" : "") + v.toString(16);
+  }).join("");
+}
+
 function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
   const policy = _getDxPipelinePolicy_(dx);
+  const previousFingerprint = String((savedRecord && savedRecord["Pipeline Fingerprint"]) || "").trim();
+  const currentFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
+  const isSameFingerprint = previousFingerprint && previousFingerprint === currentFingerprint;
 
-  const notify = policy.notifyEmail
+  const prevNotifyStatus = String((savedRecord && savedRecord["Status Notifikasi Pengampu"]) || "").trim().toUpperCase();
+  const prevSyncStatus = String((savedRecord && savedRecord["Status Sinkronisasi Pengampu"]) || "").trim().toUpperCase();
+  const prevTelegramStatus = String((savedRecord && savedRecord["Status Notifikasi Telegram"]) || "").trim().toUpperCase();
+
+  const shouldNotifyEmail = policy.notifyEmail && !(isSameFingerprint && prevNotifyStatus === "SENT");
+  const shouldSyncPengampu = policy.syncPengampu && !(isSameFingerprint && prevSyncStatus === "SYNCED");
+  const shouldNotifyTelegram = policy.notifyTelegram && !(isSameFingerprint && prevTelegramStatus === "SENT");
+
+  const notify = shouldNotifyEmail
     ? _sendPengampuNotification_(dx, savedRecord, saved, printUrl)
-    : { sent: false, reason: "DISABLED_BY_POLICY" };
+    : { sent: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
 
-  const syncPengampu = policy.syncPengampu
+  const syncPengampu = shouldSyncPengampu
     ? _syncPengampuSpreadsheet_(dx, savedRecord, saved, printUrl)
-    : { synced: false, reason: "DISABLED_BY_POLICY" };
+    : { synced: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
 
-  const telegramNotify = policy.notifyTelegram
+  const telegramNotify = shouldNotifyTelegram
     ? _sendTelegramPd3iNotification_(dx, savedRecord, saved, printUrl)
-    : { sent: false, reason: "DISABLED_BY_POLICY" };
+    : { sent: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
 
   const notifyPatch = {
     "Nomor EPID": saved.epid,
-    "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+    "Status Notifikasi Pengampu": notify.sent ? "SENT" : (shouldNotifyEmail ? (notify.reason || "FAILED") : prevNotifyStatus || "SKIPPED"),
+    "Reason Notifikasi Pengampu": notify.sent ? "" : (notify.reason || ""),
     "Notified At Pengampu": new Date(),
     "Notified To Pengampu": notify.to || "",
-    "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
+    "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (shouldSyncPengampu ? (syncPengampu.reason || "FAILED") : prevSyncStatus || "SKIPPED"),
+    "Reason Sinkronisasi Pengampu": syncPengampu.synced ? "" : (syncPengampu.reason || ""),
     "Synced At Pengampu": new Date(),
     "Sync Target Pengampu": syncPengampu.target || "",
-    "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
+    "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (shouldNotifyTelegram ? (telegramNotify.reason || "FAILED") : prevTelegramStatus || "SKIPPED"),
+    "Reason Notifikasi Telegram": telegramNotify.sent ? "" : (telegramNotify.reason || ""),
     "Telegram Notified At": new Date(),
     "Telegram Target": telegramNotify.target || "",
-    "Telegram Retry Count": telegramNotify.sent ? 0 : 0
+    "Telegram Retry Count": shouldNotifyTelegram ? ((Number(savedRecord["Telegram Retry Count"] || 0) || 0) + 1) : (Number(savedRecord["Telegram Retry Count"] || 0) || 0),
+    "Pipeline Fingerprint": currentFingerprint,
+    "Pipeline Last Run At": new Date()
   };
 
   try {
@@ -650,7 +686,8 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
   return {
     pengampuNotification: notify,
     pengampuSync: syncPengampu,
-    telegramNotification: telegramNotify
+    telegramNotification: telegramNotify,
+    idempotent: isSameFingerprint
   };
 }
 
@@ -696,6 +733,7 @@ function saveFormPayload_(data) {
     epid: saved.epid,
     dx: dx,
     printUrl: printUrl,
+    pipelineIdempotent: !!pipelineResult.idempotent,
     pengampuNotification: pipelineResult.pengampuNotification,
     pengampuSync: pipelineResult.pengampuSync,
     telegramNotification: pipelineResult.telegramNotification

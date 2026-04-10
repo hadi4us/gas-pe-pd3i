@@ -315,15 +315,20 @@ const COMMON_PIPELINE_HEADERS_ = [
   "SpreadsheetUrl Pengampu",
   "Status Routing Pengampu",
   "Status Notifikasi Pengampu",
+  "Reason Notifikasi Pengampu",
   "Notified At Pengampu",
   "Notified To Pengampu",
   "Status Sinkronisasi Pengampu",
+  "Reason Sinkronisasi Pengampu",
   "Synced At Pengampu",
   "Sync Target Pengampu",
   "Status Notifikasi Telegram",
+  "Reason Notifikasi Telegram",
   "Telegram Notified At",
   "Telegram Target",
-  "Telegram Retry Count"
+  "Telegram Retry Count",
+  "Pipeline Fingerprint",
+  "Pipeline Last Run At"
 ];
 
 // ─── saveDxRecord_ (Req 1.3, 10.1, 10.2) ────────────────────────────────────

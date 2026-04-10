@@ -110,7 +110,7 @@ function _escapeCsvValue_(val) {
  * Req 6.3: distribusi per bulan
  * Req 6.4: filter berdasarkan kolom "Tanggal Pelacakan"
  * Req 6.5: fungsi backend yang mengembalikan agregasi (bukan raw data)
- * Req 6.7: statusNotifikasi dan statusSinkronisasi hanya untuk DX MR
+ * Req 6.7: statusNotifikasi dan statusSinkronisasi tersedia jika kolom status ada
  * Req 6.8: gunakan Cache_Manager
  *
  * @param {string} dx - Kode penyakit (MR, DIF, PERT, TN, AFP)
@@ -159,15 +159,15 @@ function getDashboardStats(dx, tahun, token) {
     // Indeks kolom yang dibutuhkan
     const idxTglPelacakan = headers.indexOf("Tanggal Pelacakan");
     const idxKecamatan = headers.indexOf("Kecamatan");
-    const idxStatusNotif = dx === "MR" ? headers.indexOf("Status Notifikasi Telegram") : -1;
-    const idxStatusSync = dx === "MR" ? headers.indexOf("Status Sinkronisasi Pengampu") : -1;
+    const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
+    const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
 
     // Hasil agregasi
     let totalKasus = 0;
     const perKecamatan = {};
     const perBulan = {};
-    const statusNotifikasi = dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null;
-    const statusSinkronisasi = dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null;
+    const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
+    const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -204,30 +204,28 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
-      // Req 6.7: status notifikasi dan sinkronisasi hanya untuk DX MR
-      if (dx === "MR") {
-        if (idxStatusNotif !== -1) {
-          const statusN = String(row[idxStatusNotif] || "").trim().toUpperCase();
-          if (statusN === "SENT") {
-            statusNotifikasi.sent++;
-          } else if (statusN === "FAILED") {
-            statusNotifikasi.failed++;
-          } else {
-            // PENDING atau kosong
-            statusNotifikasi.pending++;
-          }
+      // Status notifikasi/sinkronisasi dihitung jika kolom tersedia
+      if (idxStatusNotif !== -1 && statusNotifikasi) {
+        const statusN = String(row[idxStatusNotif] || "").trim().toUpperCase();
+        if (statusN === "SENT") {
+          statusNotifikasi.sent++;
+        } else if (statusN === "FAILED") {
+          statusNotifikasi.failed++;
+        } else {
+          // PENDING atau kosong
+          statusNotifikasi.pending++;
         }
+      }
 
-        if (idxStatusSync !== -1) {
-          const statusS = String(row[idxStatusSync] || "").trim().toUpperCase();
-          if (statusS === "SYNCED") {
-            statusSinkronisasi.synced++;
-          } else if (statusS === "FAILED") {
-            statusSinkronisasi.failed++;
-          } else {
-            // PENDING atau kosong
-            statusSinkronisasi.pending++;
-          }
+      if (idxStatusSync !== -1 && statusSinkronisasi) {
+        const statusS = String(row[idxStatusSync] || "").trim().toUpperCase();
+        if (statusS === "SYNCED") {
+          statusSinkronisasi.synced++;
+        } else if (statusS === "FAILED") {
+          statusSinkronisasi.failed++;
+        } else {
+          // PENDING atau kosong
+          statusSinkronisasi.pending++;
         }
       }
     }

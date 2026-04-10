@@ -9,3 +9,4 @@
 - [x] Dokumentasi arsitektur dan alur deployment
 - [x] Phase 1: pipeline post-save config-driven untuk semua DX
 - [x] Phase 2: generalisasi header/status routing lintas DX
+- [x] Phase 3: idempotency fingerprint + reason terstruktur per step
