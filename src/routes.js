@@ -80,6 +80,21 @@ function _requireAdminFromToken_(token) {
 // ─── Daftar semua DX yang didukung ───────────────────────────────────────────
 const ALL_DX = ["MR", "DIF", "PERT", "TN", "AFP"];
 
+// ─── Pipeline policy per DX (Phase-1: config-driven orchestration) ───────────
+const DX_PIPELINE_POLICY = {
+  MR:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
+  DIF:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
+  PERT: { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
+  TN:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
+  AFP:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true }
+};
+
+function _getDxPipelinePolicy_(dx) {
+  dx = String(dx || "").trim().toUpperCase();
+  const fallback = { notifyEmail: true, syncPengampu: true, notifyTelegram: true };
+  return DX_PIPELINE_POLICY[dx] || fallback;
+}
+
 // ─── Batch_Processor ─────────────────────────────────────────────────────────
 /**
  * Batch_Processor — mengelola eksekusi retry notifikasi dan sinkronisasi secara batch.
@@ -460,7 +475,6 @@ function _upsertByEpidToSheet_(sheet, record) {
 function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
-    if (dx !== "MR") return { synced: false, reason: "SKIPPED_DX" };
 
     const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
     if (statusRouting !== "MATCHED") return { synced: false, reason: statusRouting || "UNMAPPED" };
@@ -469,8 +483,9 @@ function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
     if (!spreadsheetId) return { synced: false, reason: "NO_SPREADSHEET_ID" };
 
     const targetSs = SpreadsheetApp.openById(spreadsheetId);
-    let targetSheet = targetSs.getSheetByName("MR_Raw");
-    if (!targetSheet) targetSheet = targetSs.insertSheet("MR_Raw");
+    const targetSheetName = dx + "_Raw";
+    let targetSheet = targetSs.getSheetByName(targetSheetName);
+    if (!targetSheet) targetSheet = targetSs.insertSheet(targetSheetName);
 
     const sourceSheet = getSheetOrThrow_(dx + "_Raw");
     const sourceHeaders = getTrimmedHeaders_(sourceSheet);
@@ -505,14 +520,13 @@ function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
 function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
-    if (dx !== "MR") return { sent: false, reason: "SKIPPED_DX" };
 
     const botToken = Config_Manager.getConfig("TELEGRAM_BOT_TOKEN");
     const chatId   = Config_Manager.getConfig("TELEGRAM_CHAT_ID");
     if (!botToken || !chatId) return { sent: false, reason: "NOT_CONFIGURED" };
 
     const lines = [
-      "📢 *Kasus MR baru tersimpan*",
+      "📢 *Kasus " + dx + " baru tersimpan*",
       "",
       `*EPID:* ${saved.epid || "-"}`,
       `*Nama:* ${data["Nama"] || "-"}`,
@@ -548,7 +562,6 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
 function _sendPengampuNotification_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
-    if (dx !== "MR") return { sent: false, reason: "SKIPPED_DX" };
 
     const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
     if (statusRouting !== "MATCHED") return { sent: false, reason: statusRouting || "UNMAPPED" };
@@ -560,9 +573,9 @@ function _sendPengampuNotification_(dx, data, saved, printUrl) {
     const uniqueRecipients = Array.from(new Set(recipients));
     if (!uniqueRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
 
-    const subject = `[MR][${saved.epid}] Kasus baru wilayah ampuan ${data["Kelurahan"] || ""}`;
+    const subject = `[${dx}][${saved.epid}] Kasus baru wilayah ampuan ${data["Kelurahan"] || ""}`;
     const body = [
-      "Notifikasi kasus MR wilayah ampuan",
+      "Notifikasi kasus " + dx + " wilayah ampuan",
       "",
       `EPID: ${saved.epid}`,
       `Nama: ${data["Nama"] || "-"}`,
@@ -599,6 +612,48 @@ function _requireWriteAccessFromSession_(sess) {
   return role || "petugas";
 }
 
+function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
+  const policy = _getDxPipelinePolicy_(dx);
+
+  const notify = policy.notifyEmail
+    ? _sendPengampuNotification_(dx, savedRecord, saved, printUrl)
+    : { sent: false, reason: "DISABLED_BY_POLICY" };
+
+  const syncPengampu = policy.syncPengampu
+    ? _syncPengampuSpreadsheet_(dx, savedRecord, saved, printUrl)
+    : { synced: false, reason: "DISABLED_BY_POLICY" };
+
+  const telegramNotify = policy.notifyTelegram
+    ? _sendTelegramPd3iNotification_(dx, savedRecord, saved, printUrl)
+    : { sent: false, reason: "DISABLED_BY_POLICY" };
+
+  const notifyPatch = {
+    "Nomor EPID": saved.epid,
+    "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+    "Notified At Pengampu": new Date(),
+    "Notified To Pengampu": notify.to || "",
+    "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
+    "Synced At Pengampu": new Date(),
+    "Sync Target Pengampu": syncPengampu.target || "",
+    "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
+    "Telegram Notified At": new Date(),
+    "Telegram Target": telegramNotify.target || "",
+    "Telegram Retry Count": telegramNotify.sent ? 0 : 0
+  };
+
+  try {
+    saveDxRecord_(dx, notifyPatch);
+  } catch (e) {
+    // jangan gagalkan save utama hanya karena status pipeline gagal ditulis
+  }
+
+  return {
+    pengampuNotification: notify,
+    pengampuSync: syncPengampu,
+    telegramNotification: telegramNotify
+  };
+}
+
 // ─── saveFormPayload_ ─────────────────────────────────────────────────────────
 function saveFormPayload_(data) {
   const token = String(data.__token || "").trim();
@@ -631,30 +686,7 @@ function saveFormPayload_(data) {
   } catch (e) {
     savedRecord = data;
   }
-  const notify = _sendPengampuNotification_(dx, savedRecord, saved, printUrl);
-  const syncPengampu = _syncPengampuSpreadsheet_(dx, savedRecord, saved, printUrl);
-  const telegramNotify = _sendTelegramPd3iNotification_(dx, savedRecord, saved, printUrl);
-
-  if (dx === "MR") {
-    const notifyPatch = {
-      "Nomor EPID": saved.epid,
-      "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
-      "Notified At Pengampu": new Date(),
-      "Notified To Pengampu": notify.to || "",
-      "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
-      "Synced At Pengampu": new Date(),
-      "Sync Target Pengampu": syncPengampu.target || "",
-      "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
-      "Telegram Notified At": new Date(),
-      "Telegram Target": telegramNotify.target || "",
-      "Telegram Retry Count": telegramNotify.sent ? 0 : 0
-    };
-    try {
-      saveDxRecord_(dx, notifyPatch);
-    } catch (e) {
-      // jangan gagalkan save utama hanya karena log status notifikasi/sinkronisasi gagal ditulis
-    }
-  }
+  const pipelineResult = _runPostSavePipeline_(dx, savedRecord, saved, printUrl);
 
   return {
     status: "success",
@@ -664,8 +696,8 @@ function saveFormPayload_(data) {
     epid: saved.epid,
     dx: dx,
     printUrl: printUrl,
-    pengampuNotification: notify,
-    pengampuSync: syncPengampu,
-    telegramNotification: telegramNotify
+    pengampuNotification: pipelineResult.pengampuNotification,
+    pengampuSync: pipelineResult.pengampuSync,
+    telegramNotification: pipelineResult.telegramNotification
   };
 }
