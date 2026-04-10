@@ -612,6 +612,11 @@ function _requireWriteAccessFromSession_(sess) {
   return role || "petugas";
 }
 
+function _isAsyncPipelineEnabled_() {
+  const mode = String((Config_Manager.getConfig("PIPELINE_MODE") || "sync")).trim().toLowerCase();
+  return mode === "async";
+}
+
 function _buildPipelineFingerprint_(dx, savedRecord, saved) {
   const payload = {
     dx: String(dx || "").trim().toUpperCase(),
@@ -723,7 +728,35 @@ function saveFormPayload_(data) {
   } catch (e) {
     savedRecord = data;
   }
-  const pipelineResult = _runPostSavePipeline_(dx, savedRecord, saved, printUrl);
+
+  const pipelineFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
+  let pipelineResult = null;
+
+  if (_isAsyncPipelineEnabled_() && typeof enqueuePipelineTask_ === "function") {
+    const queueRes = enqueuePipelineTask_(dx, saved.epid, pipelineFingerprint, { printUrl: printUrl });
+    const queuedPatch = {
+      "Nomor EPID": saved.epid,
+      "Status Notifikasi Pengampu": "QUEUED",
+      "Status Sinkronisasi Pengampu": "QUEUED",
+      "Status Notifikasi Telegram": "QUEUED",
+      "Reason Notifikasi Pengampu": "QUEUED_ASYNC",
+      "Reason Sinkronisasi Pengampu": "QUEUED_ASYNC",
+      "Reason Notifikasi Telegram": "QUEUED_ASYNC",
+      "Pipeline Fingerprint": pipelineFingerprint,
+      "Pipeline Last Run At": new Date()
+    };
+    try { saveDxRecord_(dx, queuedPatch); } catch (e) {}
+
+    pipelineResult = {
+      pengampuNotification: { sent: false, reason: "QUEUED_ASYNC" },
+      pengampuSync: { synced: false, reason: "QUEUED_ASYNC" },
+      telegramNotification: { sent: false, reason: "QUEUED_ASYNC" },
+      idempotent: false,
+      queued: !!(queueRes && queueRes.queued)
+    };
+  } else {
+    pipelineResult = _runPostSavePipeline_(dx, savedRecord, saved, printUrl);
+  }
 
   return {
     status: "success",
@@ -734,6 +767,7 @@ function saveFormPayload_(data) {
     dx: dx,
     printUrl: printUrl,
     pipelineIdempotent: !!pipelineResult.idempotent,
+    pipelineQueued: !!pipelineResult.queued,
     pengampuNotification: pipelineResult.pengampuNotification,
     pengampuSync: pipelineResult.pengampuSync,
     telegramNotification: pipelineResult.telegramNotification

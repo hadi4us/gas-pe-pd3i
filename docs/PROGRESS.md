@@ -11,3 +11,4 @@
 - [x] Phase 2: generalisasi header/status routing lintas DX
 - [x] Phase 3: idempotency fingerprint + reason terstruktur per step
 - [x] Checklist verifikasi/UAT Phase 3 dibuat
+- [x] Sprint Reliability tahap awal: async pipeline queue (mode opsional via PIPELINE_MODE=async)
