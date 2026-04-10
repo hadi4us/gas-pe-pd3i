@@ -5,5 +5,5 @@
 - [x] Folder proyek dirapikan (`src/`, `docs/`, `assets/`)
 - [x] Login `clasp` selesai
 - [x] Clone source project ke `src/`
-- [ ] Inventaris file dan fungsi utama
-- [ ] Dokumentasi arsitektur dan alur deployment
+- [x] Inventaris file dan fungsi utama
+- [x] Dokumentasi arsitektur dan alur deployment
