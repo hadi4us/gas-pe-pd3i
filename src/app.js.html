@@ -2018,6 +2018,9 @@
 
       document.addEventListener("input", function(e) {
         if (e.target && e.target.closest && e.target.closest("#dynamic-form")) {
+          if (typeof enforceNumericOnlyInput === "function") {
+            enforceNumericOnlyInput(e.target);
+          }
           saveFormDraft();
         }
       });
@@ -2304,6 +2307,22 @@
 
         if (isViewer) {
           showTopAlert("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.", false);
+          return;
+        }
+
+        const numericCheck = (typeof validateNumericOnlyRequiredFields === "function")
+          ? validateNumericOnlyRequiredFields()
+          : { ok: true, invalids: [] };
+
+        if (!numericCheck.ok) {
+          showTopAlert(
+            "Field berikut hanya boleh angka: " + numericCheck.invalids.join(", "),
+            false
+          );
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = isEditMode
+            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
           return;
         }
 

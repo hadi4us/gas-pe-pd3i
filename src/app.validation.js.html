@@ -59,6 +59,76 @@
     return res;
   }
 
+  const NUMERIC_ONLY_EXACT_IDS = [
+    "NIK Pasien",
+    "No WhatsApp Petugas",
+    "RT",
+    "RW",
+    "No. Kontak Orang Tua/Wali",
+    "No Telp/WA Orang Tua/Wali",
+    "No Telp Orang Tua/Wali",
+    "No. Telp Orang Tua/Wali"
+  ];
+
+  const NUMERIC_ONLY_KEYWORDS = [
+    "nik",
+    "whatsapp",
+    "no whatsapp",
+    "no. whatsapp",
+    "no telp",
+    "no. telp",
+    "kontak",
+    "rt",
+    "rw"
+  ];
+
+  function _normalizeFieldId_(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function isNumericOnlyFieldId(fieldId) {
+    const id = _normalizeFieldId_(fieldId);
+    if (!id) return false;
+
+    if (NUMERIC_ONLY_EXACT_IDS.some(x => _normalizeFieldId_(x) === id)) return true;
+
+    // batasan agar "rt/rw" tidak match ke kata lain sembarangan
+    if (id === "rt" || id === "rw") return true;
+
+    return NUMERIC_ONLY_KEYWORDS.some(k => id.includes(k));
+  }
+
+  function _sanitizeNumericValue_(value) {
+    return String(value || "").replace(/\D+/g, "");
+  }
+
+  function enforceNumericOnlyInput(el) {
+    if (!el || !el.id || !isNumericOnlyFieldId(el.id)) return;
+    const cleaned = _sanitizeNumericValue_(el.value);
+    if (String(el.value || "") !== cleaned) {
+      el.value = cleaned;
+    }
+  }
+
+  function validateNumericOnlyRequiredFields() {
+    const invalids = [];
+    const form = document.getElementById("dynamic-form");
+    if (!form) return { ok: true, invalids: [] };
+
+    form.querySelectorAll("input[name], textarea[name]").forEach(function(el) {
+      if (!el || el.disabled || !el.id) return;
+      if (!isNumericOnlyFieldId(el.id)) return;
+
+      const raw = String(el.value || "").trim();
+      if (!raw) return;
+      if (!/^\d+$/.test(raw)) {
+        invalids.push(el.id);
+      }
+    });
+
+    return { ok: invalids.length === 0, invalids: invalids };
+  }
+
   function checkConsistencyWarnings() {
     const warnings = [];
 
