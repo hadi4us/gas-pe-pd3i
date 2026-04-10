@@ -1,0 +1,268 @@
+<script>
+// ============================================================
+// DASHBOARD STATISTIK (Req 6.1–6.7)
+// ============================================================
+
+  function initDashboard() {
+    // Isi dropdown tahun (5 tahun terakhir)
+    const tahunEl = document.getElementById("dashboard-tahun");
+    if (tahunEl && tahunEl.options.length === 0) {
+      const now = new Date().getFullYear();
+      for (let y = now; y >= now - 4; y--) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        tahunEl.appendChild(opt);
+      }
+    }
+
+    const btnLoad = document.getElementById("btn-load-dashboard");
+    if (btnLoad && !btnLoad.dataset.bound) {
+      btnLoad.dataset.bound = "1";
+      btnLoad.addEventListener("click", loadDashboard);
+    }
+
+    const btnClose = document.getElementById("btn-close-dashboard");
+    if (btnClose && !btnClose.dataset.bound) {
+      btnClose.dataset.bound = "1";
+      btnClose.addEventListener("click", function () {
+        const modal = document.getElementById("dashboard-modal");
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+      });
+    }
+
+    const btnDashboard = document.getElementById("btn-dashboard");
+    if (btnDashboard && !btnDashboard.dataset.bound) {
+      btnDashboard.dataset.bound = "1";
+      btnDashboard.addEventListener("click", function () {
+        const modal = document.getElementById("dashboard-modal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        // Tutup dropdown admin
+        const dd = document.getElementById("admin-menu-dropdown");
+        if (dd) dd.classList.add("hidden");
+      });
+    }
+
+    // Export CSV
+    const btnExport = document.getElementById("btn-export-csv");
+    if (btnExport && !btnExport.dataset.bound) {
+      btnExport.dataset.bound = "1";
+      btnExport.addEventListener("click", handleExportCsv);
+    }
+  }
+
+  function loadDashboard() {
+    const dx    = document.getElementById("dashboard-dx")?.value || "MR";
+    const tahun = document.getElementById("dashboard-tahun")?.value || new Date().getFullYear();
+    const content = document.getElementById("dashboard-content");
+    if (!content) return;
+
+    content.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...</div>';
+
+    if (!safeGsRun() || !SESSION_TOKEN) {
+      content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">Tidak dapat terhubung ke server.</div>';
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function (stats) { renderDashboard(stats, dx, tahun); })
+      .withFailureHandler(function (err) {
+        content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">Gagal memuat data: ' + String(err) + '</div>';
+      })
+      .getDashboardStats(dx, tahun, SESSION_TOKEN);
+  }
+
+  function renderDashboard(stats, dx, tahun) {
+    const content = document.getElementById("dashboard-content");
+    if (!content) return;
+
+    if (!stats || stats.status === "error") {
+      content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
+      return;
+    }
+
+    const isAdmin = window.SESSION_USER && window.SESSION_USER.role === "admin";
+    const isViewer = window.SESSION_USER && window.SESSION_USER.role === "viewer";
+
+    let html = '';
+
+    // Total kasus (Req 6.1)
+    html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+        <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Total Kasus ${dx} ${tahun}</div>
+        <div class="text-4xl font-black text-emerald-900">${stats.totalKasus || 0}</div>
+      </div>`;
+
+    // Status notifikasi & sinkronisasi MR (Req 6.7)
+    if (dx === "MR" && stats.statusNotifikasi) {
+      const n = stats.statusNotifikasi;
+      html += `<div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email</div>
+        <div class="flex justify-around text-center">
+          <div><div class="text-xl font-black text-green-700">${n.sent}</div><div class="text-xs text-slate-500">Terkirim</div></div>
+          <div><div class="text-xl font-black text-red-600">${n.failed}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div><div class="text-xl font-black text-amber-600">${n.pending}</div><div class="text-xs text-slate-500">Pending</div></div>
+        </div>
+      </div>`;
+
+      const s = stats.statusSinkronisasi || {};
+      html += `<div class="rounded-xl border border-purple-200 bg-purple-50 p-4">
+        <div class="text-xs font-extrabold uppercase text-purple-700 mb-2">Sinkronisasi Pengampu</div>
+        <div class="flex justify-around text-center">
+          <div><div class="text-xl font-black text-green-700">${s.synced || 0}</div><div class="text-xs text-slate-500">Synced</div></div>
+          <div><div class="text-xl font-black text-red-600">${s.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div><div class="text-xl font-black text-amber-600">${s.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        </div>
+      </div>`;
+    } else {
+      html += `<div></div><div></div>`;
+    }
+
+    html += `</div>`;
+
+    // Distribusi per bulan (Req 6.3)
+    const perBulan = stats.perBulan || {};
+    const bulanKeys = Object.keys(perBulan).sort();
+    if (bulanKeys.length > 0) {
+      const maxVal = Math.max(...bulanKeys.map(k => perBulan[k]));
+      html += `<div class="mb-6">
+        <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Distribusi per Bulan</div>
+        <div class="space-y-2">`;
+      bulanKeys.forEach(function (k) {
+        const val = perBulan[k];
+        const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
+        const label = k.substring(0, 4) + "-" + k.substring(4, 6);
+        html += `<div class="flex items-center gap-3">
+          <div class="w-20 text-xs font-bold text-slate-600 text-right">${label}</div>
+          <div class="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden">
+            <div class="bg-emerald-500 h-5 rounded-full transition-all" style="width:${pct}%"></div>
+          </div>
+          <div class="w-8 text-xs font-extrabold text-slate-700">${val}</div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+
+    // Distribusi per kecamatan (Req 6.2)
+    const perKec = stats.perKecamatan || {};
+    const kecKeys = Object.keys(perKec).sort(function (a, b) { return perKec[b] - perKec[a]; });
+    if (kecKeys.length > 0) {
+      html += `<div class="mb-4">
+        <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Distribusi per Kecamatan</div>
+        <div class="overflow-x-auto"><table class="w-full text-sm">
+          <thead><tr class="bg-slate-100">
+            <th class="text-left px-3 py-2 font-extrabold text-slate-600">Kecamatan</th>
+            <th class="text-right px-3 py-2 font-extrabold text-slate-600">Jumlah Kasus</th>
+          </tr></thead>
+          <tbody>`;
+      kecKeys.forEach(function (k) {
+        html += `<tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="px-3 py-2 font-semibold text-slate-700">${k}</td>
+          <td class="px-3 py-2 text-right font-extrabold text-emerald-700">${perKec[k]}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div></div>`;
+    }
+
+    // Req 6.6: viewer tidak melihat tombol aksi admin
+    if (!isViewer && isAdmin) {
+      html += `<div class="mt-4 pt-4 border-t border-slate-100 text-right">
+        <button type="button" onclick="handleExportCsv()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold">
+          <i class="fas fa-file-csv mr-1"></i> Export CSV ${dx} ${tahun}
+        </button>
+      </div>`;
+    }
+
+    content.innerHTML = html;
+  }
+
+  // ============================================================
+  // EXPORT CSV (Req 7.1–7.6)
+  // ============================================================
+  function handleExportCsv() {
+    const dx = document.getElementById("form-selector")?.value ||
+               document.getElementById("dashboard-dx")?.value || "MR";
+    if (!dx) { showTopAlert("Pilih jenis penyakit terlebih dahulu.", false); return; }
+    if (!safeGsRun() || !SESSION_TOKEN) return;
+
+    const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
+    const filename = dx + "_export_" + today + ".csv";
+
+    showTopAlert("Mengekspor data " + dx + "...", true);
+
+    google.script.run
+      .withSuccessHandler(function (csv) {
+        if (!csv || (typeof csv === "object" && csv.status === "error")) {
+          showTopAlert((csv && csv.message) || "Gagal export CSV.", false);
+          return;
+        }
+        // Trigger download
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showTopAlert("Export berhasil: " + filename, true);
+      })
+      .withFailureHandler(function (err) {
+        showTopAlert("Gagal export: " + String(err), false);
+      })
+      .exportToCsv(dx, {}, SESSION_TOKEN);
+  }
+
+  // ============================================================
+  // KONFIRMASI RESET / BATAL EDIT (Req 14.1–14.5)
+  // ============================================================
+
+  /**
+   * Konfirmasi sebelum reset form.
+   * Req 14.1: tampilkan konfirmasi jika form berisi data
+   * Req 14.5: reset langsung jika form kosong
+   */
+  function confirmAndReset() {
+    if (_formHasData_()) {
+      const confirmed = window.confirm(
+        "Semua data yang sudah diisi akan dihapus dan form akan direset.\nLanjutkan?"
+      );
+      if (!confirmed) return;
+    }
+    const dx = document.getElementById("form-selector")?.value || "";
+    clearFormDraft(dx);
+    resetForNewEntry();
+  }
+
+  // Req 14.4: peringatan browser saat navigasi keluar dengan form berisi data
+  window.addEventListener("beforeunload", function (e) {
+    if (_formHasData_()) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+
+  // Override tombol "Batal Edit / Reset Form" agar pakai konfirmasi
+  // GAS HtmlService: gunakan window.onload sebagai fallback DOMContentLoaded
+  function _initDashboardOnLoad_() {
+    initDashboard();
+
+    const btnCancel = document.getElementById("btn-cancel-edit");
+    if (btnCancel && !btnCancel.dataset.confirmBound) {
+      btnCancel.dataset.confirmBound = "1";
+      btnCancel.addEventListener("click", function (e) {
+        e.preventDefault();
+        confirmAndReset();
+      });
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", _initDashboardOnLoad_);
+  } else {
+    // DOM sudah siap (GAS HtmlService sering inject script setelah DOM ready)
+    _initDashboardOnLoad_();
+  }
+
+</script>

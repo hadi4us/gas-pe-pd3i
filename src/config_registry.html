@@ -1,0 +1,21 @@
+<script>
+  const DIAGNOSIS_CONFIG = {
+    MR: (typeof CONFIG_MR !== "undefined") ? CONFIG_MR : null,
+    DIF: (typeof CONFIG_DIF !== "undefined") ? CONFIG_DIF : null,
+    PERT: (typeof CONFIG_PERT !== "undefined") ? CONFIG_PERT : null,
+    AFP: (typeof CONFIG_AFP !== "undefined") ? CONFIG_AFP : null,
+    TN: (typeof CONFIG_TN !== "undefined") ? CONFIG_TN : null
+  };
+
+  function getDiagnosisConfig(dx) {
+    const key = String(dx || "").toUpperCase();
+    return DIAGNOSIS_CONFIG[key] || null;
+  }
+
+  function getCommonFields() {
+    return {
+      pelapor: (typeof COMMON_PELAPOR_FIELDS !== "undefined") ? COMMON_PELAPOR_FIELDS : [],
+      pasien: (typeof COMMON_PASIEN_FIELDS !== "undefined") ? COMMON_PASIEN_FIELDS : []
+    };
+  }
+</script>

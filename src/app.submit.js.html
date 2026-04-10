@@ -1,0 +1,252 @@
+<script>
+function resetForNewEntry() {
+    try {
+      clearFormDraft();
+
+      const modal = document.getElementById("success-modal");
+      closeModal(modal);
+
+      isEditMode = false;
+
+      const editBadge = document.getElementById("edit-badge");
+      const btnCancelEdit = document.getElementById("btn-cancel-edit");
+      const btnSubmit = document.getElementById("btn-submit");
+      const form = document.getElementById("dynamic-form");
+      const selector = document.getElementById("form-selector");
+      const searchEpid = document.getElementById("search-epid");
+
+      if (editBadge) editBadge.classList.add("hidden");
+      if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
+      if (searchEpid) searchEpid.value = "";
+
+      if (form) form.reset();
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove("bg-yellow-600");
+        btnSubmit.classList.add("bg-blue-600");
+        btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+      }
+
+      if (choicesInstance) {
+        try { choicesInstance.destroy(); } catch (e) {}
+        choicesInstance = null;
+      }
+      if (typeof rsChoicesInstance !== "undefined" && rsChoicesInstance) {
+        try { rsChoicesInstance.destroy(); } catch (e) {}
+        rsChoicesInstance = null;
+      }
+
+      const tbodyKontak = document.getElementById("tbody-Kontak Erat");
+      const tbodyImun = document.getElementById("tbody-Riwayat Imunisasi");
+      if (tbodyKontak) tbodyKontak.innerHTML = "";
+      if (tbodyImun) tbodyImun.innerHTML = "";
+
+      hideTopAlert();
+
+      const dx = String(selector?.value || "").trim();
+      if (selector && dx) {
+        selector.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    } catch (e) {
+      console.warn("resetForNewEntry gagal, fallback ke reload:", e);
+      window.location.href = window.location.href.split("?")[0];
+    }
+  }
+
+  function showSuccessModal(message, printUrl) {
+    const modal = document.getElementById("success-modal");
+    const msg = document.getElementById("success-modal-message");
+    const btnPrint = document.getElementById("btn-print-pdf");
+    const btnNew = document.getElementById("btn-new-entry");
+    const btnClose = document.getElementById("btn-close-success");
+
+    if (msg) msg.textContent = message || "Data berhasil disimpan.";
+
+    if (btnPrint) {
+      const safeUrl = String(printUrl || "").trim();
+      btnPrint.href = safeUrl || "javascript:void(0)";
+      btnPrint.target = "_blank";
+      btnPrint.rel = "noopener noreferrer";
+
+      if (!safeUrl) {
+        btnPrint.classList.add("opacity-60", "pointer-events-none");
+        btnPrint.setAttribute("aria-disabled", "true");
+      } else {
+        btnPrint.classList.remove("opacity-60", "pointer-events-none");
+        btnPrint.removeAttribute("aria-disabled");
+      }
+
+      if (!btnPrint.dataset.bound) {
+        btnPrint.dataset.bound = "1";
+        btnPrint.addEventListener("click", function(ev) {
+          const href = String(btnPrint.getAttribute("href") || "").trim();
+          if (!href || href === "javascript:void(0)") {
+            ev.preventDefault();
+          }
+        });
+      }
+    }
+
+    if (btnNew && !btnNew.dataset.bound) {
+      btnNew.dataset.bound = "1";
+      btnNew.addEventListener("click", function(ev) {
+        ev.preventDefault();
+        resetForNewEntry();
+      });
+    }
+
+    if (btnClose && !btnClose.dataset.bound) {
+      btnClose.dataset.bound = "1";
+      btnClose.addEventListener("click", function(ev) {
+        ev.preventDefault();
+        closeModal(modal);
+      });
+    }
+
+    openModal(modal);
+  }
+
+  // ============================================================
+  // SUBMIT PROGRESS STATE MACHINE (Req 12.1–12.5)
+  // States: idle → validating → sending → saving → done/error
+  // ============================================================
+
+  const SUBMIT_STEPS = [
+    { state: "validating", label: "Memvalidasi data..." },
+    { state: "sending",    label: "Mengirim ke server..." },
+    { state: "saving",     label: "Menyimpan ke database..." }
+  ];
+
+  let _submitTimeoutId_ = null;
+
+  /**
+   * Set state tombol submit dan teks progress.
+   * Req 12.1, 12.4
+   */
+  function _setSubmitState_(state, customLabel) {
+    const btn = document.getElementById("btn-submit");
+    if (!btn) return;
+
+    if (state === "idle") {
+      btn.disabled = false;
+      btn.classList.remove("bg-yellow-600", "opacity-75", "cursor-not-allowed");
+      btn.classList.add("bg-blue-600");
+      btn.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+      if (isEditMode) {
+        btn.classList.remove("bg-blue-600");
+        btn.classList.add("bg-yellow-600");
+        btn.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data`;
+      }
+      return;
+    }
+
+    const step = SUBMIT_STEPS.find(s => s.state === state);
+    const label = customLabel || (step ? step.label : "Memproses...");
+
+    btn.disabled = true;
+    btn.classList.add("opacity-75", "cursor-not-allowed");
+    btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>${label}`;
+  }
+
+  /**
+   * Disable/enable semua input form saat submit.
+   * Req 12.2
+   */
+  function _setFormInputsDisabled_(disabled) {
+    const form = document.getElementById("dynamic-form");
+    if (!form) return;
+    form.querySelectorAll("input, select, textarea, button").forEach(function (el) {
+      if (el.id === "btn-submit") return; // dikelola terpisah
+      el.disabled = disabled;
+    });
+  }
+
+  /**
+   * Jalankan state machine progress submit.
+   * Req 12.4: step berurutan validating → sending → saving
+   * @param {Function} submitFn - fungsi async yang melakukan submit
+   */
+  async function runSubmitWithProgress(submitFn) {
+    // Bersihkan timeout sebelumnya
+    if (_submitTimeoutId_) {
+      clearTimeout(_submitTimeoutId_);
+      _submitTimeoutId_ = null;
+    }
+
+    // Req 12.2: disable semua input
+    _setFormInputsDisabled_(true);
+
+    // Step 1: validating
+    _setSubmitState_("validating");
+    await _delay_(120);
+
+    // Step 2: sending
+    _setSubmitState_("sending");
+
+    // Req 12.5: timeout 30 detik
+    let timedOut = false;
+    _submitTimeoutId_ = setTimeout(function () {
+      timedOut = true;
+      _setFormInputsDisabled_(false);
+      _setSubmitState_("idle");
+      showTopAlert("Waktu habis. Silakan coba lagi.", false);
+    }, 30000);
+
+    try {
+      // Step 3: saving (setelah request dikirim, sebelum respons)
+      _setSubmitState_("saving");
+      const result = await submitFn();
+
+      if (timedOut) return result; // timeout sudah handle UI
+
+      clearTimeout(_submitTimeoutId_);
+      _submitTimeoutId_ = null;
+
+      // Req 12.3: kembalikan tombol ke kondisi aktif
+      _setFormInputsDisabled_(false);
+      _setSubmitState_("idle");
+
+      return result;
+    } catch (err) {
+      if (!timedOut) {
+        clearTimeout(_submitTimeoutId_);
+        _submitTimeoutId_ = null;
+        _setFormInputsDisabled_(false);
+        _setSubmitState_("idle");
+      }
+      throw err;
+    }
+  }
+
+  /** Helper: delay kecil untuk animasi step. */
+  function _delay_(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  // ============================================================
+  // SAFE JSON FETCH
+  // ============================================================
+  async function postJsonToWebApp(url, payload) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow"
+    });
+
+    const raw = await res.text();
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error("Raw response (not JSON):", raw);
+      throw new Error("Server tidak mengembalikan JSON. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.");
+    }
+  }
+
+  // ============================================================
+</script>
+

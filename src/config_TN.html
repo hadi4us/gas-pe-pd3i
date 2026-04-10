@@ -1,0 +1,47 @@
+<script>
+  const CONFIG_TN = {
+    code: "TN",
+    title: "Tetanus Neonatorum",
+    sections: [
+      {
+        key: "klinis",
+        title: "Informasi Klinis & Gejala",
+        fields: [
+          { id: "Nama Ibu", label: "Nama Ibu", type: "text", required: true },
+          { id: "Tanggal mulai sakit", label: "Tanggal mulai sakit", type: "date", required: true },
+          { id: "Bayi dapat menetek normal 2 hari pertama", label: "Bayi dapat menetek normal 2 hari pertama?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tidak bisa menetek", label: "Tidak bisa menetek?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Kaku", label: "Kaku?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Kejang/spasme", label: "Kejang/spasme?", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+      {
+        key: "ibu_persalinan",
+        title: "Riwayat Ibu & Persalinan",
+        fields: [
+          { id: "Status imunisasi TT/Td ibu", label: "Status imunisasi TT/Td ibu", type: "select", options: ["Lengkap", "Tidak lengkap", "Tidak pernah", "Tidak diketahui"] },
+          { id: "Tempat persalinan", label: "Tempat persalinan", type: "select", options: ["Rumah sakit", "Puskesmas", "Klinik", "Rumah", "Lainnya"] },
+          { id: "Penolong persalinan", label: "Penolong persalinan", type: "select", options: ["Dokter", "Bidan", "Dukun", "Keluarga", "Lainnya"] },
+          { id: "Perawatan tali pusat", label: "Perawatan tali pusat", type: "text" }
+        ]
+      },
+      {
+        key: "epidemiologi",
+        title: "Informasi Epidemiologis & Faktor Risiko",
+        fields: [
+          { id: "Berat lahir", label: "Berat lahir (gram)", type: "number" },
+          { id: "Usia gestasi", label: "Usia gestasi (minggu)", type: "number" },
+          { id: "Riwayat kasus serupa di wilayah", label: "Riwayat kasus serupa di wilayah?", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+      {
+        key: "kondisi",
+        title: "Kondisi Saat Ini",
+        fields: [
+          { id: "Status akhir TN", label: "Status akhir kasus", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal", "Tidak diketahui"] },
+          { id: "Tanggal meninggal TN", label: "Tanggal meninggal", type: "date", showIf: { field: "Status akhir TN", values: ["Meninggal"] } }
+        ]
+      }
+    ]
+  };
+</script>

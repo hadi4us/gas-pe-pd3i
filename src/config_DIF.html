@@ -1,0 +1,81 @@
+<script>
+  const CONFIG_DIF = {
+    code: "DIF",
+    title: "Difteri",
+    sections: [
+      {
+        key: "klinis",
+        title: "Informasi Klinis & Gejala",
+        fields: [
+          { id: "Tanggal mulai sakit", label: "Tanggal Mulai Sakit (sakit tenggorokan)", type: "date", required: true },
+          { id: "Keluhan Utama", label: "Keluhan Utama", type: "textarea", fullWidth: true },
+          { id: "Demam", label: "Demam?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal mulai demam", label: "Tanggal Mulai Demam", type: "date", showIf: { field: "Demam", values: ["Ya"] } },
+          { id: "Sakit tenggorokan?", label: "Sakit Tenggorokan?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal sakit tenggorokan", label: "Tanggal Sakit Tenggorokan", type: "date", showIf: { field: "Sakit tenggorokan?", values: ["Ya"] } },
+          { id: "Bull neck", label: "Leher Bengkak (Bull neck)?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal leher bengkak", label: "Tanggal Leher Bengkak", type: "date", showIf: { field: "Bull neck", values: ["Ya"] } },
+          { id: "Sesak nafas?", label: "Sesak Nafas?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal sesak nafas", label: "Tanggal Sesak Nafas", type: "date", showIf: { field: "Sesak nafas?", values: ["Ya"] } },
+          { id: "Pseudomembran?", label: "Pseudomembran?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal pseudomembran", label: "Tanggal Pseudomembran", type: "date", showIf: { field: "Pseudomembran?", values: ["Ya"] } },
+          { id: "Lokasi pseudomembran", label: "Lokasi Pseudomembran", type: "text", showIf: { field: "Pseudomembran?", values: ["Ya"] } },
+          { id: "Gejala lain DIF", label: "Gejala Lain", type: "text", fullWidth: true },
+          { id: "Status Gizi", label: "Status Gizi", type: "select", options: ["Buruk", "Kurang", "Baik"] },
+          { id: "Rawat inap?", label: "Rawat Inap?", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+      IMUNISASI_SECTION,
+      {
+        key: "spesimen",
+        title: "Informasi Spesimen",
+        fields: [
+          { id: "Swab diambil?", label: "Swab diambil?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Lokasi ambil swab", label: "Jenis Spesimen", type: "select", options: ["Tenggorokan", "Hidung", "Keduanya"], showIf: { field: "Swab diambil?", values: ["Ya"] } },
+          { id: "Tanggal ambil swab", label: "Tanggal Ambil Spesimen", type: "date", showIf: { field: "Swab diambil?", values: ["Ya"] } },
+          { id: "No Kode Spesimen", label: "No. Kode Spesimen", type: "text", showIf: { field: "Swab diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim swab", label: "Tanggal Pengiriman Spesimen ke Lab", type: "date", showIf: { field: "Swab diambil?", values: ["Ya"] } }
+        ]
+      },
+      {
+        key: "pengobatan",
+        title: "Riwayat Pengobatan",
+        fields: [
+          { id: "Berobat ke RS?", label: "Berobat ke Rumah Sakit?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal berobat RS", label: "Tanggal Berobat ke RS", type: "date", showIf: { field: "Berobat ke RS?", values: ["Ya"] } },
+          { id: "Tracheostomi", label: "Tracheostomi?", type: "select", options: OPT_YA_TIDAK, showIf: { field: "Berobat ke RS?", values: ["Ya"] } },
+          { id: "Berobat ke Puskesmas?", label: "Berobat ke Puskesmas?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal berobat Puskesmas", label: "Tanggal Berobat ke Puskesmas", type: "date", showIf: { field: "Berobat ke Puskesmas?", values: ["Ya"] } },
+          { id: "Diagnosis suspek difteri", label: "Didiagnosis sebagai Suspek Difteri?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal diagnosis suspek", label: "Tanggal Diagnosis Suspek", type: "date", showIf: { field: "Diagnosis suspek difteri", values: ["Ya"] } },
+          { id: "Antibiotik diberikan?", label: "Antibiotik Diberikan?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Jenis antibiotik", label: "Jenis Antibiotik", type: "text", showIf: { field: "Antibiotik diberikan?", values: ["Ya"] } },
+          { id: "Tanggal antibiotik", label: "Tanggal Pemberian Antibiotik", type: "date", showIf: { field: "Antibiotik diberikan?", values: ["Ya"] } },
+          { id: "ADS diberikan?", label: "ADS Diberikan?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Dosis ADS (IU)", label: "Dosis ADS (IU)", type: "number", showIf: { field: "ADS diberikan?", values: ["Ya"] } },
+          { id: "Tanggal ADS", label: "Tanggal Pemberian ADS", type: "date", showIf: { field: "ADS diberikan?", values: ["Ya"] } },
+          { id: "Alasan tidak ADS", label: "Alasan Tidak Diberi ADS", type: "text", showIf: { field: "ADS diberikan?", values: ["Tidak"] } },
+          { id: "Obat lain DIF", label: "Obat Lain", type: "text", fullWidth: true },
+          { id: "Kondisi kasus saat ini", label: "Kondisi Kasus Saat Ini", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal"] },
+          { id: "Tanggal sembuh DIF", label: "Tanggal Sembuh", type: "date", showIf: { field: "Kondisi kasus saat ini", values: ["Sembuh"] } },
+          { id: "Tanggal meninggal DIF", label: "Tanggal Meninggal", type: "date", showIf: { field: "Kondisi kasus saat ini", values: ["Meninggal"] } }
+        ]
+      },
+      {
+        key: "epidemiologi",
+        title: "Informasi Epidemiologis",
+        fields: [
+          { id: "Riwayat perjalanan 10 hari", label: "Riwayat perjalanan 10 hari sebelum sakit?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Daerah perjalanan DIF", label: "Sebutkan Daerah Perjalanan", type: "text", showIf: { field: "Riwayat perjalanan 10 hari", values: ["Ya"] } },
+          { id: "Riwayat kontak suspek/konfirmasi difteri", label: "Riwayat kontak dengan suspek/konfirmasi difteri?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Nama alamat kontak DIF", label: "Nama dan Alamat yang Dikunjungi", type: "textarea", fullWidth: true, showIf: { field: "Riwayat kontak suspek/konfirmasi difteri", values: ["Ya"] } }
+        ]
+      },
+      {
+        key: "kontak",
+        title: "Kontak Erat",
+        fields: [CONTACT_SECTION]
+      }
+    ]
+  };
+</script>

@@ -1,0 +1,450 @@
+<script>
+  // ============================================================
+  // AUTH.JS.HTML — FINAL (INIT SAFE)
+  // ============================================================
+
+  (function () {
+    let __authInitialized = false;
+    let loginAttempt = 0;
+
+    function initAuthModule() {
+      if (__authInitialized) return;
+      __authInitialized = true;
+
+      const loginModal = document.getElementById("login-modal");
+      const pinModal = document.getElementById("pin-modal");
+      const app = document.getElementById("app");
+
+      const userBadge = document.getElementById("user-badge");
+      const userBadgeText = document.getElementById("user-badge-text");
+
+      const loginForm = document.getElementById("login-form");
+      const loginAlert = document.getElementById("login-alert");
+      const loginCard = document.getElementById("login-card");
+      const btnLogin = document.getElementById("btn-login");
+
+      const pinForm = document.getElementById("pin-form");
+      const pinAlert = document.getElementById("pin-alert");
+
+      const btnRefreshCaptcha = document.getElementById("btn-refresh-captcha");
+      const btnRefreshPinCaptcha = document.getElementById("btn-refresh-pin-captcha");
+      const btnOpenPin = document.getElementById("btn-open-pin");
+      const btnClosePinModal = document.getElementById("btn-close-pin-modal");
+      const btnLogout = document.getElementById("btn-logout");
+
+      const loginUsername = document.getElementById("login-username");
+      const loginPin = document.getElementById("login-pin");
+      const loginCaptchaAnswerInput = document.getElementById("login-captcha-answer");
+
+      const pinOld = document.getElementById("pin-old");
+      const pinNew = document.getElementById("pin-new");
+      const pinNew2 = document.getElementById("pin-new2");
+      const pinCaptchaAnswerInput = document.getElementById("pin-captcha-answer");
+
+      const toggleLoginPin = document.getElementById("toggle-login-pin");
+
+      function refreshLoginCaptcha() {
+        if (typeof forceRenderLoginCaptcha === "function") {
+          forceRenderLoginCaptcha(0);
+        } else if (typeof makeLocalCaptcha === "function") {
+          makeLocalCaptcha("login");
+        }
+        if (loginCaptchaAnswerInput) loginCaptchaAnswerInput.value = "";
+      }
+
+      function refreshPinCaptcha() {
+        if (typeof forceRenderPinCaptcha === "function") {
+          forceRenderPinCaptcha(0);
+        } else if (typeof makeLocalCaptcha === "function") {
+          makeLocalCaptcha("pin");
+        }
+        if (pinCaptchaAnswerInput) pinCaptchaAnswerInput.value = "";
+      }
+
+      function setLoggedInUI(user) {
+        SESSION_USER = user || null;
+
+        if (app) app.classList.remove("hidden");
+        closeModal(loginModal);
+        closeModal(pinModal);
+
+        const role = String((user && user.role) || "").trim().toLowerCase();
+        const adminMenuWrap = document.getElementById("admin-menu-wrap");
+
+        if (userBadge) userBadge.classList.remove("hidden");
+        if (userBadgeText) {
+          const name = String((user && (user.nama || user.username)) || "");
+          userBadgeText.textContent = role ? `${name} • ${role}` : name;
+        }
+
+        if (adminMenuWrap) {
+          if (role === "admin") adminMenuWrap.classList.remove("hidden");
+          else adminMenuWrap.classList.add("hidden");
+        }
+
+        if (typeof window.applyRoleUIState === "function") {
+          window.applyRoleUIState();
+        }
+      }
+
+      function setLoggedOutUI() {
+        SESSION_TOKEN = "";
+        SESSION_USER = null;
+        let loginAttempt = 0;
+        MASTER_FASKES = [];
+        clearSessionFromBrowser();
+        stopIdleTimer();
+
+        if (choicesInstance) {
+          try { choicesInstance.destroy(); } catch (e) {}
+        }
+        choicesInstance = null;
+
+        if (typeof rsChoicesInstance !== "undefined" && rsChoicesInstance) {
+          try { rsChoicesInstance.destroy(); } catch (e) {}
+          rsChoicesInstance = null;
+        }
+
+        if (app) app.classList.add("hidden");
+        if (userBadge) userBadge.classList.add("hidden");
+        if (userBadgeText) userBadgeText.textContent = "";
+
+        closeModal(pinModal);
+        openModal(loginModal);
+
+        if (loginForm) loginForm.reset();
+        if (pinForm) pinForm.reset();
+
+        hideAlert(loginAlert);
+        hideAlert(pinAlert);
+        hideTopAlert();
+
+        setTimeout(refreshLoginCaptcha, 100);
+      }
+
+      async function handleIdleTimeout() {
+        if (!SESSION_TOKEN) return;
+
+        try {
+          if (safeGsRun()) {
+            google.script.run
+              .withSuccessHandler(function () {
+                setLoggedOutUI();
+                setAlert(loginAlert, "Sesi berakhir karena tidak ada aktivitas.", false);
+              })
+              .withFailureHandler(function () {
+                setLoggedOutUI();
+                setAlert(loginAlert, "Sesi berakhir karena tidak ada aktivitas.", false);
+              })
+              .authLogout(SESSION_TOKEN);
+          } else {
+            setLoggedOutUI();
+            setAlert(loginAlert, "Sesi berakhir karena tidak ada aktivitas.", false);
+          }
+        } catch (e) {
+          setLoggedOutUI();
+        }
+      }
+
+      function refreshIdleSession() {
+        if (!SESSION_TOKEN) return;
+        startIdleTimer(handleIdleTimeout);
+      }
+
+      bindIdleEvents(refreshIdleSession);
+
+      if (toggleLoginPin && loginPin) {
+        toggleLoginPin.addEventListener("click", function () {
+          loginPin.type = loginPin.type === "password" ? "text" : "password";
+          this.innerHTML = loginPin.type === "password"
+            ? '<i class="fas fa-eye"></i>'
+            : '<i class="fas fa-eye-slash"></i>';
+        });
+      }
+
+      if (btnRefreshCaptcha) {
+        btnRefreshCaptcha.addEventListener("click", refreshLoginCaptcha);
+      }
+
+      if (btnRefreshPinCaptcha) {
+        btnRefreshPinCaptcha.addEventListener("click", refreshPinCaptcha);
+      }
+
+      if (loginForm) {
+        loginForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          hideAlert(loginAlert);
+
+          const username = ((loginUsername && loginUsername.value) || "").trim();
+          const pin = ((loginPin && loginPin.value) || "").trim();
+          const capAns = Number(((loginCaptchaAnswerInput && loginCaptchaAnswerInput.value) || "").trim());
+
+          if (!username || !pin) {
+            setAlert(loginAlert, "Username dan PIN wajib diisi.", false);
+            if (loginCard) {
+              loginCard.classList.add("shake");
+              setTimeout(() => loginCard.classList.remove("shake"), 450);
+            }
+            return;
+          }
+
+          if (!Number.isFinite(capAns)) {
+            setAlert(loginAlert, "Jawaban captcha harus angka.", false);
+            return;
+          }
+
+          if (loginCaptchaAnswer === null || typeof loginCaptchaAnswer === "undefined") {
+            setAlert(loginAlert, "Captcha belum siap. Silakan refresh captcha.", false);
+            refreshLoginCaptcha();
+            return;
+          }
+
+          if (capAns !== loginCaptchaAnswer) {
+            setAlert(loginAlert, "Captcha salah. Silakan coba lagi.", false);
+            if (typeof showCaptchaError === "function") {
+              showCaptchaError("captcha-error", "Captcha salah. Silakan coba lagi.");
+            }
+            refreshLoginCaptcha();
+            return;
+          }
+
+          if (!safeGsRun()) {
+            setAlert(loginAlert, "Login hanya bisa digunakan di WebApp (/exec).", false);
+            return;
+          }
+
+          if (btnLogin) {
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Memverifikasi...`;
+          }
+
+          google.script.run
+            .withSuccessHandler(function (res) {
+              if (btnLogin) {
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
+              }
+
+              if (!res || res.status !== "success") {
+
+                loginAttempt++;
+
+                setAlert(loginAlert, (res && res.message) || "Login gagal.", false);
+                refreshLoginCaptcha();
+
+                if (loginAttempt >= 5) {
+
+                  setAlert(loginAlert,"Terlalu banyak percobaan login. Tunggu 5 detik.",false);
+
+                  if (btnLogin) {
+                    btnLogin.disabled = true;
+                  }
+
+                  setTimeout(function(){
+                    loginAttempt = 0;
+                    if (btnLogin) btnLogin.disabled = false;
+                  },5000);
+
+                }
+
+                return;
+              }
+
+              SESSION_TOKEN = res.token || "";
+              SESSION_USER = res.user || null;
+
+              saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
+              setLoggedInUI(SESSION_USER);
+              refreshIdleSession();
+
+              if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+            })
+            .withFailureHandler(function (err) {
+              console.error("authLogin failed:", err);
+              if (btnLogin) {
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
+              }
+              setAlert(loginAlert, "Login gagal. Coba lagi.", false);
+              refreshLoginCaptcha();
+            })
+            .authLogin(username, pin);
+        });
+      }
+
+      if (btnLogout) {
+        btnLogout.addEventListener("click", function () {
+          function resetUI() {
+            setLoggedOutUI();
+          }
+
+          if (!safeGsRun()) {
+            resetUI();
+            return;
+          }
+
+          google.script.run
+            .withSuccessHandler(resetUI)
+            .withFailureHandler(resetUI)
+            .authLogout(SESSION_TOKEN);
+        });
+      }
+
+      if (btnOpenPin) {
+        btnOpenPin.addEventListener("click", function () {
+          if (!SESSION_TOKEN) return;
+
+          if (pinForm) pinForm.reset();
+          hideAlert(pinAlert);
+          openModal(pinModal);
+
+          setTimeout(refreshPinCaptcha, 100);
+        });
+      }
+
+      if (btnClosePinModal) {
+        btnClosePinModal.addEventListener("click", function () {
+          closeModal(pinModal);
+        });
+      }
+
+      if (pinForm) {
+        pinForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          hideAlert(pinAlert);
+
+          const oldPin = ((pinOld && pinOld.value) || "").trim();
+          const newPin = ((pinNew && pinNew.value) || "").trim();
+          const newPin2 = ((pinNew2 && pinNew2.value) || "").trim();
+          const capAns = Number(((pinCaptchaAnswerInput && pinCaptchaAnswerInput.value) || "").trim());
+
+          if (!oldPin || !newPin || !newPin2) {
+            setAlert(pinAlert, "Semua field PIN wajib diisi.", false);
+            return;
+          }
+
+          if (newPin.length < 6) {
+            setAlert(pinAlert, "PIN baru minimal 6 karakter.", false);
+            return;
+          }
+
+          if (newPin !== newPin2) {
+            setAlert(pinAlert, "Ulangi PIN Baru tidak sama.", false);
+            return;
+          }
+
+          if (!Number.isFinite(capAns)) {
+            setAlert(pinAlert, "Jawaban captcha harus angka.", false);
+            return;
+          }
+
+          if (pinCaptchaAnswer === null || typeof pinCaptchaAnswer === "undefined") {
+            setAlert(pinAlert, "Captcha belum siap. Silakan refresh captcha.", false);
+            refreshPinCaptcha();
+            return;
+          }
+
+          if (capAns !== pinCaptchaAnswer) {
+            setAlert(pinAlert, "Captcha salah. Silakan coba lagi.", false);
+            if (typeof showCaptchaError === "function") {
+              showCaptchaError("pin-captcha-error", "Captcha salah. Silakan coba lagi.");
+            }
+            refreshPinCaptcha();
+            return;
+          }
+
+          if (!safeGsRun()) {
+            setAlert(pinAlert, "Fitur ini hanya bisa digunakan di WebApp (/exec).", false);
+            return;
+          }
+
+          const btnSavePin = document.getElementById("btn-save-pin");
+          if (btnSavePin) {
+            btnSavePin.disabled = true;
+            btnSavePin.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+          }
+
+          google.script.run
+            .withSuccessHandler(function (res) {
+              if (btnSavePin) {
+                btnSavePin.disabled = false;
+                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan PIN Baru`;
+              }
+
+              if (!res || res.status !== "success") {
+                setAlert(pinAlert, (res && res.message) || "Gagal mengubah PIN.", false);
+                refreshPinCaptcha();
+                return;
+              }
+
+              setAlert(pinAlert, res.message || "PIN berhasil diubah.", true);
+              refreshPinCaptcha();
+
+              setTimeout(function () {
+                closeModal(pinModal);
+              }, 900);
+            })
+            .withFailureHandler(function (err) {
+              console.error("authChangePin failed:", err);
+              if (btnSavePin) {
+                btnSavePin.disabled = false;
+                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan PIN Baru`;
+              }
+              setAlert(pinAlert, "Gagal mengubah PIN.", false);
+              refreshPinCaptcha();
+            })
+            .authChangePin(SESSION_TOKEN, oldPin, newPin);
+        });
+      }
+
+      function restoreSessionIfAny() {
+        const savedToken = getSessionTokenFromBrowser();
+        const savedUser = getSessionUserFromBrowser();
+
+        if (!savedToken || !safeGsRun()) {
+          closeModal(pinModal);
+          openModal(loginModal);
+          setTimeout(refreshLoginCaptcha, 120);
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || res.status !== "success") {
+              setLoggedOutUI();
+              return;
+            }
+
+            SESSION_TOKEN = savedToken;
+            SESSION_USER = (res && res.user) || savedUser || null;
+
+            saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
+            setLoggedInUI(SESSION_USER);
+            refreshIdleSession();
+
+            if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+          })
+          .withFailureHandler(function () {
+            setLoggedOutUI();
+          })
+          .authCheck(savedToken);
+      }
+
+      closeModal(pinModal);
+
+      if (loginModal) openModal(loginModal);
+
+      setTimeout(function () {
+        refreshLoginCaptcha();
+      }, 120);
+
+      restoreSessionIfAny();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initAuthModule);
+    } else {
+      initAuthModule();
+    }
+  })();
+</script>

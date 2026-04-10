@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Form PE Surveilans PD3I</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
+
+  <style>
+    <?!= include('style'); ?>
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans text-slate-800">
+
+  <?!= include('login'); ?>
+  <?!= include('pin'); ?>
+
+  <div id="app" class="max-w-6xl mx-auto bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden hidden">
+    <div class="bg-blue-600 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="text-center md:text-left">
+        <h2 class="text-2xl font-bold flex items-center justify-center md:justify-start gap-2">
+          <i class="fas fa-file-medical"></i> Form Surveilans PD3I
+        </h2>
+        <p class="text-blue-100 mt-1 text-sm font-medium uppercase tracking-wider">
+          Integrasi Data Real-Time • Fitur Edit • Keamanan PIN + Captcha
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div id="user-badge" class="hidden bg-white/15 border border-white/20 px-3 py-2 rounded-xl text-sm font-extrabold">
+          <i class="fas fa-user mr-2"></i><span id="user-badge-text">-</span>
+        </div>
+        <div id="admin-menu-wrap" class="relative hidden">
+          <button id="btn-admin-menu" type="button"
+            class="bg-amber-400 text-amber-950 hover:bg-amber-300 border border-amber-300 px-3 py-2 rounded-xl text-sm font-extrabold">
+            <i class="fas fa-user-shield mr-2"></i>Admin
+          </button>
+          <div id="admin-menu-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white text-slate-800 rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
+            <button id="btn-retry-sync" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 font-bold text-sm border-b border-slate-100">
+              <i class="fas fa-rotate-right mr-2 text-amber-600"></i>Retry Sync Pengampu
+            </button>
+            <button id="btn-retry-notify" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 font-bold text-sm border-b border-slate-100">
+              <i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Pengampu
+            </button>
+            <button id="btn-retry-telegram" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 font-bold text-sm border-b border-slate-100">
+              <i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Notifikasi Telegram
+            </button>
+            <button id="btn-dashboard" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 font-bold text-sm border-b border-slate-100">
+              <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>Dashboard Statistik
+            </button>
+            <button id="btn-export-csv" type="button" class="w-full text-left px-4 py-3 hover:bg-slate-50 font-bold text-sm">
+              <i class="fas fa-file-csv mr-2 text-green-600"></i>Export CSV
+            </button>          </div>
+        </div>
+        <button id="btn-open-pin" type="button"
+          class="bg-white/15 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-xl text-sm font-extrabold">
+          <i class="fas fa-key mr-2"></i>Ubah PIN
+        </button>
+        <button id="btn-logout" type="button"
+          class="bg-white text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-xl text-sm font-extrabold">
+          <i class="fas fa-right-from-bracket mr-2"></i>Logout
+        </button>
+      </div>
+    </div>
+
+    <div id="success-modal" class="fixed inset-0 z-[120] hidden items-center justify-center modal-backdrop">
+      <div class="w-full max-w-lg bg-white rounded-2xl p-6 md:p-8 modal-card mx-4">
+        <div class="text-center">
+          <div class="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-circle-check text-green-600 text-4xl"></i>
+          </div>
+          <h2 class="text-2xl font-extrabold text-slate-900">Data Berhasil Disimpan</h2>
+          <p id="success-modal-message" class="text-slate-600 mt-2 font-medium">
+            Data berhasil disimpan ke database.
+          </p>
+        </div>
+
+        <div class="mt-6 space-y-3">
+          <a id="btn-print-pdf" href="#" target="_blank"
+            class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-base py-3 rounded-xl shadow-md">
+            <i class="fas fa-file-pdf"></i> Cetak PDF
+          </a>
+
+          <button type="button" id="btn-new-entry"
+            class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-base py-3 rounded-xl">
+            Input Data Baru
+          </button>
+
+          <button type="button" id="btn-close-success"
+            class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-base py-3 rounded-xl">
+            Tetap di Halaman
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-6 md:p-8">
+      <div id="edit-badge" class="hidden mb-4 bg-yellow-300 text-yellow-900 px-4 py-2 rounded-xl font-extrabold text-sm inline-flex items-center gap-2 animate-pulse">
+        <i class="fas fa-pen-to-square"></i> MODE EDIT DATA
+      </div>
+
+      <div class="mb-8 bg-blue-50 p-5 rounded-lg border border-blue-200 shadow-sm flex flex-col md:flex-row gap-6 items-start">
+        <div class="w-full md:basis-[32%] md:max-w-[32%]">
+          <label for="form-selector" class="block text-sm font-bold text-blue-900 mb-2 uppercase tracking-wide">1. Pilih Jenis Penyakit:</label>
+          <select id="form-selector"
+            class="w-full bg-white border border-blue-300 text-slate-900 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 transition font-bold shadow-sm cursor-pointer">
+            <option value="">-- Pilih --</option>
+            <option value="MR">Campak / Rubella (MR)</option>
+            <option value="DIF">Difteri (DIF)</option>
+            <option value="PERT">Pertusis (PERT)</option>
+            <option value="TN">Tetanus Neonatorum (TN)</option>
+            <option value="AFP">Lumpuh Layuh Akut (AFP)</option>
+          </select>
+        </div>
+
+        <div id="search-container" class="w-full md:basis-[68%] md:max-w-[68%] hidden">
+          <label class="block text-sm font-bold text-blue-900 mb-2 uppercase tracking-wide">2. Cari / Edit Data:</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <input type="text" id="search-epid"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium"
+              placeholder="Nomor EPID">
+            <input type="text" id="search-nama"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium"
+              placeholder="Nama pasien">
+            <input type="date" id="search-tgl-lahir"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium">
+            <input type="text" id="search-orang-tua"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium"
+              placeholder="Nama orang tua / wali">
+            <input type="text" id="search-alamat"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium"
+              placeholder="Alamat / jalan / RT-RW">
+            <input type="text" id="search-kelurahan"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium"
+              placeholder="Kelurahan / desa">
+          </div>
+          <div class="flex flex-col md:flex-row gap-2 mt-2">
+            <button type="button" id="btn-search-epid"
+              class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg font-bold transition flex items-center gap-2">
+              <i class="fas fa-search"></i> Cari Data
+            </button>
+            <select id="search-sort"
+              class="bg-white border border-blue-300 text-slate-900 rounded-lg p-3 shadow-sm focus:ring-blue-500 font-medium min-w-[220px]">
+              <option value="updated_desc">Urutkan: Terbaru dulu</option>
+              <option value="name_asc">Urutkan: Nama A-Z</option>
+              <option value="name_desc">Urutkan: Nama Z-A</option>
+              <option value="birth_asc">Urutkan: Tanggal lahir lama → baru</option>
+              <option value="birth_desc">Urutkan: Tanggal lahir baru → lama</option>
+              <option value="epid_asc">Urutkan: EPID A-Z</option>
+              <option value="epid_desc">Urutkan: EPID Z-A</option>
+            </select>
+          </div>
+          <div id="search-results" class="hidden mt-3 border border-blue-200 rounded-lg bg-white overflow-hidden"></div>
+          <div class="text-xs text-blue-900/70 font-semibold mt-2">Bisa cari berdasarkan EPID, nama pasien, tanggal lahir, atau nama orang tua/wali.</div>
+        </div>
+      </div>
+
+      <div id="alert-box" class="hidden mb-6 p-4 rounded-lg text-sm font-bold border"></div>
+
+      <form id="dynamic-form" class="hidden space-y-8 pb-10">
+        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2">
+            <i class="fas fa-hospital-user text-blue-500"></i> Informasi Pelapor
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="pelapor-fields-container"></div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2">
+            <i class="fas fa-address-card text-blue-500"></i> Data Demografi Pasien
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="pasien-fields-container"></div>
+        </div>
+
+        <div class="bg-slate-50 p-6 rounded-lg border border-slate-300 shadow-inner">
+          <h3 class="text-xl font-bold text-blue-800 mb-4 border-b border-slate-300 pb-2 flex items-center gap-2" id="specific-title">
+            <i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik Kasus
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="specific-fields-container"></div>
+        </div>
+
+        <button type="submit" id="btn-submit"
+          class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-lg text-lg px-5 py-5 text-center transition flex justify-center items-center gap-2 shadow-lg">
+          <i class="fas fa-save"></i> Simpan Data ke Database
+        </button>
+
+        <button type="button" id="btn-cancel-edit"
+          class="hidden w-full mt-4 text-slate-600 bg-slate-200 hover:bg-slate-300 font-bold rounded-lg text-lg px-5 py-3 text-center transition">
+          Batal Edit / Reset Form
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard Modal (Req 6.1–6.7) -->
+  <div id="dashboard-modal" class="fixed inset-0 z-[110] hidden items-center justify-center modal-backdrop">
+    <div class="w-full max-w-3xl bg-white rounded-2xl p-6 md:p-8 modal-card mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik Kasus
+        </h2>
+        <button type="button" id="btn-close-dashboard" class="text-slate-400 hover:text-slate-600 text-xl">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-3 mb-5">
+        <select id="dashboard-dx" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
+          <option value="MR">Campak/Rubella (MR)</option>
+          <option value="DIF">Difteri (DIF)</option>
+          <option value="PERT">Pertusis (PERT)</option>
+          <option value="TN">Tetanus Neonatorum (TN)</option>
+          <option value="AFP">AFP</option>
+        </select>
+        <select id="dashboard-tahun" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold"></select>
+        <button type="button" id="btn-load-dashboard" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold">
+          <i class="fas fa-sync mr-1"></i> Muat Data
+        </button>
+      </div>
+      <div id="dashboard-content" class="text-sm text-slate-500 text-center py-8">Pilih DX dan tahun, lalu klik "Muat Data".</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <?!= include('utils.js'); ?>
+  <?!= include('config_common'); ?>
+  <?!= include('config_MR'); ?>
+  <?!= include('config_DIF'); ?>
+  <?!= include('config_PERT'); ?>
+  <?!= include('config_AFP'); ?>
+  <?!= include('config_TN'); ?>
+  <?!= include('config_registry'); ?>
+  <?!= include('auth.js'); ?>
+  <?!= include('app.js'); ?>
+  <?!= include('app.dashboard.js'); ?>
+</body>
+</html>

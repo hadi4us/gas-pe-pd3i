@@ -1,0 +1,671 @@
+function doGet(e) {
+  const action = String((e && e.parameter && e.parameter.action) || "").trim().toLowerCase();
+
+  if (action === "print") {
+    return handlePrintRequest_(e);
+  }
+
+  return HtmlService.createTemplateFromFile("index")
+    .evaluate()
+    .setTitle("Form PE Surveilans PD3I")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+
+    if (!e || !e.postData || !e.postData.contents) {
+      return responseJSON({ status: "error", message: "Payload kosong." });
+    }
+
+    let data = {};
+    try {
+      data = JSON.parse(e.postData.contents || "{}");
+    } catch (err) {
+      return responseJSON({ status: "error", message: "Payload JSON tidak valid." });
+    }
+
+    const result = saveFormPayload_(data);
+    return responseJSON(result);
+  } catch (err) {
+    return responseJSON({ status: "error", message: String(err) });
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
+  }
+}
+
+function saveFormData(data) {
+  const lock = LockService.getScriptLock();
+
+  try {
+    lock.waitLock(30000);
+    return saveFormPayload_(data || {});
+  } catch (err) {
+    return { status: "error", message: String(err) };
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
+  }
+}
+
+function _getRowObjectByEpid_(dx, epid) {
+  const sheet = getSheetOrThrow_(String(dx || "").trim().toUpperCase() + "_Raw");
+  const data = sheet.getDataRange().getValues();
+  if (!data || data.length < 2) throw new Error("Sheet raw kosong.");
+  const headers = data[0].map(h => String(h || "").trim());
+  const idxEpid = headers.indexOf("Nomor EPID");
+  if (idxEpid === -1) throw new Error("Kolom Nomor EPID tidak ditemukan.");
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idxEpid] || "").trim() === String(epid || "").trim()) {
+      const obj = {};
+      headers.forEach((h, j) => { obj[h] = data[i][j]; });
+      return obj;
+    }
+  }
+  throw new Error("EPID tidak ditemukan: " + epid);
+}
+
+function _requireAdminFromToken_(token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok || !sess.user) throw new Error(sess.message || "Sesi tidak valid.");
+  const role = String(sess.user.role || "").trim().toLowerCase();
+  if (role !== "admin") throw new Error("Aksi ini hanya untuk admin.");
+  return sess.user;
+}
+
+// ─── Daftar semua DX yang didukung ───────────────────────────────────────────
+const ALL_DX = ["MR", "DIF", "PERT", "TN", "AFP"];
+
+// ─── Batch_Processor ─────────────────────────────────────────────────────────
+/**
+ * Batch_Processor — mengelola eksekusi retry notifikasi dan sinkronisasi secara batch.
+ *
+ * Desain:
+ *   - Satu lock tunggal untuk seluruh batch (bukan per item)
+ *   - Baca sheet sekali per DX di awal (bukan per-iterasi)
+ *   - Cek elapsed > 25 detik → kembalikan status "PARTIAL"
+ *   - Kembalikan ringkasan { status, byDx, durationMs }
+ *
+ * Req 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7
+ */
+const Batch_Processor = (function () {
+
+  /**
+   * Kolom status dan nilai "sudah selesai" per batchType.
+   */
+  const BATCH_CONFIG = {
+    sync:     { statusCol: "Status Sinkronisasi Pengampu", doneValue: "SYNCED" },
+    telegram: { statusCol: "Status Notifikasi Telegram",   doneValue: "SENT"   },
+    notify:   { statusCol: "Status Notifikasi Pengampu",   doneValue: "SENT"   }
+  };
+
+  /**
+   * Proses satu item sesuai batchType (tanpa acquire lock sendiri).
+   * @param {string} batchType - "sync" | "telegram" | "notify"
+   * @param {string} dx
+   * @param {string} epid
+   * @param {Object} record - baris data sebagai objek header→nilai
+   * @returns {{ ok: boolean }}
+   */
+  function _processItem_(batchType, dx, epid, record) {
+    try {
+      const printUrl = String(record["Link PDF"] || "").trim();
+      if (batchType === "sync") {
+        const res = _syncPengampuSpreadsheet_(dx, record, { epid: epid }, printUrl);
+        const patch = {
+          "Nomor EPID": epid,
+          "Status Sinkronisasi Pengampu": res.synced ? "SYNCED" : (res.reason || "FAILED"),
+          "Synced At Pengampu": new Date(),
+          "Sync Target Pengampu": res.target || ""
+        };
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.synced };
+      }
+      if (batchType === "telegram") {
+        const pUrl = printUrl || safeGetPdfPrintUrl_(dx, epid, "");
+        const res = _sendTelegramPd3iNotification_(dx, record, { epid: epid }, pUrl);
+        const currentRetry = Number(record["Telegram Retry Count"] || 0) || 0;
+        const patch = {
+          "Nomor EPID": epid,
+          "Status Notifikasi Telegram": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Telegram Notified At": new Date(),
+          "Telegram Target": res.target || "",
+          "Telegram Retry Count": currentRetry + 1
+        };
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.sent };
+      }
+      if (batchType === "notify") {
+        const res = _sendPengampuNotification_(dx, record, { epid: epid }, printUrl);
+        const patch = {
+          "Nomor EPID": epid,
+          "Status Notifikasi Pengampu": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Notified At Pengampu": new Date(),
+          "Notified To Pengampu": res.to || ""
+        };
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.sent };
+      }
+      return { ok: false };
+    } catch (e) {
+      console.error("Batch_Processor._processItem_ error [" + batchType + "/" + dx + "/" + epid + "]:", e);
+      return { ok: false };
+    }
+  }
+
+  /**
+   * Jalankan batch retry untuk daftar DX dan batchType tertentu.
+   * Mengakuisisi SATU lock untuk seluruh batch.
+   *
+   * @param {string[]} dxList - daftar DX yang akan diproses
+   * @param {string} batchType - "sync" | "telegram" | "notify"
+   * @param {string} token - token sesi admin
+   * @returns {{ status: string, byDx: Object, durationMs: number }}
+   */
+  function runBatch(dxList, batchType, token) {
+    const startMs = Date.now();
+    const cfg = BATCH_CONFIG[batchType];
+    if (!cfg) return { status: "error", message: "batchType tidak dikenal: " + batchType, byDx: {}, durationMs: 0 };
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(30000);
+    } catch (lockErr) {
+      return { status: "error", message: "Gagal mendapatkan lock: " + String(lockErr), byDx: {}, durationMs: Date.now() - startMs };
+    }
+
+    const byDx = {};
+    let overallStatus = "success";
+
+    try {
+      _requireAdminFromToken_(token);
+
+      for (let di = 0; di < dxList.length; di++) {
+        const dx = String(dxList[di] || "").trim().toUpperCase();
+        if (!dx) continue;
+
+        // Cek elapsed sebelum mulai DX baru
+        if (Date.now() - startMs > 25000) {
+          overallStatus = "PARTIAL";
+          break;
+        }
+
+        // Baca sheet sekali di awal per DX (Req 3.1)
+        let values;
+        try {
+          const sheet = getSheetOrNull_(dx + "_Raw");
+          if (!sheet) continue;
+          values = sheet.getDataRange().getValues();
+        } catch (sheetErr) {
+          byDx[dx] = { total: 0, retried: 0, success: 0, failed: 0, error: String(sheetErr) };
+          continue;
+        }
+
+        if (!values || values.length < 2) {
+          byDx[dx] = { total: 0, retried: 0, success: 0, failed: 0 };
+          continue;
+        }
+
+        const headers = values[0].map(function (h) { return String(h || "").trim(); });
+        const idxEpid   = headers.indexOf("Nomor EPID");
+        const idxStatus = headers.indexOf(cfg.statusCol);
+
+        // Kolom status tidak ada → skip DX ini
+        if (idxEpid === -1 || idxStatus === -1) continue;
+
+        const total   = values.length - 1;
+        let retried   = 0;
+        let success   = 0;
+        let failed    = 0;
+        let partial   = false;
+
+        for (let i = 1; i < values.length; i++) {
+          // Cek elapsed setiap iterasi (Req 3.7)
+          if (Date.now() - startMs > 25000) {
+            overallStatus = "PARTIAL";
+            partial = true;
+            break;
+          }
+
+          const epid = String(values[i][idxEpid] || "").trim();
+          const statusVal = String(values[i][idxStatus] || "").trim().toUpperCase();
+          if (!epid || statusVal === cfg.doneValue) continue;
+
+          // Bangun objek record dari baris
+          const record = {};
+          headers.forEach(function (h, j) { record[h] = values[i][j]; });
+
+          retried += 1;
+          const res = _processItem_(batchType, dx, epid, record);
+          if (res.ok) success += 1; else failed += 1;
+        }
+
+        byDx[dx] = { total: total, retried: retried, success: success, failed: failed };
+        if (partial) break;
+      }
+    } catch (err) {
+      return {
+        status: "error",
+        message: String(err),
+        byDx: byDx,
+        durationMs: Date.now() - startMs
+      };
+    } finally {
+      try { lock.releaseLock(); } catch (e2) {}
+    }
+
+    return {
+      status: overallStatus,
+      byDx: byDx,
+      durationMs: Date.now() - startMs
+    };
+  }
+
+  return { runBatch: runBatch };
+})();
+
+// ─── Fungsi resolveLatestSavedMeta ───────────────────────────────────────────
+function resolveLatestSavedMeta(payload) {
+  const token = String((payload && payload.__token) || "").trim();
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) return { status: "error", message: sess.message || "Sesi habis." };
+
+  const dx = String((payload && payload.dx) || "").trim().toUpperCase();
+  if (!dx) return { status: "error", message: "dx wajib diisi." };
+
+  const sheet = getSheetOrThrow_(dx + "_Raw");
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return { status: "error", message: "Data belum ada." };
+
+  const headers = values[0].map(h => String(h || "").trim());
+  const idxEpid = headers.indexOf("Nomor EPID");
+  const idxNama = headers.indexOf("Nama");
+  const idxPelacakan = headers.indexOf("Tanggal Pelacakan");
+  const idxPdf = headers.indexOf("Link PDF");
+  if (idxEpid === -1 || idxNama === -1) return { status: "error", message: "Kolom meta belum lengkap." };
+
+  const targetNama = String((payload && payload["Nama"]) || "").trim();
+  const targetPelacakan = String((payload && payload["Tanggal Pelacakan"]) || "").trim();
+  const norm = (v) => String(v || "").trim().slice(0, 10);
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowNama = String(values[i][idxNama] || "").trim();
+    const rowPelacakan = idxPelacakan !== -1 ? String(values[i][idxPelacakan] || "").trim() : "";
+    if (targetNama && rowNama !== targetNama) continue;
+    if (targetPelacakan && rowPelacakan && norm(rowPelacakan) && norm(targetPelacakan) && norm(rowPelacakan) !== norm(targetPelacakan)) {
+      continue;
+    }
+    let epid = String(values[i][idxEpid] || "").trim();
+    if (!epid) {
+      epid = generateEpid_(dx);
+      if (idxEpid !== -1) sheet.getRange(i + 1, idxEpid + 1).setValue(epid);
+    }
+    let printUrl = idxPdf !== -1 ? String(values[i][idxPdf] || "").trim() : "";
+    if (!printUrl && epid) {
+      printUrl = safeGetPdfPrintUrl_(dx, epid, token);
+      if (idxPdf !== -1) sheet.getRange(i + 1, idxPdf + 1).setValue(printUrl || "");
+    }
+    return { status: "success", epid: epid, dx: dx, printUrl: printUrl };
+  }
+
+  return { status: "error", message: "Meta simpan terakhir tidak ditemukan." };
+}
+
+// ─── Single-item retry (tidak acquire lock sendiri; lock dikelola Batch_Processor) ──
+/**
+ * Retry sinkronisasi pengampu untuk satu EPID.
+ * Lock dikelola oleh pemanggil (Batch_Processor atau langsung dari admin).
+ * Req 15.4
+ */
+function retryPengampuSync(epid, dx, token) {
+  try {
+    _requireAdminFromToken_(token);
+    dx = String(dx || "MR").trim().toUpperCase();
+    const record = _getRowObjectByEpid_(dx, epid);
+    const printUrl = String(record["Link PDF"] || "").trim();
+    const syncPengampu = _syncPengampuSpreadsheet_(dx, record, { epid: epid }, printUrl);
+    const patch = {
+      "Nomor EPID": epid,
+      "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
+      "Synced At Pengampu": new Date(),
+      "Sync Target Pengampu": syncPengampu.target || ""
+    };
+    saveDxRecord_(dx, patch);
+    return { status: syncPengampu.synced ? "success" : "error", epid: epid, pengampuSync: syncPengampu };
+  } catch (err) {
+    return { status: "error", message: String(err), epid: epid };
+  }
+}
+
+/**
+ * Retry notifikasi Telegram untuk satu EPID.
+ * Lock dikelola oleh pemanggil.
+ * Req 15.3
+ */
+function retryTelegramPd3iNotification(epid, dx, token) {
+  try {
+    _requireAdminFromToken_(token);
+    dx = String(dx || "MR").trim().toUpperCase();
+    const record = _getRowObjectByEpid_(dx, epid);
+    const printUrl = String(record["Link PDF"] || "").trim() || safeGetPdfPrintUrl_(dx, epid, token);
+    const telegramNotify = _sendTelegramPd3iNotification_(dx, record, { epid: epid }, printUrl);
+    const currentRetry = Number(record["Telegram Retry Count"] || 0) || 0;
+    const patch = {
+      "Nomor EPID": epid,
+      "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
+      "Telegram Notified At": new Date(),
+      "Telegram Target": telegramNotify.target || "",
+      "Telegram Retry Count": currentRetry + 1
+    };
+    saveDxRecord_(dx, patch);
+    return { status: telegramNotify.sent ? "success" : "error", epid: epid, telegramNotification: telegramNotify };
+  } catch (err) {
+    return { status: "error", message: String(err), epid: epid };
+  }
+}
+
+/**
+ * Retry notifikasi email pengampu untuk satu EPID.
+ * Lock dikelola oleh pemanggil.
+ * Req 15.1
+ */
+function retryPengampuNotification(epid, dx, token) {
+  try {
+    _requireAdminFromToken_(token);
+    dx = String(dx || "MR").trim().toUpperCase();
+    const record = _getRowObjectByEpid_(dx, epid);
+    const printUrl = String(record["Link PDF"] || "").trim();
+    const notify = _sendPengampuNotification_(dx, record, { epid: epid }, printUrl);
+    const patch = {
+      "Nomor EPID": epid,
+      "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+      "Notified At Pengampu": new Date(),
+      "Notified To Pengampu": notify.to || ""
+    };
+    saveDxRecord_(dx, patch);
+    return { status: notify.sent ? "success" : "error", epid: epid, pengampuNotification: notify };
+  } catch (err) {
+    return { status: "error", message: String(err), epid: epid };
+  }
+}
+
+// ─── Batch retry (menggunakan Batch_Processor) ───────────────────────────────
+/**
+ * Retry semua pending sinkronisasi pengampu untuk semua DX (atau dxList tertentu).
+ * Req 3.1–3.7, 15.4, 15.6
+ *
+ * @param {string} token
+ * @param {string[]} [dxList] - opsional; default semua DX
+ * @returns {{ status, byDx, durationMs }}
+ */
+function retryAllPendingPengampuSync(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "sync", token);
+}
+
+/**
+ * Retry semua notifikasi Telegram yang gagal untuk semua DX (atau dxList tertentu).
+ * Req 3.1–3.7, 15.3, 15.6
+ *
+ * @param {string} token
+ * @param {string[]} [dxList] - opsional; default semua DX
+ * @returns {{ status, byDx, durationMs }}
+ */
+function retryAllFailedTelegramPd3iNotification(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "telegram", token);
+}
+
+/**
+ * Retry semua notifikasi email pengampu yang pending untuk semua DX (atau dxList tertentu).
+ * Req 3.1–3.7, 15.5, 15.6
+ *
+ * @param {string} token
+ * @param {string[]} [dxList] - opsional; default semua DX
+ * @returns {{ status, byDx, durationMs }}
+ */
+function retryAllPendingPengampuNotification(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "notify", token);
+}
+
+// ─── setupConfig ─────────────────────────────────────────────────────────────
+// Fungsi setupConfig(token, configMap) sudah tersedia via config.js.
+// Dapat dipanggil langsung dari frontend admin via google.script.run.setupConfig(...)
+// Req 5.6, 5.7 — tidak perlu didefinisikan ulang di sini.
+
+// ─── Helper upsert ke sheet pengampu ─────────────────────────────────────────
+function _upsertByEpidToSheet_(sheet, record) {
+  const headers = getTrimmedHeaders_(sheet);
+  const idxEpid = headers.indexOf("Nomor EPID");
+  if (idxEpid === -1) throw new Error("Sheet tujuan tidak punya kolom 'Nomor EPID'");
+
+  const targetEpid = String(record["Nomor EPID"] || "").trim();
+  if (!targetEpid) throw new Error("Nomor EPID kosong");
+
+  const rowData = headers.map(h => record[h] !== undefined ? record[h] : "");
+  const rowIndex = findRowByColumnValue_(sheet, idxEpid + 1, targetEpid);
+
+  if (rowIndex !== -1) {
+    sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+    return { updated: true, rowIndex, headersCount: headers.length };
+  }
+
+  sheet.appendRow(rowData);
+  return { updated: false, rowIndex: sheet.getLastRow(), headersCount: headers.length };
+}
+
+// ─── Sinkronisasi ke spreadsheet pengampu ────────────────────────────────────
+function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || "").trim().toUpperCase();
+    if (dx !== "MR") return { synced: false, reason: "SKIPPED_DX" };
+
+    const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
+    if (statusRouting !== "MATCHED") return { synced: false, reason: statusRouting || "UNMAPPED" };
+
+    const spreadsheetId = String(data["SpreadsheetId Pengampu"] || "").trim();
+    if (!spreadsheetId) return { synced: false, reason: "NO_SPREADSHEET_ID" };
+
+    const targetSs = SpreadsheetApp.openById(spreadsheetId);
+    let targetSheet = targetSs.getSheetByName("MR_Raw");
+    if (!targetSheet) targetSheet = targetSs.insertSheet("MR_Raw");
+
+    const sourceSheet = getSheetOrThrow_(dx + "_Raw");
+    const sourceHeaders = getTrimmedHeaders_(sourceSheet);
+    if (targetSheet.getLastRow() < 1 || targetSheet.getLastColumn() < 1) {
+      targetSheet.getRange(1, 1, 1, sourceHeaders.length).setValues([sourceHeaders]);
+    }
+
+    const record = Object.assign({}, data, {
+      "Nomor EPID": saved.epid,
+      "dx": dx,
+      "Link PDF": printUrl || data["Link PDF"] || ""
+    });
+
+    const currentTargetHeaders = getTrimmedHeaders_(targetSheet);
+    const missingHeaders = sourceHeaders.filter(h => h && !currentTargetHeaders.includes(h));
+    if (missingHeaders.length) {
+      targetSheet.getRange(1, currentTargetHeaders.length + 1, 1, missingHeaders.length).setValues([missingHeaders]);
+    }
+
+    const res = _upsertByEpidToSheet_(targetSheet, record);
+    return { synced: true, target: spreadsheetId, rowIndex: res.rowIndex, updated: !!res.updated, headersCount: res.headersCount };
+  } catch (err) {
+    return { synced: false, reason: String(err) };
+  }
+}
+
+// ─── Notifikasi Telegram (menggunakan Config_Manager, bukan konstanta hardcoded) ──
+/**
+ * Kirim notifikasi Telegram untuk kasus PD3I.
+ * Token dan Chat ID dibaca dari Config_Manager (Req 5.1, 5.2).
+ */
+function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || "").trim().toUpperCase();
+    if (dx !== "MR") return { sent: false, reason: "SKIPPED_DX" };
+
+    const botToken = Config_Manager.getConfig("TELEGRAM_BOT_TOKEN");
+    const chatId   = Config_Manager.getConfig("TELEGRAM_CHAT_ID");
+    if (!botToken || !chatId) return { sent: false, reason: "NOT_CONFIGURED" };
+
+    const lines = [
+      "📢 *Kasus MR baru tersimpan*",
+      "",
+      `*EPID:* ${saved.epid || "-"}`,
+      `*Nama:* ${data["Nama"] || "-"}`,
+      `*JK:* ${data["JK"] || "-"}`,
+      `*Kelurahan:* ${data["Kelurahan"] || "-"}`,
+      `*Kecamatan:* ${data["Kecamatan"] || "-"}`,
+      `*Puskesmas Pengampu:* ${data["Puskesmas Pengampu"] || "-"}`,
+      `*Routing:* ${data["Status Routing Pengampu"] || "-"}`,
+      `*Email Pengampu:* ${data["Status Notifikasi Pengampu"] || "-"}`,
+      `*Sync Pengampu:* ${data["Status Sinkronisasi Pengampu"] || "-"}`
+    ];
+    if (printUrl) lines.push(`*PDF:* ${printUrl}`);
+
+    const resp = UrlFetchApp.fetch("https://api.telegram.org/bot" + botToken + "/sendMessage", {
+      method: "post",
+      muteHttpExceptions: true,
+      payload: {
+        chat_id: chatId,
+        text: lines.join("\n"),
+        parse_mode: "Markdown"
+      }
+    });
+    const code = resp.getResponseCode();
+    const body = String(resp.getContentText() || "");
+    if (code >= 200 && code < 300) return { sent: true, target: chatId, responseCode: code };
+    return { sent: false, reason: "HTTP_" + code + ": " + body, target: chatId };
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+// ─── Notifikasi email pengampu ────────────────────────────────────────────────
+function _sendPengampuNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || "").trim().toUpperCase();
+    if (dx !== "MR") return { sent: false, reason: "SKIPPED_DX" };
+
+    const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
+    if (statusRouting !== "MATCHED") return { sent: false, reason: statusRouting || "UNMAPPED" };
+
+    const recipients = [];
+    [data["Email Petugas Pengampu"], data["Email Kapus Pengampu"]].forEach(v => {
+      String(v || "").split(";").map(x => x.trim()).filter(Boolean).forEach(x => recipients.push(x));
+    });
+    const uniqueRecipients = Array.from(new Set(recipients));
+    if (!uniqueRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
+
+    const subject = `[MR][${saved.epid}] Kasus baru wilayah ampuan ${data["Kelurahan"] || ""}`;
+    const body = [
+      "Notifikasi kasus MR wilayah ampuan",
+      "",
+      `EPID: ${saved.epid}`,
+      `Nama: ${data["Nama"] || "-"}`,
+      `JK: ${data["JK"] || "-"}`,
+      `Tanggal Lahir: ${data["Tanggal Lahir"] || "-"}`,
+      `Alamat: ${data["Alamat"] || "-"}`,
+      `Kelurahan: ${data["Kelurahan"] || "-"}`,
+      `Kecamatan: ${data["Kecamatan"] || "-"}`,
+      `Faskes pelapor: ${data["Nama unit pelapor"] || "-"}`,
+      `Tanggal mulai ruam: ${data["Tanggal mulai ruam"] || "-"}`,
+      `Tanggal pelacakan: ${data["Tanggal Pelacakan"] || "-"}`,
+      `Puskesmas pengampu: ${data["Puskesmas Pengampu"] || "-"}`,
+      printUrl ? `Link PDF: ${printUrl}` : ""
+    ].filter(Boolean).join("\n");
+
+    MailApp.sendEmail({
+      to: uniqueRecipients.join(","),
+      subject: subject,
+      body: body,
+      name: "Jarvis Surveilans PD3I"
+    });
+
+    return { sent: true, to: uniqueRecipients.join(",") };
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+// ─── Validasi akses tulis ─────────────────────────────────────────────────────
+function _requireWriteAccessFromSession_(sess) {
+  if (!sess || !sess.user) throw new Error("Sesi tidak valid.");
+  const role = String(sess.user.role || "").trim().toLowerCase();
+  if (role === "viewer") throw new Error("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menambah/mengubah data.");
+  return role || "petugas";
+}
+
+// ─── saveFormPayload_ ─────────────────────────────────────────────────────────
+function saveFormPayload_(data) {
+  const token = String(data.__token || "").trim();
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) {
+    return { status: "error", message: sess.message || "Sesi habis. Silakan login ulang." };
+  }
+  _requireWriteAccessFromSession_(sess);
+
+  const dx = String(data.dx || "").trim().toUpperCase();
+  if (!dx) {
+    return { status: "error", message: "dx wajib diisi." };
+  }
+
+  const saved = saveDxRecord_(dx, data);
+  const printUrl = safeGetPdfPrintUrl_(dx, saved.epid, token);
+  try {
+    const sheet = getSheetOrThrow_(dx + "_Raw");
+    const headers = getTrimmedHeaders_(sheet);
+    const idxEpid = headers.indexOf("Nomor EPID");
+    const idxPdf = headers.indexOf("Link PDF");
+    if (saved.rowIndex && idxEpid !== -1) sheet.getRange(saved.rowIndex, idxEpid + 1).setValue(saved.epid || "");
+    if (saved.rowIndex && idxPdf !== -1) sheet.getRange(saved.rowIndex, idxPdf + 1).setValue(printUrl || "");
+  } catch (persistErr) {
+    console.warn("Persist EPID/Link PDF setelah save gagal:", persistErr);
+  }
+  let savedRecord = data;
+  try {
+    savedRecord = _getRowObjectByEpid_(dx, saved.epid);
+  } catch (e) {
+    savedRecord = data;
+  }
+  const notify = _sendPengampuNotification_(dx, savedRecord, saved, printUrl);
+  const syncPengampu = _syncPengampuSpreadsheet_(dx, savedRecord, saved, printUrl);
+  const telegramNotify = _sendTelegramPd3iNotification_(dx, savedRecord, saved, printUrl);
+
+  if (dx === "MR") {
+    const notifyPatch = {
+      "Nomor EPID": saved.epid,
+      "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+      "Notified At Pengampu": new Date(),
+      "Notified To Pengampu": notify.to || "",
+      "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
+      "Synced At Pengampu": new Date(),
+      "Sync Target Pengampu": syncPengampu.target || "",
+      "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
+      "Telegram Notified At": new Date(),
+      "Telegram Target": telegramNotify.target || "",
+      "Telegram Retry Count": telegramNotify.sent ? 0 : 0
+    };
+    try {
+      saveDxRecord_(dx, notifyPatch);
+    } catch (e) {
+      // jangan gagalkan save utama hanya karena log status notifikasi/sinkronisasi gagal ditulis
+    }
+  }
+
+  return {
+    status: "success",
+    message: saved.isUpdate
+      ? "Data EPID " + saved.epid + " berhasil diperbarui!"
+      : "Data baru berhasil disimpan!",
+    epid: saved.epid,
+    dx: dx,
+    printUrl: printUrl,
+    pengampuNotification: notify,
+    pengampuSync: syncPengampu,
+    telegramNotification: telegramNotify
+  };
+}

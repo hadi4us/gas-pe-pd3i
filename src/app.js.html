@@ -1,0 +1,2445 @@
+<script>
+  // ============================================================
+  // APP.JS.HTML — FINAL STABLE
+  // ============================================================
+
+  window.rsChoicesInstance = window.rsChoicesInstance || null;
+
+  // ============================================================
+  // RENDER FIELD
+  // ============================================================
+  function generateHTML(field) {
+    if (field.type === "header") {
+      return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
+    }
+
+    const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 lg:col-span-3" : "";
+    const showIfAttr = field.showIf
+      ? `data-parent="${field.showIf.field}" data-parent-vals='${JSON.stringify(field.showIf.values)}' data-required="${field.required ? "true" : "false"}"`
+      : "";
+
+    const wrapperClass = `${widthClass} field-wrapper ${field.showIf ? "hidden" : ""}`;
+    const cls = `border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
+      field.readonly
+        ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
+        : "bg-white focus:ring-blue-500 focus:border-blue-500"
+    }`;
+    const requiredAttr = (field.required && !field.showIf) ? "required" : "";
+
+    if (field.type === "dynamic_table") {
+      let tableDef = field;
+      if (field.id === "Riwayat Imunisasi") tableDef = getImunisasiSectionDefinition();
+      if (field.id === "Kontak Erat") tableDef = getContactSectionDefinition();
+
+      const columns = tableDef.columns || [];
+      let extraHtml = "";
+
+      if (field.id === "Riwayat Imunisasi") {
+        extraHtml = `
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <div class="text-xs font-extrabold uppercase tracking-wide text-blue-800">Kesimpulan Status Imunisasi</div>
+              <div id="imun-summary-text" class="mt-2 text-lg font-black text-blue-900">Belum dinilai</div>
+              <div id="imun-summary-subtext" class="mt-1 text-xs font-semibold text-blue-700">
+                Menunggu data tanggal lahir / tanggal pelacakan / kelas
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Jumlah Dosis sesuai jadwal</div>
+              <div id="imun-summary-due" class="mt-2 text-2xl font-black text-slate-900">0</div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Sudah Dijawab "Ya"</div>
+              <div id="imun-summary-yes" class="mt-2 text-2xl font-black text-slate-900">0</div>
+            </div>
+          </div>
+          <input type="hidden" id="Kesimpulan Status Imunisasi" name="Kesimpulan Status Imunisasi" value="">
+        `;
+      }
+
+      return `<div class="${widthClass} bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-wide">${field.label}</label>
+          <button type="button" onclick="addDynamicRow('${field.id}')"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-extrabold shadow-md hover:bg-blue-700 transition">
+            <i class="fas fa-plus mr-2"></i> Tambah
+          </button>
+        </div>
+        <div class="table-container overflow-x-auto w-full border rounded-lg border-slate-200">
+          <table class="w-full text-sm text-left text-slate-500" data-dynamic-table="${field.id}">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
+              <tr>
+                ${columns.map(c => `<th class="px-2 py-4 text-xs font-extrabold text-slate-600">${c.name}</th>`).join("")}
+                <th class="px-2 py-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${field.id}"></tbody>
+          </table>
+        </div>
+        ${extraHtml}
+      </div>`;
+    }
+
+    if (field.type === "geo_button") {
+      return `<div class="${widthClass}">
+        <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${field.label}</label>
+        <div class="flex flex-col md:flex-row gap-3">
+          <button type="button" id="btn-ambil-lokasi"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
+            <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
+          </button>
+          <div id="geo-status"
+            class="flex-1 px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">
+            Klik tombol untuk mengambil titik koordinat.
+          </div>
+        </div>
+      </div>`;
+    }
+
+    let inputHtml = "";
+
+    if (field.type === "select" || field.type === "search_select") {
+      inputHtml = `<select id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr}>
+        <option value="">-- Pilih --</option>
+        ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
+      </select>`;
+    } else if (field.type === "textarea") {
+      inputHtml = `<textarea id="${field.id}" name="${field.id}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""}></textarea>`;
+    } else {
+      const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
+      let maxAttr = field.max ? `max="${field.max}"` : "";
+
+      if (field.id === "Tanggal Lahir") {
+        const today = new Date().toISOString().split("T")[0];
+        maxAttr = `max="${today}"`;
+      }
+
+      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} step="any">`;
+    }
+
+    return `<div class="${wrapperClass}" ${showIfAttr}>
+      <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">
+        ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+      </label>
+      ${inputHtml}
+    </div>`;
+  }
+
+  function renderSectionTitle(title) {
+    return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${title}</div>`;
+  }
+
+  // ============================================================
+  // DYNAMIC TABLE DEFINITIONS
+  // ============================================================
+  function getContactSectionDefinition() {
+    if (typeof CONTACT_SECTION !== "undefined") return CONTACT_SECTION;
+    return {
+      type: "dynamic_table",
+      id: "Kontak Erat",
+      label: "Daftar Kontak Erat",
+      fullWidth: true,
+      columns: [
+        { name: "Nama", type: "text", width: "w-40" },
+        { name: "Tanggal Lahir", type: "date", width: "w-36" },
+        { name: "Umur", type: "text", readonly: true, width: "w-40" },
+        { name: "Hub dgn Kasus", type: "text", width: "w-40" },
+        { name: "Status Imunisasi", type: "select", width: "w-40", options: ["Lengkap", "Tidak lengkap", "Tidak tahu"] },
+        { name: "Kondisi", type: "select", width: "w-40", options: ["Sehat", "Demam", "Ruam", "Suspek Campak", "Suspek Rubella", "Meninggal"] }
+      ]
+    };
+  }
+
+  function getImunisasiSectionDefinition() {
+    return {
+      type: "dynamic_table",
+      id: "Riwayat Imunisasi",
+      label: "Daftar Riwayat Imunisasi",
+      fullWidth: true,
+      columns: [
+        { name: "Jenis Imunisasi", type: "text", width: "w-56", readonly: true },
+        { name: "Status", type: "select", width: "w-36", options: ["Ya", "Tidak", "Belum cukup umur", "Tidak sesuai sasaran"] },
+        { name: "Tanggal", type: "date", width: "w-32" },
+        { name: "Sumber Informasi", type: "select", width: "w-44", options: ["Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+        { name: "Keterangan", type: "text", width: "w-44" }
+      ]
+    };
+  }
+
+  function getDynamicTableDefinition(tableId) {
+    if (tableId === "Riwayat Imunisasi") return getImunisasiSectionDefinition();
+    if (tableId === "Kontak Erat") return getContactSectionDefinition();
+    return null;
+  }
+
+  // ============================================================
+  // DYNAMIC ROWS
+  // ============================================================
+  window.addDynamicRow = function(tableId, presetRow) {
+    const tbody = document.getElementById(`tbody-${tableId}`);
+    if (!tbody) return;
+
+    const def = getDynamicTableDefinition(tableId);
+    if (!def || !Array.isArray(def.columns)) return;
+
+    const tr = document.createElement("tr");
+    tr.className = "bg-white border-b hover:bg-slate-50 transition";
+
+    if (presetRow && presetRow.__kode) tr.dataset.kodeImun = presetRow.__kode;
+
+    let rowHtml = "";
+    def.columns.forEach(col => {
+      const cls = `${col.readonly ? "bg-slate-100 cursor-not-allowed font-extrabold" : "bg-slate-50"} border border-slate-300 text-xs rounded block w-full p-1.5 ${col.width || ""}`;
+      const value = presetRow && presetRow[col.name] !== undefined ? String(presetRow[col.name]) : "";
+
+      if (["text", "date", "number", "tel", "email"].includes(col.type)) {
+        rowHtml += `<td class="px-2 py-2">
+          <input type="${col.type}" data-name="${col.name}" class="${cls}" value="${value.replace(/"/g, '&quot;')}" ${col.readonly ? 'readonly tabindex="-1"' : ""}>
+        </td>`;
+      } else {
+        const opts = (col.options || []).map(o => `<option value="${o}" ${o === value ? "selected" : ""}>${o}</option>`).join("");
+        rowHtml += `<td class="px-2 py-2">
+          <select data-name="${col.name}" class="${cls}">
+            <option value="">-</option>${opts}
+          </select>
+        </td>`;
+      }
+    });
+
+    rowHtml += `<td class="px-2 py-2 text-center">
+      <button type="button" onclick="removeDynamicRow(this, '${tableId}')" class="text-red-400 hover:text-red-600 p-2">
+        <i class="fas fa-trash"></i>
+      </button>
+    </td>`;
+
+    tr.innerHTML = rowHtml;
+    tbody.appendChild(tr);
+
+    const tglLahirInput = tr.querySelector('input[data-name="Tanggal Lahir"]');
+    const umurInput = tr.querySelector('input[data-name="Umur"]');
+
+    if (tglLahirInput && umurInput) {
+      const updateUmurKontakErat = (hardValidate) => {
+        const rawDob = String(tglLahirInput.value || "").trim();
+        const refValue = document.getElementById("Tanggal Pelacakan")?.value || "";
+
+        if (!isCompleteDateValue(rawDob)) {
+          umurInput.value = "";
+          return;
+        }
+
+        const res = validateBirthDateEpi(
+          rawDob,
+          isCompleteDateValue(refValue) ? refValue : ""
+        );
+
+        if (!res.ok) {
+          umurInput.value = "";
+          if (hardValidate) {
+            tglLahirInput.value = "";
+            showTopAlert(res.message, false);
+          }
+          return;
+        }
+
+        umurInput.value = res.ageText || "";
+      };
+
+      tglLahirInput.addEventListener("change", function() {
+        updateUmurKontakErat(false);
+      });
+
+      tglLahirInput.addEventListener("blur", function() {
+        updateUmurKontakErat(true);
+      });
+    }
+
+    if (tableId === "Riwayat Imunisasi") {
+      const statusSelect = tr.querySelector('select[data-name="Status"]');
+      if (statusSelect) statusSelect.addEventListener("change", updateImunisasiSummary);
+    }
+  };
+
+  window.removeDynamicRow = function(btn, tableId) {
+    const tr = btn.closest("tr");
+    if (tr) tr.remove();
+    if (tableId === "Riwayat Imunisasi") updateImunisasiSummary();
+  };
+
+  function addDefaultRowsForDynamicTables() {
+    document.querySelectorAll("table[data-dynamic-table]").forEach(tbl => {
+      const id = tbl.getAttribute("data-dynamic-table");
+      if (id === "Riwayat Imunisasi") return;
+      const tbody = document.getElementById(`tbody-${id}`);
+      if (tbody && tbody.children.length === 0) addDynamicRow(id);
+    });
+  }
+
+  // ============================================================
+  // GEOLOCATION
+  // ============================================================
+  function initGeoButton() {
+    const btn = document.getElementById("btn-ambil-lokasi");
+    const latEl = document.getElementById("Latitude");
+    const lonEl = document.getElementById("Longitude");
+    const statusEl = document.getElementById("geo-status");
+
+    if (!btn || !latEl || !lonEl || !statusEl) return;
+    if (btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+
+    btn.addEventListener("click", function() {
+      if (!navigator.geolocation) {
+        statusEl.textContent = "Geolocation tidak didukung di perangkat/browser ini.";
+        statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+        return;
+      }
+
+      statusEl.textContent = "Sedang mengambil lokasi...";
+      statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
+
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          latEl.value = lat;
+          lonEl.value = lon;
+          statusEl.textContent = `Lokasi berhasil diambil. Lat: ${lat}, Lon: ${lon}`;
+          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
+        },
+        function(error) {
+          let msg = "Gagal mengambil lokasi.";
+          if (error.code === 1) msg = "Izin lokasi ditolak.";
+          else if (error.code === 2) msg = "Lokasi tidak tersedia.";
+          else if (error.code === 3) msg = "Permintaan lokasi timeout.";
+          statusEl.textContent = msg;
+          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    });
+  }
+
+  // ============================================================
+  // WILAYAH
+  // ============================================================
+  function initWilayahDropdowns() {
+    fetch(`${API_WILAYAH_BASE}/provinces.json`)
+      .then(res => res.json())
+      .then(data => {
+        const provPelapor = document.getElementById("Provinsi");
+        const provPasien = document.getElementById("Provinsi Pasien");
+
+        if (provPelapor) {
+          provPelapor.innerHTML = '<option value="">Pilih Provinsi</option>';
+          data.forEach(p => {
+            provPelapor.innerHTML += `<option value="${p.name}" data-id="${p.id}">${p.name}</option>`;
+          });
+        }
+
+        if (provPasien) {
+          provPasien.innerHTML = '<option value="">Pilih Provinsi</option>';
+          data.forEach(p => {
+            provPasien.innerHTML += `<option value="${p.name}" data-id="${p.id}">${p.name}</option>`;
+          });
+        }
+      })
+      .catch(err => console.error("load provinces failed:", err));
+  }
+
+  // ============================================================
+  // REF FASKES
+  // ============================================================
+  window.loadFaskesRealtime = function(selectedUnitName, forceReload) {
+    if (!safeGsRun() || !SESSION_TOKEN) return;
+
+    const hasCache = Array.isArray(MASTER_FASKES) && MASTER_FASKES.length > 0;
+    if (hasCache && !forceReload) {
+      const src = document.getElementById("Sumber Laporan");
+      const currentSelected =
+        selectedUnitName ||
+        document.getElementById("Nama unit pelapor")?.value ||
+        "";
+
+      if (src && src.value) {
+        initChoices(src.value, currentSelected);
+      }
+
+      if (document.getElementById("Nama Rumah Sakit")) {
+        const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
+        initChoicesRumahSakit(currentRs);
+      }
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(data) {
+        MASTER_FASKES = Array.isArray(data) ? data : [];
+
+        const src = document.getElementById("Sumber Laporan");
+        const currentSelected =
+          selectedUnitName ||
+          document.getElementById("Nama unit pelapor")?.value ||
+          "";
+
+        if (src && src.value) {
+          initChoices(src.value, currentSelected);
+        }
+
+        if (document.getElementById("Nama Rumah Sakit")) {
+          const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
+          initChoicesRumahSakit(currentRs);
+        }
+      })
+      .withFailureHandler(function(err) {
+        console.error("getFaskesFromSheet failed:", err);
+        MASTER_FASKES = [];
+      })
+      .getFaskesFromSheet(SESSION_TOKEN);
+  };
+
+  function initChoices(jenis, selectedValue) {
+    const selectEl = document.getElementById("Nama unit pelapor");
+    if (!selectEl) return;
+
+    const keepValue = String(selectedValue || "").trim();
+
+    if (choicesInstance) {
+      try { choicesInstance.destroy(); } catch (e) {}
+      choicesInstance = null;
+    }
+
+    selectEl.disabled = false;
+    selectEl.innerHTML = '<option value="">-- Pilih Unit --</option>';
+
+    const upper = String(jenis || "").trim().toUpperCase();
+
+    if (!upper) {
+      selectEl.disabled = true;
+      selectEl.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
+    } else if (!["MASYARAKAT", "LAINNYA"].includes(upper)) {
+      const filtered = (MASTER_FASKES || []).filter(f => String(f.jenis || "").trim().toUpperCase() === upper);
+
+      filtered.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.nama;
+        opt.textContent = f.nama;
+        if (f.key) opt.setAttribute("data-key", f.key);
+        selectEl.appendChild(opt);
+      });
+
+      if (filtered.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "(Tidak ada data REF_FASKES untuk jenis ini)";
+        selectEl.appendChild(opt);
+      }
+    } else {
+      const opt = document.createElement("option");
+      opt.value = upper;
+      opt.textContent = upper;
+      selectEl.appendChild(opt);
+    }
+
+    choicesInstance = new Choices(selectEl, {
+      searchEnabled: true,
+      itemSelectText: "",
+      shouldSort: false,
+      placeholder: true,
+      placeholderValue: "-- Pilih Unit --",
+      searchPlaceholderValue: "Cari unit..."
+    });
+
+    selectEl.removeAttribute("required");
+
+    if (keepValue) {
+      setTimeout(() => {
+        try {
+          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
+          if (exists) {
+            choicesInstance.setChoiceByValue(keepValue);
+          }
+        } catch (e) {
+          console.warn("Gagal restore Nama unit pelapor:", e);
+        }
+      }, 80);
+    }
+  }
+
+  function initChoicesRumahSakit(selectedValue) {
+    const selectEl = document.getElementById("Nama Rumah Sakit");
+    if (!selectEl) return;
+
+    const keepValue = String(selectedValue || "").trim();
+
+    if (rsChoicesInstance) {
+      try { rsChoicesInstance.destroy(); } catch (e) {}
+      rsChoicesInstance = null;
+    }
+
+    selectEl.disabled = false;
+    selectEl.innerHTML = '<option value="">-- Pilih Rumah Sakit --</option>';
+
+    const filtered = (MASTER_FASKES || []).filter(f =>
+      String(f.jenis || "").trim().toUpperCase() === "RUMAH SAKIT"
+    );
+
+    filtered.forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f.nama;
+      opt.textContent = f.nama;
+      if (f.key) opt.setAttribute("data-key", f.key);
+      selectEl.appendChild(opt);
+    });
+
+    rsChoicesInstance = new Choices(selectEl, {
+      searchEnabled: true,
+      itemSelectText: "",
+      shouldSort: false,
+      placeholder: true,
+      placeholderValue: "-- Pilih Rumah Sakit --",
+      searchPlaceholderValue: "Cari rumah sakit..."
+    });
+
+    selectEl.removeAttribute("required");
+
+    if (keepValue) {
+      setTimeout(() => {
+        try {
+          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
+          if (exists) {
+            rsChoicesInstance.setChoiceByValue(keepValue);
+          }
+        } catch (e) {
+          console.warn("Gagal restore Nama Rumah Sakit:", e);
+        }
+      }, 120);
+    }
+  }
+
+  // ============================================================
+  // REF_IMUN
+  // ============================================================
+  const HARDCODED_IMUNISASI_SOURCE = "fallback-hardcoded";
+  const HARDCODED_IMUNISASI = [
+    { KodeImunisasi: "BCG", LabelImunisasi: "BCG", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 1, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "BCG maksimal sampai usia 1 tahun" },
+    { KodeImunisasi: "OPV1", LabelImunisasi: "OPV 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 1, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "OPV2", LabelImunisasi: "OPV 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 2, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "OPV3", LabelImunisasi: "OPV 3", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 3, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "OPV4", LabelImunisasi: "OPV 4", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 4, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "DPT_HB_HIB_1", LabelImunisasi: "DPT-HB-HIB 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 2, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "DPT_HB_HIB_2", LabelImunisasi: "DPT-HB-HIB 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 3, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "DPT_HB_HIB_3", LabelImunisasi: "DPT-HB-HIB 3", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 4, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "ROTAVIRUS_1", LabelImunisasi: "ROTAVIRUS 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 2, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "ROTAVIRUS_2", LabelImunisasi: "ROTAVIRUS 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 3, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "ROTAVIRUS_3", LabelImunisasi: "ROTAVIRUS 3", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 4, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "PCV1", LabelImunisasi: "PCV 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 2, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "PCV2", LabelImunisasi: "PCV 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 3, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "IPV1", LabelImunisasi: "IPV 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 4, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "MR1", LabelImunisasi: "MR 1", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 9, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "IPV2", LabelImunisasi: "IPV 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 9, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "PCV3", LabelImunisasi: "PCV 3", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 12, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "DPT_HB_HIB_4", LabelImunisasi: "DPT-HB-HIB 4", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 18, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "MR2", LabelImunisasi: "MR 2", Aktif: "YA", BasisValidasi: "UMUR", UmurMinHari: 0, UmurMinBulan: 18, UmurMinTahun: 0, JKTarget: "SEMUA", ButuhSekolah: "TIDAK", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran" },
+    { KodeImunisasi: "DT_KLS1", LabelImunisasi: "DT (Kelas 1 SD)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 1, KelasMax: 1, JKTarget: "SEMUA", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas" },
+    { KodeImunisasi: "MR3_KLS1", LabelImunisasi: "MR 3 (Kelas 1 SD)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 1, KelasMax: 1, JKTarget: "SEMUA", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas" },
+    { KodeImunisasi: "TD_KLS2", LabelImunisasi: "Td 1 (Kelas 2 SD)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 2, KelasMax: 2, JKTarget: "SEMUA", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas" },
+    { KodeImunisasi: "TD_KLS5", LabelImunisasi: "Td 2 (Kelas 5 SD)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 5, KelasMax: 5, JKTarget: "SEMUA", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas" },
+    { KodeImunisasi: "HPV_KLS5", LabelImunisasi: "HPV (Kelas 5 khusus perempuan)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 5, KelasMax: 5, JKTarget: "P", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas dan jenis kelamin" },
+    { KodeImunisasi: "HPV_KLS6", LabelImunisasi: "HPV (Kelas 6 khusus perempuan)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 6, KelasMax: 6, JKTarget: "P", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas dan jenis kelamin" },
+    { KodeImunisasi: "HPV_KLS9", LabelImunisasi: "HPV (Kelas 9 khusus perempuan)", Aktif: "YA", BasisValidasi: "KELAS", KelasMin: 9, KelasMax: 9, JKTarget: "P", ButuhSekolah: "YA", StatusDiBawahUmur: "Belum cukup umur", StatusDiLuarSasaran: "Tidak sesuai sasaran", Catatan: "Validasi utama berdasar kelas dan jenis kelamin" }
+  ];
+
+  function loadRefImunisasi() {
+    if (!safeGsRun() || !SESSION_TOKEN) {
+      REF_IMUN = HARDCODED_IMUNISASI.map(item => ({ ...item, __source: HARDCODED_IMUNISASI_SOURCE }));
+      return Promise.resolve(REF_IMUN);
+    }
+
+    return new Promise((resolve) => {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          REF_IMUN = Array.isArray(data) && data.length
+            ? data.map(item => ({ ...item, __source: "REF_IMUN" }))
+            : HARDCODED_IMUNISASI.map(item => ({ ...item, __source: HARDCODED_IMUNISASI_SOURCE }));
+          resolve(REF_IMUN);
+        })
+        .withFailureHandler(function(err) {
+          console.error("getRefImunisasi failed:", err);
+          REF_IMUN = HARDCODED_IMUNISASI.map(item => ({ ...item, __source: HARDCODED_IMUNISASI_SOURCE }));
+          resolve(REF_IMUN);
+        })
+        .getRefImunisasi(SESSION_TOKEN);
+    });
+  }
+
+
+  function isPcvCode(kode) {
+    return ["PCV1", "PCV2", "PCV3"].includes(String(kode || "").trim().toUpperCase());
+  }
+
+  function collectExistingImunisasiState(tbody) {
+    const map = {};
+    if (!tbody) return map;
+
+    Array.from(tbody.querySelectorAll("tr")).forEach(row => {
+      const kode = String(row.dataset.kodeImun || "").trim().toUpperCase();
+      if (!kode) return;
+      const status = row.querySelector('select[data-name="Status"]')?.value || "";
+      const tanggal = row.querySelector('input[data-name="Tanggal"]')?.value || "";
+      const sumber = row.querySelector('select[data-name="Sumber Informasi"]')?.value || "";
+      const keterangan = row.querySelector('input[data-name="Keterangan"]')?.value || "";
+      const statusOrigin = String(row.dataset.statusOrigin || "").trim().toLowerCase();
+      const isManual = statusOrigin === "manual" || ["YA", "TIDAK"].includes(String(status).trim().toUpperCase()) || !!tanggal || !!sumber;
+
+      map[kode] = {
+        kode,
+        status,
+        tanggal,
+        sumber,
+        keterangan,
+        statusOrigin: isManual ? "manual" : (statusOrigin || "auto")
+      };
+    });
+
+    return map;
+  }
+
+  function getRuleMap() {
+    const map = {};
+    (Array.isArray(REF_IMUN) ? REF_IMUN : []).forEach(rule => {
+      const kode = String(rule?.KodeImunisasi || "").trim().toUpperCase();
+      if (kode) map[kode] = rule;
+    });
+    return map;
+  }
+
+  function isAutoLockedStatus(status) {
+    const s = String(status || "").trim();
+    return s === "Belum cukup umur" || s === "Tidak sesuai sasaran";
+  }
+
+  function shouldPreserveManualImunisasiState(previousState, ruleMap) {
+    if (!previousState) return false;
+    if (String(previousState.statusOrigin || "").toLowerCase() === "manual") return true;
+
+    const status = String(previousState.status || "").trim();
+    if (!status && !previousState.tanggal && !previousState.sumber && !previousState.keterangan) return false;
+    if (status === "Ya" || status === "Tidak") return true;
+    if (previousState.tanggal || previousState.sumber) return true;
+
+    if (isPcvCode(previousState.kode)) {
+      const rule = ruleMap[String(previousState.kode || "").trim().toUpperCase()];
+      if (rule && previousState.keterangan && String(previousState.keterangan).trim() !== String(rule.Catatan || "").trim()) return true;
+    }
+
+    return false;
+  }
+
+  function getPcvHistoryFromStateMap(existingStateMap) {
+    const rows = Object.values(existingStateMap || {}).filter(item => isPcvCode(item.kode));
+    const yesRows = rows
+      .filter(item => String(item.status || "").trim().toUpperCase() === "YA")
+      .map(item => ({ ...item, parsedDate: parseDateSafe(item.tanggal) }))
+      .sort((a, b) => {
+        if (a.parsedDate && b.parsedDate) return a.parsedDate - b.parsedDate;
+        if (a.parsedDate) return -1;
+        if (b.parsedDate) return 1;
+        return a.kode.localeCompare(b.kode);
+      });
+
+    return {
+      yesRows,
+      givenCount: yesRows.length,
+      lastDoseDate: yesRows.length ? (yesRows[yesRows.length - 1].parsedDate || null) : null,
+      hasAnyUndatedYes: yesRows.some(item => !item.parsedDate)
+    };
+  }
+
+  function diffWeeks(fromDate, toDate) {
+    if (!(fromDate instanceof Date) || isNaN(fromDate) || !(toDate instanceof Date) || isNaN(toDate)) return null;
+    return Math.floor((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24 * 7));
+  }
+
+  function getAgeInMonths(ageParts) {
+    if (!ageParts) return null;
+    return Number(ageParts.years || 0) * 12 + Number(ageParts.months || 0);
+  }
+
+  function getPcvCatchupPlan(context) {
+    const ageParts = context.ageParts;
+    const ageMonths = getAgeInMonths(ageParts);
+    if (ageMonths === null) return null;
+
+    if (ageMonths >= 60) {
+      return { bucket: "OUT_OF_TARGET", targetTotalDoses: 0, minIntervalWeeks: 8 };
+    }
+    if (ageMonths >= 24) {
+      return { bucket: "24_59_MONTHS", targetTotalDoses: 1, minIntervalWeeks: 8 };
+    }
+    if (ageMonths >= 12) {
+      return { bucket: "12_23_MONTHS", targetTotalDoses: 2, minIntervalWeeks: 8 };
+    }
+    return { bucket: "LT12_MONTHS", targetTotalDoses: 3, minIntervalWeeks: 8 };
+  }
+
+  function evaluatePcvStatus(rule, context) {
+    const kode = String(rule.KodeImunisasi || "").trim().toUpperCase();
+    const plan = getPcvCatchupPlan(context);
+    const bawahUmur = rule.StatusDiBawahUmur || "Belum cukup umur";
+    const luarSasaran = rule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+    if (!plan) return bawahUmur;
+
+    const existing = context.existingImunisasiState || {};
+    const current = existing[kode] || null;
+    if (current && String(current.status || "").trim().toUpperCase() === "YA") return "";
+
+    const history = getPcvHistoryFromStateMap(existing);
+    const givenCount = history.givenCount;
+    const trackingDate = context.tglPelacakan || new Date();
+    const weeksSinceLastDose = history.lastDoseDate ? diffWeeks(history.lastDoseDate, trackingDate) : null;
+    const enoughInterval = !history.lastDoseDate ? !history.hasAnyUndatedYes : (weeksSinceLastDose !== null && weeksSinceLastDose >= plan.minIntervalWeeks);
+
+    if (plan.bucket === "OUT_OF_TARGET") return luarSasaran;
+
+    if (plan.bucket === "24_59_MONTHS") {
+      if (kode === "PCV1") return givenCount >= 1 ? luarSasaran : "";
+      return luarSasaran;
+    }
+
+    if (plan.bucket === "12_23_MONTHS") {
+      if (kode === "PCV1") return givenCount >= 1 ? luarSasaran : "";
+      if (kode === "PCV2") {
+        if (givenCount === 0) return bawahUmur;
+        if (givenCount >= 2) return luarSasaran;
+        return enoughInterval ? "" : bawahUmur;
+      }
+      return luarSasaran;
+    }
+
+    if (kode === "PCV1") {
+      return compareMinAge(context.ageParts, rule) ? (givenCount >= 1 ? luarSasaran : "") : bawahUmur;
+    }
+
+    if (kode === "PCV2") {
+      if (givenCount === 0) return bawahUmur;
+      if (givenCount >= 2) return luarSasaran;
+      const enoughAge = compareMinAge(context.ageParts, rule);
+      return enoughAge && enoughInterval ? "" : bawahUmur;
+    }
+
+    if (kode === "PCV3") {
+      if (givenCount < 2) return bawahUmur;
+      if (givenCount >= 3) return luarSasaran;
+      const enoughAge = compareMinAge(context.ageParts, rule);
+      return enoughAge && enoughInterval ? "" : bawahUmur;
+    }
+
+    return "";
+  }
+
+  function hasExplicitMinAge(rule) {
+    return Number(rule?.UmurMinHari || 0) > 0 || Number(rule?.UmurMinBulan || 0) > 0 || Number(rule?.UmurMinTahun || 0) > 0;
+  }
+
+  function buildRuleWithKelompokUsiaFallback(rule) {
+    if (!rule) return rule;
+    if (hasExplicitMinAge(rule)) return rule;
+
+    const kelompok = String(rule.KelompokUsia || "").trim().toLowerCase();
+    if (!kelompok) return rule;
+
+    const nextRule = { ...rule };
+    const match = kelompok.match(/(\d+)\s*(hari|bulan|tahun|sd|smp)/i);
+    if (!match) return nextRule;
+
+    const num = Number(match[1] || 0);
+    const unit = String(match[2] || "").toLowerCase();
+
+    if (unit === "hari") nextRule.UmurMinHari = num;
+    else if (unit === "bulan") nextRule.UmurMinBulan = num;
+    else if (unit === "tahun") nextRule.UmurMinTahun = num;
+
+    return nextRule;
+  }
+
+  function getImunisasiRuleSortKey(rule) {
+    const r = buildRuleWithKelompokUsiaFallback(rule);
+    const basis = String(r?.BasisValidasi || "").toUpperCase();
+    if (basis === "KELAS") {
+      return (Number(r?.KelasMin || 0) * 100) + Number(r?.UrutanDosis || 0);
+    }
+    return (Number(r?.UmurMinTahun || 0) * 3650) + (Number(r?.UmurMinBulan || 0) * 30) + Number(r?.UmurMinHari || 0) + (Number(r?.UrutanDosis || 0) / 100);
+  }
+
+  function evaluateImunisasiStatus(rule, context) {
+    const normalizedRule = buildRuleWithKelompokUsiaFallback(rule);
+    const jk = normalizeSex(context.jk);
+    const kelas = normalizeClassValue(context.kelasSaatIni);
+    const statusSekolah = String(context.statusSekolah || "").trim().toUpperCase();
+
+    const actualAgeParts = context.ageParts;
+    const hasActualAge = !!actualAgeParts;
+    const birthDate = context.birthDate || null;
+
+    const estSchoolAge = estimateSchoolAgeFromClass(context.kelasSaatIni);
+    const estimatedAgeParts = estSchoolAge ? buildAgePartsFromEstimatedYears(estSchoolAge.minYears) : null;
+    const effectiveAgeParts = hasActualAge ? actualAgeParts : estimatedAgeParts;
+
+    if (normalizedRule.JKTarget && normalizedRule.JKTarget !== "SEMUA" && jk && normalizedRule.JKTarget !== jk) {
+      return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+    }
+
+    const introCheck = checkIntroduksiEligibility(normalizedRule, birthDate);
+    if (introCheck.applies && introCheck.eligible === false) {
+      return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+    }
+
+    const basis = String(normalizedRule.BasisValidasi || "").toUpperCase();
+
+    if (basis === "KELAS") {
+      const kelasMin = normalizedRule.KelasMin ? Number(normalizedRule.KelasMin) : null;
+      const kelasMax = normalizedRule.KelasMax ? Number(normalizedRule.KelasMax) : null;
+
+      if (hasActualAge) {
+        const actualYears = Number(actualAgeParts.years || 0);
+        if (actualYears < 6) return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      }
+
+      if (String(normalizedRule.ButuhSekolah || "").toUpperCase() === "YA" && statusSekolah !== "Sekolah") {
+        if (hasActualAge && Number(actualAgeParts.years || 0) >= 6) return "";
+        return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      }
+
+      if (kelas === null) {
+        if (hasActualAge && Number(actualAgeParts.years || 0) >= 6) return "";
+        return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      }
+
+      if (kelasMin !== null && kelas < kelasMin) return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      if (kelasMax !== null && kelas > kelasMax) return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+      return "";
+    }
+
+    if (basis === "UMUR_DAN_KELAS") {
+      const cukupUmur = compareMinAge(effectiveAgeParts, normalizedRule);
+      const masihMasukUmur = compareMaxAge(effectiveAgeParts, normalizedRule);
+      const kelasMin = normalizedRule.KelasMin ? Number(normalizedRule.KelasMin) : null;
+      const kelasMax = normalizedRule.KelasMax ? Number(normalizedRule.KelasMax) : null;
+
+      if (!cukupUmur) return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      if (!masihMasukUmur) return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+
+      if (String(normalizedRule.ButuhSekolah || "").toUpperCase() === "YA" && statusSekolah !== "Sekolah") {
+        if (hasActualAge && Number(actualAgeParts.years || 0) >= 6) return "";
+        return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      }
+
+      if (kelas === null) {
+        if (hasActualAge && Number(actualAgeParts.years || 0) >= 6) return "";
+        return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      }
+
+      if (kelasMin !== null && kelas < kelasMin) return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+      if (kelasMax !== null && kelas > kelasMax) return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+
+      return "";
+    }
+
+    const cukupUmur = compareMinAge(effectiveAgeParts, normalizedRule);
+    if (!cukupUmur) return normalizedRule.StatusDiBawahUmur || "Belum cukup umur";
+    if (!compareMaxAge(effectiveAgeParts, normalizedRule)) return normalizedRule.StatusDiLuarSasaran || "Tidak sesuai sasaran";
+    return "";
+  }
+
+  function getMrSpecificImmunizationConclusionText() {
+    const getVal = (id) => String(document.getElementById(id)?.value || "").trim();
+    const yesNo = (v) => String(v || "").trim().toUpperCase();
+
+    const d1 = getVal("Imunisasi campak-rubela dosis 1");
+    const s1 = getVal("Sumber Informasi (Dosis 1)");
+    const d2 = getVal("Imunisasi campak-rubela dosis 2");
+    const s2 = getVal("Sumber Informasi (Dosis 2)");
+    const bias = getVal("Imunisasi campak-rubela saat BIAS");
+    const sBias = getVal("Sumber Informasi (BIAS)");
+    const mmr = getVal("Pernah menerima imunisasi MMR sebelumnya?");
+    const sMmr = getVal("Sumber Informasi (MMR)");
+    const tambahan = getVal("Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?");
+    const sTambahan = getVal("Sumber Informasi (Imunisasi tambahan)");
+    const tglTerakhir = getVal("Tanggal imunisasi campak-rubela terakhir");
+
+    const positiveItems = [];
+    const negativeItems = [];
+    const unknownItems = [];
+    const sourceItems = [];
+
+    const collect = (label, value, source) => {
+      const norm = yesNo(value);
+      if (norm === "YA") {
+        positiveItems.push(label);
+        if (source) sourceItems.push(`${label}: ${source}`);
+      } else if (norm === "TIDAK") {
+        negativeItems.push(label);
+      } else if (norm === "TIDAK TAHU") {
+        unknownItems.push(label);
+      }
+    };
+
+    collect("dosis 1", d1, s1);
+    collect("dosis 2", d2, s2);
+    collect("BIAS", bias, sBias);
+    collect("MMR sebelumnya", mmr, sMmr);
+    collect("imunisasi tambahan", tambahan, sTambahan);
+
+    const lines = [];
+
+    if (positiveItems.length >= 2) {
+      lines.push(`Riwayat imunisasi campak-rubela spesifik terdokumentasi cukup baik; ditemukan ${positiveItems.length} riwayat positif: ${positiveItems.join(", ")}.`);
+    } else if (positiveItems.length === 1) {
+      lines.push(`Riwayat imunisasi campak-rubela spesifik terdokumentasi sebagian; baru ditemukan 1 riwayat positif yaitu ${positiveItems[0]}.`);
+    } else if (negativeItems.length >= 3 && unknownItems.length === 0) {
+      lines.push("Pada isian imunisasi MR spesifik tidak ditemukan riwayat imunisasi campak-rubela yang positif.");
+    } else if (negativeItems.length || unknownItems.length || tglTerakhir) {
+      lines.push("Riwayat imunisasi campak-rubela spesifik belum dapat disimpulkan lengkap dari isian yang tersedia.");
+    }
+
+    if (negativeItems.length) {
+      lines.push(`Jawaban tidak/negatif pada: ${negativeItems.join(", ")}.`);
+    }
+
+    if (unknownItems.length) {
+      lines.push(`Data masih tidak diketahui pada: ${unknownItems.join(", ")}.`);
+    }
+
+    if (tglTerakhir) {
+      lines.push(`Tanggal imunisasi campak-rubela terakhir yang dicatat: ${tglTerakhir}.`);
+    }
+
+    if (sourceItems.length) {
+      lines.push(`Sumber informasi riwayat positif: ${sourceItems.join("; ")}.`);
+    }
+
+    return lines.join(" ").trim();
+  }
+
+  function updateImunisasiSummary() {
+    const tbody = document.getElementById("tbody-Riwayat Imunisasi");
+    const txt = document.getElementById("imun-summary-text");
+    const sub = document.getElementById("imun-summary-subtext");
+    const dueEl = document.getElementById("imun-summary-due");
+    const yesEl = document.getElementById("imun-summary-yes");
+    const hidden = document.getElementById("Kesimpulan Status Imunisasi");
+
+    if (!tbody || !txt || !sub || !dueEl || !yesEl || !hidden) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    let dueCount = 0;
+    let yesCount = 0;
+
+    rows.forEach(row => {
+      const status = row.querySelector('select[data-name="Status"]')?.value || "";
+      if (status === "Belum cukup umur" || status === "Tidak sesuai sasaran") return;
+      dueCount++;
+      if (status === "Ya") yesCount++;
+    });
+
+    dueEl.textContent = String(dueCount);
+    yesEl.textContent = String(yesCount);
+
+    const umurText = document.getElementById("Umur (auto)")?.value || "umur tidak diketahui";
+    const jkText = document.getElementById("JK")?.value || "jenis kelamin tidak diketahui";
+
+    let summary = "Belum dinilai";
+    let subParts = [`Kesimpulan untuk anak dengan usia ${umurText} dan jenis kelamin ${jkText}.`];
+
+    if (rows.length === 0) {
+      summary = "Belum dinilai";
+      subParts.push("Data riwayat imunisasi belum tersedia.");
+    } else if (dueCount === 0) {
+      summary = "Lengkap";
+      subParts.push("Belum ada imunisasi yang sesuai jadwal sesuai usia/sasaran.");
+    } else if (yesCount === dueCount) {
+      summary = "Lengkap";
+      subParts.push(`Semua ${dueCount} imunisasi yang sudah sesuai jadwal telah terisi \"Ya\".`);
+    } else {
+      summary = "Tidak lengkap";
+      subParts.push(`${yesCount} dari ${dueCount} imunisasi yang sudah sesuai jadwal terisi \"Ya\".`);
+    }
+
+    const mrSpecific = getMrSpecificImmunizationConclusionText();
+    if (mrSpecific) subParts.push(mrSpecific);
+
+    txt.textContent = summary;
+    sub.textContent = subParts.join(" ");
+    hidden.value = `${summary} — ${subParts.join(" ")}`;
+
+    if (summary === "Lengkap") txt.className = "mt-2 text-lg font-black text-green-700";
+    else if (summary === "Tidak lengkap") txt.className = "mt-2 text-lg font-black text-red-700";
+    else txt.className = "mt-2 text-lg font-black text-blue-900";
+  }
+
+  function buildRiwayatImunisasiRows() {
+    const tbody = document.getElementById("tbody-Riwayat Imunisasi");
+    if (!tbody) return;
+
+    const existingImunisasiState = collectExistingImunisasiState(tbody);
+    const birthDate = parseDateSafe(document.getElementById("Tanggal Lahir")?.value);
+    const tglPelacakan = parseDateSafe(document.getElementById("Tanggal Pelacakan")?.value) || new Date();
+    const jk = document.getElementById("JK")?.value || "";
+    const statusSekolah = document.getElementById("Apakah sekolah/bekerja?")?.value || "";
+    const kelasSaatIni = document.getElementById("Kelas Saat Ini")?.value || "";
+
+    tbody.innerHTML = "";
+
+    const ageParts = diffAgeParts(birthDate, tglPelacakan);
+    const context = { jk, statusSekolah, kelasSaatIni, ageParts, birthDate, tglPelacakan, existingImunisasiState };
+    const hasCoreContext = !!birthDate && !!jk;
+    const rules = Array.isArray(REF_IMUN) ? REF_IMUN.filter(r => r && r.KodeImunisasi && r.LabelImunisasi) : [];
+    const ruleMap = getRuleMap();
+
+    console.log("[imunisasi] build rows", { ruleCount: rules.length, hasCoreContext, tbodyId: tbody.id, source: rules[0]?.__source || null });
+
+    rules.forEach(rule => {
+      const kode = String(rule.KodeImunisasi || "").trim().toUpperCase();
+      const previous = existingImunisasiState[kode] || null;
+      const preserveManualState = shouldPreserveManualImunisasiState(previous, ruleMap);
+      const autoStatus = hasCoreContext ? evaluateImunisasiStatus(rule, context) : "";
+      const finalStatus = preserveManualState ? (previous?.status || autoStatus || "") : (autoStatus || "");
+      const finalTanggal = preserveManualState ? (previous?.tanggal || "") : "";
+      const finalSumber = preserveManualState ? (previous?.sumber || "") : "";
+      const finalKeterangan = preserveManualState ? (previous?.keterangan || rule.Catatan || "") : (rule.Catatan || "");
+
+      const preset = {
+        __kode: rule.KodeImunisasi,
+        "Jenis Imunisasi": rule.LabelImunisasi,
+        "Status": finalStatus,
+        "Tanggal": finalTanggal,
+        "Sumber Informasi": finalSumber,
+        "Keterangan": finalKeterangan
+      };
+
+      window.addDynamicRow("Riwayat Imunisasi", preset);
+
+      const lastRow = tbody.lastElementChild;
+      if (!lastRow) return;
+
+      const statusSelect = lastRow.querySelector('select[data-name="Status"]');
+      const tglInput = lastRow.querySelector('input[data-name="Tanggal"]');
+      const sumberSelect = lastRow.querySelector('select[data-name="Sumber Informasi"]');
+      lastRow.dataset.statusOrigin = preserveManualState ? "manual" : "auto";
+      if (statusSelect && !statusSelect.dataset.boundImunOrigin) {
+        statusSelect.dataset.boundImunOrigin = "1";
+        statusSelect.addEventListener("change", () => {
+          lastRow.dataset.statusOrigin = ["Ya", "Tidak"].includes(statusSelect.value) ? "manual" : "auto";
+          updateImunisasiSummary();
+        });
+      }
+      if (tglInput && !tglInput.dataset.boundImunOrigin) {
+        tglInput.dataset.boundImunOrigin = "1";
+        tglInput.addEventListener("input", () => { lastRow.dataset.statusOrigin = "manual"; });
+      }
+      if (sumberSelect && !sumberSelect.dataset.boundImunOrigin) {
+        sumberSelect.dataset.boundImunOrigin = "1";
+        sumberSelect.addEventListener("change", () => { lastRow.dataset.statusOrigin = "manual"; });
+      }
+    });
+
+    if (rules.length === 0) {
+      console.warn("[imunisasi] REF_IMUN kosong saat build");
+    }
+
+    updateImunisasiSummary();
+  }
+
+  function forceBuildImunisasiWhenReady() {
+    const attempt = () => {
+      const tbody = document.getElementById("tbody-Riwayat Imunisasi");
+      if (!tbody) return false;
+      if (!Array.isArray(REF_IMUN) || REF_IMUN.length === 0) return false;
+      if (tbody.children.length > 0) return true;
+      buildRiwayatImunisasiRows();
+      return tbody.children.length > 0;
+    };
+
+    let delays = [0, 150, 400, 800, 1500];
+    delays.forEach(ms => {
+      setTimeout(() => {
+        const ok = attempt();
+        console.log("[imunisasi] force build attempt", { ms, ok, refLen: Array.isArray(REF_IMUN) ? REF_IMUN.length : null, rows: document.getElementById("tbody-Riwayat Imunisasi")?.children.length ?? null });
+      }, ms);
+    });
+  }
+
+  // ============================================================
+  // DRAFT AUTOSAVE
+  // ============================================================
+  function collectDynamicTableData(tableId) {
+    const table = document.querySelector(`table[data-dynamic-table="${tableId}"]`);
+    if (!table) return [];
+
+    const rows = [];
+    table.querySelectorAll("tbody tr").forEach(row => {
+      const rowObj = {};
+      row.querySelectorAll("input, select").forEach(i => {
+        rowObj[i.getAttribute("data-name")] = i.value;
+      });
+      if (tableId === "Riwayat Imunisasi") rowObj.__kode = row.dataset.kodeImun || "";
+      rows.push(rowObj);
+    });
+    return rows;
+  }
+
+  const FORM_DRAFT_TTL_MS = 30 * 60 * 1000;
+
+  function saveFormDraft() {
+    try {
+      const selector = document.getElementById("form-selector");
+      const form = document.getElementById("dynamic-form");
+      if (!selector || !form || form.classList.contains("hidden")) return;
+
+      const dx = String(selector.value || "").trim();
+      if (!dx) return;
+
+      const fields = {};
+      form.querySelectorAll("input[name], select[name], textarea[name]").forEach(el => {
+        fields[el.name] = el.value;
+      });
+
+      const now = Date.now();
+      const draft = {
+        version: 1,
+        savedAt: now,
+        expiresAt: now + FORM_DRAFT_TTL_MS,
+        dx,
+        isEditMode: !!window.isEditMode,
+        searchEpid: document.getElementById("search-epid")?.value || "",
+        fields,
+        tables: {
+          "Kontak Erat": collectDynamicTableData("Kontak Erat"),
+          "Riwayat Imunisasi": collectDynamicTableData("Riwayat Imunisasi")
+        }
+      };
+
+      sessionStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(draft));
+    } catch (e) {
+      console.warn("Gagal menyimpan draft:", e);
+    }
+  }
+
+  function clearFormDraft() {
+    try {
+      sessionStorage.removeItem(FORM_DRAFT_KEY);
+    } catch (e) {}
+  }
+
+  function getFormDraft() {
+    try {
+      const raw = sessionStorage.getItem(FORM_DRAFT_KEY);
+      const draft = raw ? JSON.parse(raw) : null;
+      if (!draft) return null;
+      if (draft.expiresAt && Date.now() > Number(draft.expiresAt)) {
+        clearFormDraft();
+        return null;
+      }
+      return draft;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function restoreDraftRows(tableId, rows) {
+    const tbody = document.getElementById(`tbody-${tableId}`);
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    (rows || []).forEach(item => addDynamicRow(tableId, item));
+  }
+
+  function restoreFormDraft() {
+    try {
+      const draft = getFormDraft();
+      if (!draft || !draft.dx) return false;
+
+      const selector = document.getElementById("form-selector");
+      if (!selector) return false;
+
+      selector.value = draft.dx;
+      selector.dispatchEvent(new Event("change", { bubbles: true }));
+
+      setTimeout(async () => {
+        const fields = draft.fields || {};
+        Object.keys(fields).forEach(name => {
+          const el = document.getElementsByName(name)[0];
+          if (el) {
+            el.value = fields[name];
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+
+        const searchEpid = document.getElementById("search-epid");
+        if (searchEpid && draft.searchEpid) searchEpid.value = draft.searchEpid;
+
+        if (typeof loadRefImunisasi === "function") {
+          await loadRefImunisasi();
+        }
+
+        if (draft.tables) {
+          restoreDraftRows("Kontak Erat", draft.tables["Kontak Erat"] || []);
+          restoreDraftRows("Riwayat Imunisasi", draft.tables["Riwayat Imunisasi"] || []);
+        }
+
+        if (typeof updateImunisasiSummary === "function") {
+          updateImunisasiSummary();
+        }
+
+        showTopAlert("Draft sebelumnya berhasil dipulihkan.", true);
+      }, 350);
+
+      return true;
+    } catch (e) {
+      console.warn("Gagal restore draft:", e);
+      return false;
+    }
+  }
+
+  // ============================================================
+  // VALIDASI UMUR / KONSISTENSI EPIDEMIOLOGI
+  // ============================================================
+  function isCompleteDateValue(value) {
+    const s = String(value || "").trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(s);
+  }
+
+  function applyBirthValidationUI(res) {
+    const umurEl = document.getElementById("Umur (auto)");
+    const epiEl = document.getElementById("Kelompok Umur Epidemiologis");
+
+    if (!res || !res.ok) {
+      if (umurEl) umurEl.value = "";
+      if (epiEl) epiEl.value = "";
+      return false;
+    }
+
+    if (umurEl) umurEl.value = res.ageText || "";
+    if (epiEl) epiEl.value = res.epiGroup || "";
+    return true;
+  }
+
+  function validateAndApplyBirthUI(options) {
+    const opts = options || {};
+    const silent = opts.silent === true;
+    const hard = opts.hard === true;
+
+    const dobEl = document.getElementById("Tanggal Lahir");
+    const refEl = document.getElementById("Tanggal Pelacakan");
+    const umurEl = document.getElementById("Umur (auto)");
+    const epiEl = document.getElementById("Kelompok Umur Epidemiologis");
+
+    const dobValue = dobEl?.value || "";
+    const refValue = refEl?.value || "";
+
+    if (!isCompleteDateValue(dobValue)) {
+      if (umurEl) umurEl.value = "";
+      if (epiEl) epiEl.value = "";
+      return { ok: false, pending: true };
+    }
+
+    const safeRefValue = isCompleteDateValue(refValue) ? refValue : "";
+    const res = validateBirthDateEpi(dobValue, safeRefValue);
+
+    if (!res.ok) {
+      if (umurEl) umurEl.value = "";
+      if (epiEl) epiEl.value = "";
+
+      if (!silent && hard) {
+        showTopAlert(res.message, false);
+      }
+      return res;
+    }
+
+    if (umurEl) umurEl.value = res.ageText || "";
+    if (epiEl) epiEl.value = res.epiGroup || "";
+
+    return res;
+  }
+
+  function checkConsistencyWarnings() {
+    const warnings = [];
+
+    const dobValue = document.getElementById("Tanggal Lahir")?.value || "";
+    const refValue = document.getElementById("Tanggal Pelacakan")?.value || "";
+    const statusSekolah = String(document.getElementById("Apakah sekolah/bekerja?")?.value || "").trim();
+    const kelasSaatIni = String(document.getElementById("Kelas Saat Ini")?.value || "").trim();
+    const dx = String(document.getElementById("form-selector")?.value || "").toUpperCase();
+
+    if (!isCompleteDateValue(dobValue)) return warnings;
+
+    const val = validateBirthDateEpi(dobValue, isCompleteDateValue(refValue) ? refValue : "");
+    if (!val.ok) return warnings;
+
+    const age = val.age || {};
+    const years = Number(age.years || 0);
+    const totalDays = Number(age.totalDays || 0);
+
+    if (statusSekolah === "Sekolah" && years < 5) {
+      warnings.push("Status kegiatan terisi 'Sekolah', tetapi umur pasien masih di bawah 5 tahun.");
+    }
+
+    const k = normalizeClassValue(kelasSaatIni);
+    if (k !== null) {
+      const est = estimateSchoolAgeFromClass(kelasSaatIni);
+      if (est) {
+        if (years < est.minYears - 1 || years > est.maxYears + 2) {
+          warnings.push(`Kelas saat ini (${kelasSaatIni}) tampak kurang konsisten dengan umur pasien (${val.ageText}).`);
+        }
+      }
+    }
+
+    if (dx === "TN" && totalDays > 28) {
+      warnings.push("Diagnosis TN dipilih, tetapi umur pasien bukan neonatus (lebih dari 28 hari).");
+    }
+
+    return warnings;
+  }
+
+  // ============================================================
+  // CONFIG HELPERS
+  // ============================================================
+  function getCommonConfigSafe() {
+    if (typeof getCommonFields === "function") return getCommonFields();
+    return {
+      pelapor: (typeof COMMON_PELAPOR_FIELDS !== "undefined") ? COMMON_PELAPOR_FIELDS : [],
+      pasien: (typeof COMMON_PASIEN_FIELDS !== "undefined") ? COMMON_PASIEN_FIELDS : []
+    };
+  }
+
+  function getDxConfigSafe(dx) {
+    if (typeof getDiagnosisConfig === "function") return getDiagnosisConfig(dx);
+    if (typeof DIAGNOSIS_CONFIG !== "undefined") return DIAGNOSIS_CONFIG[String(dx || "").toUpperCase()] || null;
+    return null;
+  }
+
+  function renderDiagnosisSections(cfg, container) {
+    container.innerHTML = "";
+    if (!cfg || !Array.isArray(cfg.sections)) return;
+
+    cfg.sections.forEach(section => {
+      container.innerHTML += renderSectionTitle(section.title);
+      (section.fields || []).forEach(field => {
+        container.innerHTML += generateHTML(field);
+      });
+    });
+  }
+
+  function getShowIfParentValue(parentId) {
+    const parent = document.getElementById(parentId);
+    return String(parent ? parent.value : "").trim();
+  }
+
+  function matchesShowIf(parentValue, vals, parentId) {
+    const actual = String(parentValue || "").trim();
+    const targets = Array.isArray(vals) ? vals.map(v => String(v || "").trim()) : [];
+    if (targets.includes(actual)) return true;
+
+    if (parentId === "JK") {
+      if ((actual === "Perempuan" || actual === "P") && targets.some(v => v === "Perempuan" || v === "P")) return true;
+      if ((actual === "Laki-laki" || actual === "L" || actual === "Laki-Laki") && targets.some(v => v === "Laki-laki" || v === "L" || v === "Laki-Laki")) return true;
+    }
+
+    return targets.map(v => v.toLowerCase()).includes(actual.toLowerCase());
+  }
+
+  function reevaluateShowIfFields() {
+      const wrappers = document.querySelectorAll(".field-wrapper[data-parent]");
+      wrappers.forEach(wrapper => {
+        const parentId = wrapper.getAttribute("data-parent");
+        const parent = document.getElementById(parentId);
+        const parentValue = getShowIfParentValue(parentId);
+        const vals = JSON.parse(wrapper.getAttribute("data-parent-vals") || "[]");
+        const required = wrapper.getAttribute("data-required") === "true";
+        const inp = wrapper.querySelector("input, select, textarea");
+
+        let shouldShow = !!parent && matchesShowIf(parentValue, vals, parentId);
+
+        if (!shouldShow && parentId === "JK") {
+          const jkNorm = String(parentValue || "").trim().toLowerCase();
+          const wantsPerempuan = vals.some(v => String(v || "").trim().toLowerCase() === "perempuan");
+          if (wantsPerempuan && (jkNorm === "perempuan" || jkNorm === "p")) {
+            shouldShow = true;
+          }
+        }
+
+        if (shouldShow) {
+          wrapper.classList.remove("hidden");
+          if (required && inp) inp.required = true;
+
+          if (parentId === "Apakah dirawat inap?" && parentValue === "Ya" && wrapper.querySelector("#Nama Rumah Sakit")) {
+            setTimeout(() => {
+              const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
+              initChoicesRumahSakit(currentRs);
+            }, 50);
+          }
+        } else {
+          wrapper.classList.add("hidden");
+          if (inp) {
+            inp.required = false;
+            if (inp.tagName === "SELECT") inp.selectedIndex = 0;
+            else inp.value = "";
+          }
+        }
+      });
+  }
+
+  // ============================================================
+  // GLOBAL CHANGE / BLUR HANDLER
+  // ============================================================
+
+  /**
+   * Evaluasi semua field showIf berdasarkan nilai parent saat ini.
+   * Dipanggil setelah setiap change event dan setelah form dirender.
+   */
+  function reevaluateShowIfFields() {
+    document.querySelectorAll(".field-wrapper[data-parent]").forEach(function(wrapper) {
+      const parentId = wrapper.getAttribute("data-parent");
+      const parent = document.getElementById(parentId);
+      const vals = JSON.parse(wrapper.getAttribute("data-parent-vals") || "[]");
+      const required = wrapper.getAttribute("data-required") === "true";
+      const inp = wrapper.querySelector("input, select, textarea");
+
+      if (parent && vals.includes(parent.value)) {
+        wrapper.classList.remove("hidden");
+        if (required && inp) inp.required = true;
+
+        // Khusus: inisialisasi Choices.js untuk Nama Rumah Sakit jika muncul
+        if (parentId === "Apakah dirawat inap?" && parent.value === "Ya" && wrapper.querySelector("#Nama\\ Rumah\\ Sakit")) {
+          setTimeout(function() {
+            const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
+            if (typeof initChoicesRumahSakit === "function") initChoicesRumahSakit(currentRs);
+          }, 50);
+        }
+      } else {
+        wrapper.classList.add("hidden");
+        if (inp) {
+          inp.required = false;
+          if (inp.tagName === "SELECT") inp.selectedIndex = 0;
+          else inp.value = "";
+        }
+      }
+    });
+  }
+
+  // Alias untuk pemanggilan setelah render form
+  function applyAllShowIf() {
+    reevaluateShowIfFields();
+  }
+  document.addEventListener("change", function(e) {
+    const wilayahMap = {
+      "Provinsi": "Kab/Kota",
+      "Provinsi Pasien": "Kab/Kota Pasien",
+      "Kab/Kota Pasien": "Kecamatan",
+      "Kecamatan": "Kelurahan"
+    };
+
+    if (wilayahMap[e.target.id]) {
+      const next = wilayahMap[e.target.id];
+      const nextEl = document.getElementById(next);
+      if (!nextEl) return;
+
+      const id = e.target.options[e.target.selectedIndex]?.getAttribute("data-id");
+      nextEl.innerHTML = '<option value="">-- Pilih --</option>';
+      if (!id) return;
+
+      let type = "";
+      if (e.target.id === "Provinsi" || e.target.id === "Provinsi Pasien") type = "regencies";
+      else if (e.target.id === "Kab/Kota Pasien") type = "districts";
+      else if (e.target.id === "Kecamatan") type = "villages";
+      if (!type) return;
+
+      fetch(`${API_WILAYAH_BASE}/${type}/${id}.json`)
+        .then(res => res.json())
+        .then(data => {
+          data.forEach(item => {
+            nextEl.innerHTML += `<option value="${item.name}" data-id="${item.id}">${item.name}</option>`;
+          });
+        })
+        .catch(err => console.error("load wilayah failed:", err));
+    }
+
+    if (e.target.id === "Sumber Laporan") {
+      const unitEl = document.getElementById("Nama unit pelapor");
+      if (unitEl) {
+        if (choicesInstance) {
+          try { choicesInstance.destroy(); } catch (err) {}
+          choicesInstance = null;
+        }
+        unitEl.innerHTML = '<option value="">Memuat data unit pelapor...</option>';
+        unitEl.disabled = true;
+      }
+
+      if (Array.isArray(MASTER_FASKES) && MASTER_FASKES.length > 0) {
+        initChoices(e.target.value || "", "");
+      } else {
+        loadFaskesRealtime("");
+      }
+    }
+
+    if (e.target.id === "Tanggal Lahir" || e.target.id === "Tanggal Pelacakan") {
+      const res = validateAndApplyBirthUI({ silent: true, hard: false });
+
+      if (res && res.ok) {
+        const warns = checkConsistencyWarnings();
+        if (warns.length > 0) {
+          showTopAlert(warns.join(" "), false);
+        }
+      }
+    }
+
+    if (["Tanggal Lahir", "Tanggal Pelacakan", "JK", "Apakah sekolah/bekerja?", "Kelas Saat Ini"].includes(e.target.id)) {
+      buildRiwayatImunisasiRows();
+
+      const warns = checkConsistencyWarnings();
+      if (warns.length > 0) {
+        showTopAlert(warns.join(" "), false);
+      }
+    }
+
+    if ([
+      "Imunisasi campak-rubela dosis 1",
+      "Sumber Informasi (Dosis 1)",
+      "Imunisasi campak-rubela dosis 2",
+      "Sumber Informasi (Dosis 2)",
+      "Imunisasi campak-rubela saat BIAS",
+      "Sumber Informasi (BIAS)",
+      "Pernah menerima imunisasi MMR sebelumnya?",
+      "Sumber Informasi (MMR)",
+      "Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?",
+      "Sumber Informasi (Imunisasi tambahan)",
+      "Tanggal imunisasi campak-rubela terakhir"
+    ].includes(e.target.id)) {
+      updateImunisasiSummary();
+    }
+
+    reevaluateShowIfFields();
+  });
+
+  document.addEventListener("blur", function(e) {
+    if (e.target.id === "Tanggal Lahir" || e.target.id === "Tanggal Pelacakan") {
+      const res = validateAndApplyBirthUI({ silent: false, hard: true });
+
+      if (res && res.ok) {
+        const warns = checkConsistencyWarnings();
+        if (warns.length > 0) {
+          showTopAlert(warns.join(" "), false);
+        }
+      }
+    }
+  }, true);
+
+  // ============================================================
+  // EDIT MODE HELPERS
+  // ============================================================
+  function hydrateRecordToForm(record) {
+    Object.keys(record || {}).forEach(key => {
+      if (key === "Nama unit pelapor" || key === "Nama Rumah Sakit") return;
+      const el = document.getElementById(key);
+      if (el) {
+        el.value = record[key];
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  }
+
+  function hydrateDynamicTableByJson(tableId, jsonString) {
+    const tbody = document.getElementById(`tbody-${tableId}`);
+    if (!tbody || !jsonString) return;
+
+    tbody.innerHTML = "";
+    try {
+      const rows = JSON.parse(jsonString);
+      (rows || []).forEach(item => {
+        if (tableId === "Riwayat Imunisasi") {
+          addDynamicRow(tableId, {
+            __kode: item.KodeImunisasi || item.Kode || "",
+            "Jenis Imunisasi": item["Jenis Imunisasi"] || "",
+            "Status": item["Status"] || "",
+            "Tanggal": item["Tanggal"] || "",
+            "Sumber Informasi": item["Sumber Informasi"] || "",
+            "Keterangan": item["Keterangan"] || ""
+          });
+        } else {
+          addDynamicRow(tableId, item);
+        }
+      });
+    } catch (e) {
+      console.warn(`Gagal parse ${tableId}:`, e);
+    }
+  }
+
+  function hydrateDynamicTables(record) {
+    if (!record) return;
+    hydrateDynamicTableByJson("Kontak Erat", record["Kontak Erat"]);
+    hydrateDynamicTableByJson("Riwayat Imunisasi", record["Riwayat Imunisasi"]);
+    updateImunisasiSummary();
+  }
+
+  function resetForNewEntry() {
+    try {
+      clearFormDraft();
+
+      const modal = document.getElementById("success-modal");
+      closeModal(modal);
+
+      isEditMode = false;
+
+      const editBadge = document.getElementById("edit-badge");
+      const btnCancelEdit = document.getElementById("btn-cancel-edit");
+      const btnSubmit = document.getElementById("btn-submit");
+      const form = document.getElementById("dynamic-form");
+      const selector = document.getElementById("form-selector");
+      const searchEpid = document.getElementById("search-epid");
+      const searchResults = document.getElementById("search-results");
+
+      if (editBadge) editBadge.classList.add("hidden");
+      if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
+      if (searchEpid) searchEpid.value = "";
+      if (searchResults) {
+        searchResults.classList.add("hidden");
+        searchResults.innerHTML = "";
+      }
+
+      if (form) form.reset();
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove("bg-yellow-600");
+        btnSubmit.classList.add("bg-blue-600");
+        btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+      }
+
+      if (choicesInstance) {
+        try { choicesInstance.destroy(); } catch (e) {}
+        choicesInstance = null;
+      }
+      if (typeof rsChoicesInstance !== "undefined" && rsChoicesInstance) {
+        try { rsChoicesInstance.destroy(); } catch (e) {}
+        rsChoicesInstance = null;
+      }
+
+      const tbodyKontak = document.getElementById("tbody-Kontak Erat");
+      const tbodyImun = document.getElementById("tbody-Riwayat Imunisasi");
+      if (tbodyKontak) tbodyKontak.innerHTML = "";
+      if (tbodyImun) tbodyImun.innerHTML = "";
+
+      hideTopAlert();
+
+      const dx = String(selector?.value || "").trim();
+      if (selector && dx) {
+        selector.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      console.warn("resetForNewEntry gagal, fallback ke reload aman:", e);
+      window.location.href = window.location.href.split("?")[0];
+    }
+  }
+
+  // ============================================================
+  // SUCCESS MODAL
+  // ============================================================
+  function buildClientPrintUrl(dx, epid, token) {
+    try {
+      const safeDx = String(dx || "").trim().toUpperCase();
+      const safeEpid = String(epid || "").trim();
+      const safeToken = String(token || "").trim();
+      if (!safeDx || !safeEpid || !safeToken) return "";
+
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.hash = "";
+      url.searchParams.set("action", "print");
+      url.searchParams.set("dx", safeDx);
+      url.searchParams.set("epid", safeEpid);
+      url.searchParams.set("token", safeToken);
+      return url.toString();
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function showSuccessModal(message, printUrl, fallbackMeta) {
+    const modal = document.getElementById("success-modal");
+    const msg = document.getElementById("success-modal-message");
+    const btnPrint = document.getElementById("btn-print-pdf");
+    const btnNew = document.getElementById("btn-new-entry");
+    const btnClose = document.getElementById("btn-close-success");
+
+    if (msg) msg.textContent = message || "Data berhasil disimpan.";
+
+    if (btnPrint) {
+      let safeUrl = String(printUrl || "").trim();
+      const resolvedDx = String((fallbackMeta && fallbackMeta.dx) || document.getElementById("form-selector")?.value || "").trim();
+      const resolvedEpid = String((fallbackMeta && fallbackMeta.epid) || document.getElementById("Nomor EPID")?.value || "").trim();
+      const resolvedToken = String((fallbackMeta && fallbackMeta.token) || SESSION_TOKEN || "").trim();
+      if (!safeUrl) {
+        safeUrl = buildClientPrintUrl(resolvedDx, resolvedEpid, resolvedToken);
+      }
+      btnPrint.href = safeUrl || "javascript:void(0)";
+      btnPrint.target = "_blank";
+      btnPrint.rel = "noopener noreferrer";
+
+      if (!safeUrl) {
+        btnPrint.classList.add("opacity-60", "pointer-events-none");
+        btnPrint.setAttribute("aria-disabled", "true");
+      } else {
+        btnPrint.classList.remove("opacity-60", "pointer-events-none");
+        btnPrint.removeAttribute("aria-disabled");
+      }
+
+      if (!btnPrint.dataset.bound) {
+        btnPrint.dataset.bound = "1";
+        btnPrint.addEventListener("click", function(ev) {
+          const href = String(btnPrint.getAttribute("href") || "").trim();
+          if (!href || href === "javascript:void(0)") {
+            ev.preventDefault();
+          }
+        });
+      }
+    }
+
+    if (btnNew && !btnNew.dataset.bound) {
+      btnNew.dataset.bound = "1";
+      btnNew.addEventListener("click", function(ev) {
+        ev.preventDefault();
+        resetForNewEntry();
+      });
+    }
+
+    if (btnClose && !btnClose.dataset.bound) {
+      btnClose.dataset.bound = "1";
+      btnClose.addEventListener("click", function(ev) {
+        ev.preventDefault();
+        closeModal(modal);
+      });
+    }
+
+    openModal(modal);
+  }
+
+  // ============================================================
+  // SAFE JSON FETCH
+  // ============================================================
+  async function postJsonToWebApp(url, payload) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow"
+    });
+
+    const raw = await res.text();
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error("Raw response (not JSON):", raw);
+      throw new Error("Server tidak mengembalikan JSON dari /exec.");
+    }
+  }
+
+  function saveFormViaGsRun(payload) {
+    return new Promise((resolve, reject) => {
+      if (!safeGsRun()) {
+        reject(new Error("google.script.run tidak tersedia"));
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .saveFormData(payload);
+    });
+  }
+
+  function resolveLatestSavedMetaViaGsRun(payload) {
+    return new Promise((resolve, reject) => {
+      if (!safeGsRun()) {
+        reject(new Error("google.script.run tidak tersedia"));
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .resolveLatestSavedMeta(payload);
+    });
+  }
+
+  // ============================================================
+  // APP INIT
+  // ============================================================
+  (function () {
+    let __appInitialized = false;
+
+    function initAppModule() {
+      if (__appInitialized) return;
+      __appInitialized = true;
+
+      const selector = document.getElementById("form-selector");
+      const formElement = document.getElementById("dynamic-form");
+      const pelaporContainer = document.getElementById("pelapor-fields-container");
+      const pasienContainer = document.getElementById("pasien-fields-container");
+      const specificContainer = document.getElementById("specific-fields-container");
+      const specificTitle = document.getElementById("specific-title");
+      const btnSubmit = document.getElementById("btn-submit");
+      const searchContainer = document.getElementById("search-container");
+      const editBadge = document.getElementById("edit-badge");
+      const btnCancelEdit = document.getElementById("btn-cancel-edit");
+      const btnSearchEpid = document.getElementById("btn-search-epid");
+      const btnRetrySync = document.getElementById("btn-retry-sync");
+      const btnRetryNotify = document.getElementById("btn-retry-notify");
+      const btnRetryTelegram = document.getElementById("btn-retry-telegram");
+      const btnAdminMenu = document.getElementById("btn-admin-menu");
+      const adminMenuWrap = document.getElementById("admin-menu-wrap");
+      const adminMenuDropdown = document.getElementById("admin-menu-dropdown");
+      const btnOpenPin = document.getElementById("btn-open-pin");
+
+      if (!selector || !formElement || !pelaporContainer || !pasienContainer || !specificContainer || !btnSubmit) {
+        console.warn("App init dibatalkan: elemen inti belum lengkap.");
+        return;
+      }
+
+      window.applyRoleUIState = function applyRoleUIState() {
+        const currentRole = String((SESSION_USER && SESSION_USER.role) || "").trim().toLowerCase();
+        const isViewer = currentRole === "viewer";
+        const isAdmin = currentRole === "admin";
+
+        if (isViewer) {
+          btnSubmit.disabled = true;
+          btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
+          btnSubmit.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
+          if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
+          selector.classList.add("opacity-90");
+        } else {
+          btnSubmit.classList.remove("opacity-60", "cursor-not-allowed");
+          selector.classList.remove("opacity-90");
+        }
+
+        if (btnOpenPin) {
+          if (isViewer) btnOpenPin.classList.add("hidden");
+          else btnOpenPin.classList.remove("hidden");
+        }
+
+        if (adminMenuWrap) {
+          if (!isAdmin) adminMenuWrap.classList.add("hidden");
+          else adminMenuWrap.classList.remove("hidden");
+        }
+        if (btnAdminMenu) {
+          if (!isAdmin) btnAdminMenu.classList.add("hidden");
+          else btnAdminMenu.classList.remove("hidden");
+        }
+        if (adminMenuDropdown && !isAdmin) {
+          adminMenuDropdown.classList.add("hidden");
+        }
+
+        if (btnRetrySync) {
+          if (!isAdmin) btnRetrySync.classList.add("hidden");
+          else btnRetrySync.classList.remove("hidden");
+        }
+        if (btnRetryNotify) {
+          if (!isAdmin) btnRetryNotify.classList.add("hidden");
+          else btnRetryNotify.classList.remove("hidden");
+        }
+        if (btnRetryTelegram) {
+          if (!isAdmin) btnRetryTelegram.classList.add("hidden");
+          else btnRetryTelegram.classList.remove("hidden");
+        }
+
+        return { isViewer, isAdmin, currentRole };
+      };
+
+      const { isViewer, isAdmin } = window.applyRoleUIState();
+
+      if (btnAdminMenu && adminMenuDropdown) {
+        btnAdminMenu.addEventListener("click", function(e) {
+          e.stopPropagation();
+          const currentRole = String((SESSION_USER && SESSION_USER.role) || "").trim().toLowerCase();
+          if (currentRole !== "admin") return;
+          adminMenuDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", function(ev) {
+          if (!adminMenuWrap || !adminMenuDropdown) return;
+          if (!adminMenuWrap.contains(ev.target)) {
+            adminMenuDropdown.classList.add("hidden");
+          }
+        });
+      }
+
+      if (btnRetrySync) {
+        if (!isAdmin) {
+          btnRetrySync.classList.add("hidden");
+        } else {
+          btnRetrySync.classList.remove("hidden");
+          btnRetrySync.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Retry sync hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!confirm("Jalankan retry sinkronisasi pengampu untuk semua kasus MR yang belum SYNCED?")) return;
+
+            btnRetrySync.disabled = true;
+            btnRetrySync.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btnRetrySync.disabled = false;
+                btnRetrySync.innerHTML = '<i class="fas fa-rotate-right mr-2"></i>Retry Sync Pengampu';
+
+                if (res && res.status === "success") {
+                  showTopAlert(`Retry sync selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.synced || 0}, Gagal: ${res.failed || 0}`, true);
+                } else {
+                  showTopAlert((res && res.message) || "Retry sync gagal.", false);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btnRetrySync.disabled = false;
+                btnRetrySync.innerHTML = '<i class="fas fa-rotate-right mr-2"></i>Retry Sync Pengampu';
+                showTopAlert("Retry sync gagal: " + (err && err.message ? err.message : err), false);
+              })
+              .retryAllPendingPengampuSync(SESSION_TOKEN);
+          });
+        }
+      }
+
+      if (btnRetryNotify) {
+        if (!isAdmin) {
+          btnRetryNotify.classList.add("hidden");
+        } else {
+          btnRetryNotify.classList.remove("hidden");
+          btnRetryNotify.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Retry notifikasi hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!confirm("Jalankan retry notifikasi pengampu untuk semua kasus MR yang status notifikasinya belum SENT?")) return;
+
+            btnRetryNotify.disabled = true;
+            btnRetryNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btnRetryNotify.disabled = false;
+                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Pengampu';
+
+                if (res && res.status === "success") {
+                  showTopAlert(`Retry notifikasi selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.sent || 0}, Gagal: ${res.failed || 0}`, true);
+                } else {
+                  showTopAlert((res && res.message) || "Retry notifikasi gagal.", false);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btnRetryNotify.disabled = false;
+                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Pengampu';
+                showTopAlert("Retry notifikasi gagal: " + (err && err.message ? err.message : err), false);
+              })
+              .retryAllPendingPengampuNotification(SESSION_TOKEN);
+          });
+        }
+      }
+
+      if (btnRetryTelegram) {
+        if (!isAdmin) {
+          btnRetryTelegram.classList.add("hidden");
+        } else {
+          btnRetryTelegram.classList.remove("hidden");
+          btnRetryTelegram.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Retry Telegram hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!confirm("Jalankan retry notifikasi Telegram untuk semua kasus MR yang status Telegram-nya belum SENT?")) return;
+
+            btnRetryTelegram.disabled = true;
+            btnRetryTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btnRetryTelegram.disabled = false;
+                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Notifikasi Telegram';
+
+                if (res && res.status === "success") {
+                  showTopAlert(`Retry Telegram selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.sent || 0}, Gagal: ${res.failed || 0}`, true);
+                } else {
+                  showTopAlert((res && res.message) || "Retry Telegram gagal.", false);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btnRetryTelegram.disabled = false;
+                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Notifikasi Telegram';
+                showTopAlert("Retry Telegram gagal: " + (err && err.message ? err.message : err), false);
+              })
+              .retryAllFailedTelegramPd3iNotification(SESSION_TOKEN);
+          });
+        }
+      }
+
+      // ── Tombol Dashboard & Export CSV ──────────────────────────────
+      const btnDashboard = document.getElementById("btn-dashboard");
+      const btnExportCsv = document.getElementById("btn-export-csv");
+
+      if (btnDashboard) {
+        if (!isAdmin) {
+          btnDashboard.classList.add("hidden");
+        } else {
+          btnDashboard.classList.remove("hidden");
+          btnDashboard.addEventListener("click", function () {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            const modal = document.getElementById("dashboard-modal");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+            if (typeof initDashboard === "function") initDashboard();
+          });
+        }
+      }
+
+      if (btnExportCsv) {
+        if (!isAdmin) {
+          btnExportCsv.classList.add("hidden");
+        } else {
+          btnExportCsv.classList.remove("hidden");
+          btnExportCsv.addEventListener("click", function () {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (typeof handleExportCsv === "function") handleExportCsv();
+          });
+        }
+      }
+
+      const COMMON = getCommonConfigSafe();
+
+      document.addEventListener("input", function(e) {
+        if (e.target && e.target.closest && e.target.closest("#dynamic-form")) {
+          saveFormDraft();
+        }
+      });
+
+      document.addEventListener("change", function(e) {
+        if (e.target && e.target.type === "checkbox") {
+          const hidden = document.getElementById(`${e.target.id}__hidden`);
+          if (hidden) hidden.value = e.target.checked ? "Ya" : "Tidak";
+        }
+
+        if (e.target && ((e.target.closest && e.target.closest("#dynamic-form")) || e.target.id === "form-selector" || e.target.id === "search-epid")) {
+          saveFormDraft();
+        }
+      });
+
+      window.addEventListener("beforeunload", function() {
+        saveFormDraft();
+      });
+
+      selector.addEventListener("change", function() {
+        clearFormDraft();
+        const dx = this.value;
+        const cfg = getDxConfigSafe(dx);
+
+        pelaporContainer.innerHTML = "";
+        pasienContainer.innerHTML = "";
+        specificContainer.innerHTML = "";
+        hideTopAlert();
+
+        isEditMode = false;
+        if (editBadge) editBadge.classList.add("hidden");
+        if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove("bg-yellow-600");
+        btnSubmit.classList.add("bg-blue-600");
+        btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+
+        if (choicesInstance) {
+          try { choicesInstance.destroy(); } catch (e) {}
+          choicesInstance = null;
+        }
+        if (rsChoicesInstance) {
+          try { rsChoicesInstance.destroy(); } catch (e) {}
+          rsChoicesInstance = null;
+        }
+
+        if (!dx || !cfg) {
+          formElement.classList.add("hidden");
+          if (searchContainer) searchContainer.classList.add("hidden");
+          return;
+        }
+
+        formElement.classList.remove("hidden");
+        if (searchContainer) searchContainer.classList.remove("hidden");
+
+        (COMMON.pelapor || []).forEach(f => {
+          pelaporContainer.innerHTML += generateHTML(f);
+        });
+
+        (COMMON.pasien || []).forEach(f => {
+          pasienContainer.innerHTML += generateHTML(f);
+        });
+
+        specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;
+        renderDiagnosisSections(cfg, specificContainer);
+
+        setTimeout(async () => {
+          addDefaultRowsForDynamicTables();
+          initWilayahDropdowns();
+          initGeoButton();
+          // Evaluasi showIf setelah form dirender
+          applyAllShowIf();
+
+          const unit = document.getElementById("Nama unit pelapor");
+          if (unit) {
+            unit.disabled = true;
+            unit.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
+          }
+
+          await loadRefImunisasi();
+          buildRiwayatImunisasiRows();
+          forceBuildImunisasiWhenReady();
+
+          loadFaskesRealtime("", false);
+          if (MASTER_FASKES && MASTER_FASKES.length > 0) {
+            initChoicesRumahSakit();
+          }
+        }, 50);
+      });
+
+      if (btnSearchEpid) {
+        btnSearchEpid.addEventListener("click", function() {
+          const dx = selector.value;
+
+          const filters = {
+            epid:         (document.getElementById("search-epid")?.value || "").trim(),
+            nama:         (document.getElementById("search-nama")?.value || "").trim(),
+            tanggalLahir: (document.getElementById("search-tgl-lahir")?.value || "").trim(),
+            orangTua:     (document.getElementById("search-orang-tua")?.value || "").trim(),
+            alamat:       (document.getElementById("search-alamat")?.value || "").trim(),
+            kelurahan:    (document.getElementById("search-kelurahan")?.value || "").trim(),
+            sortBy:       (document.getElementById("search-sort")?.value || "updated_desc")
+          };
+
+          const hasFilter = filters.epid || filters.nama || filters.tanggalLahir ||
+                            filters.orangTua || filters.alamat || filters.kelurahan;
+
+          if (!dx) {
+            showTopAlert("Pilih Jenis Penyakit terlebih dahulu.", false);
+            return;
+          }
+          if (!hasFilter) {
+            showTopAlert("Isi minimal satu kriteria pencarian.", false);
+            return;
+          }
+          if (!safeGsRun()) {
+            showTopAlert("Fitur Cari/Edit hanya berfungsi di lingkungan WebApp (/exec).", false);
+            return;
+          }
+
+          const searchResultsBox = document.getElementById("search-results");
+          if (searchResultsBox) {
+            searchResultsBox.classList.remove("hidden");
+            searchResultsBox.innerHTML = `<div class="p-4 text-sm text-slate-500 text-center"><i class="fas fa-spinner fa-spin mr-2"></i>Mencari data...</div>`;
+          }
+
+          google.script.run
+            .withSuccessHandler(function(data) {
+              // data bisa array (lama) atau objek paginasi baru
+              const results = Array.isArray(data) ? data : (data && data.results ? data.results : []);
+              const total   = Array.isArray(data) ? data.length : (data && data.total != null ? data.total : results.length);
+              _renderSearchResultsList(results, total, dx);
+            })
+            .withFailureHandler(function(err) {
+              console.error("searchRecords failed:", err);
+              if (searchResultsBox) {
+                searchResultsBox.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">Gagal mencari data. Silakan coba lagi.</div>`;
+              }
+            })
+            .searchRecords(dx, filters, SESSION_TOKEN);
+        });
+      }
+
+      /**
+       * Render daftar hasil pencarian multi-kriteria.
+       */
+      function _renderSearchResultsList(results, total, dx) {
+        const box = document.getElementById("search-results");
+        if (!box) return;
+
+        box.classList.remove("hidden");
+
+        if (!results || results.length === 0) {
+          box.innerHTML = `<div class="p-4 text-sm text-slate-500 font-semibold text-center">Tidak ada data yang cocok dengan kriteria pencarian.</div>`;
+          return;
+        }
+
+        let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${results.length} dari ${total} hasil</div>`;
+        html += `<ul class="divide-y divide-slate-100">`;
+
+        results.forEach(function(item) {
+          html += `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer transition"
+            onclick="_loadRecordFromSearch_('${(item.epid || "").replace(/'/g, "\\'")}', '${dx}')">
+            <div class="font-extrabold text-slate-800 text-sm">${item.nama || "-"}</div>
+            <div class="text-xs text-slate-500 mt-0.5">
+              EPID: <span class="font-bold text-blue-700">${item.epid || "-"}</span>
+              &nbsp;|&nbsp; Lahir: ${item.tanggalLahir || "-"}
+              &nbsp;|&nbsp; ${item.kelurahan || "-"}
+            </div>
+            ${item.orangTua ? `<div class="text-xs text-slate-400 mt-0.5">Ortu/Wali: ${item.orangTua}</div>` : ""}
+          </li>`;
+        });
+
+        html += `</ul>`;
+        box.innerHTML = html;
+      }
+
+      window._loadRecordFromSearch_ = function(epid, dx) {
+        if (!epid || !dx) return;
+        if (!safeGsRun()) return;
+
+        const searchResultsBox = document.getElementById("search-results");
+        if (searchResultsBox) searchResultsBox.classList.add("hidden");
+
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Data...`;
+
+        google.script.run
+          .withSuccessHandler(async function(record) {
+            if (!record) {
+              showTopAlert("Data tidak ditemukan.", false);
+              btnSubmit.disabled = false;
+              btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+              return;
+            }
+
+            isEditMode = !isViewer;
+            if (editBadge) {
+              if (isViewer) editBadge.classList.add("hidden");
+              else editBadge.classList.remove("hidden");
+            }
+            if (btnCancelEdit) {
+              if (isViewer) btnCancelEdit.classList.add("hidden");
+              else btnCancelEdit.classList.remove("hidden");
+            }
+            if (isViewer) {
+              btnSubmit.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
+              btnSubmit.classList.remove("bg-yellow-600", "bg-blue-600");
+              btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
+              btnSubmit.disabled = true;
+            } else {
+              btnSubmit.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data EPID ${epid}`;
+              btnSubmit.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
+              btnSubmit.classList.add("bg-yellow-600");
+              btnSubmit.disabled = false;
+            }
+
+            hydrateRecordToForm(record);
+            applyAllShowIf();
+
+            if (record["Sumber Laporan"]) {
+              initChoices(record["Sumber Laporan"], record["Nama unit pelapor"] || "");
+            }
+            if (record["Apakah dirawat inap?"] === "Ya") {
+              setTimeout(() => { initChoicesRumahSakit(record["Nama Rumah Sakit"] || ""); }, 150);
+            }
+
+            const birthValidation = validateAndApplyBirthUI({ silent: true, hard: false });
+            applyBirthValidationUI(birthValidation);
+
+            await loadRefImunisasi();
+            buildRiwayatImunisasiRows();
+            forceBuildImunisasiWhenReady();
+            hydrateDynamicTables(record);
+
+            showTopAlert("Data berhasil dimuat. Silakan lakukan perubahan.", true);
+            window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
+          })
+          .withFailureHandler(function(err) {
+            console.error("getRecordByEpid failed:", err);
+            showTopAlert("Gagal memuat data.", false);
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          })
+          .getRecordByEpid(dx, epid, SESSION_TOKEN);
+      };
+                showTopAlert("Data dengan EPID tersebut tidak ditemukan.", false);
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+                return;
+              }
+
+              isEditMode = !isViewer;
+              if (editBadge) {
+                if (isViewer) editBadge.classList.add("hidden");
+                else editBadge.classList.remove("hidden");
+              }
+              if (btnCancelEdit) {
+                if (isViewer) btnCancelEdit.classList.add("hidden");
+                else btnCancelEdit.classList.remove("hidden");
+              }
+              if (isViewer) {
+                btnSubmit.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
+                btnSubmit.classList.remove("bg-yellow-600", "bg-blue-600");
+                btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
+                btnSubmit.disabled = true;
+              } else {
+                btnSubmit.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data EPID ${epid}`;
+                btnSubmit.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
+                btnSubmit.classList.add("bg-yellow-600");
+                btnSubmit.disabled = false;
+              }
+
+      if (btnCancelEdit) {
+        btnCancelEdit.addEventListener("click", function() {
+          location.reload();
+        });
+      }
+
+      restoreFormDraft();
+
+      formElement.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        if (isViewer) {
+          showTopAlert("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.", false);
+          return;
+        }
+
+        const birthValidation = validateAndApplyBirthUI({ silent: false, hard: true });
+
+        if (!birthValidation || !birthValidation.ok) {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = isEditMode
+            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          return;
+        }
+
+        const warnings = checkConsistencyWarnings();
+        if (warnings.length > 0) {
+          showTopAlert(warnings.join(" "), false);
+        }
+
+        updateImunisasiSummary();
+
+        btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
+        btnSubmit.disabled = true;
+
+        const formData = new FormData(this);
+        const dataObj = { dx: selector.value, __token: SESSION_TOKEN };
+        formData.forEach((v, k) => { dataObj[k] = v; });
+
+        if (!dataObj["Nama unit pelapor"]) {
+          showTopAlert("Nama Unit Pelapor wajib dipilih.", false);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          return;
+        }
+
+        const unitSelect = document.getElementById("Nama unit pelapor");
+        dataObj["FaskesKey"] =
+          unitSelect?.options[unitSelect.selectedIndex]?.getAttribute("data-key")
+          || (dataObj["Nama unit pelapor"] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+        const rsSelect = document.getElementById("Nama Rumah Sakit");
+        if (rsSelect) {
+          dataObj["Nama Rumah Sakit"] = dataObj["Nama Rumah Sakit"] || rsSelect.value || "";
+          if (dataObj["Nama Rumah Sakit"]) {
+            dataObj["RumahSakitKey"] =
+              rsSelect?.options[rsSelect.selectedIndex]?.getAttribute("data-key")
+              || (dataObj["Nama Rumah Sakit"] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+          }
+        }
+
+        document.querySelectorAll("table[data-dynamic-table]").forEach(table => {
+          const tableId = table.getAttribute("data-dynamic-table");
+          const tableData = [];
+
+          table.querySelectorAll("tbody tr").forEach(row => {
+            const rowObj = {};
+            row.querySelectorAll("input, select").forEach(i => {
+              rowObj[i.getAttribute("data-name")] = i.value;
+            });
+
+            if (tableId === "Riwayat Imunisasi") {
+              rowObj["KodeImunisasi"] = row.dataset.kodeImun || "";
+              if (rowObj["Jenis Imunisasi"]) tableData.push(rowObj);
+            } else {
+              if (rowObj["Nama"]) tableData.push(rowObj);
+            }
+          });
+
+          dataObj[tableId] = tableData.length > 0 ? JSON.stringify(tableData) : "";
+        });
+
+        try {
+          let res = null;
+
+          try {
+            res = await postJsonToWebApp(GOOGLE_SCRIPT_URL, dataObj);
+          } catch (webErr) {
+            console.warn("POST /exec gagal, fallback ke google.script.run.saveFormData:", webErr);
+            res = await saveFormViaGsRun(dataObj);
+          }
+
+          if (res && res.status === "success") {
+            showTopAlert(res.message || "Data berhasil disimpan.", true);
+
+            let epidSaved = String((res && res.epid) || dataObj["Nomor EPID"] || "").trim();
+            let dxSaved = String((res && res.dx) || dataObj.dx || "").trim();
+            let printUrl = String((res && res.printUrl) || "").trim();
+
+            if ((!epidSaved || !printUrl) && safeGsRun()) {
+              try {
+                const metaRes = await resolveLatestSavedMetaViaGsRun(dataObj);
+                if (metaRes && metaRes.status === "success") {
+                  epidSaved = String(metaRes.epid || epidSaved || "").trim();
+                  dxSaved = String(metaRes.dx || dxSaved || "").trim();
+                  printUrl = String(metaRes.printUrl || printUrl || "").trim();
+                }
+              } catch (metaErr) {
+                console.warn("resolveLatestSavedMetaViaGsRun gagal:", metaErr);
+              }
+            }
+
+            if (epidSaved && !dataObj["Nomor EPID"]) {
+              dataObj["Nomor EPID"] = epidSaved;
+              const epidInput = document.getElementById("Nomor EPID");
+              if (epidInput) epidInput.value = epidSaved;
+            }
+
+            console.log("Save response:", res);
+            console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
+
+            clearFormDraft();
+
+            showSuccessModal(
+              res.message || "Data berhasil disimpan.",
+              printUrl,
+              { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
+            );
+          } else {
+            showTopAlert("Error: " + (res?.message || "Gagal menyimpan data."), false);
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = isEditMode
+              ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+              : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          }
+        } catch (err) {
+          console.error("submit failed:", err);
+          showTopAlert("Gagal submit. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.", false);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+        }
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initAppModule);
+    } else {
+      initAppModule();
+    }
+  })();
+</script>

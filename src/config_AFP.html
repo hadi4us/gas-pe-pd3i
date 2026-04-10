@@ -1,0 +1,40 @@
+<script>
+  const CONFIG_AFP = {
+    code: "AFP",
+    title: "Acute Flaccid Paralysis",
+    sections: [
+      {
+        key: "klinis",
+        title: "Informasi Klinis & Gejala",
+        fields: [
+          { id: "Tgl mulai lumpuh", label: "Tgl mulai lumpuh", type: "date", required: true },
+          { id: "Sifat akut", label: "Sifat akut?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Lumpuh layuh", label: "Lumpuh layuh?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Asimetris", label: "Asimetris?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Demam saat onset", label: "Demam saat onset?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] },
+          { id: "Lokasi kelumpuhan", label: "Lokasi kelumpuhan", type: "text" }
+        ]
+      },
+      IMUNISASI_SECTION,
+      {
+        key: "spesimen",
+        title: "Informasi Spesimen",
+        fields: [
+          { id: "Spesimen tinja 1 diambil?", label: "Spesimen tinja 1 diambil?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal tinja 1", label: "Tanggal tinja 1", type: "date", showIf: { field: "Spesimen tinja 1 diambil?", values: ["Ya"] } },
+          { id: "Spesimen tinja 2 diambil?", label: "Spesimen tinja 2 diambil?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal tinja 2", label: "Tanggal tinja 2", type: "date", showIf: { field: "Spesimen tinja 2 diambil?", values: ["Ya"] } },
+          { id: "Kondisi spesimen baik", label: "Kondisi spesimen baik?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] }
+        ]
+      },
+      {
+        key: "followup",
+        title: "Follow Up 60 Hari",
+        fields: [
+          { id: "Tanggal follow up 60 hari", label: "Tanggal follow up 60 hari", type: "date" },
+          { id: "Masih ada kelumpuhan", label: "Masih ada kelumpuhan?", type: "select", options: ["Ya", "Tidak", "Belum follow up"] }
+        ]
+      }
+    ]
+  };
+</script>

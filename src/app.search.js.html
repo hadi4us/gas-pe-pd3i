@@ -1,0 +1,267 @@
+<script>
+  // ============================================================
+  // PAGINATION STATE (Req 9.1–9.6)
+  // ============================================================
+  let _searchCurrentPage_ = 1;
+  let _searchTotalPages_  = 0;
+  let _searchTotalResults_ = 0;
+  let _searchPageSize_    = 30;
+  let _lastSearchFilters_ = null;
+
+  /**
+   * Render hasil pencarian dengan info pagination.
+   * Req 9.3: tampilkan "Menampilkan X-Y dari Z hasil"
+   * Req 9.4: tombol Sebelumnya / Berikutnya
+   * Req 9.6: pesan jika tidak ada hasil
+   */
+  function renderSearchResults(data) {
+    const container = document.getElementById("search-results");
+    if (!container) return;
+
+    // data bisa berupa array lama (backward compat) atau objek paginasi baru
+    let results, total, page, pageSize, totalPages;
+    if (Array.isArray(data)) {
+      results    = data;
+      total      = data.length;
+      page       = 1;
+      pageSize   = data.length;
+      totalPages = 1;
+    } else {
+      results    = data.results || [];
+      total      = data.total || 0;
+      page       = data.page || 1;
+      pageSize   = data.pageSize || 30;
+      totalPages = data.totalPages || 0;
+    }
+
+    _searchCurrentPage_  = page;
+    _searchTotalPages_   = totalPages;
+    _searchTotalResults_ = total;
+    _searchPageSize_     = pageSize;
+
+    container.classList.remove("hidden");
+
+    if (total === 0) {
+      // Req 9.6
+      container.innerHTML = `<div class="p-4 text-sm text-slate-500 font-semibold text-center">Tidak ada data yang cocok dengan kriteria pencarian.</div>`;
+      return;
+    }
+
+    const startNum = (page - 1) * pageSize + 1;
+    const endNum   = Math.min(page * pageSize, total);
+
+    let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${startNum}–${endNum} dari ${total} hasil</div>`;
+    html += `<ul class="divide-y divide-slate-100">`;
+
+    results.forEach(function (item) {
+      html += `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer transition flex flex-col gap-0.5"
+        onclick="loadRecordForEdit('${item.epid}')">
+        <div class="font-extrabold text-slate-800 text-sm">${item.nama || "-"}</div>
+        <div class="text-xs text-slate-500">EPID: <span class="font-bold text-blue-700">${item.epid || "-"}</span>
+          &nbsp;|&nbsp; Lahir: ${item.tanggalLahir || "-"}
+          &nbsp;|&nbsp; ${item.kelurahan || "-"}
+        </div>
+        ${item.orangTua ? `<div class="text-xs text-slate-400">Ortu/Wali: ${item.orangTua}</div>` : ""}
+      </li>`;
+    });
+
+    html += `</ul>`;
+
+    // Req 9.4: tombol navigasi
+    if (totalPages > 1) {
+      html += `<div class="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
+        <button type="button" id="btn-search-prev"
+          class="px-3 py-1.5 rounded-lg text-sm font-bold border ${page <= 1 ? "opacity-40 cursor-not-allowed border-slate-200 text-slate-400" : "border-blue-300 text-blue-700 hover:bg-blue-50"}"
+          ${page <= 1 ? "disabled" : ""}
+          onclick="_searchGoToPage_(${page - 1})">
+          <i class="fas fa-chevron-left mr-1"></i>Sebelumnya
+        </button>
+        <span class="text-xs text-slate-500 font-semibold">Halaman ${page} / ${totalPages}</span>
+        <button type="button" id="btn-search-next"
+          class="px-3 py-1.5 rounded-lg text-sm font-bold border ${page >= totalPages ? "opacity-40 cursor-not-allowed border-slate-200 text-slate-400" : "border-blue-300 text-blue-700 hover:bg-blue-50"}"
+          ${page >= totalPages ? "disabled" : ""}
+          onclick="_searchGoToPage_(${page + 1})">
+          Berikutnya<i class="fas fa-chevron-right ml-1"></i>
+        </button>
+      </div>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  /**
+   * Pindah ke halaman tertentu dengan mempertahankan filter.
+   * Req 9.5: pertahankan nilai filter saat berpindah halaman
+   */
+  function _searchGoToPage_(targetPage) {
+    if (!_lastSearchFilters_) return;
+    const filters = Object.assign({}, _lastSearchFilters_, { page: targetPage, pageSize: _searchPageSize_ });
+    const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
+    if (!dx || !SESSION_TOKEN) return;
+
+    google.script.run
+      .withSuccessHandler(function (data) { renderSearchResults(data); })
+      .withFailureHandler(function (err) { console.error("searchRecords gagal:", err); })
+      .searchRecords(dx, filters, SESSION_TOKEN);
+  }
+
+  /**
+   * Simpan filter terakhir dan jalankan pencarian halaman 1.
+   * Dipanggil dari event handler tombol "Cari Data".
+   */
+  function executeSearch(dx, filters) {
+    _lastSearchFilters_ = Object.assign({}, filters, { page: 1, pageSize: 30 });
+    _searchCurrentPage_ = 1;
+
+    google.script.run
+      .withSuccessHandler(function (data) { renderSearchResults(data); })
+      .withFailureHandler(function (err) {
+        console.error("searchRecords gagal:", err);
+        const container = document.getElementById("search-results");
+        if (container) {
+          container.classList.remove("hidden");
+          container.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">Gagal mencari data. Silakan coba lagi.</div>`;
+        }
+      })
+      .searchRecords(dx, _lastSearchFilters_, SESSION_TOKEN);
+  }
+
+  // ============================================================
+  // DUPLICATE CHECKER (Req 8.1–8.4)
+  // ============================================================
+  let _dupCheckTimer_ = null;
+
+  /**
+   * Cek duplikasi kasus saat field Nama dan Tanggal Lahir terisi.
+   * Req 8.1: panggil checkDuplicate saat kedua field terisi
+   * Req 8.2: tampilkan peringatan non-blocking
+   * Req 8.3: case-insensitive (dilakukan di backend)
+   * Req 8.4: excludeEpid saat mode edit
+   */
+  function initDuplicateChecker() {
+    const namaEl    = document.getElementById("Nama");
+    const tglLahirEl = document.getElementById("Tanggal Lahir");
+    if (!namaEl || !tglLahirEl) return;
+    if (namaEl.dataset.dupBound === "1") return;
+    namaEl.dataset.dupBound = "1";
+
+    function triggerDupCheck() {
+      const nama      = String(namaEl.value || "").trim();
+      const tglLahir  = String(tglLahirEl.value || "").trim();
+      const dx        = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
+
+      // Hapus peringatan lama
+      const existing = document.getElementById("dup-warning-box");
+      if (existing) existing.remove();
+
+      if (!nama || !tglLahir || !dx || !SESSION_TOKEN) return;
+
+      // Debounce 600ms
+      clearTimeout(_dupCheckTimer_);
+      _dupCheckTimer_ = setTimeout(function () {
+        const excludeEpid = isEditMode ? (document.getElementById("Nomor EPID")?.value || "") : "";
+
+        google.script.run
+          .withSuccessHandler(function (dupes) {
+            if (!Array.isArray(dupes) || dupes.length === 0) return;
+            _showDuplicateWarning_(dupes);
+          })
+          .withFailureHandler(function () { /* silent fail */ })
+          .checkDuplicate(dx, nama, tglLahir, excludeEpid, SESSION_TOKEN);
+      }, 600);
+    }
+
+    namaEl.addEventListener("blur", triggerDupCheck);
+    tglLahirEl.addEventListener("change", triggerDupCheck);
+  }
+
+  /**
+   * Tampilkan peringatan duplikat non-blocking.
+   * Req 8.2
+   */
+  function _showDuplicateWarning_(dupes) {
+    const form = document.getElementById("dynamic-form");
+    if (!form) return;
+
+    const existing = document.getElementById("dup-warning-box");
+    if (existing) existing.remove();
+
+    const box = document.createElement("div");
+    box.id = "dup-warning-box";
+    box.className = "mb-4 p-4 rounded-lg border border-amber-300 bg-amber-50 text-sm font-semibold text-amber-900";
+
+    const list = dupes.slice(0, 5).map(function (d) {
+      return `<li>EPID <strong>${d.epid}</strong> — ${d.nama} (lahir: ${d.tanggalLahir}, pelacakan: ${d.tanggalPelacakan || "-"})</li>`;
+    }).join("");
+
+    box.innerHTML = `<div class="flex items-start gap-2">
+      <i class="fas fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+      <div>
+        <div class="font-extrabold mb-1">Potensi data duplikat ditemukan:</div>
+        <ul class="list-disc list-inside space-y-0.5">${list}</ul>
+        <div class="mt-2 text-xs text-amber-700">Anda tetap bisa menyimpan data ini. Sistem akan menandai sebagai "Potensi Duplikat".</div>
+      </div>
+      <button type="button" onclick="this.closest('#dup-warning-box').remove()" class="ml-auto text-amber-400 hover:text-amber-600"><i class="fas fa-xmark"></i></button>
+    </div>`;
+
+    // Sisipkan sebelum tombol submit
+    const btnSubmit = document.getElementById("btn-submit");
+    if (btnSubmit) {
+      form.insertBefore(box, btnSubmit);
+    } else {
+      form.prepend(box);
+    }
+
+    // Set flag untuk payload submit (Req 8.6)
+    window._hasDuplicateWarning_ = true;
+  }
+
+  // ============================================================
+  // HYDRATE RECORD
+  // ============================================================
+
+function hydrateRecordToForm(record) {
+    Object.keys(record || {}).forEach(key => {
+      if (key === "Nama unit pelapor" || key === "Nama Rumah Sakit") return;
+      const el = document.getElementById(key);
+      if (el) {
+        el.value = record[key];
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  }
+
+  function hydrateDynamicTableByJson(tableId, jsonString) {
+    const tbody = document.getElementById(`tbody-${tableId}`);
+    if (!tbody || !jsonString) return;
+
+    tbody.innerHTML = "";
+    try {
+      const rows = JSON.parse(jsonString);
+      (rows || []).forEach(item => {
+        if (tableId === "Riwayat Imunisasi") {
+          addDynamicRow(tableId, {
+            __kode: item.KodeImunisasi || item.Kode || "",
+            "Jenis Imunisasi": item["Jenis Imunisasi"] || "",
+            "Status": item["Status"] || "",
+            "Tanggal": item["Tanggal"] || "",
+            "Sumber Informasi": item["Sumber Informasi"] || "",
+            "Keterangan": item["Keterangan"] || ""
+          });
+        } else {
+          addDynamicRow(tableId, item);
+        }
+      });
+    } catch (e) {
+      console.warn(`Gagal parse ${tableId}:`, e);
+    }
+  }
+
+  function hydrateDynamicTables(record) {
+    if (!record) return;
+    hydrateDynamicTableByJson("Kontak Erat", record["Kontak Erat"]);
+    hydrateDynamicTableByJson("Riwayat Imunisasi", record["Riwayat Imunisasi"]);
+    updateImunisasiSummary();
+  }
+</script>
+

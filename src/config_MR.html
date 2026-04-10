@@ -1,0 +1,139 @@
+<script>
+  const CONFIG_MR = {
+    code: "MR",
+    title: "Campak / Rubella",
+    sections: [
+      {
+        key: "klinis_gejala_utama",
+        title: "Informasi Klinis & Gejala Utama",
+        fields: [
+          { id: "Tanggal mulai demam", label: "Tanggal mulai demam", type: "date", required: true },
+          { id: "Tanggal mulai ruam", label: "Tanggal mulai ruam", type: "date", required: true },
+          { id: "Spacer Gejala Utama", label: "", type: "header" },
+
+          { id: "Batuk", label: "Batuk", type: "select", options: OPT_YA_TIDAK },
+          { id: "Pilek", label: "Pilek", type: "select", options: OPT_YA_TIDAK },
+          { id: "Mata merah", label: "Mata merah", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+
+      {
+        key: "klinis_rubella_khusus",
+        title: "Gejala Klinis Khas Rubella",
+        fields: [
+          { id: "Arthralgia", label: "Arthralgia (nyeri sendi)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Bagian Sendi", label: "Bagian sendi", type: "text", fullWidth: true, required: true, showIf: { field: "Arthralgia", values: ["Ya"] } },
+          { id: "Adenopathy", label: "Adenopathy (pembesaran kelenjar getah bening)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Lokasi Adenopathy", label: "Lokasi adenopathy", type: "text", fullWidth: true, required: true, showIf: { field: "Adenopathy", values: ["Ya"] } }
+        ]
+      },
+
+      {
+        key: "klinis_kondisi_khusus",
+        title: "Kondisi Khusus",
+        fields: [
+          { id: "Kehamilan", label: "Kehamilan (isi untuk pasien perempuan)", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Umur kehamilan", label: "Umur kehamilan (bulan)", type: "number", showIf: { field: "Kehamilan", values: ["Ya"] } }
+        ]
+      },
+
+      {
+        key: "klinis_gejala_lain",
+        title: "Gejala Lain",
+        fields: [
+          { id: "Gejala lain", label: "Lainnya (gejala lain)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Sebutkan gejala lain", label: "Sebutkan gejala lain", type: "text", fullWidth: true, required: true, showIf: { field: "Gejala lain", values: ["Ya"] } }
+        ]
+      },
+
+      {
+        key: "komplikasi",
+        title: "Komplikasi",
+        fields: [
+          { id: "Diare", label: "Diare", type: "select", options: OPT_YA_TIDAK },
+          { id: "Bronchopneumonia", label: "Bronchopneumonia", type: "select", options: OPT_YA_TIDAK },
+          { id: "Kebutaan", label: "Kebutaan", type: "select", options: OPT_YA_TIDAK },
+          { id: "Otitis media", label: "Otitis media", type: "select", options: OPT_YA_TIDAK },
+          { id: "Pneumonia", label: "Pneumonia", type: "select", options: OPT_YA_TIDAK },
+          { id: "Encephalitis", label: "Encephalitis", type: "select", options: OPT_YA_TIDAK },
+          { id: "Malnutrisi", label: "Malnutrisi", type: "select", options: OPT_YA_TIDAK },
+          { id: "Ulkus mukosa mulut", label: "Ulkus mukosa mulut", type: "select", options: OPT_YA_TIDAK },
+          { id: "Lainnya komplikasi", label: "Lainnya (komplikasi)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Sebutkan komplikasi lain", label: "Sebutkan komplikasi lain", type: "text", fullWidth: true, required: true, showIf: { field: "Lainnya komplikasi", values: ["Ya"] } }
+        ]
+      },
+
+      {
+        key: "perawatan",
+        title: "Riwayat Perawatan",
+        fields: [
+          { id: "Apakah dirawat inap?", label: "Apakah dirawat inap?", type: "select", options: ["Ya", "Tidak"], required: true },
+
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
+          { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
+
+          { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
+
+          { id: "Status Pasien Rawat Inap", label: "Status Pasien Rawat Inap", type: "select", options: ["Masih dirawat", "Sudah pulang"], required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
+
+          { id: "Tanggal Pulang", label: "Tanggal Pulang", type: "date", required: true, showIf: { field: "Status Pasien Rawat Inap", values: ["Sudah pulang"] } }
+        ]
+      },
+
+      IMUNISASI_SECTION,
+
+      {
+        key: "epidemiologi_pajanan",
+        title: "Informasi Epidemiologis",
+        fields: [
+          { id: "Pemberian Vitamin A", label: "Pemberian Vitamin A", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Ada kasus serupa di lingkungan", label: "Ada anggota keluarga/masyarakat sekitar yang sakit sama?", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Jumlah kasus sekitar", label: "Jumlah kasus sekitar", type: "number", required: true, showIf: { field: "Ada kasus serupa di lingkungan", values: ["Ya"] } },
+
+          { id: "Riwayat perjalanan 7-21 hari", label: "Apakah bepergian 1 bulan terakhir?", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Lokasi perjalanan", label: "Lokasi perjalanan", type: "text", fullWidth: true, required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
+          { id: "Tanggal pergi", label: "Tanggal pergi", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
+          { id: "Tanggal pulang perjalanan", label: "Tanggal kembali", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
+
+          { id: "Riwayat kontak kasus serupa", label: "Riwayat kontak dengan kasus serupa?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Riwayat kunjungan fasilitas kesehatan", label: "Riwayat kunjungan fasilitas kesehatan sebelum diagnosis?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Cluster/kejadian luar biasa", label: "Diduga bagian dari klaster/KLB?", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+
+      {
+        key: "spesimen",
+        title: "Informasi Spesimen",
+        fields: [
+          { id: "Apakah spesimen darah diambil", label: "Apakah spesimen darah diambil", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Jenis Sampel Darah", label: "Jenis Sampel Darah", type: "select", required: true, options: ["Serum", "Darah lengkap", "Lainnya"], showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
+          { id: "Tanggal ambil spesimen darah", label: "Tanggal ambil spesimen darah", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
+          { id: "Tanggal pengiriman spesimen darah ke lab", label: "Tanggal pengiriman spesimen darah ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
+
+          { id: "Apakah spesimen lain diambil", label: "Apakah spesimen lain diambil", type: "select", options: OPT_YA_TIDAK },
+          { id: "Jenis Sampel Lain", label: "Jenis Sampel Lain", type: "select", required: true, options: ["Swab tenggorok", "Urine", "Lainnya"], showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
+          { id: "Tanggal ambil spesimen lain", label: "Tanggal ambil spesimen lain", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
+          { id: "Tanggal pengiriman spesimen lain ke lab", label: "Tanggal pengiriman spesimen lain ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } }
+        ]
+      },
+
+      {
+        key: "kondisi",
+        title: "Kondisi Saat Ini",
+        fields: [
+          { id: "Status akhir kasus", label: "Keadaan saat ini", type: "select", options: ["Hidup", "Meninggal", "Lost to follow-up"], required: true },
+          { id: "Tanggal meninggal", label: "Tanggal meninggal", type: "date", required: true, showIf: { field: "Status akhir kasus", values: ["Meninggal"] } },
+          { id: "Penyebab kematian", label: "Penyebab kematian", type: "text", fullWidth: true, required: true, showIf: { field: "Status akhir kasus", values: ["Meninggal"] } }
+        ]
+      },
+
+      {
+        key: "kontak",
+        title: "Kontak Erat",
+        fields: [
+          CONTACT_SECTION
+        ]
+      }
+    ]
+  };
+</script>

@@ -1,0 +1,254 @@
+/* ============================================================
+   STYLE.HTML — FINAL
+   ============================================================ */
+
+/* -----------------------------
+   Base helpers
+------------------------------ */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+/* -----------------------------
+   Dynamic wrapper show / hide
+------------------------------ */
+.field-wrapper {
+  transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+  opacity: 1;
+  max-height: 2400px;
+  overflow: visible;
+}
+
+.field-wrapper.hidden {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+}
+
+/* -----------------------------
+   Table container
+------------------------------ */
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 999px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+  border-radius: 999px;
+}
+
+/* -----------------------------
+   Choices.js - common
+------------------------------ */
+.choices {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+}
+
+.choices.is-open {
+  z-index: 9999 !important;
+}
+
+.choices__inner {
+  background-color: #ffffff !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 0.55rem 0.75rem !important;
+  min-height: 44px !important;
+  font-size: 0.95rem !important;
+  box-shadow: none !important;
+}
+
+.is-focused .choices__inner,
+.is-open .choices__inner {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
+}
+
+.choices__list--single {
+  padding: 0 !important;
+}
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+  border-radius: 0.85rem !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.18) !important;
+  z-index: 99999 !important;
+  margin-top: 0.35rem !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+}
+
+.choices__list--dropdown .choices__list,
+.choices__list[aria-expanded] .choices__list {
+  max-height: 260px !important;
+  overflow-y: auto !important;
+}
+
+.choices__item--choice {
+  padding: 0.8rem 0.9rem !important;
+  font-size: 0.95rem !important;
+}
+
+.choices__item--choice.is-highlighted {
+  background-color: #eff6ff !important;
+  color: #1e3a8a !important;
+}
+
+.choices__placeholder {
+  opacity: 1 !important;
+  color: #94a3b8 !important;
+}
+
+.choices__input.choices__input--cloned {
+  display: block !important;
+  font-size: 0.95rem !important;
+  background: transparent !important;
+}
+
+.choices[data-type*="select-one"] .choices__button {
+  margin-right: 0 !important;
+}
+
+.choices__button {
+  opacity: 0.7;
+}
+
+.choices__button:hover {
+  opacity: 1;
+}
+
+/* -----------------------------
+   Khusus supaya dropdown RS / unit
+   tidak kalah overlay
+------------------------------ */
+#dynamic-form,
+#pelapor-fields-container,
+#pasien-fields-container,
+#specific-fields-container,
+.bg-white,
+.bg-slate-50,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl {
+  overflow: visible;
+}
+
+select,
+input,
+button {
+  position: relative;
+}
+
+/* -----------------------------
+   Modal
+------------------------------ */
+.modal-backdrop {
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.26);
+}
+
+/* -----------------------------
+   Alerts / cards polish
+------------------------------ */
+.shadow-soft {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.shadow-soft-lg {
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+}
+
+/* -----------------------------
+   Dynamic table cells
+------------------------------ */
+table[data-dynamic-table] input,
+table[data-dynamic-table] select {
+  min-height: 38px;
+}
+
+table[data-dynamic-table] td,
+table[data-dynamic-table] th {
+  vertical-align: middle;
+}
+
+/* -----------------------------
+   Summary box
+------------------------------ */
+#imun-summary-text,
+#imun-summary-subtext,
+#imun-summary-due,
+#imun-summary-yes {
+  word-break: break-word;
+}
+
+/* -----------------------------
+   Geo status
+------------------------------ */
+#geo-status {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+/* -----------------------------
+   Shake animation
+------------------------------ */
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shakeX 0.35s ease;
+}
+
+/* -----------------------------
+   Responsive fixes
+------------------------------ */
+@media (max-width: 768px) {
+  .choices__list--dropdown,
+  .choices__list[aria-expanded] {
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  .modal-card {
+    border-radius: 1.25rem;
+  }
+}
