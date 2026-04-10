@@ -100,13 +100,13 @@
 
   const NUMERIC_LENGTH_RULES = {
     "nik pasien": { exact: 16 },
-    "rt": { min: 1, max: 3 },
-    "rw": { min: 1, max: 3 },
-    "no whatsapp petugas": { min: 10, max: 15 },
-    "no. kontak orang tua/wali": { min: 10, max: 15 },
-    "no telp/wa orang tua/wali": { min: 10, max: 15 },
-    "no telp orang tua/wali": { min: 10, max: 15 },
-    "no. telp orang tua/wali": { min: 10, max: 15 }
+    "rt": { min: 1, max: 3, pad3: true },
+    "rw": { min: 1, max: 3, pad3: true },
+    "no whatsapp petugas": { min: 10, max: 15, phone: true },
+    "no. kontak orang tua/wali": { min: 10, max: 15, phone: true },
+    "no telp/wa orang tua/wali": { min: 10, max: 15, phone: true },
+    "no telp orang tua/wali": { min: 10, max: 15, phone: true },
+    "no. telp orang tua/wali": { min: 10, max: 15, phone: true }
   };
 
   function _sanitizeNumericValue_(value) {
@@ -118,15 +118,34 @@
     return NUMERIC_LENGTH_RULES[id] || null;
   }
 
-  function enforceNumericOnlyInput(el) {
+  function _normalizePhonePrefix_(digits) {
+    const v = String(digits || "");
+    if (!v) return v;
+    if (v.startsWith("62")) return v;
+    if (v.startsWith("0")) return "62" + v.slice(1);
+    return v;
+  }
+
+  function enforceNumericOnlyInput(el, options) {
     if (!el || !el.id || !isNumericOnlyFieldId(el.id)) return;
+    const opts = options || {};
+    const onBlur = opts.onBlur === true;
+
     const rule = _getNumericLengthRule_(el.id);
     let cleaned = _sanitizeNumericValue_(el.value);
+
+    if (rule && rule.phone && onBlur) {
+      cleaned = _normalizePhonePrefix_(cleaned);
+    }
 
     if (rule && rule.exact) {
       cleaned = cleaned.slice(0, Number(rule.exact));
     } else if (rule && rule.max) {
       cleaned = cleaned.slice(0, Number(rule.max));
+    }
+
+    if (rule && rule.pad3 && onBlur && cleaned) {
+      cleaned = cleaned.padStart(3, "0");
     }
 
     if (String(el.value || "") !== cleaned) {
@@ -156,6 +175,11 @@
       const len = raw.length;
       if (rule.exact && len !== Number(rule.exact)) {
         invalids.push(el.id + " (harus " + rule.exact + " digit)");
+        return;
+      }
+
+      if (rule.phone && !(raw.startsWith("08") || raw.startsWith("62"))) {
+        invalids.push(el.id + " (harus diawali 08 atau 62)");
         return;
       }
 

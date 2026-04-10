@@ -1522,6 +1522,12 @@
   });
 
   document.addEventListener("blur", function(e) {
+    if (e.target && e.target.closest && e.target.closest("#dynamic-form")) {
+      if (typeof enforceNumericOnlyInput === "function") {
+        enforceNumericOnlyInput(e.target, { onBlur: true });
+      }
+    }
+
     if (e.target.id === "Tanggal Lahir" || e.target.id === "Tanggal Pelacakan") {
       const res = validateAndApplyBirthUI({ silent: false, hard: true });
 
