@@ -98,13 +98,37 @@
     return NUMERIC_ONLY_KEYWORDS.some(k => id.includes(k));
   }
 
+  const NUMERIC_LENGTH_RULES = {
+    "nik pasien": { exact: 16 },
+    "rt": { min: 1, max: 3 },
+    "rw": { min: 1, max: 3 },
+    "no whatsapp petugas": { min: 10, max: 15 },
+    "no. kontak orang tua/wali": { min: 10, max: 15 },
+    "no telp/wa orang tua/wali": { min: 10, max: 15 },
+    "no telp orang tua/wali": { min: 10, max: 15 },
+    "no. telp orang tua/wali": { min: 10, max: 15 }
+  };
+
   function _sanitizeNumericValue_(value) {
     return String(value || "").replace(/\D+/g, "");
   }
 
+  function _getNumericLengthRule_(fieldId) {
+    const id = _normalizeFieldId_(fieldId);
+    return NUMERIC_LENGTH_RULES[id] || null;
+  }
+
   function enforceNumericOnlyInput(el) {
     if (!el || !el.id || !isNumericOnlyFieldId(el.id)) return;
-    const cleaned = _sanitizeNumericValue_(el.value);
+    const rule = _getNumericLengthRule_(el.id);
+    let cleaned = _sanitizeNumericValue_(el.value);
+
+    if (rule && rule.exact) {
+      cleaned = cleaned.slice(0, Number(rule.exact));
+    } else if (rule && rule.max) {
+      cleaned = cleaned.slice(0, Number(rule.max));
+    }
+
     if (String(el.value || "") !== cleaned) {
       el.value = cleaned;
     }
@@ -122,7 +146,27 @@
       const raw = String(el.value || "").trim();
       if (!raw) return;
       if (!/^\d+$/.test(raw)) {
-        invalids.push(el.id);
+        invalids.push(el.id + " (harus angka)");
+        return;
+      }
+
+      const rule = _getNumericLengthRule_(el.id);
+      if (!rule) return;
+
+      const len = raw.length;
+      if (rule.exact && len !== Number(rule.exact)) {
+        invalids.push(el.id + " (harus " + rule.exact + " digit)");
+        return;
+      }
+
+      const min = Number(rule.min || 0);
+      const max = Number(rule.max || 0);
+      if (min && len < min) {
+        invalids.push(el.id + " (minimal " + min + " digit)");
+        return;
+      }
+      if (max && len > max) {
+        invalids.push(el.id + " (maksimal " + max + " digit)");
       }
     });
 
