@@ -104,16 +104,22 @@ Dokumen ini untuk verifikasi implementasi:
 
 ---
 
+## Eksekusi Saat Ini (Jarvis)
+
+- [x] `clasp push -f` berhasil (36 files)
+- [x] Syntax check lokal lulus (`routes.js`, `data.js`, `dashboard.js`)
+- [ ] Uji runtime end-to-end via web app belum bisa dieksekusi penuh dari sisi server karena endpoint deploy meminta permission akun Google interaktif.
+
 ## Template Hasil Uji
 
 | Test Case | Status (PASS/FAIL) | Catatan |
 |---|---|---|
-| TC-01 |  |  |
-| TC-02 |  |  |
-| TC-03 |  |  |
-| TC-04 |  |  |
-| TC-05 |  |  |
-| TC-06 |  |  |
+| TC-01 | PENDING | Perlu uji via UI akun operasional |
+| TC-02 | PENDING | Perlu submit ulang payload yang sama |
+| TC-03 | PENDING | Perlu edit payload relevan |
+| TC-04 | PENDING | Perlu simulasi error config/recipient |
+| TC-05 | PENDING | Perlu cek dashboard tiap DX |
+| TC-06 | PENDING | Perlu jalankan retry batch di runtime |
 
 ---
 
