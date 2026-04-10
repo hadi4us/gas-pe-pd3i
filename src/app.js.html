@@ -8,6 +8,27 @@
   // ============================================================
   // RENDER FIELD
   // ============================================================
+  function _getNumericFieldHintById(fieldId) {
+    const id = String(fieldId || "").trim().toLowerCase();
+    if (!id) return "";
+
+    if (id === "nik pasien") return "Harus 16 digit angka.";
+    if (id === "rt" || id === "rw") return "Hanya angka. Otomatis format 3 digit (contoh: 001).";
+
+    const phoneKeys = [
+      "no whatsapp petugas",
+      "no. kontak orang tua/wali",
+      "no telp/wa orang tua/wali",
+      "no telp orang tua/wali",
+      "no. telp orang tua/wali"
+    ];
+    if (phoneKeys.includes(id)) {
+      return "Hanya angka, 10–15 digit, awalan 08/62. Saat keluar field, 08 akan otomatis jadi 62.";
+    }
+
+    return "";
+  }
+
   function generateHTML(field) {
     if (field.type === "header") {
       return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
@@ -117,11 +138,14 @@
       inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} step="any">`;
     }
 
+    const numericHint = _getNumericFieldHintById(field.id);
+
     return `<div class="${wrapperClass}" ${showIfAttr}>
       <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">
         ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
       </label>
       ${inputHtml}
+      ${numericHint ? `<p class="mt-1 text-[11px] font-semibold text-slate-500">${numericHint}</p>` : ""}
     </div>`;
   }
 
