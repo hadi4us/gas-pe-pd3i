@@ -1,0 +1,29 @@
+flowchart TD
+    A[Mulai] --> B[User buka Web App]
+    B --> C[Login: username + PIN]
+    C --> D{Login valid?}
+    D -- Tidak --> E[Tampilkan error login]
+    E --> C
+    D -- Ya --> F[Masuk ke Dashboard/Form]
+
+    F --> G[Pilih DX: MR/DIF/PERT/TN/AFP]
+    G --> H[Isi form kasus]
+    H --> I[Submit]
+
+    I --> J[Backend validasi session & role]
+    J --> K[Simpan ke sheet DX_Raw]
+    K --> L[Generate/validasi EPID]
+    L --> M[Simpan link print]
+
+    M --> N{DX = MR?}
+    N -- Tidak --> O[Return sukses ke user]
+    N -- Ya --> P[Routing pengampu dari REF_PENGAMPU]
+    P --> Q[Kirim email pengampu]
+    Q --> R[Sinkronisasi ke spreadsheet pengampu]
+    R --> S[Kirim notifikasi Telegram]
+    S --> T[Update status notifikasi/sinkronisasi di row MR]
+    T --> O
+
+    O --> U[User lihat hasil simpan + EPID]
+    U --> V[Opsi: cari / edit / cetak PDF / dashboard]
+    V --> W[Selesai]
