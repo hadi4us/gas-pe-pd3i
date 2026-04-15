@@ -1,4 +1,4 @@
-# BLUEPRINT CONTINUATION — PD3I GAS Project
+# BLUEPRINT CONTINUATION — GAS PE PD3I
 
 Dokumen ini adalah **panduan lanjut kerja** jika project terputus di tengah jalan.
 
@@ -8,7 +8,7 @@ Dokumen ini adalah **panduan lanjut kerja** jika project terputus di tengah jala
 
 - **Project ID (Apps Script):** `1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu`
 - **Workspace lokal:**
-  - `projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu/`
+  - repository root (`./`)
 - **Source utama:** `src/`
 - **Dokumentasi:** `docs/`
 
@@ -61,7 +61,7 @@ Dokumen ini adalah **panduan lanjut kerja** jika project terputus di tengah jala
 
 ### A. Sync code terbaru
 ```bash
-cd /root/.openclaw/workspace/projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu/src
+cd src
 clasp pull
 clasp status
 ```
@@ -79,7 +79,7 @@ Update:
 
 ### D. Commit lokal
 ```bash
-cd /root/.openclaw/workspace
+cd <repo-root>
 git add .
 git commit -m "<ringkas perubahan>"
 ```

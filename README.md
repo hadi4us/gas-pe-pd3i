@@ -1,8 +1,8 @@
-# Google Apps Script Project
+# GAS PE PD3I
 
 ## Identitas
 - **Project ID**: `1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu`
-- **Local Path**: `projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu`
+- **Local Path**: repository root (`./`)
 - **Status**: Menunggu autentikasi `clasp` untuk clone source
 
 ## Struktur Folder
@@ -16,6 +16,6 @@
 clasp login --no-localhost
 
 # clone project
-cd projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu/src
+cd src
 clasp clone 1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu
 ```

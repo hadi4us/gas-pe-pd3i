@@ -8,17 +8,17 @@
 
 ## Struktur Lokal
 - Root project:
-  - `projects/gas-<PROJECT_ID>/`
+  - `./`
 - Source GAS:
-  - `projects/gas-<PROJECT_ID>/src`
+  - `src/`
 - Dokumentasi:
-  - `projects/gas-<PROJECT_ID>/docs`
+  - `docs/`
 
 ## Workflow Harian
 Dari folder `src`:
 
 ```bash
-cd /root/.openclaw/workspace/projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu/src
+cd src
 
 # cek status perubahan
 clasp status
@@ -32,7 +32,7 @@ clasp pull
 
 ## Buat Versi & Deploy Web App
 ```bash
-cd /root/.openclaw/workspace/projects/gas-1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu/src
+cd src
 
 # buat version snapshot
 clasp version "update: <catatan perubahan>"
