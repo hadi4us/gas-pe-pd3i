@@ -716,17 +716,54 @@ body.modal-open {
 }
 
 .pd3i-edit-badge {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
   gap: 0.55rem;
-  padding: 0.85rem 1rem;
-  border-radius: 16px;
-  background: #fff7d6;
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff7d6, #fff1b8);
   color: #7c5400;
   border: 1px solid #f3d16b;
   font-size: 0.88rem;
   font-weight: 900;
   box-shadow: var(--pd3i-shadow-soft);
+}
+
+.pd3i-edit-badge-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pd3i-edit-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(124, 84, 0, 0.12);
+  color: #7c5400;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.pd3i-edit-badge-pill.subtle {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.pd3i-edit-badge-title {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #7c5400;
+}
+
+.pd3i-edit-badge-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  font-size: 0.78rem;
+  color: #8a5a00;
 }
 
 .pd3i-alert-card {
@@ -806,6 +843,37 @@ body.modal-open {
   color: var(--pd3i-muted);
   font-size: 0.88rem;
   line-height: 1.7;
+}
+
+.pd3i-workflow-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.pd3i-workflow-status-item {
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #e3edf9;
+}
+
+.pd3i-workflow-status-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: var(--pd3i-muted);
+}
+
+.pd3i-workflow-status-value {
+  display: block;
+  margin-top: 0.32rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 800;
+  color: var(--pd3i-text);
 }
 
 /* -----------------------------

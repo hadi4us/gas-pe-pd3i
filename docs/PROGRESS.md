@@ -42,3 +42,5 @@
 - [x] Timeline / riwayat status kasus ditambahkan sebagai dynamic table pada workflow status
 - [x] Dashboard quality cards ditambahkan untuk verifikasi, hasil sampel, konfirmasi, discarded, dan klinis
 - [x] Hasil pencarian sekarang menampilkan badge status kasus, status verifikasi EPID, dan ringkasan status sampel untuk bantu edit workflow
+- [x] Edit mode banner diperkaya dengan EPID, DX, dan status kasus aktif
+- [x] Summary panel + workflow summary kini menampilkan state verifikasi EPID dan hasil sampel saat record dibuka

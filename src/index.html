@@ -353,7 +353,15 @@
 
             <aside class="pd3i-form-sidebar">
               <div id="edit-badge" class="hidden pd3i-edit-badge">
-                <i class="fas fa-pen-to-square"></i> MODE EDIT DATA
+                <div class="pd3i-edit-badge-topline">
+                  <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
+                  <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
+                </div>
+                <div class="pd3i-edit-badge-title">Record existing sedang dibuka untuk verifikasi / pembaruan status</div>
+                <div class="pd3i-edit-badge-meta">
+                  <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
+                  <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
+                </div>
               </div>
 
               <div id="alert-box" class="hidden pd3i-alert-card"></div>
@@ -399,6 +407,14 @@
                     <span class="pd3i-summary-value" id="summary-status-kasus">Belum ditentukan</span>
                   </div>
                   <div class="pd3i-summary-item full">
+                    <span class="pd3i-summary-label">Verifikasi EPID</span>
+                    <span class="pd3i-summary-value" id="summary-verifikasi-epid">Belum diverifikasi</span>
+                  </div>
+                  <div class="pd3i-summary-item full">
+                    <span class="pd3i-summary-label">Hasil sampel</span>
+                    <span class="pd3i-summary-value" id="summary-sampel-state">Tidak ada sampel</span>
+                  </div>
+                  <div class="pd3i-summary-item full">
                     <span class="pd3i-summary-label">Peringatan validasi</span>
                     <span class="pd3i-summary-value" id="summary-warning-count">0 warning</span>
                   </div>
@@ -425,16 +441,27 @@
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Workflow</div>
-                    <h3 class="pd3i-card-title">Cara kerja singkat</h3>
+                    <h3 class="pd3i-card-title">Ringkasan alur record aktif</h3>
                   </div>
                 </div>
-                <ol class="pd3i-workflow-list">
-                  <li>Pilih diagnosis aktif.</li>
-                  <li>Lakukan input kasus: pelapor, identitas, dan data spesifik diagnosis.</li>
-                  <li>Verifikasi untuk penentuan / pengesahan nomor EPID.</li>
-                  <li>Isi hasil pemeriksaan sampel bila tersedia.</li>
-                  <li>Update status pasien / kasus (suspek, discarded, klinis, konfirmasi, dll).</li>
-                </ol>
+                <div class="pd3i-workflow-status-list">
+                  <div class="pd3i-workflow-status-item">
+                    <span class="pd3i-workflow-status-label">1. Input kasus</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-input-state">Dalam pengisian</span>
+                  </div>
+                  <div class="pd3i-workflow-status-item">
+                    <span class="pd3i-workflow-status-label">2. Verifikasi EPID</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-verifikasi-state">Belum diverifikasi</span>
+                  </div>
+                  <div class="pd3i-workflow-status-item">
+                    <span class="pd3i-workflow-status-label">3. Hasil sampel</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-sampel-state">Tidak ada sampel</span>
+                  </div>
+                  <div class="pd3i-workflow-status-item">
+                    <span class="pd3i-workflow-status-label">4. Status pasien / kasus</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-status-kasus">Belum ditentukan</span>
+                  </div>
+                </div>
               </div>
             </aside>
           </div>
