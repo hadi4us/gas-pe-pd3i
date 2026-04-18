@@ -1328,6 +1328,197 @@
     return warnings;
   }
 
+  function getFieldValueSafe(fieldId) {
+    return String(document.getElementById(fieldId)?.value || "").trim();
+  }
+
+  function isNonEmptyField(fieldId) {
+    return getFieldValueSafe(fieldId) !== "";
+  }
+
+  function parseDateInputValue(value) {
+    if (!isCompleteDateValue(value)) return null;
+    const d = new Date(value + "T00:00:00");
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function compareDateInputValues(a, b) {
+    const da = parseDateInputValue(a);
+    const db = parseDateInputValue(b);
+    if (!da || !db) return null;
+    const ta = da.getTime();
+    const tb = db.getTime();
+    if (ta === tb) return 0;
+    return ta > tb ? 1 : -1;
+  }
+
+  function validateRequiredVisibleFields(form) {
+    if (!form) return { ok: true };
+
+    const invalidEls = Array.from(form.querySelectorAll("input, select, textarea"))
+      .filter(function(el) {
+        if (!el || el.disabled) return false;
+        if (el.type === "hidden") return false;
+        const wrapper = el.closest(".field-wrapper");
+        if (wrapper && wrapper.classList.contains("hidden")) return false;
+        return typeof el.checkValidity === "function" && !el.checkValidity();
+      });
+
+    if (!invalidEls.length) return { ok: true };
+
+    const first = invalidEls[0];
+    try {
+      first.focus();
+      if (typeof first.reportValidity === "function") first.reportValidity();
+    } catch (e) {}
+
+    return {
+      ok: false,
+      message: "Masih ada field wajib yang belum lengkap atau formatnya belum valid."
+    };
+  }
+
+  function validateDxBusinessRules() {
+    const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
+    const errors = [];
+    const warnings = [];
+
+    const tglLapor = getFieldValueSafe("Tanggal terima laporan");
+    const tglLacak = getFieldValueSafe("Tanggal Pelacakan");
+    const tglLahir = getFieldValueSafe("Tanggal Lahir");
+
+    if (tglLapor && tglLacak && compareDateInputValues(tglLapor, tglLacak) === 1) {
+      errors.push("Tanggal terima laporan tidak boleh lebih akhir dari tanggal pelacakan.");
+    }
+
+    if (tglLahir && tglLacak && compareDateInputValues(tglLahir, tglLacak) === 1) {
+      errors.push("Tanggal lahir tidak boleh lebih akhir dari tanggal pelacakan.");
+    }
+
+    if (dx === "MR") {
+      const tglPergi = getFieldValueSafe("Tanggal pergi");
+      const tglKembali = getFieldValueSafe("Tanggal pulang perjalanan");
+      const darahAmbil = getFieldValueSafe("Tanggal ambil spesimen darah");
+      const darahKirim = getFieldValueSafe("Tanggal pengiriman spesimen darah ke lab");
+      const lainAmbil = getFieldValueSafe("Tanggal ambil spesimen lain");
+      const lainKirim = getFieldValueSafe("Tanggal pengiriman spesimen lain ke lab");
+      const statusAkhir = getFieldValueSafe("Status akhir kasus");
+
+      if (tglPergi && tglKembali && compareDateInputValues(tglPergi, tglKembali) === 1) {
+        errors.push("Tanggal kembali perjalanan MR tidak boleh lebih awal dari tanggal pergi.");
+      }
+      if (darahAmbil && darahKirim && compareDateInputValues(darahAmbil, darahKirim) === 1) {
+        errors.push("Tanggal kirim spesimen darah MR tidak boleh lebih awal dari tanggal ambil.");
+      }
+      if (lainAmbil && lainKirim && compareDateInputValues(lainAmbil, lainKirim) === 1) {
+        errors.push("Tanggal kirim spesimen lain MR tidak boleh lebih awal dari tanggal ambil.");
+      }
+      if (statusAkhir === "Meninggal" && !isNonEmptyField("Penyebab kematian")) {
+        errors.push("Penyebab kematian wajib diisi jika status akhir MR adalah meninggal.");
+      }
+    }
+
+    if (dx === "DIF") {
+      const antibiotik = getFieldValueSafe("Antibiotik diberikan?");
+      const ads = getFieldValueSafe("ADS diberikan?");
+      const kondisi = getFieldValueSafe("Kondisi kasus saat ini");
+
+      if (antibiotik === "Ya" && !isNonEmptyField("Jenis antibiotik")) {
+        errors.push("Jenis antibiotik wajib diisi pada kasus difteri jika antibiotik diberikan.");
+      }
+      if (ads === "Ya" && !isNonEmptyField("Dosis ADS (IU)")) {
+        errors.push("Dosis ADS wajib diisi pada kasus difteri jika ADS diberikan.");
+      }
+      if (kondisi === "Meninggal" && !isNonEmptyField("Tanggal meninggal DIF")) {
+        errors.push("Tanggal meninggal wajib diisi pada kasus difteri jika kondisi akhir meninggal.");
+      }
+    }
+
+    if (dx === "PERT") {
+      const masuk = getFieldValueSafe("Tanggal Masuk Rawat Inap");
+      const keluar = getFieldValueSafe("Tanggal Keluar");
+      const tglPergi = getFieldValueSafe("Tanggal pergi PERT");
+      const tglKembali = getFieldValueSafe("Tanggal kembali PERT");
+      const ambil2 = getFieldValueSafe("Tanggal ambil spesimen lain pertusis");
+      const kirim2 = getFieldValueSafe("Tanggal kirim spesimen lain pertusis");
+      const status = getFieldValueSafe("Status akhir PERT");
+
+      if (masuk && keluar && compareDateInputValues(masuk, keluar) === 1) {
+        errors.push("Tanggal keluar rawat inap pertusis tidak boleh lebih awal dari tanggal masuk.");
+      }
+      if (tglPergi && tglKembali && compareDateInputValues(tglPergi, tglKembali) === 1) {
+        errors.push("Tanggal kembali perjalanan pertusis tidak boleh lebih awal dari tanggal pergi.");
+      }
+      if (ambil2 && kirim2 && compareDateInputValues(ambil2, kirim2) === 1) {
+        errors.push("Tanggal kirim spesimen lain pertusis tidak boleh lebih awal dari tanggal ambil.");
+      }
+      if (status === "Meninggal" && !isNonEmptyField("Tanggal meninggal PERT")) {
+        errors.push("Tanggal meninggal wajib diisi pada kasus pertusis jika status akhir meninggal.");
+      }
+    }
+
+    if (dx === "TN") {
+      const dobValue = document.getElementById("Tanggal Lahir")?.value || "";
+      const refValue = document.getElementById("Tanggal Pelacakan")?.value || "";
+      const birthVal = validateBirthDateEpi(dobValue, isCompleteDateValue(refValue) ? refValue : "");
+
+      if (birthVal && birthVal.ok) {
+        const totalDays = Number((birthVal.age && birthVal.age.totalDays) || 0);
+        if (totalDays > 28) {
+          errors.push("Form TN hanya untuk neonatus. Umur pasien saat pelacakan tidak boleh lebih dari 28 hari.");
+        }
+      }
+
+      if (getFieldValueSafe("Apakah bayi dirawat") === "Ya") {
+        if (!isNonEmptyField("Tempat perawatan TN")) {
+          errors.push("Tempat perawatan TN wajib diisi jika bayi dirawat.");
+        }
+        if (!isNonEmptyField("Tanggal mulai dirawat TN")) {
+          errors.push("Tanggal mulai dirawat TN wajib diisi jika bayi dirawat.");
+        }
+      }
+    }
+
+    if (dx === "AFP") {
+      const sifatAkut = getFieldValueSafe("Sifat akut");
+      const lumpuhLayuh = getFieldValueSafe("Lumpuh layuh");
+      const rudapaksa = getFieldValueSafe("Rudapaksa AFP");
+      const t1 = getFieldValueSafe("Tanggal tinja 1");
+      const t1a = getFieldValueSafe("Tanggal kirim tinja 1 kab-prov");
+      const t1b = getFieldValueSafe("Tanggal kirim tinja 1 prov-lab");
+      const t2 = getFieldValueSafe("Tanggal tinja 2");
+      const t2a = getFieldValueSafe("Tanggal kirim tinja 2 kab-prov");
+      const t2b = getFieldValueSafe("Tanggal kirim tinja 2 prov-lab");
+
+      if (sifatAkut && sifatAkut !== "Ya") {
+        errors.push("Kasus AFP harus memiliki kelemahan/kelumpuhan akut (1-14 hari).");
+      }
+      if (lumpuhLayuh && lumpuhLayuh !== "Ya") {
+        errors.push("Kasus AFP harus memiliki kelumpuhan layuh (flaccid).");
+      }
+      if (rudapaksa === "Ya") {
+        errors.push("Kasus AFP tidak boleh disebabkan rudapaksa.");
+      }
+      if (t1 && t1a && compareDateInputValues(t1, t1a) === 1) {
+        errors.push("Tanggal kirim spesimen I AFP ke provinsi tidak boleh lebih awal dari tanggal ambil.");
+      }
+      if (t1a && t1b && compareDateInputValues(t1a, t1b) === 1) {
+        errors.push("Tanggal kirim spesimen I AFP ke lab tidak boleh lebih awal dari tanggal kirim ke provinsi.");
+      }
+      if (t2 && t2a && compareDateInputValues(t2, t2a) === 1) {
+        errors.push("Tanggal kirim spesimen II AFP ke provinsi tidak boleh lebih awal dari tanggal ambil.");
+      }
+      if (t2a && t2b && compareDateInputValues(t2a, t2b) === 1) {
+        errors.push("Tanggal kirim spesimen II AFP ke lab tidak boleh lebih awal dari tanggal kirim ke provinsi.");
+      }
+      if (isNonEmptyField("Tanggal follow up 60 hari") && !isNonEmptyField("Masih ada kelumpuhan")) {
+        warnings.push("Tanggal follow up 60 hari AFP sudah diisi, tetapi hasil follow up masih kosong.");
+      }
+    }
+
+    return { ok: errors.length === 0, errors, warnings };
+  }
+
   // ============================================================
   // CONFIG HELPERS
   // ============================================================
@@ -2343,6 +2534,16 @@
           return;
         }
 
+        const requiredCheck = validateRequiredVisibleFields(formElement);
+        if (!requiredCheck.ok) {
+          showTopAlert(requiredCheck.message || "Masih ada field wajib yang belum lengkap.", false);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = isEditMode
+            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          return;
+        }
+
         const numericCheck = (typeof validateNumericOnlyRequiredFields === "function")
           ? validateNumericOnlyRequiredFields()
           : { ok: true, invalids: [] };
@@ -2369,7 +2570,17 @@
           return;
         }
 
-        const warnings = checkConsistencyWarnings();
+        const dxRuleCheck = validateDxBusinessRules();
+        if (!dxRuleCheck.ok) {
+          showTopAlert(dxRuleCheck.errors.join(" "), false);
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = isEditMode
+            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          return;
+        }
+
+        const warnings = checkConsistencyWarnings().concat(dxRuleCheck.warnings || []);
         if (warnings.length > 0) {
           showTopAlert(warnings.join(" "), false);
         }

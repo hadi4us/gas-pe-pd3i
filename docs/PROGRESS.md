@@ -28,3 +28,5 @@
 - [x] Deployment produksi yang dipakai aplikasi berhasil diredeploy ke versi `238` tanpa mengganti URL web app
 - [x] Checklist UAT khusus batch ekspansi form dibuat di `docs/FORM-EXPANSION-UAT.md`
 - [x] `docs/NEXT-STEPS.md` diperbarui ke fokus pasca-implementasi batch ekspansi form
+- [x] Validasi submit diperkuat agar field wajib/show-if benar-benar dicek sebelum simpan
+- [x] Guardrail epidemiologis awal ditambahkan untuk MR, DIF, PERT, TN, dan AFP (urutan tanggal penting + rule klinis minimum)
