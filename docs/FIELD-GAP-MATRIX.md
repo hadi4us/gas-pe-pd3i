@@ -1,6 +1,8 @@
 # Field Gap Matrix per Diagnosis
 
-Analisis ini membandingkan **form manual PE PD3I** yang diberikan user dengan **form input aktif** pada aplikasi saat ini.
+> Catatan: dokumen ini adalah **baseline audit gap** yang dipakai sebagai dasar implementasi batch form pada 2026-04-18. Setelah batch implementasi terbaru, sebagian gap pada dokumen ini sudah mulai ditutup di codebase dan perlu diperbarui lagi pada audit berikutnya.
+
+Analisis ini membandingkan **form manual PE PD3I** yang diberikan user dengan **form input aktif** pada saat audit dilakukan.
 
 ## Sumber pembanding
 - Form input aplikasi:

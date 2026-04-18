@@ -4,42 +4,124 @@
     title: "Tetanus Neonatorum",
     sections: [
       {
-        key: "klinis",
-        title: "Informasi Klinis & Gejala",
+        key: "identitas_ibu_bayi",
+        title: "Identitas Bayi dan Ibu",
         fields: [
           { id: "Nama Ibu", label: "Nama Ibu", type: "text", required: true },
-          { id: "Tanggal mulai sakit", label: "Tanggal mulai sakit", type: "date", required: true },
-          { id: "Bayi dapat menetek normal 2 hari pertama", label: "Bayi dapat menetek normal 2 hari pertama?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Tidak bisa menetek", label: "Tidak bisa menetek?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Kaku", label: "Kaku?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Kejang/spasme", label: "Kejang/spasme?", type: "select", options: OPT_YA_TIDAK }
+          { id: "Anak ke-", label: "Anak ke-", type: "number" },
+          { id: "Usia ibu", label: "Usia ibu", type: "number" },
+          { id: "Pekerjaan ibu", label: "Pekerjaan ibu", type: "text" },
+          { id: "Pendidikan ibu", label: "Pendidikan ibu", type: "select", options: ["", "Tidak sekolah", "SD", "SMP", "SMA", "Diploma", "Sarjana", "Lainnya"] },
+          { id: "Lama tinggal di desa", label: "Sudah berapa lama ibu tinggal di desa ini?", type: "text", fullWidth: true }
         ]
       },
       {
-        key: "ibu_persalinan",
-        title: "Riwayat Ibu & Persalinan",
+        key: "informasi_kelahiran",
+        title: "Informasi Kelahiran Bayi",
         fields: [
-          { id: "Status imunisasi TT/Td ibu", label: "Status imunisasi TT/Td ibu", type: "select", options: ["Lengkap", "Tidak lengkap", "Tidak pernah", "Tidak diketahui"] },
-          { id: "Tempat persalinan", label: "Tempat persalinan", type: "select", options: ["Rumah sakit", "Puskesmas", "Klinik", "Rumah", "Lainnya"] },
-          { id: "Penolong persalinan", label: "Penolong persalinan", type: "select", options: ["Dokter", "Bidan", "Dukun", "Keluarga", "Lainnya"] },
-          { id: "Perawatan tali pusat", label: "Perawatan tali pusat", type: "text" }
+          { id: "Apakah bayi lahir hidup", label: "Apakah bayi lahir hidup?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tanggal mulai sakit", label: "Tanggal mulai sakit", type: "date", required: true },
+          { id: "Tanggal meninggal TN", label: "Bila bayi meninggal, tanggal meninggal", type: "date" },
+          { id: "Umur bayi meninggal (hari)", label: "Umur bayi meninggal (hari)", type: "number" },
+          { id: "Bayi menangis saat lahir", label: "Waktu lahir apakah bayi menangis?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
+          { id: "Tanda kelahiran hidup", label: "Apakah terlihat tanda-tanda kelahiran hidup?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"], showIf: { field: "Bayi menangis saat lahir", values: ["Tidak Tahu"] } },
+          { id: "Bayi bisa menyusu dengan baik", label: "Setelah lahir apakah bayi bisa menyusu/minum dengan baik?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
+          { id: "Mulut mencucu dan tidak bisa menyusu", label: "Apakah 3 hari kemudian mulut bayi mencucu dan tidak bisa menyusu?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
+          { id: "Bayi mudah kejang", label: "Apakah bayi mudah kejang jika disentuh/kena sinar/mendengar bunyi?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
+          { id: "Apakah bayi dirawat", label: "Apakah bayi dirawat?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tempat perawatan TN", label: "Tempat perawatan", type: "text", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
+          { id: "Tanggal mulai dirawat TN", label: "Tanggal mulai dirawat", type: "date", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
+          { id: "Keadaan bayi setelah dirawat", label: "Keadaan bayi setelah dirawat", type: "select", options: ["", "Sembuh", "Meninggal"] }
         ]
       },
       {
-        key: "epidemiologi",
-        title: "Informasi Epidemiologis & Faktor Risiko",
+        key: "riwayat_pemeriksaan_kehamilan",
+        title: "Riwayat Pemeriksaan Kehamilan Ibu",
+        fields: [
+          { id: "Jumlah kunjungan ANC", label: "Berapa kali kunjungan ibu hamil (ANC) dilakukan?", type: "number" },
+          { id: "Tempat pemeriksaan ibu hamil", label: "Tempat pemeriksaan ibu hamil", type: "text" },
+          { id: "Pemeriksa kehamilan", label: "Pemeriksaan kehamilan oleh", type: "select", options: ["", "Dokter", "Bidan/Perawat", "Lainnya"] },
+          { id: "Pemeriksa kehamilan lainnya", label: "Sebutkan pemeriksa lainnya", type: "text", showIf: { field: "Pemeriksa kehamilan", values: ["Lainnya"] } }
+        ]
+      },
+      {
+        key: "riwayat_persalinan",
+        title: "Riwayat Persalinan",
+        fields: [
+          { id: "Tempat persalinan", label: "Tempat persalinan", type: "select", options: ["", "Rumah sakit", "Puskesmas", "Klinik", "Rumah", "Lainnya"] },
+          { id: "Tempat persalinan lainnya", label: "Sebutkan tempat persalinan lainnya", type: "text", showIf: { field: "Tempat persalinan", values: ["Lainnya"] } },
+          { id: "Usia gestasi", label: "Usia kehamilan ibu saat persalinan (minggu)", type: "number" },
+          { id: "Penolong persalinan", label: "Penolong persalinan", type: "select", options: ["", "Dokter", "Bidan/Perawat", "Lainnya"] },
+          { id: "Penolong persalinan lainnya", label: "Sebutkan penolong lainnya", type: "text", showIf: { field: "Penolong persalinan", values: ["Lainnya"] } },
+          { id: "Alat potong tali pusat", label: "Alat potong tali pusat", type: "select", options: ["", "Gunting", "Silet", "Pisau", "Sembilu", "Tidak tahu", "Lainnya"] },
+          { id: "Alat potong tali pusat lainnya", label: "Sebutkan alat potong lainnya", type: "text", showIf: { field: "Alat potong tali pusat", values: ["Lainnya"] } },
+          { id: "Perawatan tali pusat", label: "Perawatan tali pusat", type: "select", options: ["", "Alkohol", "Betadine/Yodium", "Ramuan tradisional", "Lainnya"] },
+          { id: "Perawatan tali pusat lainnya", label: "Sebutkan perawatan tali pusat", type: "text", fullWidth: true, showIf: { field: "Perawatan tali pusat", values: ["Ramuan tradisional", "Lainnya"] } },
+          { id: "Keadaan ibu saat ini", label: "Keadaan ibu saat ini", type: "select", options: ["", "Hidup", "Meninggal"] }
+        ]
+      },
+      {
+        key: "riwayat_imunisasi_ibu",
+        title: "Riwayat Imunisasi Ibu",
+        fields: [
+          { id: "Sumber informasi imunisasi ibu", label: "Sumber informasi imunisasi ibu", type: "select", options: ["", "Catatan buku KIA/imunisasi", "Ingatan responden"] },
+          { id: "Td kehamilan ini", label: "Ibu mendapat imunisasi Td pada saat kehamilan ini", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Jumlah Td kehamilan ini", label: "Berapa kali imunisasi Td pada kehamilan ini?", type: "number", showIf: { field: "Td kehamilan ini", values: ["Ya"] } },
+          { id: "Usia kehamilan Td1", label: "Usia kehamilan Td pertama (bulan)", type: "number", showIf: { field: "Td kehamilan ini", values: ["Ya"] } },
+          { id: "Tanggal Td1 kehamilan ini", label: "Tanggal imunisasi Td pertama", type: "date", showIf: { field: "Td kehamilan ini", values: ["Ya"] } },
+          { id: "Usia kehamilan Td2", label: "Usia kehamilan Td kedua (bulan)", type: "number", showIf: { field: "Td kehamilan ini", values: ["Ya"] } },
+          { id: "Tanggal Td2 kehamilan ini", label: "Tanggal imunisasi Td kedua", type: "date", showIf: { field: "Td kehamilan ini", values: ["Ya"] } },
+          { id: "Td kehamilan sebelumnya", label: "Ibu mendapat imunisasi Td pada kehamilan sebelumnya", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tanggal Td1 kehamilan sebelumnya", label: "Tanggal imunisasi kehamilan sebelumnya dosis pertama", type: "date", showIf: { field: "Td kehamilan sebelumnya", values: ["Ya"] } },
+          { id: "Tanggal Td2 kehamilan sebelumnya", label: "Tanggal imunisasi kehamilan sebelumnya dosis kedua", type: "date", showIf: { field: "Td kehamilan sebelumnya", values: ["Ya"] } },
+          { id: "Td calon pengantin", label: "Ibu mendapat imunisasi Td calon pengantin", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tanggal Td calon pengantin", label: "Tanggal imunisasi calon pengantin", type: "date", showIf: { field: "Td calon pengantin", values: ["Ya"] } },
+          { id: "Riwayat DPT-HB-HiB 1 ibu", label: "Riwayat imunisasi DPT-HB-HiB (1)", type: "date" },
+          { id: "Riwayat DPT-HB-HiB 2 ibu", label: "Riwayat imunisasi DPT-HB-HiB (2)", type: "date" },
+          { id: "Riwayat DPT-HB-HiB 3 ibu", label: "Riwayat imunisasi DPT-HB-HiB (3)", type: "date" },
+          { id: "Riwayat DPT-HB-HiB 4 ibu", label: "Riwayat imunisasi DPT-HB-HiB (4)", type: "date" },
+          { id: "Riwayat DT kelas 1 ibu", label: "Riwayat imunisasi DT kelas 1", type: "date" },
+          { id: "Riwayat Td kelas 2 ibu", label: "Riwayat imunisasi Td kelas 2", type: "date" },
+          { id: "Riwayat Td kelas 5 ibu", label: "Riwayat imunisasi Td kelas 5", type: "date" },
+          { id: "Status T ibu", label: "Status T ibu hamil saat ini", type: "select", options: ["", "T1", "T2", "T3", "T4", "T5"] },
+          { id: "Status imunisasi TT/Td ibu", label: "Status imunisasi TT/Td ibu (ringkas)", type: "select", options: ["Lengkap", "Tidak lengkap", "Tidak pernah", "Tidak diketahui"] }
+        ]
+      },
+      {
+        key: "respon_kasus",
+        title: "Respon Kasus",
+        fields: [
+          { id: "Vaksin Td saat investigasi", label: "Ibu mendapatkan vaksin Td pada saat investigasi kasus", type: "select", options: ["", "Ya", "Tidak", "Tidak Perlu/Sudah protected", "Tidak Tahu"] },
+          { id: "Tanggal vaksin Td saat investigasi", label: "Tanggal pemberian vaksin", type: "date", showIf: { field: "Vaksin Td saat investigasi", values: ["Ya"] } }
+        ]
+      },
+      {
+        key: "informasi_lain",
+        title: "Informasi Lain",
+        fields: [
+          { id: "Cakupan DPT-HB-Hib 1", label: "Cakupan imunisasi DPT-HB-Hib 1 (%)", type: "number" },
+          { id: "Cakupan DPT-HB-Hib 2", label: "Cakupan imunisasi DPT-HB-Hib 2 (%)", type: "number" },
+          { id: "Cakupan DPT-HB-Hib 3", label: "Cakupan imunisasi DPT-HB-Hib 3 (%)", type: "number" },
+          { id: "Cakupan DT Kelas 1", label: "Cakupan DT kelas 1 (%)", type: "number" },
+          { id: "Cakupan Td kelas 2", label: "Cakupan Td kelas 2 (%)", type: "number" },
+          { id: "Cakupan Td kelas 5", label: "Cakupan Td kelas 5 (%)", type: "number" },
+          { id: "Cakupan TT 2+", label: "Cakupan TT 2+ (%)", type: "number" },
+          { id: "Cakupan persalinan faskes", label: "Cakupan persalinan di fasilitas kesehatan (%)", type: "number" },
+          { id: "Cakupan KN1", label: "Cakupan kunjungan neonatus KN1 (%)", type: "number" },
+          { id: "Cakupan KN2", label: "Cakupan kunjungan neonatus KN2 (%)", type: "number" },
+          { id: "Cakupan KN3", label: "Cakupan kunjungan neonatus KN3 (%)", type: "number" },
+          { id: "Akses desa ke faskes", label: "Apakah desa kasus TN mudah dijangkau dari fasilitas pelayanan kesehatan? Jelaskan", type: "textarea", rows: 3, fullWidth: true },
+          { id: "Faktor pelaksanaan imunisasi", label: "Apakah terdapat faktor lain yang berpengaruh terhadap pelaksanaan imunisasi? Jelaskan", type: "textarea", rows: 3, fullWidth: true },
+          { id: "Faktor pertolongan persalinan", label: "Apakah terdapat faktor lain yang berpengaruh terhadap proses pertolongan persalinan? Jelaskan", type: "textarea", rows: 3, fullWidth: true }
+        ]
+      },
+      {
+        key: "epidemiologi_tambahan",
+        title: "Variabel Epidemiologis Tambahan",
         fields: [
           { id: "Berat lahir", label: "Berat lahir (gram)", type: "number" },
-          { id: "Usia gestasi", label: "Usia gestasi (minggu)", type: "number" },
-          { id: "Riwayat kasus serupa di wilayah", label: "Riwayat kasus serupa di wilayah?", type: "select", options: OPT_YA_TIDAK }
-        ]
-      },
-      {
-        key: "kondisi",
-        title: "Kondisi Saat Ini",
-        fields: [
-          { id: "Status akhir TN", label: "Status akhir kasus", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal", "Tidak diketahui"] },
-          { id: "Tanggal meninggal TN", label: "Tanggal meninggal", type: "date", showIf: { field: "Status akhir TN", values: ["Meninggal"] } }
+          { id: "Riwayat kasus serupa di wilayah", label: "Riwayat kasus serupa di wilayah?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Status akhir TN", label: "Status akhir kasus", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal", "Tidak diketahui"] }
         ]
       }
     ]

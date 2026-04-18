@@ -10,10 +10,31 @@
           { id: "Tanggal mulai batuk", label: "Tanggal mulai batuk", type: "date", required: true },
           { id: "Batuk terus menerus?", label: "Batuk terus menerus?", type: "select", options: OPT_YA_TIDAK },
           { id: "Batuk ≥ 2 minggu?", label: "Batuk ≥ 2 minggu?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Whoop", label: "Whoop?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Whoop", label: "Batuk rejan / whoop?", type: "select", options: OPT_YA_TIDAK },
           { id: "Muntah setelah batuk", label: "Muntah setelah batuk?", type: "select", options: OPT_YA_TIDAK },
           { id: "Apnea", label: "Apnea?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal mulai apnea", label: "Tanggal mulai apnea", type: "date", showIf: { field: "Apnea", values: ["Ya"] } },
+          { id: "Gejala lain pertusis", label: "Gejala lain", type: "text", fullWidth: true },
           { id: "Rawat inap?", label: "Rawat inap?", type: "select", options: OPT_YA_TIDAK }
+        ]
+      },
+      {
+        key: "perawatan",
+        title: "Riwayat Pengobatan / Rawat Inap",
+        fields: [
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", showIf: { field: "Rawat inap?", values: ["Ya"] } },
+          { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Rawat inap?", values: ["Ya"] } },
+          { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", showIf: { field: "Rawat inap?", values: ["Ya"] } },
+          { id: "Tanggal Keluar", label: "Tanggal Keluar", type: "date", showIf: { field: "Rawat inap?", values: ["Ya"] } }
+        ]
+      },
+      {
+        key: "imunisasi_spesifik",
+        title: "Riwayat Vaksinasi Spesifik Pertusis",
+        fields: [
+          { id: "ORI Pertusis", label: "Pernah menerima imunisasi DPT-HB-HiB pada saat ORI?", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi ORI Pertusis", label: "Sumber Informasi ORI", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Tanggal vaksinasi DPT-HB-HiB terakhir", label: "Tanggal vaksinasi DPT-HB-HiB terakhir", type: "date" }
         ]
       },
       IMUNISASI_SECTION,
@@ -22,7 +43,12 @@
         title: "Informasi Epidemiologis",
         fields: [
           { id: "Kontak batuk lama", label: "Riwayat kontak dengan orang batuk lama?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Ada klaster/kejadian serupa", label: "Ada klaster/kejadian serupa di lingkungan?", type: "select", options: OPT_YA_TIDAK }
+          { id: "Ada klaster/kejadian serupa", label: "Ada klaster/kejadian serupa di lingkungan?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Jumlah kasus sekitar PERT", label: "Jumlah kasus serupa di sekitar", type: "number", showIf: { field: "Ada klaster/kejadian serupa", values: ["Ya"] } },
+          { id: "Perjalanan 1 bulan PERT", label: "Apakah bepergian 1 bulan terakhir?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Lokasi perjalanan PERT", label: "Lokasi perjalanan", type: "text", fullWidth: true, showIf: { field: "Perjalanan 1 bulan PERT", values: ["Ya"] } },
+          { id: "Tanggal pergi PERT", label: "Tanggal pergi", type: "date", showIf: { field: "Perjalanan 1 bulan PERT", values: ["Ya"] } },
+          { id: "Tanggal kembali PERT", label: "Tanggal kembali", type: "date", showIf: { field: "Perjalanan 1 bulan PERT", values: ["Ya"] } }
         ]
       },
       {
@@ -32,7 +58,19 @@
           { id: "Spesimen pertusis diambil?", label: "Spesimen diambil?", type: "select", options: OPT_YA_TIDAK },
           { id: "Tanggal ambil spesimen pertusis", label: "Tanggal ambil spesimen", type: "date", showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
           { id: "Jenis spesimen pertusis", label: "Jenis spesimen", type: "select", options: ["Swab nasofaring", "Aspirat nasofaring"], showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
-          { id: "Tanggal kirim spesimen pertusis", label: "Tanggal kirim spesimen", type: "date", showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } }
+          { id: "Tanggal kirim spesimen pertusis", label: "Tanggal kirim spesimen", type: "date", showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
+          { id: "Spesimen lain pertusis diambil?", label: "Apakah spesimen lain diambil?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Jenis spesimen lain pertusis", label: "Jenis sampel lain", type: "text", showIf: { field: "Spesimen lain pertusis diambil?", values: ["Ya"] } },
+          { id: "Tanggal ambil spesimen lain pertusis", label: "Tanggal ambil spesimen lain", type: "date", showIf: { field: "Spesimen lain pertusis diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim spesimen lain pertusis", label: "Tanggal kirim spesimen lain", type: "date", showIf: { field: "Spesimen lain pertusis diambil?", values: ["Ya"] } }
+        ]
+      },
+      {
+        key: "kondisi",
+        title: "Kondisi Saat Ini",
+        fields: [
+          { id: "Status akhir PERT", label: "Keadaan saat ini", type: "select", options: ["Hidup", "Meninggal", "Lost to follow-up"] },
+          { id: "Tanggal meninggal PERT", label: "Tanggal meninggal", type: "date", showIf: { field: "Status akhir PERT", values: ["Meninggal"] } }
         ]
       },
       {

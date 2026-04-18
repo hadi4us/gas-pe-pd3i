@@ -4,11 +4,34 @@
     title: "Difteri",
     sections: [
       {
+        key: "pelapor_tambahan",
+        title: "Identitas Pelapor Tambahan",
+        fields: [
+          { id: "Nama Kantor & Jabatan", label: "Nama Kantor & Jabatan", type: "text", fullWidth: true }
+        ]
+      },
+      {
+        key: "identitas_tambahan",
+        title: "Identitas Penderita & Kontak Darurat",
+        fields: [
+          { id: "No. kontak pasien", label: "No. Kontak Pasien", type: "tel" },
+          { id: "Pekerjaan", label: "Pekerjaan", type: "text" },
+          { id: "Alamat tempat kerja", label: "Alamat Tempat Kerja", type: "text", fullWidth: true },
+          { id: "Orang tua/Wali/Saudara dekat", label: "Orang tua / wali / saudara dekat yang dapat dihubungi", type: "text", fullWidth: true },
+          { id: "Alamat Lengkap Wali", label: "Alamat Lengkap Wali", type: "text", fullWidth: true },
+          { id: "Desa/Kelurahan Wali", label: "Desa/Kelurahan Wali", type: "text" },
+          { id: "Kecamatan Wali", label: "Kecamatan Wali", type: "text" },
+          { id: "Kab/Kota Wali", label: "Kabupaten/Kota Wali", type: "text" },
+          { id: "Provinsi Wali", label: "Provinsi Wali", type: "text" },
+          { id: "No. Telepon Wali", label: "Nomor Telepon / HP Wali", type: "tel" }
+        ]
+      },
+      {
         key: "klinis",
         title: "Informasi Klinis & Gejala",
         fields: [
           { id: "Tanggal mulai sakit", label: "Tanggal Mulai Sakit (sakit tenggorokan)", type: "date", required: true },
-          { id: "Keluhan Utama", label: "Keluhan Utama", type: "textarea", fullWidth: true },
+          { id: "Keluhan Utama", label: "Keluhan Utama", type: "textarea", rows: 3, fullWidth: true },
           { id: "Demam", label: "Demam?", type: "select", options: OPT_YA_TIDAK },
           { id: "Tanggal mulai demam", label: "Tanggal Mulai Demam", type: "date", showIf: { field: "Demam", values: ["Ya"] } },
           { id: "Sakit tenggorokan?", label: "Sakit Tenggorokan?", type: "select", options: OPT_YA_TIDAK },
@@ -46,6 +69,11 @@
           { id: "Tracheostomi", label: "Tracheostomi?", type: "select", options: OPT_YA_TIDAK, showIf: { field: "Berobat ke RS?", values: ["Ya"] } },
           { id: "Berobat ke Puskesmas?", label: "Berobat ke Puskesmas?", type: "select", options: OPT_YA_TIDAK },
           { id: "Tanggal berobat Puskesmas", label: "Tanggal Berobat ke Puskesmas", type: "date", showIf: { field: "Berobat ke Puskesmas?", values: ["Ya"] } },
+          { id: "Berobat ke Dokter Swasta?", label: "Berobat ke Dokter Praktek Swasta?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal berobat Dokter Swasta", label: "Tanggal Berobat ke Dokter Praktek Swasta", type: "date", showIf: { field: "Berobat ke Dokter Swasta?", values: ["Ya"] } },
+          { id: "Berobat ke Perawat/Bidan?", label: "Berobat ke Perawat/Mantri/Bidan?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Tanggal berobat Perawat/Bidan", label: "Tanggal Berobat ke Perawat/Mantri/Bidan", type: "date", showIf: { field: "Berobat ke Perawat/Bidan?", values: ["Ya"] } },
+          { id: "Tidak berobat", label: "Tidak berobat", type: "select", options: ["", "Ya", "Tidak"] },
           { id: "Diagnosis suspek difteri", label: "Didiagnosis sebagai Suspek Difteri?", type: "select", options: OPT_YA_TIDAK },
           { id: "Tanggal diagnosis suspek", label: "Tanggal Diagnosis Suspek", type: "date", showIf: { field: "Diagnosis suspek difteri", values: ["Ya"] } },
           { id: "Antibiotik diberikan?", label: "Antibiotik Diberikan?", type: "select", options: OPT_YA_TIDAK },
@@ -68,7 +96,7 @@
           { id: "Riwayat perjalanan 10 hari", label: "Riwayat perjalanan 10 hari sebelum sakit?", type: "select", options: OPT_YA_TIDAK },
           { id: "Daerah perjalanan DIF", label: "Sebutkan Daerah Perjalanan", type: "text", showIf: { field: "Riwayat perjalanan 10 hari", values: ["Ya"] } },
           { id: "Riwayat kontak suspek/konfirmasi difteri", label: "Riwayat kontak dengan suspek/konfirmasi difteri?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Nama alamat kontak DIF", label: "Nama dan Alamat yang Dikunjungi", type: "textarea", fullWidth: true, showIf: { field: "Riwayat kontak suspek/konfirmasi difteri", values: ["Ya"] } }
+          { id: "Nama alamat kontak DIF", label: "Nama dan Alamat yang Dikunjungi", type: "textarea", rows: 3, fullWidth: true, showIf: { field: "Riwayat kontak suspek/konfirmasi difteri", values: ["Ya"] } }
         ]
       },
       {

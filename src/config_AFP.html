@@ -4,27 +4,110 @@
     title: "Acute Flaccid Paralysis",
     sections: [
       {
-        key: "klinis",
-        title: "Informasi Klinis & Gejala",
+        key: "riwayat_sakit",
+        title: "Riwayat Sakit",
         fields: [
-          { id: "Tgl mulai lumpuh", label: "Tgl mulai lumpuh", type: "date", required: true },
-          { id: "Sifat akut", label: "Sifat akut?", type: "select", options: ["Ya", "Tidak"] },
-          { id: "Lumpuh layuh", label: "Lumpuh layuh?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Tanggal mulai sakit/gejala awal", label: "Tanggal mulai sakit/gejala awal sebelum lumpuh", type: "date" },
+          { id: "Tgl mulai lumpuh", label: "Tanggal mulai lemah/lumpuh", type: "date", required: true },
+          { id: "Tanggal meninggal AFP", label: "Tanggal meninggal", type: "date" },
+          { id: "Pengobatan tradisional AFP", label: "Setelah lemah/lumpuh, apakah menjalani pengobatan tradisional/alternatif?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Nama tempat pengobatan tradisional AFP", label: "Nama tempat pengobatan tradisional", type: "text", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
+          { id: "Tanggal berkunjung pengobatan tradisional AFP", label: "Tanggal berkunjung pengobatan tradisional", type: "date", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
+          { id: "Berobat ke Rumah Sakit AFP", label: "Setelah lemah/lumpuh, apakah berobat ke Rumah Sakit?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
+          { id: "Tanggal berobat AFP", label: "Tanggal berobat", type: "date", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
+          { id: "Diagnosis AFP", label: "Diagnosis", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
+          { id: "Nomor Rekam Medik", label: "No. rekam medik", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
+          { id: "Sifat akut", label: "Apakah kelemahan/kelumpuhan sifatnya akut (1-14 hari)?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Lumpuh layuh", label: "Apakah kelemahan/kelumpuhan sifatnya layuh (flaccid)?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Rudapaksa AFP", label: "Apakah kelemahan/kelumpuhan disebabkan rudapaksa?", type: "select", options: ["", "Ya", "Tidak"] },
           { id: "Asimetris", label: "Asimetris?", type: "select", options: ["Ya", "Tidak"] },
-          { id: "Demam saat onset", label: "Demam saat onset?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] },
-          { id: "Lokasi kelumpuhan", label: "Lokasi kelumpuhan", type: "text" }
+          { id: "Demam saat onset", label: "Apakah penderita demam sebelum lemah/lumpuh?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] }
+        ]
+      },
+      {
+        key: "pemeriksaan_neurologis",
+        title: "Gejala / Tanda Neurologis",
+        fields: [
+          { id: "Tungkai kanan lumpuh", label: "Tungkai kanan: kelumpuhan/kelemahan", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tungkai kanan kekuatan", label: "Tungkai kanan: kekuatan otot (0-5)", type: "number" },
+          { id: "Tungkai kanan rasa raba", label: "Tungkai kanan: gangguan rasa raba", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tungkai kiri lumpuh", label: "Tungkai kiri: kelumpuhan/kelemahan", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Tungkai kiri kekuatan", label: "Tungkai kiri: kekuatan otot (0-5)", type: "number" },
+          { id: "Tungkai kiri rasa raba", label: "Tungkai kiri: gangguan rasa raba", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Lengan kanan lumpuh", label: "Lengan kanan: kelumpuhan/kelemahan", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Lengan kanan kekuatan", label: "Lengan kanan: kekuatan otot (0-5)", type: "number" },
+          { id: "Lengan kanan rasa raba", label: "Lengan kanan: gangguan rasa raba", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Lengan kiri lumpuh", label: "Lengan kiri: kelumpuhan/kelemahan", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Lengan kiri kekuatan", label: "Lengan kiri: kekuatan otot (0-5)", type: "number" },
+          { id: "Lengan kiri rasa raba", label: "Lengan kiri: gangguan rasa raba", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Lokasi kelumpuhan", label: "Lain-lain / muka / leher / lokasi tambahan", type: "text", fullWidth: true }
+        ]
+      },
+      {
+        key: "riwayat_kontak",
+        title: "Riwayat Kontak / Perjalanan",
+        fields: [
+          { id: "Perjalanan 35 hari AFP", label: "Dalam 35 hari terakhir sebelum sakit, pernah bepergian ke luar kabupaten/provinsi/negeri?", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Lokasi perjalanan AFP", label: "Lokasi perjalanan", type: "text", fullWidth: true, showIf: { field: "Perjalanan 35 hari AFP", values: ["Ya"] } },
+          { id: "Tanggal pergi AFP", label: "Tanggal pergi", type: "date", showIf: { field: "Perjalanan 35 hari AFP", values: ["Ya"] } },
+          { id: "Kontak OPV 75 hari AFP", label: "Dalam 75 hari terakhir sebelum sakit, pernah berkontak dengan anak yang baru mendapat imunisasi polio oral?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] }
+        ]
+      },
+      {
+        key: "sanitasi",
+        title: "Sanitasi Dasar",
+        fields: [
+          { id: "Punya jamban sendiri", label: "Apakah memiliki jamban sendiri di rumah?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Jenis jamban", label: "Jenis jamban yang digunakan", type: "select", options: ["", "Jamban leher angsa dengan septic tank", "Jamban cemplung (tanpa septic tank)", "Jamban di sungai/kebun/kolam (tidak sehat)", "Lainnya"] },
+          { id: "Jenis jamban lainnya", label: "Sebutkan jenis jamban lainnya", type: "text", showIf: { field: "Jenis jamban", values: ["Lainnya"] } },
+          { id: "Selalu pakai jamban", label: "Apakah selalu menggunakan jamban untuk buang air besar?", type: "select", options: ["", "Ya, Selalu", "Kadang-kadang", "Tidak"] },
+          { id: "Jamban aman", label: "Apakah jamban dilengkapi saluran pembuangan yang kedap dan aman?", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Pembuangan diapers", label: "Bagaimana pembuangan diapers/popok setelah digunakan?", type: "select", options: ["", "Dibuang ke tempat sampah tertutup", "Dibuang ke sungai/kebun/halaman terbuka", "Dibakar", "Lainnya"] },
+          { id: "Pembuangan diapers lainnya", label: "Sebutkan cara pembuangan diapers lainnya", type: "text", showIf: { field: "Pembuangan diapers", values: ["Lainnya"] } }
+        ]
+      },
+      {
+        key: "imunisasi_polio_tambahan",
+        title: "Status Imunisasi Polio Ringkas",
+        fields: [
+          { id: "Dosis OPV rutin", label: "Jumlah dosis OPV imunisasi rutin", type: "select", options: ["", "1x", "2x", "3x", "4x", "Belum pernah", "Tidak Tahu"] },
+          { id: "Dosis IPV rutin", label: "Jumlah dosis IPV imunisasi rutin", type: "select", options: ["", "1x", "2x", "3x", "4x", "Belum pernah", "Tidak Tahu"] },
+          { id: "Dosis Hexavalen rutin", label: "Jumlah dosis hexavalen imunisasi rutin", type: "select", options: ["", "1x", "2x", "3x", "4x", "Belum pernah", "Tidak Tahu"] },
+          { id: "Sumber info imunisasi rutin AFP", label: "Sumber informasi imunisasi rutin", type: "select", options: ["", "Buku KIA/kohort", "ASIK", "Ingatan responden"] },
+          { id: "Program imunisasi tambahan AFP", label: "Imunisasi tambahan: Crash program / Sub-PIN / PIN", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Dosis OPV tambahan AFP", label: "Jumlah dosis OPV imunisasi tambahan", type: "select", options: ["", "1x", "2x", "3x", "4x", "Belum pernah", "Tidak Tahu"], showIf: { field: "Program imunisasi tambahan AFP", values: ["Ya"] } },
+          { id: "Dosis IPV tambahan AFP", label: "Jumlah dosis IPV imunisasi tambahan", type: "select", options: ["", "1x", "2x", "3x", "4x", "Belum pernah", "Tidak Tahu"], showIf: { field: "Program imunisasi tambahan AFP", values: ["Ya"] } },
+          { id: "Sumber info imunisasi tambahan AFP", label: "Sumber informasi imunisasi tambahan", type: "select", options: ["", "Buku KIA/kohort", "ASIK", "Ingatan responden"], showIf: { field: "Program imunisasi tambahan AFP", values: ["Ya"] } },
+          { id: "Tanggal OPV terakhir AFP", label: "Tanggal imunisasi polio terakhir OPV", type: "date" },
+          { id: "Tanggal IPV terakhir AFP", label: "Tanggal imunisasi polio terakhir IPV", type: "date" },
+          { id: "Tanggal Hexavalen terakhir AFP", label: "Tanggal imunisasi polio terakhir Hexavalen", type: "date" }
         ]
       },
       IMUNISASI_SECTION,
       {
         key: "spesimen",
-        title: "Informasi Spesimen",
+        title: "Pengumpulan Spesimen",
         fields: [
           { id: "Spesimen tinja 1 diambil?", label: "Spesimen tinja 1 diambil?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Tanggal tinja 1", label: "Tanggal tinja 1", type: "date", showIf: { field: "Spesimen tinja 1 diambil?", values: ["Ya"] } },
+          { id: "Tanggal tinja 1", label: "Tanggal ambil spesimen I", type: "date", showIf: { field: "Spesimen tinja 1 diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim tinja 1 kab-prov", label: "Tanggal kirim spesimen I kab/kota ke provinsi", type: "date", showIf: { field: "Spesimen tinja 1 diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim tinja 1 prov-lab", label: "Tanggal kirim spesimen I provinsi ke lab", type: "date", showIf: { field: "Spesimen tinja 1 diambil?", values: ["Ya"] } },
           { id: "Spesimen tinja 2 diambil?", label: "Spesimen tinja 2 diambil?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Tanggal tinja 2", label: "Tanggal tinja 2", type: "date", showIf: { field: "Spesimen tinja 2 diambil?", values: ["Ya"] } },
-          { id: "Kondisi spesimen baik", label: "Kondisi spesimen baik?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] }
+          { id: "Tanggal tinja 2", label: "Tanggal ambil spesimen II", type: "date", showIf: { field: "Spesimen tinja 2 diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim tinja 2 kab-prov", label: "Tanggal kirim spesimen II kab/kota ke provinsi", type: "date", showIf: { field: "Spesimen tinja 2 diambil?", values: ["Ya"] } },
+          { id: "Tanggal kirim tinja 2 prov-lab", label: "Tanggal kirim spesimen II provinsi ke lab", type: "date", showIf: { field: "Spesimen tinja 2 diambil?", values: ["Ya"] } },
+          { id: "Alasan tidak diambil spesimen AFP", label: "Alasan tidak diambil spesimen", type: "text", fullWidth: true },
+          { id: "Kondisi spesimen baik", label: "Kondisi spesimen baik?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] },
+          { id: "Hasil pemeriksaan AFP", label: "Hasil pemeriksaan", type: "textarea", rows: 3, fullWidth: true }
+        ]
+      },
+      {
+        key: "dokter_petugas",
+        title: "Petugas / Dokter",
+        fields: [
+          { id: "Nama dokter AFP", label: "Nama dokter", type: "text" },
+          { id: "No. Telp dokter AFP", label: "No. Telp./HP dokter", type: "tel" }
         ]
       },
       {

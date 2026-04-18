@@ -4,11 +4,22 @@
     title: "Campak / Rubella",
     sections: [
       {
+        key: "kejadian",
+        title: "Informasi Kejadian / KLB",
+        fields: [
+          { id: "Kasus KLB", label: "Kasus KLB", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "KLB ke", label: "KLB ke", type: "number", showIf: { field: "Kasus KLB", values: ["Ya"] } },
+          { id: "Nomor KLB", label: "Nomor KLB", type: "text", showIf: { field: "Kasus KLB", values: ["Ya"] } }
+        ]
+      },
+      {
         key: "klinis_gejala_utama",
         title: "Informasi Klinis & Gejala Utama",
         fields: [
-          { id: "Tanggal mulai demam", label: "Tanggal mulai demam", type: "date", required: true },
-          { id: "Tanggal mulai ruam", label: "Tanggal mulai ruam", type: "date", required: true },
+          { id: "Demam?", label: "Demam", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Tanggal mulai demam", label: "Tanggal mulai demam", type: "date", required: true, showIf: { field: "Demam?", values: ["Ya"] } },
+          { id: "Ruam Makulopapular?", label: "Ruam makulopapular", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Tanggal mulai ruam", label: "Tanggal mulai ruam", type: "date", required: true, showIf: { field: "Ruam Makulopapular?", values: ["Ya"] } },
           { id: "Spacer Gejala Utama", label: "", type: "header" },
 
           { id: "Batuk", label: "Batuk", type: "select", options: OPT_YA_TIDAK },
@@ -68,15 +79,29 @@
         title: "Riwayat Perawatan",
         fields: [
           { id: "Apakah dirawat inap?", label: "Apakah dirawat inap?", type: "select", options: ["Ya", "Tidak"], required: true },
-
           { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
-
           { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
-
           { id: "Status Pasien Rawat Inap", label: "Status Pasien Rawat Inap", type: "select", options: ["Masih dirawat", "Sudah pulang"], required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
-
           { id: "Tanggal Pulang", label: "Tanggal Pulang", type: "date", required: true, showIf: { field: "Status Pasien Rawat Inap", values: ["Sudah pulang"] } }
+        ]
+      },
+
+      {
+        key: "imunisasi_spesifik_mr",
+        title: "Riwayat Imunisasi Spesifik Campak-Rubella",
+        fields: [
+          { id: "Imunisasi campak-rubela dosis 1", label: "Imunisasi campak-rubela dosis 1", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi (Dosis 1)", label: "Sumber Informasi dosis 1", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Imunisasi campak-rubela dosis 2", label: "Imunisasi campak-rubela dosis 2", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi (Dosis 2)", label: "Sumber Informasi dosis 2", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Imunisasi campak-rubela saat BIAS", label: "Imunisasi campak-rubela saat BIAS", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi (BIAS)", label: "Sumber Informasi BIAS", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Pernah menerima imunisasi MMR sebelumnya?", label: "Pernah menerima imunisasi MMR sebelumnya?", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi (MMR)", label: "Sumber Informasi MMR", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?", label: "Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?", type: "select", options: ["", "Ya", "Tidak", "Tidak tahu"] },
+          { id: "Sumber Informasi (Imunisasi tambahan)", label: "Sumber Informasi imunisasi tambahan", type: "select", options: ["", "Buku KIA/KMS", "Kartu/rekam imunisasi", "Aplikasi/Sertifikat", "Ingatan orang tua/wali", "Catatan sekolah", "Tidak diketahui", "Lainnya"] },
+          { id: "Tanggal imunisasi campak-rubela terakhir", label: "Tanggal imunisasi campak-rubela terakhir", type: "date" }
         ]
       },
 
@@ -89,12 +114,10 @@
           { id: "Pemberian Vitamin A", label: "Pemberian Vitamin A", type: "select", options: OPT_YA_TIDAK, required: true },
           { id: "Ada kasus serupa di lingkungan", label: "Ada anggota keluarga/masyarakat sekitar yang sakit sama?", type: "select", options: OPT_YA_TIDAK, required: true },
           { id: "Jumlah kasus sekitar", label: "Jumlah kasus sekitar", type: "number", required: true, showIf: { field: "Ada kasus serupa di lingkungan", values: ["Ya"] } },
-
           { id: "Riwayat perjalanan 7-21 hari", label: "Apakah bepergian 1 bulan terakhir?", type: "select", options: OPT_YA_TIDAK, required: true },
           { id: "Lokasi perjalanan", label: "Lokasi perjalanan", type: "text", fullWidth: true, required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pergi", label: "Tanggal pergi", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pulang perjalanan", label: "Tanggal kembali", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
-
           { id: "Riwayat kontak kasus serupa", label: "Riwayat kontak dengan kasus serupa?", type: "select", options: OPT_YA_TIDAK },
           { id: "Riwayat kunjungan fasilitas kesehatan", label: "Riwayat kunjungan fasilitas kesehatan sebelum diagnosis?", type: "select", options: OPT_YA_TIDAK },
           { id: "Cluster/kejadian luar biasa", label: "Diduga bagian dari klaster/KLB?", type: "select", options: OPT_YA_TIDAK }
@@ -109,7 +132,6 @@
           { id: "Jenis Sampel Darah", label: "Jenis Sampel Darah", type: "select", required: true, options: ["Serum", "Darah lengkap", "Lainnya"], showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen darah", label: "Tanggal ambil spesimen darah", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal pengiriman spesimen darah ke lab", label: "Tanggal pengiriman spesimen darah ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
-
           { id: "Apakah spesimen lain diambil", label: "Apakah spesimen lain diambil", type: "select", options: OPT_YA_TIDAK },
           { id: "Jenis Sampel Lain", label: "Jenis Sampel Lain", type: "select", required: true, options: ["Swab tenggorok", "Urine", "Lainnya"], showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen lain", label: "Tanggal ambil spesimen lain", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },

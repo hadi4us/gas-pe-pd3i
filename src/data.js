@@ -341,9 +341,15 @@ function saveDxRecord_(dx, data) {
   let headers = getTrimmedHeaders_(sheet);
   if (!headers.length) throw new Error("Header sheet tidak ditemukan.");
   const mrOnlyHeaders = ["Nomor Rekam Medik", "Tanggal meninggal", "Penyebab kematian"];
-  headers = _ensureSheetHeaders_(sheet, dx === "MR"
+
+  const incomingFieldHeaders = Object.keys(data || {})
+    .filter(function (key) {
+      return key && String(key).trim() && String(key).indexOf("__") !== 0;
+    });
+
+  headers = _ensureSheetHeaders_(sheet, (dx === "MR"
     ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_)
-    : COMMON_PIPELINE_HEADERS_);
+    : COMMON_PIPELINE_HEADERS_).concat(incomingFieldHeaders));
   data = _applyHeaderAliases_(dx, data || {}, headers);
 
   const kecamatanVal = data["Kecamatan"] || data["Kecamatan domisili"] || "";
