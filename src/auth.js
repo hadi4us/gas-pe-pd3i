@@ -137,13 +137,14 @@ function authLogin(username, pin) {
 
     const token = Utilities.getUuid();
     const ttl = Session_Manager.getTtlForRole(found.role);
-    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: Date.now(), ttl: ttl }), ttl);
+    const nowTs = Date.now();
+    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: nowTs, ttl: ttl }), ttl);
 
     if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) {
       Audit_Logger.logLogin(found);
     }
 
-    return { status: "success", token: token, user: found };
+    return { status: "success", token: token, user: found, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
     return { status: "error", message: String(e) };
   }
@@ -169,8 +170,11 @@ function authCheck(token) {
     }
 
     const ttl = obj.ttl || Session_Manager.getTtlForRole(obj.user.role);
+    const nowTs = Date.now();
+    obj.ts = nowTs;
+    obj.ttl = ttl;
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify(obj), ttl);
-    return { status: "success", user: obj.user };
+    return { status: "success", user: obj.user, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
     return { status: "error", message: String(e) };
   }

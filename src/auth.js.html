@@ -6,6 +6,7 @@
   (function () {
     let __authInitialized = false;
     let loginAttempt = 0;
+    let AUTH_SESSION_META = null;
 
     function initAuthModule() {
       if (__authInitialized) return;
@@ -71,6 +72,13 @@
         if (overlay) overlay.classList.remove("hidden");
       }
 
+      function setAuthSessionMeta(meta) {
+        AUTH_SESSION_META = meta || null;
+        try {
+          window.__AUTH_SESSION_META = AUTH_SESSION_META;
+        } catch (e) {}
+      }
+
       function setLoggedInUI(user) {
         SESSION_USER = user || null;
 
@@ -101,6 +109,7 @@
       function setLoggedOutUI() {
         SESSION_TOKEN = "";
         SESSION_USER = null;
+        setAuthSessionMeta(null);
         loginAttempt = 0;
         MASTER_FASKES = [];
         clearSessionFromBrowser();
@@ -238,32 +247,20 @@
               }
 
               if (!res || res.status !== "success") {
-
                 loginAttempt++;
-
                 setAlert(loginAlert, (res && res.message) || "Login gagal.", false);
                 refreshLoginCaptcha();
-
-                if (loginAttempt >= 5) {
-
-                  setAlert(loginAlert,"Terlalu banyak percobaan login. Tunggu 5 detik.",false);
-
-                  if (btnLogin) {
-                    btnLogin.disabled = true;
-                  }
-
-                  setTimeout(function(){
-                    loginAttempt = 0;
-                    if (btnLogin) btnLogin.disabled = false;
-                  },5000);
-
-                }
-
                 return;
               }
 
+              loginAttempt = 0;
               SESSION_TOKEN = res.token || "";
               SESSION_USER = res.user || null;
+              setAuthSessionMeta({
+                ttlSec: Number(res.ttlSec || 0),
+                issuedAt: Number(res.issuedAt || 0),
+                expiresAt: Number(res.expiresAt || 0)
+              });
 
               saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
               setLoggedInUI(SESSION_USER);
@@ -430,6 +427,11 @@
 
             SESSION_TOKEN = savedToken;
             SESSION_USER = (res && res.user) || savedUser || null;
+            setAuthSessionMeta({
+              ttlSec: Number(res.ttlSec || 0),
+              issuedAt: Number(res.issuedAt || 0),
+              expiresAt: Number(res.expiresAt || 0)
+            });
 
             saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
             setLoggedInUI(SESSION_USER);
