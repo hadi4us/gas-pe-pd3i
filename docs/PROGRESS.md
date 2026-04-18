@@ -55,3 +55,5 @@
 - [x] UI viewer mode diperjelas: banner mode lihat, form read-only, dan CTA hasil pencarian otomatis berubah jadi Buka / Lihat
 - [x] Role model di UI dibuat lebih eksplisit lewat capability summary (Admin / Petugas / Viewer)
 - [x] Dasar penetapan status kini menyesuaikan diagnosis + status kasus agar workflow status lebih cerdas
+- [x] Aturan transisi status kasus ditambahkan agar workflow tidak melompat seenaknya
+- [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`

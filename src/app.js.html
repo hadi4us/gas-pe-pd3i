@@ -1427,6 +1427,14 @@
       errors.push("Dasar penetapan status wajib diisi untuk status kasus klinis/discarded/konfirmasi.");
     }
 
+    const latestStatus = getLatestStatusFromTimeline();
+    if (latestStatus && statusKasusGlobal && latestStatus !== statusKasusGlobal && typeof getAllowedStatusTransitions === "function") {
+      const allowedNext = getAllowedStatusTransitions(dx, latestStatus) || [];
+      if (allowedNext.indexOf(statusKasusGlobal) === -1) {
+        errors.push(`Transisi status dari '${latestStatus}' ke '${statusKasusGlobal}' tidak sesuai alur yang diizinkan.`);
+      }
+    }
+
     if (dx === "MR") {
       const tglPergi = getFieldValueSafe("Tanggal pergi");
       const tglKembali = getFieldValueSafe("Tanggal pulang perjalanan");
@@ -1754,6 +1762,16 @@
     }
   }
 
+  function getLatestStatusFromTimeline() {
+    const rows = collectDynamicTableData("Riwayat Status Kasus") || [];
+    if (!rows.length) return "";
+    const sorted = rows.slice().sort(function(a, b) {
+      return String(a.Tanggal || "").localeCompare(String(b.Tanggal || ""));
+    });
+    const last = sorted[sorted.length - 1] || {};
+    return String(last.Status || "").trim();
+  }
+
   function getCaseStatusReasonOptions(dx, status) {
     const statusNorm = String(status || "").trim().toLowerCase();
     const dxNorm = String(dx || "").trim().toUpperCase();
@@ -1791,11 +1809,23 @@
     if (!select) return;
 
     const currentValue = String(select.value || "").trim();
+    const previousStatus = getLatestStatusFromTimeline();
     let options = [];
-    if (typeof getCaseStatusOptions === "function") {
+
+    if (typeof getAllowedStatusTransitions === "function") {
+      options = getAllowedStatusTransitions(dx, previousStatus);
+    } else if (typeof getCaseStatusOptions === "function") {
       options = getCaseStatusOptions(dx);
     } else {
       options = ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"];
+    }
+
+    if (!previousStatus && typeof getCaseStatusOptions === "function") {
+      options = getCaseStatusOptions(dx);
+    }
+
+    if (currentValue && options.indexOf(currentValue) === -1) {
+      options = [currentValue].concat(options);
     }
 
     select.innerHTML = options.map(function(opt) {
@@ -2105,7 +2135,9 @@
     reevaluateShowIfFields();
     if (["Status Pasien/Kasus", "Tanggal Update Status", "Dasar Penetapan Status", "Catatan Status Pasien", "Petugas Verifikator"].includes(e.target.id)) {
       syncStatusHistoryTimeline();
-      if (e.target.id === "Status Pasien/Kasus") {
+      if (e.target.id === "Status Pasien/Kasus" || e.target.id === "Tanggal Update Status") {
+        syncCaseStatusOptionsByDx(document.getElementById("form-selector")?.value || "");
+      } else {
         syncStatusRulesByContext(document.getElementById("form-selector")?.value || "");
       }
     }

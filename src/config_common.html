@@ -88,6 +88,44 @@
     return (CASE_STATUS_OPTIONS_BY_DX[key] || CASE_STATUS_OPTIONS_BY_DX.DEFAULT || []).slice();
   }
 
+  const CASE_STATUS_TRANSITIONS = {
+    DEFAULT: {
+      "Suspek": ["Menunggu hasil lab", "Klinis", "Probable", "Konfirmasi", "Discarded", "Follow up", "Meninggal", "Lost to follow-up"],
+      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up", "Meninggal"],
+      "Probable": ["Konfirmasi", "Discarded", "Follow up", "Meninggal", "Lost to follow-up"],
+      "Klinis": ["Konfirmasi", "Discarded", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Konfirmasi", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up 60 hari": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    },
+    AFP: {
+      "Suspek": ["Menunggu hasil lab", "Klinis", "Probable", "Konfirmasi", "Discarded", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
+      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up 60 hari", "Meninggal"],
+      "Probable": ["Konfirmasi", "Discarded", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
+      "Klinis": ["Konfirmasi", "Discarded", "Follow up 60 hari", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up 60 hari", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up 60 hari": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    }
+  };
+
+  function getAllowedStatusTransitions(dx, fromStatus) {
+    const key = String(dx || "").trim().toUpperCase();
+    const current = String(fromStatus || "").trim();
+    if (!current) return getCaseStatusOptions(dx);
+    const map = CASE_STATUS_TRANSITIONS[key] || CASE_STATUS_TRANSITIONS.DEFAULT || {};
+    const allowed = map[current];
+    if (!Array.isArray(allowed)) return getCaseStatusOptions(dx);
+    return allowed.slice();
+  }
+
   const IMUNISASI_SECTION = {
     key: "riwayat_imunisasi",
     title: "Riwayat Imunisasi",
