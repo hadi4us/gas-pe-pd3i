@@ -32,3 +32,4 @@
 - [x] Guardrail epidemiologis awal ditambahkan untuk MR, DIF, PERT, TN, dan AFP (urutan tanggal penting + rule klinis minimum)
 - [x] UI blueprint Tabler-style ditulis di `docs/UI-BLUEPRINT.md`
 - [x] Halaman utama direstruktur ke model admin shell (sidebar + topbar + workspace + summary panel) dengan pendekatan Tabler-inspired
+- [x] Polishing UI lanjutan: field card lebih rapi, sub-section diagnosis lebih tegas, summary panel lebih responsif, dan sidebar active-state mengikuti konteks halaman

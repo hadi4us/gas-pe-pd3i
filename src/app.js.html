@@ -42,8 +42,8 @@
       ? `data-parent="${field.showIf.field}" data-parent-vals='${JSON.stringify(field.showIf.values)}' data-required="${field.required ? "true" : "false"}"`
       : "";
 
-    const wrapperClass = `${widthClass} field-wrapper ${field.showIf ? "hidden" : ""}`;
-    const cls = `border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
+    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "hidden" : ""}`;
+    const cls = `pd3i-generated-control border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
       field.readonly
         ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
         : "bg-white focus:ring-blue-500 focus:border-blue-500"
@@ -81,8 +81,8 @@
         `;
       }
 
-      return `<div class="${widthClass} bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
-        <div class="flex justify-between items-center mb-4">
+      return `<div class="${widthClass} pd3i-dynamic-card bg-white p-5 border border-slate-200 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-4 gap-3 flex-wrap">
           <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-wide">${field.label}</label>
           <button type="button" onclick="addDynamicRow('${field.id}')"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-extrabold shadow-md hover:bg-blue-700 transition">
@@ -144,16 +144,16 @@
     const numericHint = _getNumericFieldHintById(field.id);
 
     return `<div class="${wrapperClass}" ${showIfAttr}>
-      <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">
+      <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
         ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
       </label>
       ${inputHtml}
-      ${numericHint ? `<p class="mt-1 text-[11px] font-semibold text-slate-500">${numericHint}</p>` : ""}
+      ${numericHint ? `<p class="mt-2 text-[11px] font-semibold text-slate-500">${numericHint}</p>` : ""}
     </div>`;
   }
 
   function renderSectionTitle(title) {
-    return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${title}</div>`;
+    return `<div class="col-span-1 md:col-span-2 lg:col-span-3 pd3i-section-banner"><div class="pd3i-section-banner-eyebrow">Sub-section diagnosis</div><div class="pd3i-section-banner-title">${title}</div></div>`;
   }
 
   // ============================================================
@@ -1572,6 +1572,15 @@
     setSummaryText("summary-warning-pill", String(issueCount));
   }
 
+  function updateSidebarActiveState(activeId) {
+    document.querySelectorAll(".pd3i-nav-link[href^='#']").forEach(function(link) {
+      const target = String(link.getAttribute("href") || "").replace(/^#/, "");
+      if (!target) return;
+      if (target === activeId) link.classList.add("is-active");
+      else link.classList.remove("is-active");
+    });
+  }
+
   function renderDiagnosisSections(cfg, container) {
     container.innerHTML = "";
     if (!cfg || !Array.isArray(cfg.sections)) return;
@@ -2122,6 +2131,26 @@
 
       const { isViewer, isAdmin } = window.applyRoleUIState();
       updateUiShellSummary();
+      updateSidebarActiveState("section-overview");
+
+      document.querySelectorAll(".pd3i-nav-link[href^='#']").forEach(function(link) {
+        link.addEventListener("click", function() {
+          const target = String(link.getAttribute("href") || "").replace(/^#/, "");
+          if (target) updateSidebarActiveState(target);
+        });
+      });
+
+      window.addEventListener("scroll", function() {
+        const sectionIds = ["section-overview", "section-search-shell", "section-pelapor", "section-pasien", "section-specific"];
+        let currentId = "section-overview";
+        sectionIds.forEach(function(id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 160) currentId = id;
+        });
+        updateSidebarActiveState(currentId);
+      }, { passive: true });
 
       if (btnAdminMenu && adminMenuDropdown) {
         btnAdminMenu.addEventListener("click", function(e) {
@@ -2298,6 +2327,7 @@
             enforceNumericOnlyInput(e.target);
           }
           saveFormDraft();
+          updateUiShellSummary();
         }
       });
 
