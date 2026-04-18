@@ -1581,6 +1581,15 @@
     });
   }
 
+  function updateFormStepperState(activeId) {
+    document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
+      const target = String(item.getAttribute("data-step-target") || "").trim();
+      if (!target) return;
+      if (target === activeId) item.classList.add("is-active");
+      else item.classList.remove("is-active");
+    });
+  }
+
   function renderDiagnosisSections(cfg, container) {
     container.innerHTML = "";
     if (!cfg || !Array.isArray(cfg.sections)) return;
@@ -2132,6 +2141,7 @@
       const { isViewer, isAdmin } = window.applyRoleUIState();
       updateUiShellSummary();
       updateSidebarActiveState("section-overview");
+      updateFormStepperState("section-pelapor");
 
       document.querySelectorAll(".pd3i-nav-link[href^='#']").forEach(function(link) {
         link.addEventListener("click", function() {
@@ -2150,7 +2160,17 @@
           if (rect.top <= 160) currentId = id;
         });
         updateSidebarActiveState(currentId);
+        if (["section-pelapor", "section-pasien", "section-specific"].includes(currentId)) {
+          updateFormStepperState(currentId);
+        }
       }, { passive: true });
+
+      document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
+        item.addEventListener("click", function() {
+          const target = String(item.getAttribute("data-step-target") || "").trim();
+          if (target) updateFormStepperState(target);
+        });
+      });
 
       if (btnAdminMenu && adminMenuDropdown) {
         btnAdminMenu.addEventListener("click", function(e) {
@@ -2377,6 +2397,7 @@
           formElement.classList.add("hidden");
           if (searchContainer) searchContainer.classList.add("hidden");
           if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
+          updateFormStepperState("section-pelapor");
           updateUiShellSummary();
           return;
         }
@@ -2490,22 +2511,30 @@
         }
 
         let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${results.length} dari ${total} hasil</div>`;
-        html += `<ul class="divide-y divide-slate-100">`;
+        html += `<div class="pd3i-search-results-wrap">`;
 
         results.forEach(function(item) {
-          html += `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer transition"
-            onclick="_loadRecordFromSearch_('${(item.epid || "").replace(/'/g, "\\'")}', '${dx}')">
-            <div class="font-extrabold text-slate-800 text-sm">${item.nama || "-"}</div>
-            <div class="text-xs text-slate-500 mt-0.5">
-              EPID: <span class="font-bold text-blue-700">${item.epid || "-"}</span>
-              &nbsp;|&nbsp; Lahir: ${item.tanggalLahir || "-"}
-              &nbsp;|&nbsp; ${item.kelurahan || "-"}
+          const safeEpid = (item.epid || "").replace(/'/g, "\\'");
+          html += `<div class="pd3i-search-result-card">
+            <div class="min-w-0 flex-1">
+              <div class="font-extrabold text-slate-800 text-sm md:text-base">${item.nama || "-"}</div>
+              <div class="pd3i-search-result-meta">
+                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${item.epid || "-"}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${item.tanggalLahir || "-"}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${item.kelurahan || "-"}</span>
+              </div>
+              <div class="pd3i-search-result-copy mt-2">
+                ${item.orangTua ? `Ortu/Wali: <strong>${item.orangTua}</strong><br>` : ""}
+                ${item.alamat ? `Alamat: ${item.alamat}` : "Alamat belum tersedia"}
+              </div>
             </div>
-            ${item.orangTua ? `<div class="text-xs text-slate-400 mt-0.5">Ortu/Wali: ${item.orangTua}</div>` : ""}
-          </li>`;
+            <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeEpid}', '${dx}')">
+              <i class="fas fa-pen-to-square"></i> Buka / Edit
+            </button>
+          </div>`;
         });
 
-        html += `</ul>`;
+        html += `</div>`;
         box.innerHTML = html;
       }
 

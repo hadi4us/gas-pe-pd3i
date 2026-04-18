@@ -33,3 +33,5 @@
 - [x] UI blueprint Tabler-style ditulis di `docs/UI-BLUEPRINT.md`
 - [x] Halaman utama direstruktur ke model admin shell (sidebar + topbar + workspace + summary panel) dengan pendekatan Tabler-inspired
 - [x] Polishing UI lanjutan: field card lebih rapi, sub-section diagnosis lebih tegas, summary panel lebih responsif, dan sidebar active-state mengikuti konteks halaman
+- [x] Stepper workflow ditambahkan untuk memandu alur pengisian form
+- [x] Hasil pencarian dipoles menjadi card-based result list dengan CTA edit yang lebih jelas
