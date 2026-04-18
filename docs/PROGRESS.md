@@ -51,3 +51,4 @@
 - [x] Mekanisme auth diperkeras: rate-limit login sederhana, audit login/login gagal, hashing PIN baru, dan session browser lebih proper (sessionStorage-first)
 - [x] UX auth dipoles dengan boot overlay + restore session yang lebih halus
 - [x] Status sesi autentikasi sekarang ditampilkan di summary panel, dan lockout front-end yang rancu dihapus agar konsisten dengan guard backend
+- [x] Authorization backend diperkeras: save/update sekarang eksplisit menolak role viewer, dan guard admin dirapikan lewat helper terpusat di routes
