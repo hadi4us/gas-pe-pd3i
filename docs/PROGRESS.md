@@ -24,3 +24,5 @@
 - [x] Form AFP diperluas besar-besaran (riwayat sakit, pemeriksaan neurologis, sanitasi, imunisasi polio ringkas, logistik spesimen, dan data dokter)
 - [x] Penyimpanan backend diperkuat agar header sheet baru otomatis ditambahkan saat field baru masuk
 - [x] Tabel kontak erat diperluas agar bisa menampung jumlah imunisasi terkait, kondisi saat itu, dan penanda kontak hamil
+- [x] Source terbaru sudah dipush ke Apps Script (`clasp push -f`)
+- [x] Deployment produksi yang dipakai aplikasi berhasil diredeploy ke versi `238` tanpa mengganti URL web app
