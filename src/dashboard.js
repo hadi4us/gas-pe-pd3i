@@ -149,6 +149,7 @@ function getDashboardStats(dx, tahun, token) {
         totalKasus: 0,
         perKecamatan: {},
         perBulan: {},
+        perStatusKasus: {},
         statusNotifikasi: dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null,
         statusSinkronisasi: dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null
       };
@@ -161,11 +162,13 @@ function getDashboardStats(dx, tahun, token) {
     const idxKecamatan = headers.indexOf("Kecamatan");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
+    const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
 
     // Hasil agregasi
     let totalKasus = 0;
     const perKecamatan = {};
     const perBulan = {};
+    const perStatusKasus = {};
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
 
@@ -204,6 +207,11 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
+      if (idxStatusKasus !== -1) {
+        const statusKasus = String(row[idxStatusKasus] || "").trim() || "Belum ditentukan";
+        perStatusKasus[statusKasus] = (perStatusKasus[statusKasus] || 0) + 1;
+      }
+
       // Status notifikasi/sinkronisasi dihitung jika kolom tersedia
       if (idxStatusNotif !== -1 && statusNotifikasi) {
         const statusN = String(row[idxStatusNotif] || "").trim().toUpperCase();
@@ -234,6 +242,7 @@ function getDashboardStats(dx, tahun, token) {
       totalKasus: totalKasus,
       perKecamatan: perKecamatan,
       perBulan: perBulan,
+      perStatusKasus: perStatusKasus,
       statusNotifikasi: statusNotifikasi,
       statusSinkronisasi: statusSinkronisasi
     };

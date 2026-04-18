@@ -1610,6 +1610,28 @@
     });
   }
 
+  function syncCaseStatusOptionsByDx(dx) {
+    const select = document.getElementById("Status Pasien/Kasus");
+    if (!select) return;
+
+    const currentValue = String(select.value || "").trim();
+    let options = [];
+    if (typeof getCaseStatusOptions === "function") {
+      options = getCaseStatusOptions(dx);
+    } else {
+      options = ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"];
+    }
+
+    select.innerHTML = options.map(function(opt) {
+      const selected = opt === currentValue ? ' selected' : '';
+      return `<option value="${opt}"${selected}>${opt}</option>`;
+    }).join("");
+
+    if (currentValue && options.indexOf(currentValue) === -1) {
+      select.value = options[0] || "";
+    }
+  }
+
   function updateFormStepperState(activeId) {
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
       const target = String(item.getAttribute("data-step-target") || "").trim();
@@ -2478,6 +2500,7 @@
 
         specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;
         renderDiagnosisSections(cfg, specificContainer);
+        syncCaseStatusOptionsByDx(dx);
 
         setTimeout(async () => {
           addDefaultRowsForDynamicTables();
@@ -2657,6 +2680,7 @@
             buildRiwayatImunisasiRows();
             forceBuildImunisasiWhenReady();
             hydrateDynamicTables(record);
+            syncCaseStatusOptionsByDx(dx);
 
             showTopAlert("Data berhasil dimuat. Silakan lakukan perubahan.", true);
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });

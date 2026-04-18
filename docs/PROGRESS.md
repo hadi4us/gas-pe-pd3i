@@ -37,3 +37,5 @@
 - [x] Hasil pencarian dipoles menjadi card-based result list dengan CTA edit yang lebih jelas
 - [x] Alur baru ditanamkan ke UI: input kasus → verifikasi EPID → hasil sampel (opsional) → update status pasien/kasus
 - [x] Field generik verifikasi EPID, hasil sampel, dan status pasien/kasus ditambahkan sebagai blok common workflow
+- [x] Opsi status pasien/kasus sekarang mulai dibedakan per diagnosis
+- [x] Dashboard mulai menampilkan distribusi status kasus dari kolom `Status Pasien/Kasus`

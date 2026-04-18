@@ -61,6 +61,20 @@
     { id: "Catatan Status Pasien", label: "Catatan Status Pasien", type: "textarea", rows: 3, fullWidth: true }
   ];
 
+  const CASE_STATUS_OPTIONS_BY_DX = {
+    DEFAULT: ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+    MR: ["Suspek", "Discarded", "Klinis", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+    DIF: ["Suspek", "Discarded", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+    PERT: ["Suspek", "Discarded", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+    TN: ["Suspek", "Discarded", "Klinis", "Konfirmasi", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+    AFP: ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up 60 hari", "Sembuh", "Meninggal", "Lost to follow-up"]
+  };
+
+  function getCaseStatusOptions(dx) {
+    const key = String(dx || "").trim().toUpperCase();
+    return (CASE_STATUS_OPTIONS_BY_DX[key] || CASE_STATUS_OPTIONS_BY_DX.DEFAULT || []).slice();
+  }
+
   const IMUNISASI_SECTION = {
     key: "riwayat_imunisasi",
     title: "Riwayat Imunisasi",
