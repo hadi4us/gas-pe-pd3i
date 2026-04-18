@@ -170,6 +170,22 @@
       </div>
     </div>`;
 
+    const actionAlerts = [];
+    if ((qc.pendingVerification || 0) > 0) actionAlerts.push(`${qc.pendingVerification} kasus masih belum / menunggu verifikasi EPID.`);
+    if ((qc.waitingSampleResult || 0) > 0) actionAlerts.push(`${qc.waitingSampleResult} kasus menunggu hasil sampel.`);
+    if (epi.workflowCompletenessRate != null && epi.workflowCompletenessRate < 70) actionAlerts.push(`Kelengkapan workflow baru ${epi.workflowCompletenessRate}% — perlu perapihan data.`);
+    if (epi.medianReportToTrackingDays != null && epi.medianReportToTrackingDays > 2) actionAlerts.push(`Median laporan ke pelacakan ${epi.medianReportToTrackingDays} hari — timeliness perlu dipercepat.`);
+
+    if (actionAlerts.length > 0) {
+      html += `<div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <div class="text-sm font-extrabold text-amber-800 mb-3 uppercase tracking-wide">Prioritas Tindak Lanjut</div>
+        <ul class="list-disc pl-5 space-y-2 text-sm font-semibold text-amber-900">`;
+      actionAlerts.forEach(function(msg) {
+        html += `<li>${msg}</li>`;
+      });
+      html += `</ul></div>`;
+    }
+
     const perStatus = stats.perStatusKasus || {};
     const statusKeys = Object.keys(perStatus).sort(function(a, b) { return perStatus[b] - perStatus[a]; });
     if (statusKeys.length > 0) {

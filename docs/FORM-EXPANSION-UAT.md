@@ -339,6 +339,7 @@ Checklist:
 - tombol `Langkah Sebelumnya` / `Langkah Berikutnya` berpindah ke section yang tepat
 - progress wizard berubah sesuai step aktif
 - stepper menunjukkan step aktif / complete secara konsisten
+- `Langkah Berikutnya` menahan perpindahan bila field wajib di step aktif belum lengkap
 
 ### TC-WF-02 — Verifikasi EPID
 - isi `Status Verifikasi EPID`
@@ -377,6 +378,7 @@ Checklist:
 ### TC-REG-03 — Dashboard
 - dashboard tetap bisa dibuka
 - quality cards dan indikator epidemiologis muncul tanpa error
+- prioritas tindak lanjut tampil konsisten bila ambang masalah operasional terpenuhi
 
 ### TC-REG-04 — Retry admin
 - retry sync / notify / telegram tetap tampil untuk admin

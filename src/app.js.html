@@ -1668,6 +1668,40 @@
     return { total, filled, percent: total > 0 ? Math.round((filled / total) * 100) : 100 };
   }
 
+  function validateWorkflowStepCompletion(stepId) {
+    const normalized = normalizeWorkflowStepId(stepId);
+    const step = getWorkflowStepDefinitions().find(function(item) { return item.id === normalized; });
+    if (!step) return { ok: true };
+
+    const invalidEls = [];
+    (step.sections || []).forEach(function(id) {
+      const root = document.getElementById(id);
+      if (!root) return;
+      root.querySelectorAll("input, select, textarea").forEach(function(el) {
+        if (!el || el.disabled || !el.required) return;
+        if (el.type === "hidden") return;
+        const wrapper = el.closest(".field-wrapper");
+        if (wrapper && wrapper.classList.contains("hidden")) return;
+        if (typeof el.checkValidity === "function" && !el.checkValidity()) {
+          invalidEls.push(el);
+        }
+      });
+    });
+
+    if (!invalidEls.length) return { ok: true };
+
+    const first = invalidEls[0];
+    try {
+      first.focus();
+      if (typeof first.reportValidity === "function") first.reportValidity();
+    } catch (e) {}
+
+    return {
+      ok: false,
+      message: `Lengkapi dulu field wajib pada langkah ${step.label} sebelum lanjut ke langkah berikutnya.`
+    };
+  }
+
   function updateWorkflowProgressUI(activeId) {
     const currentId = normalizeWorkflowStepId(activeId);
     const steps = getWorkflowStepDefinitions();
@@ -1684,7 +1718,7 @@
     const btnNext = document.getElementById("btn-next-step");
 
     if (currentLabel) currentLabel.textContent = `Langkah ${currentIndex + 1} dari ${totalSteps} • ${currentStep.label}`;
-    if (progressLabel) progressLabel.textContent = `${completion.percent}% langkah aktif • total ${overallPercent}%`;
+    if (progressLabel) progressLabel.textContent = `${completion.filled}/${completion.total} field wajib terisi • total ${overallPercent}%`;
     if (progressFill) progressFill.style.width = `${Math.max(0, Math.min(100, overallPercent))}%`;
     if (btnPrev) btnPrev.disabled = currentIndex === 0;
     if (btnNext) btnNext.disabled = currentIndex === totalSteps - 1;
@@ -2394,6 +2428,11 @@
           const active = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
           const currentId = normalizeWorkflowStepId(active);
           const idx = steps.findIndex(function(step) { return step.id === currentId; });
+          const stepCheck = validateWorkflowStepCompletion(currentId);
+          if (!stepCheck.ok) {
+            showTopAlert(stepCheck.message || "Lengkapi langkah aktif terlebih dahulu.", false);
+            return;
+          }
           if (idx !== -1 && idx < steps.length - 1) goToWorkflowStep(steps[idx + 1].id);
         });
       }

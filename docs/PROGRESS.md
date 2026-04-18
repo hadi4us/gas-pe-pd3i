@@ -44,6 +44,7 @@
 - [x] Hasil pencarian sekarang menampilkan badge status kasus, status verifikasi EPID, dan ringkasan status sampel untuk bantu edit workflow
 - [x] Edit mode banner diperkaya dengan EPID, DX, dan status kasus aktif
 - [x] Summary panel + workflow summary kini menampilkan state verifikasi EPID dan hasil sampel saat record dibuka
-- [x] Wizard diperketat dengan progress bar, tombol langkah sebelumnya/berikutnya, dan indikator completion step
+- [x] Wizard diperketat dengan progress bar, tombol langkah sebelumnya/berikutnya, indikator completion step, dan gating field wajib per langkah
 - [x] Dashboard analitik ditambah indikator epidemiologis ringkas (timeliness, workflow completeness, distribusi umur, distribusi jenis kelamin)
+- [x] Dashboard sekarang memberi prioritas tindak lanjut otomatis berdasarkan masalah operasional utama
 - [x] Checklist UAT diperluas untuk fitur workflow baru: wizard, verifikasi EPID, hasil sampel, timeline status, dan badge hasil pencarian
