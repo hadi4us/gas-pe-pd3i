@@ -1395,6 +1395,30 @@
       errors.push("Tanggal lahir tidak boleh lebih akhir dari tanggal pelacakan.");
     }
 
+    const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID");
+    if (statusVerifikasi === "Terverifikasi") {
+      if (!isNonEmptyField("Tanggal Verifikasi EPID")) {
+        errors.push("Tanggal verifikasi EPID wajib diisi jika status verifikasi sudah terverifikasi.");
+      }
+      if (!isNonEmptyField("Petugas Verifikator")) {
+        errors.push("Petugas verifikator wajib diisi jika status verifikasi sudah terverifikasi.");
+      }
+    }
+
+    if (getFieldValueSafe("Pemeriksaan Sampel Dilakukan") === "Ya") {
+      if (!isNonEmptyField("Tanggal Hasil Sampel")) {
+        warnings.push("Tanggal hasil sampel belum diisi walau pemeriksaan sampel ditandai dilakukan.");
+      }
+      if (!isNonEmptyField("Interpretasi Hasil Sampel")) {
+        warnings.push("Interpretasi hasil sampel belum diisi.");
+      }
+    }
+
+    const statusKasusGlobal = getFieldValueSafe("Status Pasien/Kasus");
+    if ((statusKasusGlobal === "Konfirmasi" || statusKasusGlobal === "Discarded" || statusKasusGlobal === "Klinis") && !isNonEmptyField("Dasar Penetapan Status")) {
+      errors.push("Dasar penetapan status wajib diisi untuk status kasus klinis/discarded/konfirmasi.");
+    }
+
     if (dx === "MR") {
       const tglPergi = getFieldValueSafe("Tanggal pergi");
       const tglKembali = getFieldValueSafe("Tanggal pulang perjalanan");
@@ -1526,7 +1550,10 @@
     if (typeof getCommonFields === "function") return getCommonFields();
     return {
       pelapor: (typeof COMMON_PELAPOR_FIELDS !== "undefined") ? COMMON_PELAPOR_FIELDS : [],
-      pasien: (typeof COMMON_PASIEN_FIELDS !== "undefined") ? COMMON_PASIEN_FIELDS : []
+      pasien: (typeof COMMON_PASIEN_FIELDS !== "undefined") ? COMMON_PASIEN_FIELDS : [],
+      verifikasi: (typeof COMMON_VERIFIKASI_FIELDS !== "undefined") ? COMMON_VERIFIKASI_FIELDS : [],
+      sampel: (typeof COMMON_HASIL_SAMPEL_FIELDS !== "undefined") ? COMMON_HASIL_SAMPEL_FIELDS : [],
+      status: (typeof COMMON_STATUS_FIELDS !== "undefined") ? COMMON_STATUS_FIELDS : []
     };
   }
 
@@ -1549,6 +1576,7 @@
     const epidText = getFieldValueSafe("Nomor EPID") || "Otomatis saat simpan";
     const ageText = getFieldValueSafe("Umur (auto)") || "-";
     const epiGroupText = getFieldValueSafe("Kelompok Umur Epidemiologis") || "-";
+    const statusKasus = getFieldValueSafe("Status Pasien/Kasus") || "Belum ditentukan";
     const userName = String((SESSION_USER && (SESSION_USER.nama || SESSION_USER.username || SESSION_USER.name)) || "Belum login").trim() || "Belum login";
 
     let issueCount = 0;
@@ -1566,6 +1594,7 @@
     setSummaryText("summary-epi-group", epiGroupText);
     setSummaryText("summary-mode", modeText);
     setSummaryText("summary-user", userName);
+    setSummaryText("summary-status-kasus", statusKasus);
     setSummaryText("summary-dx-pill", dx ? `${dx} • ${dxTitle}` : "Belum dipilih");
     setSummaryText("summary-mode-pill", modeText);
     setSummaryText("summary-warning-count", issueCount > 0 ? `${issueCount} isu perlu dicek` : "0 warning");
@@ -2068,6 +2097,9 @@
       const formElement = document.getElementById("dynamic-form");
       const pelaporContainer = document.getElementById("pelapor-fields-container");
       const pasienContainer = document.getElementById("pasien-fields-container");
+      const verifikasiContainer = document.getElementById("verifikasi-fields-container");
+      const sampelContainer = document.getElementById("sampel-fields-container");
+      const statusContainer = document.getElementById("status-fields-container");
       const specificContainer = document.getElementById("specific-fields-container");
       const specificTitle = document.getElementById("specific-title");
       const btnSubmit = document.getElementById("btn-submit");
@@ -2084,7 +2116,7 @@
       const adminMenuDropdown = document.getElementById("admin-menu-dropdown");
       const btnOpenPin = document.getElementById("btn-open-pin");
 
-      if (!selector || !formElement || !pelaporContainer || !pasienContainer || !specificContainer || !btnSubmit) {
+      if (!selector || !formElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !btnSubmit) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
         return;
       }
@@ -2146,12 +2178,17 @@
       document.querySelectorAll(".pd3i-nav-link[href^='#']").forEach(function(link) {
         link.addEventListener("click", function() {
           const target = String(link.getAttribute("href") || "").replace(/^#/, "");
-          if (target) updateSidebarActiveState(target);
+          if (target) {
+            updateSidebarActiveState(target);
+            if (["section-pelapor", "section-verifikasi", "section-sampel", "section-status"].includes(target)) {
+              updateFormStepperState(target);
+            }
+          }
         });
       });
 
       window.addEventListener("scroll", function() {
-        const sectionIds = ["section-overview", "section-search-shell", "section-pelapor", "section-pasien", "section-specific"];
+        const sectionIds = ["section-overview", "section-search-shell", "section-pelapor", "section-pasien", "section-specific", "section-verifikasi", "section-sampel", "section-status"];
         let currentId = "section-overview";
         sectionIds.forEach(function(id) {
           const el = document.getElementById(id);
@@ -2159,16 +2196,24 @@
           const rect = el.getBoundingClientRect();
           if (rect.top <= 160) currentId = id;
         });
-        updateSidebarActiveState(currentId);
         if (["section-pelapor", "section-pasien", "section-specific"].includes(currentId)) {
+          updateSidebarActiveState("section-pelapor");
+          updateFormStepperState("section-pelapor");
+        } else if (["section-verifikasi", "section-sampel", "section-status"].includes(currentId)) {
+          updateSidebarActiveState(currentId);
           updateFormStepperState(currentId);
+        } else {
+          updateSidebarActiveState(currentId);
         }
       }, { passive: true });
 
       document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
         item.addEventListener("click", function() {
           const target = String(item.getAttribute("data-step-target") || "").trim();
-          if (target) updateFormStepperState(target);
+          if (target) {
+            updateFormStepperState(target);
+            updateSidebarActiveState(target);
+          }
         });
       });
 
@@ -2373,6 +2418,9 @@
 
         pelaporContainer.innerHTML = "";
         pasienContainer.innerHTML = "";
+        verifikasiContainer.innerHTML = "";
+        sampelContainer.innerHTML = "";
+        statusContainer.innerHTML = "";
         specificContainer.innerHTML = "";
         hideTopAlert();
 
@@ -2405,6 +2453,8 @@
         formElement.classList.remove("hidden");
         if (searchContainer) searchContainer.classList.remove("hidden");
         if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
+        updateFormStepperState("section-pelapor");
+        updateSidebarActiveState("section-pelapor");
 
         (COMMON.pelapor || []).forEach(f => {
           pelaporContainer.innerHTML += generateHTML(f);
@@ -2412,6 +2462,18 @@
 
         (COMMON.pasien || []).forEach(f => {
           pasienContainer.innerHTML += generateHTML(f);
+        });
+
+        (COMMON.verifikasi || []).forEach(f => {
+          verifikasiContainer.innerHTML += generateHTML(f);
+        });
+
+        (COMMON.sampel || []).forEach(f => {
+          sampelContainer.innerHTML += generateHTML(f);
+        });
+
+        (COMMON.status || []).forEach(f => {
+          statusContainer.innerHTML += generateHTML(f);
         });
 
         specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;

@@ -35,3 +35,5 @@
 - [x] Polishing UI lanjutan: field card lebih rapi, sub-section diagnosis lebih tegas, summary panel lebih responsif, dan sidebar active-state mengikuti konteks halaman
 - [x] Stepper workflow ditambahkan untuk memandu alur pengisian form
 - [x] Hasil pencarian dipoles menjadi card-based result list dengan CTA edit yang lebih jelas
+- [x] Alur baru ditanamkan ke UI: input kasus → verifikasi EPID → hasil sampel (opsional) → update status pasien/kasus
+- [x] Field generik verifikasi EPID, hasil sampel, dan status pasien/kasus ditambahkan sebagai blok common workflow

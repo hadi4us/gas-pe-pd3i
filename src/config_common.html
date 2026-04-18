@@ -38,6 +38,29 @@
     { id: "Ambil Lokasi", label: "Lokasi GPS", type: "geo_button", group: "pasien", fullWidth: true }
   ];
 
+  const COMMON_VERIFIKASI_FIELDS = [
+    { id: "Status Verifikasi EPID", label: "Status Verifikasi EPID", type: "select", options: ["Belum diverifikasi", "Menunggu verifikasi", "Terverifikasi"], required: true },
+    { id: "Tanggal Verifikasi EPID", label: "Tanggal Verifikasi EPID", type: "date" },
+    { id: "Petugas Verifikator", label: "Petugas Verifikator", type: "text" },
+    { id: "Catatan Verifikasi EPID", label: "Catatan Verifikasi EPID", type: "textarea", rows: 3, fullWidth: true }
+  ];
+
+  const COMMON_HASIL_SAMPEL_FIELDS = [
+    { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "select", options: ["", "Ya", "Tidak"] },
+    { id: "Jenis Sampel Diuji", label: "Jenis Sampel Diuji", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
+    { id: "Nomor Sampel / Lab", label: "Nomor Sampel / Lab", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
+    { id: "Tanggal Hasil Sampel", label: "Tanggal Hasil Sampel", type: "date", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
+    { id: "Hasil Pemeriksaan Sampel", label: "Hasil Pemeriksaan Sampel", type: "textarea", rows: 3, fullWidth: true, showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
+    { id: "Interpretasi Hasil Sampel", label: "Interpretasi Hasil Sampel", type: "select", options: ["", "Positif", "Negatif", "Inkonklusif", "Belum keluar"], showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } }
+  ];
+
+  const COMMON_STATUS_FIELDS = [
+    { id: "Status Pasien/Kasus", label: "Status Pasien / Kasus", type: "select", options: ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"], required: true },
+    { id: "Tanggal Update Status", label: "Tanggal Update Status", type: "date", required: true },
+    { id: "Dasar Penetapan Status", label: "Dasar Penetapan Status", type: "select", options: ["", "Klinis", "Epidemiologis", "Laboratorium", "Verifikasi program"] },
+    { id: "Catatan Status Pasien", label: "Catatan Status Pasien", type: "textarea", rows: 3, fullWidth: true }
+  ];
+
   const IMUNISASI_SECTION = {
     key: "riwayat_imunisasi",
     title: "Riwayat Imunisasi",

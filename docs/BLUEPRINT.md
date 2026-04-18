@@ -218,14 +218,17 @@ Google Spreadsheet sebagai data store utama:
 ### 8.1 Alur input kasus
 1. Petugas login
 2. Memilih diagnosis
-3. Mengisi field common + field diagnosis
-4. Frontend memvalidasi input
-5. Payload dikirim ke `doPost`
-6. Backend memvalidasi token sesi dan role
-7. Data disimpan ke sheet diagnosis terkait
-8. Sistem menghasilkan / memastikan **Nomor EPID**
-9. Pipeline pasca-simpan dijalankan (sinkron / async)
-10. Audit log dicatat
+3. Mengisi field input kasus (pelapor, identitas, dan data spesifik diagnosis)
+4. Melakukan / menerima **verifikasi penentuan nomor EPID**
+5. Menginput hasil pemeriksaan sampel bila tersedia (opsional)
+6. Memperbarui **status pasien / kasus** (mis. suspek, discarded, klinis, probable, konfirmasi, dll.)
+7. Frontend memvalidasi input
+8. Payload dikirim ke `doPost`
+9. Backend memvalidasi token sesi dan role
+10. Data disimpan ke sheet diagnosis terkait
+11. Sistem menghasilkan / memastikan **Nomor EPID**
+12. Pipeline pasca-simpan dijalankan (sinkron / async)
+13. Audit log dicatat
 
 ### 8.2 Alur pencarian dan edit
 1. Pengguna mencari berdasarkan EPID / nama / filter lain

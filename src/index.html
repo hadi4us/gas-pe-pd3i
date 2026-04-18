@@ -43,16 +43,20 @@
             <span>Cari / Edit</span>
           </a>
           <a href="#section-pelapor" class="pd3i-nav-link">
-            <i class="fas fa-hospital-user"></i>
-            <span>Informasi Pelapor</span>
+            <i class="fas fa-file-pen"></i>
+            <span>Input Kasus</span>
           </a>
-          <a href="#section-pasien" class="pd3i-nav-link">
-            <i class="fas fa-address-card"></i>
-            <span>Demografi Pasien</span>
+          <a href="#section-verifikasi" class="pd3i-nav-link">
+            <i class="fas fa-id-card-clip"></i>
+            <span>Verifikasi EPID</span>
           </a>
-          <a href="#section-specific" class="pd3i-nav-link">
-            <i class="fas fa-stethoscope"></i>
-            <span>Data Spesifik Kasus</span>
+          <a href="#section-sampel" class="pd3i-nav-link">
+            <i class="fas fa-vials"></i>
+            <span>Hasil Sampel</span>
+          </a>
+          <a href="#section-status" class="pd3i-nav-link">
+            <i class="fas fa-list-check"></i>
+            <span>Status Pasien</span>
           </a>
           <button id="btn-sidebar-dashboard" type="button" class="pd3i-nav-link pd3i-nav-button">
             <i class="fas fa-chart-column"></i>
@@ -252,22 +256,29 @@
                   <a href="#section-pelapor" class="pd3i-stepper-item is-active" data-step-target="section-pelapor">
                     <span class="pd3i-stepper-index">1</span>
                     <span class="pd3i-stepper-copy">
-                      <strong>Pelapor</strong>
-                      <small>Sumber laporan & petugas</small>
+                      <strong>Input</strong>
+                      <small>Pelapor, identitas, klinis, epidemiologi</small>
                     </span>
                   </a>
-                  <a href="#section-pasien" class="pd3i-stepper-item" data-step-target="section-pasien">
+                  <a href="#section-verifikasi" class="pd3i-stepper-item" data-step-target="section-verifikasi">
                     <span class="pd3i-stepper-index">2</span>
                     <span class="pd3i-stepper-copy">
-                      <strong>Demografi</strong>
-                      <small>Identitas & lokasi pasien</small>
+                      <strong>Verifikasi EPID</strong>
+                      <small>Penentuan / pengesahan nomor EPID</small>
                     </span>
                   </a>
-                  <a href="#section-specific" class="pd3i-stepper-item" data-step-target="section-specific">
+                  <a href="#section-sampel" class="pd3i-stepper-item" data-step-target="section-sampel">
                     <span class="pd3i-stepper-index">3</span>
                     <span class="pd3i-stepper-copy">
-                      <strong>Kasus</strong>
-                      <small>Klinis, epi, imunisasi, outcome</small>
+                      <strong>Hasil Sampel</strong>
+                      <small>Opsional sesuai ketersediaan pemeriksaan</small>
+                    </span>
+                  </a>
+                  <a href="#section-status" class="pd3i-stepper-item" data-step-target="section-status">
+                    <span class="pd3i-stepper-index">4</span>
+                    <span class="pd3i-stepper-copy">
+                      <strong>Status Pasien</strong>
+                      <small>Suspek / discarded / klinis / konfirmasi / dll</small>
                     </span>
                   </a>
                 </div>
@@ -276,7 +287,7 @@
               <section id="section-pelapor" class="pd3i-shell-card pd3i-form-card">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 1</div>
+                    <div class="pd3i-card-eyebrow">Step 1A</div>
                     <h3 class="pd3i-card-title"><i class="fas fa-hospital-user text-blue-600 mr-2"></i>Informasi Pelapor</h3>
                   </div>
                   <span class="pd3i-badge-soft">Sumber laporan & petugas</span>
@@ -287,7 +298,7 @@
               <section id="section-pasien" class="pd3i-shell-card pd3i-form-card">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 2</div>
+                    <div class="pd3i-card-eyebrow">Step 1B</div>
                     <h3 class="pd3i-card-title"><i class="fas fa-address-card text-blue-600 mr-2"></i>Data Demografi Pasien</h3>
                   </div>
                   <span class="pd3i-badge-soft">Identitas & lokasi</span>
@@ -298,12 +309,45 @@
               <section id="section-specific" class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 3+</div>
+                    <div class="pd3i-card-eyebrow">Step 1C</div>
                     <h3 class="pd3i-card-title" id="specific-title"><i class="fas fa-stethoscope text-blue-600 mr-2"></i>Data Spesifik Kasus</h3>
                   </div>
                   <span class="pd3i-badge-soft">Klinis, epi, imunisasi, outcome</span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="specific-fields-container"></div>
+              </section>
+
+              <section id="section-verifikasi" class="pd3i-shell-card pd3i-form-card">
+                <div class="pd3i-card-header-row">
+                  <div>
+                    <div class="pd3i-card-eyebrow">Step 2</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-id-card-clip text-blue-600 mr-2"></i>Verifikasi Penentuan Nomor EPID</h3>
+                  </div>
+                  <span class="pd3i-badge-soft">Validasi kasus & EPID</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="verifikasi-fields-container"></div>
+              </section>
+
+              <section id="section-sampel" class="pd3i-shell-card pd3i-form-card">
+                <div class="pd3i-card-header-row">
+                  <div>
+                    <div class="pd3i-card-eyebrow">Step 3</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-vials text-blue-600 mr-2"></i>Input Hasil Pemeriksaan Sampel</h3>
+                  </div>
+                  <span class="pd3i-badge-soft">Opsional</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="sampel-fields-container"></div>
+              </section>
+
+              <section id="section-status" class="pd3i-shell-card pd3i-form-card">
+                <div class="pd3i-card-header-row">
+                  <div>
+                    <div class="pd3i-card-eyebrow">Step 4</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Update Status Pasien / Kasus</h3>
+                  </div>
+                  <span class="pd3i-badge-soft">Suspek / discarded / klinis / konfirmasi / dll</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="status-fields-container"></div>
               </section>
             </div>
 
@@ -351,6 +395,10 @@
                     <span class="pd3i-summary-value" id="summary-user">Belum login</span>
                   </div>
                   <div class="pd3i-summary-item full">
+                    <span class="pd3i-summary-label">Status pasien / kasus</span>
+                    <span class="pd3i-summary-value" id="summary-status-kasus">Belum ditentukan</span>
+                  </div>
+                  <div class="pd3i-summary-item full">
                     <span class="pd3i-summary-label">Peringatan validasi</span>
                     <span class="pd3i-summary-value" id="summary-warning-count">0 warning</span>
                   </div>
@@ -382,10 +430,10 @@
                 </div>
                 <ol class="pd3i-workflow-list">
                   <li>Pilih diagnosis aktif.</li>
-                  <li>Isi data pelapor dan demografi pasien.</li>
-                  <li>Lengkapi blok klinis, epidemiologi, imunisasi, spesimen, outcome.</li>
-                  <li>Cek warning di panel ringkasan.</li>
-                  <li>Simpan, lalu gunakan print / edit / dashboard sesuai kebutuhan.</li>
+                  <li>Lakukan input kasus: pelapor, identitas, dan data spesifik diagnosis.</li>
+                  <li>Verifikasi untuk penentuan / pengesahan nomor EPID.</li>
+                  <li>Isi hasil pemeriksaan sampel bila tersedia.</li>
+                  <li>Update status pasien / kasus (suspek, discarded, klinis, konfirmasi, dll).</li>
                 </ol>
               </div>
             </aside>

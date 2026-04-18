@@ -102,15 +102,19 @@ Berisi:
 Form tidak lagi hanya tampil sebagai blok tunggal. Struktur yang dipakai:
 
 ### Kolom kiri — pengisian utama
-1. **Informasi Pelapor**
-2. **Data Demografi Pasien**
-3. **Data Spesifik Kasus**
+1. **Input kasus**
+   - informasi pelapor
+   - data demografi pasien
+   - data spesifik diagnosis
+2. **Verifikasi penentuan nomor EPID**
+3. **Input hasil pemeriksaan sampel** (opsional)
+4. **Update status pasien / kasus**
+   - suspek
+   - discarded
    - klinis
-   - epidemiologi
-   - imunisasi
-   - spesimen
-   - outcome
-   - kontak erat
+   - probable
+   - konfirmasi
+   - status lain sesuai kebutuhan program
 
 ### Kolom kanan — control tower
 1. **Edit badge**
