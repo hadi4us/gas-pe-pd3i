@@ -58,7 +58,20 @@
     { id: "Status Pasien/Kasus", label: "Status Pasien / Kasus", type: "select", options: ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"], required: true },
     { id: "Tanggal Update Status", label: "Tanggal Update Status", type: "date", required: true },
     { id: "Dasar Penetapan Status", label: "Dasar Penetapan Status", type: "select", options: ["", "Klinis", "Epidemiologis", "Laboratorium", "Verifikasi program"] },
-    { id: "Catatan Status Pasien", label: "Catatan Status Pasien", type: "textarea", rows: 3, fullWidth: true }
+    { id: "Catatan Status Pasien", label: "Catatan Status Pasien", type: "textarea", rows: 3, fullWidth: true },
+    {
+      type: "dynamic_table",
+      id: "Riwayat Status Kasus",
+      label: "Timeline / Riwayat Status Kasus",
+      fullWidth: true,
+      columns: [
+        { name: "Tanggal", type: "date", width: "w-40" },
+        { name: "Status", type: "text", width: "w-44" },
+        { name: "Dasar", type: "text", width: "w-44" },
+        { name: "Petugas", type: "text", width: "w-44" },
+        { name: "Catatan", type: "text", width: "w-72" }
+      ]
+    }
   ];
 
   const CASE_STATUS_OPTIONS_BY_DX = {

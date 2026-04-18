@@ -39,3 +39,5 @@
 - [x] Field generik verifikasi EPID, hasil sampel, dan status pasien/kasus ditambahkan sebagai blok common workflow
 - [x] Opsi status pasien/kasus sekarang mulai dibedakan per diagnosis
 - [x] Dashboard mulai menampilkan distribusi status kasus dari kolom `Status Pasien/Kasus`
+- [x] Timeline / riwayat status kasus ditambahkan sebagai dynamic table pada workflow status
+- [x] Dashboard quality cards ditambahkan untuk verifikasi, hasil sampel, konfirmasi, discarded, dan klinis

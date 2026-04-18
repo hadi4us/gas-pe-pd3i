@@ -54,6 +54,7 @@
       let tableDef = field;
       if (field.id === "Riwayat Imunisasi") tableDef = getImunisasiSectionDefinition();
       if (field.id === "Kontak Erat") tableDef = getContactSectionDefinition();
+      if (field.id === "Riwayat Status Kasus") tableDef = field;
 
       const columns = tableDef.columns || [];
       let extraHtml = "";
@@ -196,6 +197,11 @@
   function getDynamicTableDefinition(tableId) {
     if (tableId === "Riwayat Imunisasi") return getImunisasiSectionDefinition();
     if (tableId === "Kontak Erat") return getContactSectionDefinition();
+    if (tableId === "Riwayat Status Kasus") {
+      const common = getCommonConfigSafe();
+      const statusFields = (common && common.status) || [];
+      return statusFields.find(function(f) { return f && f.id === "Riwayat Status Kasus"; }) || null;
+    }
     return null;
   }
 
@@ -1143,7 +1149,8 @@
         fields,
         tables: {
           "Kontak Erat": collectDynamicTableData("Kontak Erat"),
-          "Riwayat Imunisasi": collectDynamicTableData("Riwayat Imunisasi")
+          "Riwayat Imunisasi": collectDynamicTableData("Riwayat Imunisasi"),
+          "Riwayat Status Kasus": collectDynamicTableData("Riwayat Status Kasus")
         }
       };
 
@@ -1212,6 +1219,7 @@
         if (draft.tables) {
           restoreDraftRows("Kontak Erat", draft.tables["Kontak Erat"] || []);
           restoreDraftRows("Riwayat Imunisasi", draft.tables["Riwayat Imunisasi"] || []);
+          restoreDraftRows("Riwayat Status Kasus", draft.tables["Riwayat Status Kasus"] || []);
         }
 
         if (typeof updateImunisasiSummary === "function") {
@@ -1641,6 +1649,36 @@
     });
   }
 
+  function syncStatusHistoryTimeline() {
+    const tbody = document.getElementById("tbody-Riwayat Status Kasus");
+    if (!tbody) return;
+
+    const status = getFieldValueSafe("Status Pasien/Kasus");
+    const tanggal = getFieldValueSafe("Tanggal Update Status");
+    const dasar = getFieldValueSafe("Dasar Penetapan Status");
+    const catatan = getFieldValueSafe("Catatan Status Pasien");
+    const petugas = getFieldValueSafe("Petugas Verifikator") || getFieldValueSafe("Nama Petugas");
+
+    if (!status || !tanggal) return;
+
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const exists = rows.some(function(row) {
+      const t = row.querySelector('[data-name="Tanggal"]')?.value || "";
+      const s = row.querySelector('[data-name="Status"]')?.value || "";
+      return t === tanggal && s === status;
+    });
+
+    if (exists) return;
+
+    addDynamicRow("Riwayat Status Kasus", {
+      "Tanggal": tanggal,
+      "Status": status,
+      "Dasar": dasar,
+      "Petugas": petugas,
+      "Catatan": catatan
+    });
+  }
+
   function renderDiagnosisSections(cfg, container) {
     container.innerHTML = "";
     if (!cfg || !Array.isArray(cfg.sections)) return;
@@ -1842,6 +1880,9 @@
     }
 
     reevaluateShowIfFields();
+    if (["Status Pasien/Kasus", "Tanggal Update Status", "Dasar Penetapan Status", "Catatan Status Pasien", "Petugas Verifikator"].includes(e.target.id)) {
+      syncStatusHistoryTimeline();
+    }
     updateUiShellSummary();
   });
 
@@ -1910,6 +1951,7 @@
     if (!record) return;
     hydrateDynamicTableByJson("Kontak Erat", record["Kontak Erat"]);
     hydrateDynamicTableByJson("Riwayat Imunisasi", record["Riwayat Imunisasi"]);
+    hydrateDynamicTableByJson("Riwayat Status Kasus", record["Riwayat Status Kasus"]);
     updateImunisasiSummary();
   }
 
@@ -1958,8 +2000,10 @@
 
       const tbodyKontak = document.getElementById("tbody-Kontak Erat");
       const tbodyImun = document.getElementById("tbody-Riwayat Imunisasi");
+      const tbodyStatus = document.getElementById("tbody-Riwayat Status Kasus");
       if (tbodyKontak) tbodyKontak.innerHTML = "";
       if (tbodyImun) tbodyImun.innerHTML = "";
+      if (tbodyStatus) tbodyStatus.innerHTML = "";
 
       hideTopAlert();
 
@@ -2788,6 +2832,7 @@
         }
 
         updateImunisasiSummary();
+        syncStatusHistoryTimeline();
 
         btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
         btnSubmit.disabled = true;
@@ -2831,6 +2876,8 @@
             if (tableId === "Riwayat Imunisasi") {
               rowObj["KodeImunisasi"] = row.dataset.kodeImun || "";
               if (rowObj["Jenis Imunisasi"]) tableData.push(rowObj);
+            } else if (tableId === "Riwayat Status Kasus") {
+              if (rowObj["Tanggal"] || rowObj["Status"]) tableData.push(rowObj);
             } else {
               if (rowObj["Nama"]) tableData.push(rowObj);
             }

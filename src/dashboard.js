@@ -150,6 +150,7 @@ function getDashboardStats(dx, tahun, token) {
         perKecamatan: {},
         perBulan: {},
         perStatusKasus: {},
+        qualityCards: { pendingVerification: 0, waitingSampleResult: 0, confirmed: 0, discarded: 0, clinical: 0 },
         statusNotifikasi: dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null,
         statusSinkronisasi: dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null
       };
@@ -163,12 +164,22 @@ function getDashboardStats(dx, tahun, token) {
     const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
     const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
+    const idxVerifikasi = headers.indexOf("Status Verifikasi EPID");
+    const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
+    const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
 
     // Hasil agregasi
     let totalKasus = 0;
     const perKecamatan = {};
     const perBulan = {};
     const perStatusKasus = {};
+    const qualityCards = {
+      pendingVerification: 0,
+      waitingSampleResult: 0,
+      confirmed: 0,
+      discarded: 0,
+      clinical: 0
+    };
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
 
@@ -207,9 +218,30 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
+      let statusKasus = "Belum ditentukan";
       if (idxStatusKasus !== -1) {
-        const statusKasus = String(row[idxStatusKasus] || "").trim() || "Belum ditentukan";
+        statusKasus = String(row[idxStatusKasus] || "").trim() || "Belum ditentukan";
         perStatusKasus[statusKasus] = (perStatusKasus[statusKasus] || 0) + 1;
+      }
+
+      const statusKasusUpper = String(statusKasus || "").trim().toUpperCase();
+      if (statusKasusUpper === "KONFIRMASI") qualityCards.confirmed++;
+      if (statusKasusUpper === "DISCARDED") qualityCards.discarded++;
+      if (statusKasusUpper === "KLINIS") qualityCards.clinical++;
+
+      if (idxVerifikasi !== -1) {
+        const verif = String(row[idxVerifikasi] || "").trim().toUpperCase();
+        if (!verif || verif === "BELUM DIVERIFIKASI" || verif === "MENUNGGU VERIFIKASI") {
+          qualityCards.pendingVerification++;
+        }
+      }
+
+      if (idxSampelDilakukan !== -1) {
+        const sampel = String(row[idxSampelDilakukan] || "").trim().toUpperCase();
+        const interpretasi = idxInterpretasiSampel !== -1 ? String(row[idxInterpretasiSampel] || "").trim().toUpperCase() : "";
+        if (sampel === "YA" && (!interpretasi || interpretasi === "BELUM KELUAR")) {
+          qualityCards.waitingSampleResult++;
+        }
       }
 
       // Status notifikasi/sinkronisasi dihitung jika kolom tersedia
@@ -243,6 +275,7 @@ function getDashboardStats(dx, tahun, token) {
       perKecamatan: perKecamatan,
       perBulan: perBulan,
       perStatusKasus: perStatusKasus,
+      qualityCards: qualityCards,
       statusNotifikasi: statusNotifikasi,
       statusSinkronisasi: statusSinkronisasi
     };

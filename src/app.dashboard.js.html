@@ -120,6 +120,33 @@
 
     html += `</div>`;
 
+    const qc = stats.qualityCards || {};
+    html += `<div class="mb-6">
+      <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Kartu Mutu / Status Operasional</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-amber-700 mb-1">Belum / Menunggu Verifikasi</div>
+          <div class="text-2xl font-black text-amber-900">${qc.pendingVerification || 0}</div>
+        </div>
+        <div class="rounded-xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-sky-700 mb-1">Menunggu Hasil Sampel</div>
+          <div class="text-2xl font-black text-sky-900">${qc.waitingSampleResult || 0}</div>
+        </div>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Kasus Konfirmasi</div>
+          <div class="text-2xl font-black text-emerald-900">${qc.confirmed || 0}</div>
+        </div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-rose-700 mb-1">Discarded</div>
+          <div class="text-2xl font-black text-rose-900">${qc.discarded || 0}</div>
+        </div>
+        <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-indigo-700 mb-1">Klinis</div>
+          <div class="text-2xl font-black text-indigo-900">${qc.clinical || 0}</div>
+        </div>
+      </div>
+    </div>`;
+
     const perStatus = stats.perStatusKasus || {};
     const statusKeys = Object.keys(perStatus).sort(function(a, b) { return perStatus[b] - perStatus[a]; });
     if (statusKeys.length > 0) {
