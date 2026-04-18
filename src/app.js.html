@@ -2644,6 +2644,11 @@
 
         results.forEach(function(item) {
           const safeEpid = (item.epid || "").replace(/'/g, "\\'");
+          const statusKasus = item.statusKasus || "Belum ditentukan";
+          const statusVerifikasi = item.statusVerifikasi || "Belum diverifikasi";
+          const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
+            ? (item.interpretasiSampel || "Menunggu hasil")
+            : "Tidak ada sampel";
           html += `<div class="pd3i-search-result-card">
             <div class="min-w-0 flex-1">
               <div class="font-extrabold text-slate-800 text-sm md:text-base">${item.nama || "-"}</div>
@@ -2651,6 +2656,11 @@
                 <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${item.epid || "-"}</span>
                 <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${item.tanggalLahir || "-"}</span>
                 <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${item.kelurahan || "-"}</span>
+              </div>
+              <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
+                <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${statusKasus}</span>
+                <span class="pd3i-search-result-badge is-verify"><i class="fas fa-id-card-clip"></i> ${statusVerifikasi}</span>
+                <span class="pd3i-search-result-badge is-sample"><i class="fas fa-vials"></i> ${sampelState}</span>
               </div>
               <div class="pd3i-search-result-copy mt-2">
                 ${item.orangTua ? `Ortu/Wali: <strong>${item.orangTua}</strong><br>` : ""}

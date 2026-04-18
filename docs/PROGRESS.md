@@ -41,3 +41,4 @@
 - [x] Dashboard mulai menampilkan distribusi status kasus dari kolom `Status Pasien/Kasus`
 - [x] Timeline / riwayat status kasus ditambahkan sebagai dynamic table pada workflow status
 - [x] Dashboard quality cards ditambahkan untuk verifikasi, hasil sampel, konfirmasi, discarded, dan klinis
+- [x] Hasil pencarian sekarang menampilkan badge status kasus, status verifikasi EPID, dan ringkasan status sampel untuk bantu edit workflow

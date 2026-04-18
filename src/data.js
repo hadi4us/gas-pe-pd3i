@@ -599,6 +599,10 @@ function searchRecords(dx, filters, token) {
     const idxAlamat = headers.indexOf("Alamat");
     const idxKelurahan = headers.indexOf("Kelurahan");
     const idxTimestamp = headers.indexOf("Timestamp");
+    const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
+    const idxStatusVerifikasi = headers.indexOf("Status Verifikasi EPID");
+    const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
+    const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
 
     const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
     const allResults = [];
@@ -632,6 +636,11 @@ function searchRecords(dx, filters, token) {
         }
       }
 
+      const statusKasus = idxStatusKasus !== -1 ? String(r[idxStatusKasus] || "").trim() : "";
+      const statusVerifikasi = idxStatusVerifikasi !== -1 ? String(r[idxStatusVerifikasi] || "").trim() : "";
+      const sampelDilakukan = idxSampelDilakukan !== -1 ? String(r[idxSampelDilakukan] || "").trim() : "";
+      const interpretasiSampel = idxInterpretasiSampel !== -1 ? String(r[idxInterpretasiSampel] || "").trim() : "";
+
       const matchEpid = !qEpid || epid.toLowerCase().includes(qEpid);
       const matchNama = !qNama || nama.toLowerCase().includes(qNama);
       const matchTglLahir = !qTglLahir || tglLahir === qTglLahir;
@@ -647,6 +656,10 @@ function searchRecords(dx, filters, token) {
           orangTua: orangTua,
           alamat: alamat,
           kelurahan: kelurahan,
+          statusKasus: statusKasus,
+          statusVerifikasi: statusVerifikasi,
+          sampelDilakukan: sampelDilakukan,
+          interpretasiSampel: interpretasiSampel,
           timestampValue: Number(timestampValue || 0),
           rowIndex: i + 2
         });
