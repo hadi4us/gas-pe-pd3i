@@ -355,6 +355,7 @@ Checklist:
 ### TC-WF-04 — Status pasien dan timeline
 - ubah `Status Pasien/Kasus`
 - isi `Tanggal Update Status`
+- cek apakah opsi `Dasar Penetapan Status` menyesuaikan konteks status
 - cek apakah row baru muncul di `Riwayat Status Kasus`
 - simpan lalu edit ulang, pastikan timeline tetap ada
 

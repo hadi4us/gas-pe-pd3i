@@ -53,3 +53,5 @@
 - [x] Status sesi autentikasi sekarang ditampilkan di summary panel, dan lockout front-end yang rancu dihapus agar konsisten dengan guard backend
 - [x] Authorization backend diperkeras: save/update sekarang eksplisit menolak role viewer, dan guard admin dirapikan lewat helper terpusat di routes
 - [x] UI viewer mode diperjelas: banner mode lihat, form read-only, dan CTA hasil pencarian otomatis berubah jadi Buka / Lihat
+- [x] Role model di UI dibuat lebih eksplisit lewat capability summary (Admin / Petugas / Viewer)
+- [x] Dasar penetapan status kini menyesuaikan diagnosis + status kasus agar workflow status lebih cerdas
