@@ -26,3 +26,5 @@
 - [x] Tabel kontak erat diperluas agar bisa menampung jumlah imunisasi terkait, kondisi saat itu, dan penanda kontak hamil
 - [x] Source terbaru sudah dipush ke Apps Script (`clasp push -f`)
 - [x] Deployment produksi yang dipakai aplikasi berhasil diredeploy ke versi `238` tanpa mengganti URL web app
+- [x] Checklist UAT khusus batch ekspansi form dibuat di `docs/FORM-EXPANSION-UAT.md`
+- [x] `docs/NEXT-STEPS.md` diperbarui ke fokus pasca-implementasi batch ekspansi form
