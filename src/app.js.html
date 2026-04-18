@@ -1536,6 +1536,42 @@
     return null;
   }
 
+  function setSummaryText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value || "");
+  }
+
+  function updateUiShellSummary() {
+    const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
+    const cfg = getDxConfigSafe(dx);
+    const dxTitle = cfg && cfg.title ? cfg.title : "Belum dipilih";
+    const modeText = isEditMode ? "Mode edit" : "Input baru";
+    const epidText = getFieldValueSafe("Nomor EPID") || "Otomatis saat simpan";
+    const ageText = getFieldValueSafe("Umur (auto)") || "-";
+    const epiGroupText = getFieldValueSafe("Kelompok Umur Epidemiologis") || "-";
+    const userName = String((SESSION_USER && (SESSION_USER.nama || SESSION_USER.username || SESSION_USER.name)) || "Belum login").trim() || "Belum login";
+
+    let issueCount = 0;
+    try {
+      issueCount += (checkConsistencyWarnings() || []).length;
+      const ruleCheck = validateDxBusinessRules();
+      issueCount += ((ruleCheck && ruleCheck.warnings) || []).length;
+      issueCount += ((ruleCheck && ruleCheck.errors) || []).length;
+    } catch (e) {}
+
+    setSummaryText("summary-dx-name", dxTitle);
+    setSummaryText("summary-dx-code", dx || "-");
+    setSummaryText("summary-epid", epidText);
+    setSummaryText("summary-umur", ageText);
+    setSummaryText("summary-epi-group", epiGroupText);
+    setSummaryText("summary-mode", modeText);
+    setSummaryText("summary-user", userName);
+    setSummaryText("summary-dx-pill", dx ? `${dx} • ${dxTitle}` : "Belum dipilih");
+    setSummaryText("summary-mode-pill", modeText);
+    setSummaryText("summary-warning-count", issueCount > 0 ? `${issueCount} isu perlu dicek` : "0 warning");
+    setSummaryText("summary-warning-pill", String(issueCount));
+  }
+
   function renderDiagnosisSections(cfg, container) {
     container.innerHTML = "";
     if (!cfg || !Array.isArray(cfg.sections)) return;
@@ -1737,6 +1773,7 @@
     }
 
     reevaluateShowIfFields();
+    updateUiShellSummary();
   });
 
   document.addEventListener("blur", function(e) {
@@ -1756,6 +1793,8 @@
         }
       }
     }
+
+    updateUiShellSummary();
   }, true);
 
   // ============================================================
@@ -2015,6 +2054,7 @@
       const specificTitle = document.getElementById("specific-title");
       const btnSubmit = document.getElementById("btn-submit");
       const searchContainer = document.getElementById("search-container");
+      const searchPlaceholder = document.getElementById("search-placeholder");
       const editBadge = document.getElementById("edit-badge");
       const btnCancelEdit = document.getElementById("btn-cancel-edit");
       const btnSearchEpid = document.getElementById("btn-search-epid");
@@ -2081,6 +2121,7 @@
       };
 
       const { isViewer, isAdmin } = window.applyRoleUIState();
+      updateUiShellSummary();
 
       if (btnAdminMenu && adminMenuDropdown) {
         btnAdminMenu.addEventListener("click", function(e) {
@@ -2210,6 +2251,7 @@
 
       // ── Tombol Dashboard & Export CSV ──────────────────────────────
       const btnDashboard = document.getElementById("btn-dashboard");
+      const btnSidebarDashboard = document.getElementById("btn-sidebar-dashboard");
       const btnExportCsv = document.getElementById("btn-export-csv");
 
       if (btnDashboard) {
@@ -2224,6 +2266,16 @@
             if (typeof initDashboard === "function") initDashboard();
           });
         }
+      }
+
+      if (btnSidebarDashboard) {
+        btnSidebarDashboard.addEventListener("click", function () {
+          if (btnDashboard && !btnDashboard.classList.contains("hidden")) {
+            btnDashboard.click();
+          } else {
+            showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
+          }
+        });
       }
 
       if (btnExportCsv) {
@@ -2294,11 +2346,14 @@
         if (!dx || !cfg) {
           formElement.classList.add("hidden");
           if (searchContainer) searchContainer.classList.add("hidden");
+          if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
+          updateUiShellSummary();
           return;
         }
 
         formElement.classList.remove("hidden");
         if (searchContainer) searchContainer.classList.remove("hidden");
+        if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
 
         (COMMON.pelapor || []).forEach(f => {
           pelaporContainer.innerHTML += generateHTML(f);
@@ -2332,6 +2387,8 @@
           if (MASTER_FASKES && MASTER_FASKES.length > 0) {
             initChoicesRumahSakit();
           }
+
+          updateUiShellSummary();
         }, 50);
       });
 
@@ -2677,6 +2734,7 @@
             console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
 
             clearFormDraft();
+            updateUiShellSummary();
 
             showSuccessModal(
               res.message || "Data berhasil disimpan.",

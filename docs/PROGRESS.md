@@ -30,3 +30,5 @@
 - [x] `docs/NEXT-STEPS.md` diperbarui ke fokus pasca-implementasi batch ekspansi form
 - [x] Validasi submit diperkuat agar field wajib/show-if benar-benar dicek sebelum simpan
 - [x] Guardrail epidemiologis awal ditambahkan untuk MR, DIF, PERT, TN, dan AFP (urutan tanggal penting + rule klinis minimum)
+- [x] UI blueprint Tabler-style ditulis di `docs/UI-BLUEPRINT.md`
+- [x] Halaman utama direstruktur ke model admin shell (sidebar + topbar + workspace + summary panel) dengan pendekatan Tabler-inspired
