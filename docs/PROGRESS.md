@@ -52,3 +52,4 @@
 - [x] UX auth dipoles dengan boot overlay + restore session yang lebih halus
 - [x] Status sesi autentikasi sekarang ditampilkan di summary panel, dan lockout front-end yang rancu dihapus agar konsisten dengan guard backend
 - [x] Authorization backend diperkeras: save/update sekarang eksplisit menolak role viewer, dan guard admin dirapikan lewat helper terpusat di routes
+- [x] UI viewer mode diperjelas: banner mode lihat, form read-only, dan CTA hasil pencarian otomatis berubah jadi Buka / Lihat
