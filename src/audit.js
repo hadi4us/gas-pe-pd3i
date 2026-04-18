@@ -120,6 +120,28 @@ const Audit_Logger = {
     } catch (e) {
       console.error("Audit.logLogout: error tidak terduga:", e);
     }
+  },
+
+  logLogin: function (user) {
+    try {
+      const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+      const timestamp = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
+      const username = user && user.username ? String(user.username) : "";
+      const role = user && user.role ? String(user.role) : "";
+      _appendAuditRow_([timestamp, username, role, "", "", "LOGIN", ""]);
+    } catch (e) {
+      console.error("Audit.logLogin: error tidak terduga:", e);
+    }
+  },
+
+  logAuthFailed: function (username, reason) {
+    try {
+      const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+      const timestamp = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
+      _appendAuditRow_([timestamp, String(username || ""), "", "", "", "LOGIN_FAIL", String(reason || "")]);
+    } catch (e) {
+      console.error("Audit.logAuthFailed: error tidak terduga:", e);
+    }
   }
 };
 

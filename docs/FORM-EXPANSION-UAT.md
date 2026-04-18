@@ -371,6 +371,9 @@ Checklist:
 
 ### TC-REG-01 — Login
 - login tetap berhasil
+- sesi lama direstore tanpa flicker modal berlebihan
+- token sesi tidak lagi disimpan persisten di local browser antar-tab bila sessionStorage tersedia
+- brute-force guard mengunci sementara setelah percobaan gagal berulang
 
 ### TC-REG-02 — Search
 - cari berdasarkan EPID/nama tetap jalan

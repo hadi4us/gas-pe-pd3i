@@ -1,4 +1,14 @@
-<div id="login-modal" class="fixed inset-0 z-[100] flex items-center justify-center modal-backdrop">
+<div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center modal-backdrop">
+  <div class="w-full max-w-sm bg-white rounded-2xl p-6 modal-card mx-4 text-center">
+    <div class="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
+      <i class="fas fa-shield-halved text-blue-600 text-2xl"></i>
+    </div>
+    <div class="text-lg font-extrabold text-slate-900">Memeriksa sesi akses…</div>
+    <div class="text-sm text-slate-500 mt-2 font-medium">Menyiapkan autentikasi aplikasi.</div>
+  </div>
+</div>
+
+<div id="login-modal" class="fixed inset-0 z-[100] hidden items-center justify-center modal-backdrop">
   <div id="login-card" class="w-full max-w-md bg-white rounded-2xl p-6 md:p-8 modal-card mx-4">
     <div class="flex flex-col items-center text-center">
       <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-4">

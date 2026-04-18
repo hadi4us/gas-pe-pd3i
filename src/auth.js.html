@@ -61,12 +61,23 @@
         if (pinCaptchaAnswerInput) pinCaptchaAnswerInput.value = "";
       }
 
+      function hideAuthBootOverlay() {
+        const overlay = document.getElementById("auth-boot-overlay");
+        if (overlay) overlay.classList.add("hidden");
+      }
+
+      function showAuthBootOverlay() {
+        const overlay = document.getElementById("auth-boot-overlay");
+        if (overlay) overlay.classList.remove("hidden");
+      }
+
       function setLoggedInUI(user) {
         SESSION_USER = user || null;
 
         if (app) app.classList.remove("hidden");
         closeModal(loginModal);
         closeModal(pinModal);
+        hideAuthBootOverlay();
 
         const role = String((user && user.role) || "").trim().toLowerCase();
         const adminMenuWrap = document.getElementById("admin-menu-wrap");
@@ -90,7 +101,7 @@
       function setLoggedOutUI() {
         SESSION_TOKEN = "";
         SESSION_USER = null;
-        let loginAttempt = 0;
+        loginAttempt = 0;
         MASTER_FASKES = [];
         clearSessionFromBrowser();
         stopIdleTimer();
@@ -111,6 +122,7 @@
 
         closeModal(pinModal);
         openModal(loginModal);
+        hideAuthBootOverlay();
 
         if (loginForm) loginForm.reset();
         if (pinForm) pinForm.reset();
@@ -404,6 +416,7 @@
         if (!savedToken || !safeGsRun()) {
           closeModal(pinModal);
           openModal(loginModal);
+          hideAuthBootOverlay();
           setTimeout(refreshLoginCaptcha, 120);
           return;
         }
@@ -431,12 +444,8 @@
       }
 
       closeModal(pinModal);
-
-      if (loginModal) openModal(loginModal);
-
-      setTimeout(function () {
-        refreshLoginCaptcha();
-      }, 120);
+      closeModal(loginModal);
+      showAuthBootOverlay();
 
       restoreSessionIfAny();
     }

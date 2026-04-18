@@ -1,3 +1,53 @@
+function _authAttemptCacheKey_(username) {
+  return "LOGIN_ATTEMPT_" + String(username || "").trim().toLowerCase();
+}
+
+function _readLoginAttemptState_(username) {
+  try {
+    const raw = AUTH_CACHE.get(_authAttemptCacheKey_(username));
+    if (!raw) return { count: 0, lockUntil: 0 };
+    const obj = JSON.parse(raw);
+    return {
+      count: Number(obj && obj.count || 0),
+      lockUntil: Number(obj && obj.lockUntil || 0)
+    };
+  } catch (e) {
+    return { count: 0, lockUntil: 0 };
+  }
+}
+
+function _writeLoginAttemptState_(username, state, ttlSec) {
+  try {
+    AUTH_CACHE.put(_authAttemptCacheKey_(username), JSON.stringify(state || {}), ttlSec || 300);
+  } catch (e) {
+    console.error("Auth: gagal simpan state login attempt:", e);
+  }
+}
+
+function _clearLoginAttemptState_(username) {
+  try {
+    AUTH_CACHE.remove(_authAttemptCacheKey_(username));
+  } catch (e) {}
+}
+
+function _verifyPinValue_(storedPin, suppliedPin) {
+  storedPin = String(storedPin || "").trim();
+  suppliedPin = String(suppliedPin || "").trim();
+  if (!storedPin || !suppliedPin) return false;
+
+  if (/^sha256:/i.test(storedPin)) {
+    const expected = storedPin.replace(/^sha256:/i, "").trim().toLowerCase();
+    const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, suppliedPin, Utilities.Charset.UTF_8);
+    const actual = digest.map(function(b) {
+      const v = (b < 0 ? b + 256 : b).toString(16);
+      return v.length === 1 ? "0" + v : v;
+    }).join("").toLowerCase();
+    return actual === expected;
+  }
+
+  return storedPin === suppliedPin;
+}
+
 function authLogin(username, pin) {
   try {
     username = String(username || "").trim();
@@ -5,6 +55,12 @@ function authLogin(username, pin) {
 
     if (!username || !pin) {
       return { status: "error", message: "Username dan PIN wajib diisi." };
+    }
+
+    const attemptState = _readLoginAttemptState_(username);
+    if (attemptState.lockUntil && Date.now() < attemptState.lockUntil) {
+      const waitSec = Math.max(1, Math.ceil((attemptState.lockUntil - Date.now()) / 1000));
+      return { status: "error", message: "Terlalu banyak percobaan login. Coba lagi dalam " + waitSec + " detik." };
     }
 
     const sh = getSheetOrNull_("REF_USER");
@@ -32,22 +88,25 @@ function authLogin(username, pin) {
 
     const uLower = username.toLowerCase();
     let found = null;
+    let matchedUserRow = null;
 
     for (const r of rows) {
       const u = String(r[ixUser] || "").trim();
       if (!u) continue;
       if (u.toLowerCase() !== uLower) continue;
+      matchedUserRow = r;
 
       if (ixAktif !== -1) {
         const aktif = String(r[ixAktif] || "").trim().toUpperCase();
         if (aktif && aktif !== "YA" && aktif !== "AKTIF") {
-          return { status: "error", message: "Akun tidak aktif." };
+          return { status: "error", message: "Akun tidak aktif. Hubungi admin." };
         }
       }
 
       const p = String(r[ixPin] || "").trim();
-      if (p !== pin) {
-        return { status: "error", message: "Password/PIN salah." };
+      if (!_verifyPinValue_(p, pin)) {
+        matchedUserRow = r;
+        break;
       }
 
       found = {
@@ -59,12 +118,30 @@ function authLogin(username, pin) {
     }
 
     if (!found) {
-      return { status: "error", message: "Username tidak ditemukan." };
+      const nextCount = Number(attemptState.count || 0) + 1;
+      const lockUntil = nextCount >= 5 ? (Date.now() + 5 * 60 * 1000) : 0;
+      _writeLoginAttemptState_(username, { count: nextCount, lockUntil: lockUntil }, 5 * 60);
+
+      if (typeof Audit_Logger !== "undefined" && Audit_Logger.logAuthFailed) {
+        Audit_Logger.logAuthFailed(username, matchedUserRow ? "PIN_SALAH" : "USER_TIDAK_DITEMUKAN");
+      }
+
+      if (lockUntil) {
+        return { status: "error", message: "Terlalu banyak percobaan login. Akun dikunci sementara selama 5 menit." };
+      }
+
+      return { status: "error", message: "Username atau PIN salah." };
     }
+
+    _clearLoginAttemptState_(username);
 
     const token = Utilities.getUuid();
     const ttl = Session_Manager.getTtlForRole(found.role);
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: Date.now(), ttl: ttl }), ttl);
+
+    if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) {
+      Audit_Logger.logLogin(found);
+    }
 
     return { status: "success", token: token, user: found };
   } catch (e) {
@@ -122,6 +199,16 @@ function authLogout(token) {
   }
 }
 
+function _hashPinForStorage_(pin) {
+  pin = String(pin || "").trim();
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pin, Utilities.Charset.UTF_8);
+  const hex = digest.map(function(b) {
+    const v = (b < 0 ? b + 256 : b).toString(16);
+    return v.length === 1 ? "0" + v : v;
+  }).join("");
+  return "sha256:" + hex;
+}
+
 function authChangePin(token, oldPin, newPin) {
   try {
     oldPin = String(oldPin || "").trim();
@@ -164,11 +251,11 @@ function authChangePin(token, oldPin, newPin) {
       if (u.toLowerCase() !== username.toLowerCase()) continue;
 
       const p = String(data[i][ixPin] || "").trim();
-      if (p !== oldPin) {
+      if (!_verifyPinValue_(p, oldPin)) {
         return { status: "error", message: "PIN lama salah." };
       }
 
-      sh.getRange(i + 1, ixPin + 1).setValue(newPin);
+      sh.getRange(i + 1, ixPin + 1).setValue(_hashPinForStorage_(newPin));
       return { status: "success", message: "PIN berhasil diubah." };
     }
 
