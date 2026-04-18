@@ -399,15 +399,13 @@ Blueprint dianggap berhasil diwujudkan jika aplikasi:
 - `docs/PROGRESS.md`
 - `docs/NEXT-STEPS.md`
 - `docs/PHASE3-VERIFICATION.md`
-- `docs/BLUEPRINT-CONTINUATION.md`
 - `docs/FIELD-GAP-MATRIX.md`
 
 ---
 
 ## 16) Catatan Penggunaan Dokumen Ini
 
-- **`BLUEPRINT.md`** → dokumen utama level produk dan arah pengembangan
-- **`BLUEPRINT-CONTINUATION.md`** → checkpoint resume kerja teknis jika sesi/pekerjaan terputus
+- **`BLUEPRINT.md`** → dokumen utama level produk, arah pengembangan, dan referensi kerja lanjutan
 - **`FIELD-GAP-MATRIX.md`** → daftar detail gap field manual vs form input
 
 Dokumen ini sebaiknya diperbarui saat ada perubahan besar pada:
