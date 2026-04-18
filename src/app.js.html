@@ -1631,6 +1631,82 @@
     });
   }
 
+  function getWorkflowStepDefinitions() {
+    return [
+      { id: "section-pelapor", label: "Input Kasus", sections: ["section-pelapor", "section-pasien", "section-specific"] },
+      { id: "section-verifikasi", label: "Verifikasi EPID", sections: ["section-verifikasi"] },
+      { id: "section-sampel", label: "Hasil Sampel", sections: ["section-sampel"] },
+      { id: "section-status", label: "Status Pasien", sections: ["section-status"] }
+    ];
+  }
+
+  function normalizeWorkflowStepId(activeId) {
+    if (["section-pelapor", "section-pasien", "section-specific"].includes(activeId)) return "section-pelapor";
+    if (["section-verifikasi", "section-sampel", "section-status"].includes(activeId)) return activeId;
+    return "section-pelapor";
+  }
+
+  function countRequiredCompletionForSections(sectionIds) {
+    const ids = Array.isArray(sectionIds) ? sectionIds : [];
+    let total = 0;
+    let filled = 0;
+
+    ids.forEach(function(id) {
+      const root = document.getElementById(id);
+      if (!root) return;
+      root.querySelectorAll("input, select, textarea").forEach(function(el) {
+        if (!el || el.disabled || !el.required) return;
+        if (el.type === "hidden") return;
+        const wrapper = el.closest(".field-wrapper");
+        if (wrapper && wrapper.classList.contains("hidden")) return;
+        total++;
+        const value = String(el.value || "").trim();
+        if (value !== "") filled++;
+      });
+    });
+
+    return { total, filled, percent: total > 0 ? Math.round((filled / total) * 100) : 100 };
+  }
+
+  function updateWorkflowProgressUI(activeId) {
+    const currentId = normalizeWorkflowStepId(activeId);
+    const steps = getWorkflowStepDefinitions();
+    const currentIndex = Math.max(0, steps.findIndex(function(step) { return step.id === currentId; }));
+    const totalSteps = steps.length;
+    const currentStep = steps[currentIndex] || steps[0];
+    const completion = countRequiredCompletionForSections(currentStep.sections);
+    const overallPercent = Math.round(((currentIndex + (completion.percent / 100)) / totalSteps) * 100);
+
+    const currentLabel = document.getElementById("wizard-current-label");
+    const progressLabel = document.getElementById("wizard-progress-label");
+    const progressFill = document.getElementById("wizard-progress-fill");
+    const btnPrev = document.getElementById("btn-prev-step");
+    const btnNext = document.getElementById("btn-next-step");
+
+    if (currentLabel) currentLabel.textContent = `Langkah ${currentIndex + 1} dari ${totalSteps} • ${currentStep.label}`;
+    if (progressLabel) progressLabel.textContent = `${completion.percent}% langkah aktif • total ${overallPercent}%`;
+    if (progressFill) progressFill.style.width = `${Math.max(0, Math.min(100, overallPercent))}%`;
+    if (btnPrev) btnPrev.disabled = currentIndex === 0;
+    if (btnNext) btnNext.disabled = currentIndex === totalSteps - 1;
+
+    document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
+      const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
+      const stepIdx = steps.findIndex(function(step) { return step.id === target; });
+      item.classList.toggle("is-complete", stepIdx !== -1 && stepIdx < currentIndex);
+    });
+  }
+
+  function goToWorkflowStep(targetId) {
+    const normalized = normalizeWorkflowStepId(targetId);
+    const el = document.getElementById(normalized);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      updateFormStepperState(normalized);
+      updateSidebarActiveState(normalized);
+      updateWorkflowProgressUI(normalized);
+    }
+  }
+
   function syncCaseStatusOptionsByDx(dx) {
     const select = document.getElementById("Status Pasien/Kasus");
     if (!select) return;
@@ -1654,12 +1730,14 @@
   }
 
   function updateFormStepperState(activeId) {
+    const normalized = normalizeWorkflowStepId(activeId);
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
-      const target = String(item.getAttribute("data-step-target") || "").trim();
+      const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
       if (!target) return;
-      if (target === activeId) item.classList.add("is-active");
+      if (target === normalized) item.classList.add("is-active");
       else item.classList.remove("is-active");
     });
+    updateWorkflowProgressUI(normalized);
   }
 
   function syncStatusHistoryTimeline() {
@@ -1896,6 +1974,8 @@
     if (["Status Pasien/Kasus", "Tanggal Update Status", "Dasar Penetapan Status", "Catatan Status Pasien", "Petugas Verifikator"].includes(e.target.id)) {
       syncStatusHistoryTimeline();
     }
+    const activeStepTarget = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+    updateWorkflowProgressUI(activeStepTarget);
     updateUiShellSummary();
   });
 
@@ -2195,6 +2275,8 @@
       const adminMenuWrap = document.getElementById("admin-menu-wrap");
       const adminMenuDropdown = document.getElementById("admin-menu-dropdown");
       const btnOpenPin = document.getElementById("btn-open-pin");
+      const btnPrevStep = document.getElementById("btn-prev-step");
+      const btnNextStep = document.getElementById("btn-next-step");
 
       if (!selector || !formElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !btnSubmit) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
@@ -2291,11 +2373,30 @@
         item.addEventListener("click", function() {
           const target = String(item.getAttribute("data-step-target") || "").trim();
           if (target) {
-            updateFormStepperState(target);
-            updateSidebarActiveState(target);
+            goToWorkflowStep(target);
           }
         });
       });
+
+      if (btnPrevStep) {
+        btnPrevStep.addEventListener("click", function() {
+          const steps = getWorkflowStepDefinitions();
+          const active = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+          const currentId = normalizeWorkflowStepId(active);
+          const idx = steps.findIndex(function(step) { return step.id === currentId; });
+          if (idx > 0) goToWorkflowStep(steps[idx - 1].id);
+        });
+      }
+
+      if (btnNextStep) {
+        btnNextStep.addEventListener("click", function() {
+          const steps = getWorkflowStepDefinitions();
+          const active = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+          const currentId = normalizeWorkflowStepId(active);
+          const idx = steps.findIndex(function(step) { return step.id === currentId; });
+          if (idx !== -1 && idx < steps.length - 1) goToWorkflowStep(steps[idx + 1].id);
+        });
+      }
 
       if (btnAdminMenu && adminMenuDropdown) {
         btnAdminMenu.addEventListener("click", function(e) {
@@ -2472,6 +2573,8 @@
             enforceNumericOnlyInput(e.target);
           }
           saveFormDraft();
+          const activeStepTarget = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+          updateWorkflowProgressUI(activeStepTarget);
           updateUiShellSummary();
         }
       });

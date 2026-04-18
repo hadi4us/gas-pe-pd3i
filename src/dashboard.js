@@ -82,6 +82,30 @@ function _parseDateStr_(str) {
   return new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)));
 }
 
+function _findFirstHeaderIndex_(headers, candidates) {
+  candidates = Array.isArray(candidates) ? candidates : [];
+  for (var i = 0; i < candidates.length; i++) {
+    var idx = headers.indexOf(candidates[i]);
+    if (idx !== -1) return idx;
+  }
+  return -1;
+}
+
+function _diffDays_(a, b) {
+  const da = _parseDateStr_(_formatDateValue_(a));
+  const db = _parseDateStr_(_formatDateValue_(b));
+  if (!da || !db) return null;
+  return Math.round((db.getTime() - da.getTime()) / 86400000);
+}
+
+function _medianNumber_(arr) {
+  arr = (arr || []).filter(function(v) { return typeof v === 'number' && !isNaN(v); }).sort(function(a, b) { return a - b; });
+  if (!arr.length) return null;
+  var mid = Math.floor(arr.length / 2);
+  if (arr.length % 2) return arr[mid];
+  return Math.round(((arr[mid - 1] + arr[mid]) / 2) * 10) / 10;
+}
+
 // ─── Helper: escape nilai CSV (RFC 4180) ─────────────────────────────────────
 
 /**
@@ -151,6 +175,9 @@ function getDashboardStats(dx, tahun, token) {
         perBulan: {},
         perStatusKasus: {},
         qualityCards: { pendingVerification: 0, waitingSampleResult: 0, confirmed: 0, discarded: 0, clinical: 0 },
+        epidemiology: { medianReportToTrackingDays: null, sameDayReportTrackingRate: null, medianOnsetToReportDays: null, workflowCompletenessRate: null },
+        perKelompokUmur: {},
+        perJenisKelamin: {},
         statusNotifikasi: dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null,
         statusSinkronisasi: dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null
       };
@@ -160,7 +187,18 @@ function getDashboardStats(dx, tahun, token) {
 
     // Indeks kolom yang dibutuhkan
     const idxTglPelacakan = headers.indexOf("Tanggal Pelacakan");
+    const idxTglTerima = headers.indexOf("Tanggal terima laporan");
+    const idxTglOnset = _findFirstHeaderIndex_(headers, [
+      "Tanggal mulai sakit",
+      "Tanggal mulai demam",
+      "Tanggal mulai batuk",
+      "Tgl mulai lumpuh",
+      "Tanggal mulai sakit/gejala awal",
+      "Tanggal mulai sakit/gejala awal sebelum lumpuh"
+    ]);
     const idxKecamatan = headers.indexOf("Kecamatan");
+    const idxKelompokUmur = headers.indexOf("Kelompok Umur Epidemiologis");
+    const idxJK = headers.indexOf("JK");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
     const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
@@ -173,6 +211,8 @@ function getDashboardStats(dx, tahun, token) {
     const perKecamatan = {};
     const perBulan = {};
     const perStatusKasus = {};
+    const perKelompokUmur = {};
+    const perJenisKelamin = {};
     const qualityCards = {
       pendingVerification: 0,
       waitingSampleResult: 0,
@@ -180,6 +220,10 @@ function getDashboardStats(dx, tahun, token) {
       discarded: 0,
       clinical: 0
     };
+    const lagsReportToTracking = [];
+    const lagsOnsetToReport = [];
+    let sameDayReportTracking = 0;
+    let completenessWorkflowFilled = 0;
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
 
@@ -218,6 +262,16 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
+      if (idxKelompokUmur !== -1) {
+        const kelompok = String(row[idxKelompokUmur] || "").trim() || "Tidak diketahui";
+        perKelompokUmur[kelompok] = (perKelompokUmur[kelompok] || 0) + 1;
+      }
+
+      if (idxJK !== -1) {
+        const jk = String(row[idxJK] || "").trim() || "Tidak diketahui";
+        perJenisKelamin[jk] = (perJenisKelamin[jk] || 0) + 1;
+      }
+
       let statusKasus = "Belum ditentukan";
       if (idxStatusKasus !== -1) {
         statusKasus = String(row[idxStatusKasus] || "").trim() || "Belum ditentukan";
@@ -228,6 +282,17 @@ function getDashboardStats(dx, tahun, token) {
       if (statusKasusUpper === "KONFIRMASI") qualityCards.confirmed++;
       if (statusKasusUpper === "DISCARDED") qualityCards.discarded++;
       if (statusKasusUpper === "KLINIS") qualityCards.clinical++;
+
+      const lagReportTracking = (idxTglTerima !== -1 && idxTglPelacakan !== -1) ? _diffDays_(row[idxTglTerima], row[idxTglPelacakan]) : null;
+      if (lagReportTracking !== null && lagReportTracking >= 0) {
+        lagsReportToTracking.push(lagReportTracking);
+        if (lagReportTracking === 0) sameDayReportTracking++;
+      }
+
+      const lagOnsetReport = (idxTglOnset !== -1 && idxTglTerima !== -1) ? _diffDays_(row[idxTglOnset], row[idxTglTerima]) : null;
+      if (lagOnsetReport !== null && lagOnsetReport >= 0) {
+        lagsOnsetToReport.push(lagOnsetReport);
+      }
 
       if (idxVerifikasi !== -1) {
         const verif = String(row[idxVerifikasi] || "").trim().toUpperCase();
@@ -243,6 +308,12 @@ function getDashboardStats(dx, tahun, token) {
           qualityCards.waitingSampleResult++;
         }
       }
+
+      var workflowFieldsPresent = 0;
+      if (statusKasus && statusKasus !== "Belum ditentukan") workflowFieldsPresent++;
+      if (idxVerifikasi !== -1 && String(row[idxVerifikasi] || "").trim()) workflowFieldsPresent++;
+      if (idxSampelDilakukan !== -1 && String(row[idxSampelDilakukan] || "").trim()) workflowFieldsPresent++;
+      completenessWorkflowFilled += workflowFieldsPresent;
 
       // Status notifikasi/sinkronisasi dihitung jika kolom tersedia
       if (idxStatusNotif !== -1 && statusNotifikasi) {
@@ -275,7 +346,15 @@ function getDashboardStats(dx, tahun, token) {
       perKecamatan: perKecamatan,
       perBulan: perBulan,
       perStatusKasus: perStatusKasus,
+      perKelompokUmur: perKelompokUmur,
+      perJenisKelamin: perJenisKelamin,
       qualityCards: qualityCards,
+      epidemiology: {
+        medianReportToTrackingDays: _medianNumber_(lagsReportToTracking),
+        sameDayReportTrackingRate: lagsReportToTracking.length ? Math.round((sameDayReportTracking / lagsReportToTracking.length) * 100) : null,
+        medianOnsetToReportDays: _medianNumber_(lagsOnsetToReport),
+        workflowCompletenessRate: totalKasus ? Math.round((completenessWorkflowFilled / (totalKasus * 3)) * 100) : null
+      },
       statusNotifikasi: statusNotifikasi,
       statusSinkronisasi: statusSinkronisasi
     };

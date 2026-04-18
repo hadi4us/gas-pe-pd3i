@@ -333,7 +333,40 @@ Checklist:
 
 ---
 
-## 6) Verifikasi Risiko Regresi
+## 6) Verifikasi Workflow Baru
+
+### TC-WF-01 — Wizard navigation
+- tombol `Langkah Sebelumnya` / `Langkah Berikutnya` berpindah ke section yang tepat
+- progress wizard berubah sesuai step aktif
+- stepper menunjukkan step aktif / complete secara konsisten
+
+### TC-WF-02 — Verifikasi EPID
+- isi `Status Verifikasi EPID`
+- isi `Tanggal Verifikasi EPID`
+- isi `Petugas Verifikator`
+- pastikan summary panel dan workflow summary ikut berubah
+
+### TC-WF-03 — Hasil sampel
+- ubah `Pemeriksaan Sampel Dilakukan`
+- isi interpretasi hasil bila ada
+- pastikan summary panel membaca state sampel dengan benar
+
+### TC-WF-04 — Status pasien dan timeline
+- ubah `Status Pasien/Kasus`
+- isi `Tanggal Update Status`
+- cek apakah row baru muncul di `Riwayat Status Kasus`
+- simpan lalu edit ulang, pastikan timeline tetap ada
+
+### TC-WF-05 — Search result workflow badges
+- cari data existing
+- pastikan hasil pencarian menampilkan:
+  - status kasus
+  - status verifikasi EPID
+  - status sampel
+
+---
+
+## 7) Verifikasi Risiko Regresi
 
 ### TC-REG-01 — Login
 - login tetap berhasil
@@ -343,6 +376,7 @@ Checklist:
 
 ### TC-REG-03 — Dashboard
 - dashboard tetap bisa dibuka
+- quality cards dan indikator epidemiologis muncul tanpa error
 
 ### TC-REG-04 — Retry admin
 - retry sync / notify / telegram tetap tampil untuk admin
@@ -353,7 +387,7 @@ Checklist:
 
 ---
 
-## 7) Hasil Eksekusi
+## 8) Hasil Eksekusi
 
 | Test Case | Status | Catatan |
 |---|---|---|
@@ -382,6 +416,11 @@ Checklist:
 | TC-AFP-03 | PENDING | |
 | TC-AFP-04 | PENDING | |
 | TC-AFP-05 | PENDING | |
+| TC-WF-01 | PENDING | |
+| TC-WF-02 | PENDING | |
+| TC-WF-03 | PENDING | |
+| TC-WF-04 | PENDING | |
+| TC-WF-05 | PENDING | |
 | TC-REG-01 | PENDING | |
 | TC-REG-02 | PENDING | |
 | TC-REG-03 | PENDING | |
@@ -390,7 +429,7 @@ Checklist:
 
 ---
 
-## 8) Definisi Lulus Batch Ekspansi Form
+## 9) Definisi Lulus Batch Ekspansi Form
 
 Batch dianggap cukup aman untuk lanjut ke penutupan gap berikutnya jika:
 - semua diagnosis bisa dirender tanpa error

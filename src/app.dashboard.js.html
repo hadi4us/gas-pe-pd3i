@@ -147,6 +147,29 @@
       </div>
     </div>`;
 
+    const epi = stats.epidemiology || {};
+    html += `<div class="mb-6">
+      <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Indikator Epidemiologis Ringkas</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Median laporan → pelacakan</div>
+          <div class="text-2xl font-black text-slate-900">${epi.medianReportToTrackingDays != null ? epi.medianReportToTrackingDays + ' hari' : '-'}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Pelacakan hari yang sama</div>
+          <div class="text-2xl font-black text-slate-900">${epi.sameDayReportTrackingRate != null ? epi.sameDayReportTrackingRate + '%' : '-'}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Median onset → laporan</div>
+          <div class="text-2xl font-black text-slate-900">${epi.medianOnsetToReportDays != null ? epi.medianOnsetToReportDays + ' hari' : '-'}</div>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Kelengkapan workflow</div>
+          <div class="text-2xl font-black text-slate-900">${epi.workflowCompletenessRate != null ? epi.workflowCompletenessRate + '%' : '-'}</div>
+        </div>
+      </div>
+    </div>`;
+
     const perStatus = stats.perStatusKasus || {};
     const statusKeys = Object.keys(perStatus).sort(function(a, b) { return perStatus[b] - perStatus[a]; });
     if (statusKeys.length > 0) {
@@ -161,6 +184,37 @@
         </div>`;
       });
       html += `</div></div>`;
+    }
+
+    const perJK = stats.perJenisKelamin || {};
+    const jkKeys = Object.keys(perJK).sort(function(a, b) { return perJK[b] - perJK[a]; });
+    const perUmur = stats.perKelompokUmur || {};
+    const umurKeys = Object.keys(perUmur).sort(function(a, b) { return perUmur[b] - perUmur[a]; });
+    if (jkKeys.length > 0 || umurKeys.length > 0) {
+      html += `<div class="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-4">`;
+      if (jkKeys.length > 0) {
+        html += `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Distribusi Jenis Kelamin</div>`;
+        jkKeys.forEach(function(k) {
+          html += `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0">
+            <span class="text-sm font-semibold text-slate-700">${k}</span>
+            <span class="text-base font-black text-blue-700">${perJK[k]}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      if (umurKeys.length > 0) {
+        html += `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Distribusi Kelompok Umur</div>`;
+        umurKeys.forEach(function(k) {
+          html += `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 gap-3">
+            <span class="text-sm font-semibold text-slate-700">${k}</span>
+            <span class="text-base font-black text-emerald-700">${perUmur[k]}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
     }
 
     // Distribusi per bulan (Req 6.3)
