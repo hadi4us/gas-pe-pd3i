@@ -2014,6 +2014,20 @@
     return appUrl ? appUrl + '?workspace=' + encodeURIComponent(normalized) : '';
   }
 
+  function syncWorkspaceRoute(workspace, options) {
+    const opts = options || {};
+    const targetUrl = buildWorkspaceRouteUrl(workspace);
+    if (!targetUrl || !window.history) return;
+    try {
+      const currentUrl = window.location.href.split('#')[0];
+      if (currentUrl === targetUrl) return;
+      const method = opts.replace ? 'replaceState' : 'pushState';
+      if (typeof window.history[method] === 'function') {
+        window.history[method]({}, '', targetUrl);
+      }
+    } catch (e) {}
+  }
+
   function applyInitialRouteView() {
     const boot = getRouteBootConfig();
     const requestedWorkspace = boot.initialView === 'dashboard' ? 'dashboard' : boot.initialWorkspace;
@@ -2021,7 +2035,8 @@
       return openSidebarWorkspace(requestedWorkspace, {
         scroll: false,
         useRoute: false,
-        autoLoad: false
+        autoLoad: false,
+        replaceRoute: true
       });
     }
     const currentRole = String((SESSION_USER && SESSION_USER.role) || '').trim().toLowerCase();
@@ -2041,7 +2056,8 @@
     return openSidebarWorkspace(requestedWorkspace, {
       scroll: false,
       useRoute: false,
-      autoLoad: requestedWorkspace === 'dashboard'
+      autoLoad: requestedWorkspace === 'dashboard',
+      replaceRoute: true
     });
   }
 
@@ -2107,12 +2123,7 @@
     const targetStage = getWorkspaceStageForSidebar(normalized);
 
     if (opts.useRoute) {
-      const targetUrl = buildWorkspaceRouteUrl(normalized);
-      const currentUrl = window.location.href.split('#')[0];
-      if (targetUrl && currentUrl !== targetUrl) {
-        window.location.assign(targetUrl);
-        return normalized;
-      }
+      syncWorkspaceRoute(normalized, { replace: !!opts.replaceRoute });
     }
 
     if (normalized === 'dashboard') {
@@ -3763,6 +3774,12 @@
           if (!workspace) return;
           openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
         });
+      });
+
+      window.addEventListener('popstate', function() {
+        if (typeof applyInitialRouteView === 'function') {
+          applyInitialRouteView();
+        }
       });
 
       window.addEventListener("scroll", function() {
