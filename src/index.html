@@ -567,9 +567,9 @@
             </aside>
           </div>
         </form>
-  <section id="section-dashboard" class="hidden mt-6">
-    <div class="pd3i-shell-card">
-      <div class="pd3i-card-header-row mb-4">
+  <section id="section-dashboard" class="pd3i-dashboard-section hidden mt-6">
+    <div class="pd3i-shell-card pd3i-dashboard-shell">
+      <div class="pd3i-card-header-row pd3i-dashboard-header mb-4">
         <div>
           <div class="pd3i-card-eyebrow">Dashboard statistik</div>
           <h2 class="pd3i-card-title flex items-center gap-2">
@@ -581,20 +581,20 @@
           <i class="fas fa-arrow-up"></i> Kembali ke workspace
         </button>
       </div>
-      <div class="flex flex-wrap gap-3 mb-5">
-        <select id="dashboard-dx" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold">
+      <div class="pd3i-dashboard-toolbar mb-5">
+        <select id="dashboard-dx" class="pd3i-shell-select pd3i-dashboard-filter">
           <option value="MR">Campak/Rubella (MR)</option>
           <option value="DIF">Difteri (DIF)</option>
           <option value="PERT">Pertusis (PERT)</option>
           <option value="TN">Tetanus Neonatorum (TN)</option>
           <option value="AFP">AFP</option>
         </select>
-        <select id="dashboard-tahun" class="border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold"></select>
-        <button type="button" id="btn-load-dashboard" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold">
+        <select id="dashboard-tahun" class="pd3i-shell-select pd3i-dashboard-filter pd3i-dashboard-filter-year"></select>
+        <button type="button" id="btn-load-dashboard" class="pd3i-primary-button pd3i-dashboard-load">
           <i class="fas fa-sync mr-1"></i> Muat Data
         </button>
       </div>
-      <div id="dashboard-content" class="text-sm text-slate-500 text-center py-8">Pilih DX dan tahun, lalu klik "Muat Data".</div>
+      <div id="dashboard-content" class="pd3i-dashboard-content"><div class="pd3i-dashboard-state">Pilih DX dan tahun, lalu klik "Muat Data".</div></div>
     </div>
   </section>
 

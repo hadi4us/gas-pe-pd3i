@@ -93,3 +93,4 @@
 - [x] Pemilihan diagnosa sekarang difokuskan hanya untuk mode input kasus baru; pencarian / inbox workflow bisa berjalan lintas semua diagnosa, hasil pencarian menampilkan kode DX, dan record existing akan otomatis memuat diagnosa saat dibuka
 - [x] Dashboard statistik diubah dari modal/pop-up menjadi section halaman penuh di HTML utama; klik sidebar atau menu admin sekarang mengarahkan ke workspace dashboard di page yang sama
 - [x] Sidebar mulai dipisah jadi router workspace yang lebih mandiri: menu diarahkan ke workspace `overview/search/input/verifikasi/sampel/status/dashboard`, workflow intent bar disederhanakan, dan active state sidebar tidak lagi bergantung pada scroll section yang sering bikin tidak sinkron dengan form yang tampil
+- [x] Visual dashboard dipoles agar benar-benar nyatu dengan shell utama: section dashboard sekarang punya header, toolbar filter, state loading/error/empty, dan ritme spacing/card yang konsisten dengan template aplikasi

@@ -403,17 +403,17 @@
     const section = document.getElementById('section-dashboard');
     if (section) section.classList.remove('hidden');
     content.dataset.loaded = '';
-    content.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...</div>';
+    content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
 
     if (!safeGsRun() || !SESSION_TOKEN) {
-      content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">Tidak dapat terhubung ke server.</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">Tidak dapat terhubung ke server.</div>';
       return;
     }
 
     google.script.run
       .withSuccessHandler(function (stats) { renderDashboard(stats, dx, tahun); })
       .withFailureHandler(function (err) {
-        content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">Gagal memuat data: ' + String(err) + '</div>';
+        content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
       .getDashboardStats(dx, tahun, SESSION_TOKEN);
   }
@@ -424,7 +424,7 @@
 
     if (!stats || stats.status === "error") {
       content.dataset.loaded = '';
-      content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
       return;
     }
 
