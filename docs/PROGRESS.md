@@ -76,3 +76,5 @@
 - [x] Label role tahap-spesifik dinormalisasi agar lebih manusiawi di UI, dan TTL sesi role tahap-spesifik disetarakan dengan role operasional
 - [x] Otorisasi tahap diperketat lagi: verifikasi sekarang admin-only, sedangkan input hasil pemeriksaan untuk non-admin mensyaratkan kelurahan domisili pasien cocok dengan wilayah kerja kelurahan user dari `REF_USER`
 - [x] UX workflow dibuat lebih eksplisit lewat pilihan jalur kerja (input baru / verifikasi / hasil pemeriksaan / update status), sehingga user diarahkan sejak awal apakah harus mulai dari form kosong atau dari pencarian record existing
+- [x] `REF_USER` dan `REF_PENGAMPU` live sudah diarsipkan ke sheet legacy lalu dibentuk ulang ke model baru: `REF_PENGAMPU` sebagai source of truth wilayah (Kab/Kota + Kecamatan + Kelurahan -> puskesmas pengampu), `REF_USER` sebagai akun + role + unit/scope puskesmas/dinkes
+- [x] Rule akses hasil pemeriksaan kini disinkronkan ke model baru: non-admin dicek lewat puskesmas pengampu domisili pasien, bukan daftar kelurahan mentah di `REF_USER`

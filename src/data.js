@@ -255,15 +255,18 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
 
   const headers = data[0].map(h => String(h || "").trim());
   const rows = data.slice(1);
+  const idxKab = headers.indexOf("Kab/Kota");
   const idxKecamatan = headers.indexOf("Kecamatan");
   const idxKelurahan = headers.indexOf("Kelurahan");
+  const idxKodePuskesmas = headers.indexOf("KodePuskesmas");
+  const idxNamaPuskesmas = headers.indexOf("NamaPuskesmas");
   const idxPengampu = headers.indexOf("Pengampu");
   const idxKapus = headers.indexOf("KepalaPuskesmas");
   const idxEmailKapus = headers.indexOf("EmailKapus");
   const idxPetugas = headers.indexOf("PetugasSurveilans");
   const idxEmailPetugas = headers.indexOf("EmailPetugas");
-  const idxSpreadsheetId = headers.indexOf("SpreadsheetId");
-  const idxSpreadsheetUrl = headers.indexOf("SpreadsheetUrl");
+  const idxSpreadsheetId = headers.indexOf("SpreadsheetId") !== -1 ? headers.indexOf("SpreadsheetId") : headers.indexOf("SpreadsheetIdTujuan");
+  const idxSpreadsheetUrl = headers.indexOf("SpreadsheetUrl") !== -1 ? headers.indexOf("SpreadsheetUrl") : headers.indexOf("SpreadsheetUrlTujuan");
 
   const kecNorm = _normalizeWilayahKey_(kecamatan);
   const kelNorm = _normalizeWilayahKey_(kelurahan);
@@ -271,12 +274,17 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
   for (const r of rows) {
     const rk = idxKecamatan !== -1 ? _normalizeWilayahKey_(r[idxKecamatan]) : "";
     const rl = idxKelurahan !== -1 ? _normalizeWilayahKey_(r[idxKelurahan]) : "";
-    if (rk === kecNorm && rl === kelNorm) {
+    const rb = idxKab !== -1 ? _normalizeWilayahKey_(r[idxKab]) : "";
+    const kabMatch = !kabNorm || !rb || rb === kabNorm || (kabNorm === "DEPOK" && rb === "KOTA DEPOK");
+    if (kabMatch && rk === kecNorm && rl === kelNorm) {
       return {
         found: true,
         status: "MATCHED",
+        kabKota: rb,
         kecamatan: rk,
         kelurahan: rl,
+        kodePuskesmas: idxKodePuskesmas !== -1 ? String(r[idxKodePuskesmas] || "").trim() : "",
+        namaPuskesmas: idxNamaPuskesmas !== -1 ? String(r[idxNamaPuskesmas] || "").trim() : "",
         pengampu: idxPengampu !== -1 ? String(r[idxPengampu] || "").trim() : "",
         kepalaPuskesmas: idxKapus !== -1 ? String(r[idxKapus] || "").trim() : "",
         emailKapus: idxEmailKapus !== -1 ? String(r[idxEmailKapus] || "").trim() : "",

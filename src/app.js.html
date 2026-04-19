@@ -2154,11 +2154,11 @@
         if (normalized === "section-verifikasi") {
           helperText += " Verifikasi memang dibatasi admin saja.";
         } else if (normalized === "section-sampel") {
-          const currentKelurahan = getFieldValueSafe("Kelurahan") || "kelurahan belum diketahui";
-          const assigned = getUserAssignedKelurahanKeys(SESSION_USER);
-          helperText += assigned.length
-            ? ` Kelurahan domisili record ini: ${currentKelurahan}. Akun aktif hanya bisa input hasil pemeriksaan untuk kelurahan wilayah kerja: ${assigned.join(", ")}.`
-            : " Akun aktif belum punya daftar kelurahan wilayah kerja di sesi login / REF_USER.";
+          const scope = getCurrentRecordPengampuPuskesmasMeta();
+          const userUnit = String((SESSION_USER && (SESSION_USER.unitKerja || SESSION_USER.kodePuskesmas)) || '').trim();
+          helperText += scope.namaPuskesmas || scope.kodePuskesmas
+            ? ` Record ini terpetakan ke puskesmas pengampu: ${(scope.namaPuskesmas || scope.kodePuskesmas)} untuk domisili ${scope.kecamatan || '-'} / ${scope.kelurahan || '-'}. Akun aktif: ${userUnit || 'belum diatur'}.`
+            : " Record ini belum punya metadata pengampu di UI; backend tetap akan cek Kab/Kota + Kecamatan + Kelurahan ke REF_PENGAMPU saat simpan.";
         } else {
           helperText += " Role aktif bisa melihat tahap ini, tapi tidak berwenang menyimpan perubahan pada tahap ini.";
         }
@@ -2468,22 +2468,35 @@
       .replace(/\s+/g, " ");
   }
 
-  function getUserAssignedKelurahanKeys(user) {
-    const raw = user && Array.isArray(user.wilayahKelurahan) ? user.wilayahKelurahan : [];
-    return raw.map(function(v) { return normalizeUiKelurahanKey(v); }).filter(Boolean);
+  function getCurrentLoadedRecordMeta() {
+    return (typeof window !== 'undefined' && window.__PD3I_ACTIVE_RECORD_META) ? window.__PD3I_ACTIVE_RECORD_META : null;
   }
 
-  function getCurrentRecordKelurahanKey() {
-    return normalizeUiKelurahanKey(getFieldValueSafe("Kelurahan") || getFieldValueSafe("Kelurahan domisili") || "");
+  function getCurrentRecordPengampuPuskesmasMeta() {
+    const record = getCurrentLoadedRecordMeta() || {};
+    return {
+      namaPuskesmas: normalizeUiKelurahanKey(record["Puskesmas Pengampu"] || record["NamaPuskesmas"] || ""),
+      kodePuskesmas: normalizeUiKelurahanKey(record["KodePuskesmas Pengampu"] || record["KodePuskesmas"] || ""),
+      kabKota: normalizeUiKelurahanKey(record["Kab/Kota Pasien"] || record["Kab/Kota"] || ""),
+      kecamatan: normalizeUiKelurahanKey(record["Kecamatan"] || ""),
+      kelurahan: normalizeUiKelurahanKey(record["Kelurahan"] || record["Kelurahan domisili"] || "")
+    };
   }
 
-  function canUserWriteSampleStageByKelurahan(user) {
+  function canUserWriteSampleStageByScope(user) {
     const role = normalizeUiRole(user && user.role);
     if (role === "admin") return true;
-    const currentKelurahan = getCurrentRecordKelurahanKey();
-    const assigned = getUserAssignedKelurahanKeys(user);
-    if (!currentKelurahan || !assigned.length) return false;
-    return assigned.indexOf(currentKelurahan) !== -1;
+    const recordScope = getCurrentRecordPengampuPuskesmasMeta();
+    const userKode = normalizeUiKelurahanKey(user && user.kodePuskesmas);
+    const userUnit = normalizeUiKelurahanKey(user && user.unitKerja);
+    const userScopeLevel = String((user && user.scopeLevel) || "").trim().toLowerCase();
+    if (userScopeLevel === "dinkes") return true;
+    if (!recordScope.namaPuskesmas && !recordScope.kodePuskesmas) {
+      return true;
+    }
+    if (userKode && recordScope.kodePuskesmas && userKode === recordScope.kodePuskesmas) return true;
+    if (userUnit && recordScope.namaPuskesmas && userUnit === recordScope.namaPuskesmas) return true;
+    return false;
   }
 
   function getRoleCapabilities(user) {
@@ -2508,7 +2521,7 @@
       return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: allStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
     if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
-      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi wilayah domisili, verifikasi admin-only" };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi puskesmas pengampu domisili, verifikasi admin-only" };
     }
     if (writeStages.length === 1) {
       return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
@@ -2526,7 +2539,7 @@
 
     if (!caps.canWrite || caps.writeStages.indexOf(normalized) === -1) return false;
     if (normalized === "section-verifikasi") return role === "admin";
-    if (normalized === "section-sampel") return canUserWriteSampleStageByKelurahan(user);
+    if (normalized === "section-sampel") return canUserWriteSampleStageByScope(user);
     return true;
   }
 
@@ -3472,6 +3485,9 @@
           rsChoicesInstance = null;
         }
 
+        if (typeof window !== 'undefined') {
+          window.__PD3I_ACTIVE_RECORD_META = null;
+        }
         if (!dx || !cfg) {
           formElement.classList.add("hidden");
           if (searchContainer) searchContainer.classList.add("hidden");
@@ -3715,6 +3731,9 @@
             const birthValidation = validateAndApplyBirthUI({ silent: true, hard: false });
             applyBirthValidationUI(birthValidation);
 
+            if (typeof window !== 'undefined') {
+              window.__PD3I_ACTIVE_RECORD_META = Object.assign({}, record || {});
+            }
             await loadRefImunisasi();
             buildRiwayatImunisasiRows();
             forceBuildImunisasiWhenReady();

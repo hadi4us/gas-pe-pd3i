@@ -638,30 +638,33 @@ function _getWorkflowStageLabel_(workflowStage) {
   return labels[normalized] || normalized;
 }
 
-function _normalizeAccessKelurahanKey_(value) {
+function _normalizeAccessScopeKey_(value) {
   return String(value || "")
     .trim()
     .toUpperCase()
     .replace(/\s+/g, " ");
 }
 
-function _getUserAssignedKelurahanKeys_(user) {
-  const rawList = user && Array.isArray(user.wilayahKelurahan) ? user.wilayahKelurahan : [];
-  return rawList.map(function(v) { return _normalizeAccessKelurahanKey_(v); }).filter(Boolean);
-}
-
-function _getKelurahanKeyForRecordAccess_(dx, data) {
-  const direct = _normalizeAccessKelurahanKey_((data && (data["Kelurahan"] || data["Kelurahan domisili"] || data["Kelurahan/Desa"])) || "");
-  if (direct) return direct;
+function _getRecordDomisiliForAccess_(dx, data) {
+  const direct = {
+    kabKota: _normalizeAccessScopeKey_((data && (data["Kab/Kota Pasien"] || data["Kab/Kota"] || data["Kabupaten/Kota"])) || ""),
+    kecamatan: _normalizeAccessScopeKey_((data && data["Kecamatan"]) || ""),
+    kelurahan: _normalizeAccessScopeKey_((data && (data["Kelurahan"] || data["Kelurahan domisili"] || data["Kelurahan/Desa"])) || "")
+  };
+  if (direct.kecamatan && direct.kelurahan) return direct;
 
   const epid = String((data && data["Nomor EPID"]) || "").trim();
-  if (!dx || !epid) return "";
+  if (!dx || !epid) return direct;
 
   try {
     const record = _getRowObjectByEpid_(dx, epid);
-    return _normalizeAccessKelurahanKey_(record["Kelurahan"] || record["Kelurahan domisili"] || record["Kelurahan/Desa"] || "");
+    return {
+      kabKota: _normalizeAccessScopeKey_(record["Kab/Kota Pasien"] || record["Kab/Kota"] || record["Kabupaten/Kota"] || direct.kabKota),
+      kecamatan: _normalizeAccessScopeKey_(record["Kecamatan"] || direct.kecamatan),
+      kelurahan: _normalizeAccessScopeKey_(record["Kelurahan"] || record["Kelurahan domisili"] || record["Kelurahan/Desa"] || direct.kelurahan)
+    };
   } catch (e) {
-    return "";
+    return direct;
   }
 }
 
@@ -683,18 +686,31 @@ function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
       throw new Error("Tahap hasil pemeriksaan hanya dapat diinput oleh admin atau petugas yang berwenang atas wilayah domisili pasien.");
     }
 
-    const recordKelurahan = _getKelurahanKeyForRecordAccess_(dx, data);
-    if (!recordKelurahan) {
-      throw new Error("Kelurahan domisili pasien belum tersedia, sehingga hak input hasil pemeriksaan tidak bisa diverifikasi.");
+    const domisili = _getRecordDomisiliForAccess_(dx, data);
+    if (!domisili.kecamatan || !domisili.kelurahan) {
+      throw new Error("Kecamatan / kelurahan domisili pasien belum tersedia, sehingga hak input hasil pemeriksaan tidak bisa diverifikasi.");
     }
 
-    const assignedKelurahan = _getUserAssignedKelurahanKeys_(sess.user);
-    if (!assignedKelurahan.length) {
-      throw new Error("Wilayah kerja kelurahan akun ini belum diatur di REF_USER.");
+    const pengampu = getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota);
+    if (!pengampu || !pengampu.found) {
+      throw new Error("Mapping REF_PENGAMPU untuk domisili pasien belum ditemukan.");
     }
 
-    if (assignedKelurahan.indexOf(recordKelurahan) === -1) {
-      throw new Error("Petugas hanya boleh input hasil pemeriksaan untuk pasien dengan domisili kelurahan sesuai wilayah kerjanya.");
+    const userScopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+    const userKodePuskesmas = _normalizeAccessScopeKey_((sess.user && sess.user.kodePuskesmas) || '');
+    const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
+    const mappedKodePuskesmas = _normalizeAccessScopeKey_(pengampu.kodePuskesmas || '');
+    const mappedNamaPuskesmas = _normalizeAccessScopeKey_(pengampu.namaPuskesmas || '');
+
+    if (userScopeLevel === 'dinkes') return true;
+    if (!userKodePuskesmas && !userUnitKerja) {
+      throw new Error("Kode/unit puskesmas akun ini belum diatur di REF_USER.");
+    }
+
+    const kodeMatch = userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas;
+    const unitMatch = userUnitKerja && mappedNamaPuskesmas && userUnitKerja === mappedNamaPuskesmas;
+    if (!kodeMatch && !unitMatch) {
+      throw new Error("Petugas hanya boleh input hasil pemeriksaan untuk pasien yang diampu puskesmas sesuai domisili (Kab/Kota + Kecamatan + Kelurahan). Mapped: " + (pengampu.namaPuskesmas || pengampu.kodePuskesmas || '-') + "; User: " + ((sess.user && (sess.user.unitKerja || sess.user.kodePuskesmas)) || '-'));
     }
   }
 

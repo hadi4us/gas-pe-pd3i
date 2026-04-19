@@ -408,8 +408,8 @@ Gunakan akun contoh dengan role berbeda di `REF_USER`:
 **Expected**
 - Verifikasi hanya bisa disimpan oleh admin.
 - Tombol submit tahap verifikasi non-admin harus terkunci.
-- Tahap hasil pemeriksaan untuk non-admin hanya aktif jika kelurahan domisili pasien cocok dengan daftar kelurahan wilayah kerja user di `REF_USER`.
-- Backend menolak save jika role menyimpan stage di luar kewenangannya atau jika kelurahan tidak match.
+- Tahap hasil pemeriksaan untuk non-admin hanya aktif jika domisili pasien (Kab/Kota + Kecamatan + Kelurahan) terpetakan ke puskesmas pengampu yang sama dengan `UnitKerja` / `KodePuskesmas` user.
+- Backend menolak save jika role menyimpan stage di luar kewenangannya atau jika mapping puskesmas pengampu tidak match.
 - Tahap selain input tetap mensyaratkan record existing / EPID sudah ada.
 - Setelah save berhasil, field metadata tahap di raw sheet ikut terisi (stage terakhir, actor, role, timestamp tahap terkait).
 - AUDIT_LOG mencatat `Tahap Workflow` dan `Label Tahap Workflow` untuk INSERT/UPDATE terkait record.
