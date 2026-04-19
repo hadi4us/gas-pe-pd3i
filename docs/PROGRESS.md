@@ -82,3 +82,4 @@
 - [x] Menu verifikasi EPID dirombak jadi alur review admin: input awal kasus default `Pending`, admin memilih `Terverifikasi` / `Perlu Revisi`, sistem menampilkan rekomendasi EPID, admin bisa override EPID final, dan record tanpa EPID tetap bisa dibuka lewat `ID Registrasi Kasus`
 - [x] Ditambahkan inbox workflow: admin melihat daftar kasus pending verifikasi, sedangkan akun puskesmas melihat daftar kasus `Perlu Revisi` yang harus ditindaklanjuti
 - [x] Workflow review dipoles lagi: pencarian sekarang bisa difilter berdasarkan status verifikasi, dan jalur kerja menampilkan badge count untuk pending review / revisi agar antrian kerja lebih terlihat
+- [x] Dashboard admin sekarang punya queue verifikasi: list kasus Pending / Perlu Revisi / Terverifikasi dengan filter tab dan tombol Review langsung ke workspace admin review

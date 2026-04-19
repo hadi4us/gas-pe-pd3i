@@ -1407,6 +1407,105 @@ textarea {
   }
 }
 
+
+.pd3i-admin-queue-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.pd3i-admin-queue-card {
+  border: 1px solid #d9e6f5;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 1rem;
+}
+
+.pd3i-admin-queue-card.pending {
+  border-color: #fcd34d;
+  background: #fffdf5;
+}
+
+.pd3i-admin-queue-card.revisi {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.pd3i-admin-queue-card.verified {
+  border-color: #bbf7d0;
+  background: #f7fff9;
+}
+
+.pd3i-admin-queue-count {
+  margin-top: 0.35rem;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--pd3i-text);
+}
+
+.pd3i-admin-queue-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.pd3i-admin-queue-tab {
+  padding: 0.62rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid #d9e6f5;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--pd3i-text);
+}
+
+.pd3i-admin-queue-tab.is-active {
+  border-color: #60a5fa;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.pd3i-admin-queue-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.pd3i-admin-queue-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid #e5eef9;
+  background: #fff;
+}
+
+.pd3i-admin-queue-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pd3i-admin-queue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.pd3i-admin-queue-row small {
+  color: var(--pd3i-muted);
+  line-height: 1.45;
+}
+
 @media (max-width: 1100px) {
   .pd3i-app {
     grid-template-columns: 1fr;
@@ -1424,7 +1523,8 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .pd3i-workflow-intent-grid {
+  .pd3i-workflow-intent-grid,
+  .pd3i-admin-queue-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1457,6 +1557,7 @@ textarea {
   .pd3i-summary-grid,
   .pd3i-stepper,
   .pd3i-workflow-intent-grid,
+  .pd3i-admin-queue-grid,
   .pd3i-wizard-controls {
     grid-template-columns: 1fr;
   }

@@ -1,3 +1,95 @@
+
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderAdminVerificationQueue(stats) {
+    const wrap = document.getElementById('dashboard-admin-queue');
+    if (!wrap) return;
+
+    const queue = stats && stats.verificationQueue ? stats.verificationQueue : null;
+    const role = String((window.SESSION_USER && window.SESSION_USER.role) || '').trim().toLowerCase();
+    if (!queue || role !== 'admin') {
+      wrap.classList.add('hidden');
+      wrap.innerHTML = '';
+      return;
+    }
+
+    const counts = queue.counts || { pending: 0, perluRevisi: 0, terverifikasi: 0 };
+    const activeFilter = (window.__ADMIN_QUEUE_FILTER || 'pending');
+    const filterMap = {
+      pending: queue.pending || [],
+      perluRevisi: queue.perluRevisi || [],
+      terverifikasi: queue.terverifikasi || []
+    };
+    const rows = filterMap[activeFilter] || [];
+
+    function renderCard(label, count, cls) {
+      return `<div class="pd3i-admin-queue-card ${cls}"><div class="pd3i-helper-text font-extrabold uppercase">${label}</div><div class="pd3i-admin-queue-count">${count}</div></div>`;
+    }
+
+    function renderTab(key, label, count) {
+      const active = key === activeFilter ? ' is-active' : '';
+      return `<button type="button" class="pd3i-admin-queue-tab${active}" data-admin-queue-filter="${key}">${label} (${count})</button>`;
+    }
+
+    const listHtml = rows.length
+      ? rows.map(function(item) {
+          const safeKey = String(item.recordKey || item.recordId || item.epid || '').replace(/'/g, "\'");
+          const dx = String(document.getElementById('dashboard-dx-filter')?.value || '').trim();
+          return `<div class="pd3i-admin-queue-row">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <strong>${escapeHtml(item.nama || '-')}</strong>
+                <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml(item.puskesmas || '-')}</small>
+              </div>
+              <button type="button" class="pd3i-search-result-action" onclick="window.__openAdminQueueRecord && window.__openAdminQueueRecord('${safeKey}', '${escapeHtml(dx)}')"><i class="fas fa-folder-open"></i> Review</button>
+            </div>
+            <div class="pd3i-admin-queue-meta">
+              <span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi || '-')}</span>
+              <span class="pd3i-admin-queue-pill">${escapeHtml(item.kecamatan || '-')} / ${escapeHtml(item.kelurahan || '-')}</span>
+              ${item.epid ? `<span class="pd3i-admin-queue-pill">EPID ${escapeHtml(item.epid)}</span>` : '<span class="pd3i-admin-queue-pill">Belum ada EPID final</span>'}
+            </div>
+            ${item.catatanVerifikasi ? `<small>Catatan: ${escapeHtml(item.catatanVerifikasi)}</small>` : ''}
+          </div>`;
+        }).join('')
+      : '<div class="pd3i-helper-text mt-3">Belum ada kasus pada filter ini.</div>';
+
+    wrap.innerHTML = `
+      <div class="pd3i-card-header-row mt-4">
+        <div>
+          <div class="pd3i-card-eyebrow">Admin verification queue</div>
+          <h3 class="pd3i-card-title">Antrian review verifikasi</h3>
+        </div>
+        <span class="pd3i-badge-soft">Queue</span>
+      </div>
+      <div class="pd3i-admin-queue-grid">
+        ${renderCard('Pending review', counts.pending || 0, 'pending')}
+        ${renderCard('Perlu revisi', counts.perluRevisi || 0, 'revisi')}
+        ${renderCard('Terverifikasi', counts.terverifikasi || 0, 'verified')}
+      </div>
+      <div class="pd3i-admin-queue-toolbar">
+        ${renderTab('pending', 'Pending', counts.pending || 0)}
+        ${renderTab('perluRevisi', 'Perlu Revisi', counts.perluRevisi || 0)}
+        ${renderTab('terverifikasi', 'Terverifikasi', counts.terverifikasi || 0)}
+      </div>
+      <div class="pd3i-admin-queue-list">${listHtml}</div>
+    `;
+    wrap.classList.remove('hidden');
+
+    wrap.querySelectorAll('[data-admin-queue-filter]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        window.__ADMIN_QUEUE_FILTER = String(btn.getAttribute('data-admin-queue-filter') || 'pending');
+        renderAdminVerificationQueue(stats);
+      });
+    });
+  }
+
 <script>
 // ============================================================
 // DASHBOARD STATISTIK (Req 6.1–6.7)
