@@ -62,3 +62,4 @@
 - [x] Opsi dasar penetapan status kini mengikuti diagnosis + status secara lebih spesifik
 - [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`
 - [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin
+- [x] Regresi syntax di `app.js.html` yang memicu `Unexpected token 'if'` saat load Web App sudah diperbaiki (blok duplikat setelah load-record handler dihapus)

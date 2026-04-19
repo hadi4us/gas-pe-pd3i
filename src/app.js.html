@@ -3069,32 +3069,6 @@
           })
           .getRecordByEpid(dx, epid, SESSION_TOKEN);
       };
-                showTopAlert("Data dengan EPID tersebut tidak ditemukan.", false);
-                btnSubmit.disabled = false;
-                btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
-                return;
-              }
-
-              isEditMode = !isViewer;
-              if (editBadge) {
-                if (isViewer) editBadge.classList.add("hidden");
-                else editBadge.classList.remove("hidden");
-              }
-              if (btnCancelEdit) {
-                if (isViewer) btnCancelEdit.classList.add("hidden");
-                else btnCancelEdit.classList.remove("hidden");
-              }
-              if (isViewer) {
-                btnSubmit.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
-                btnSubmit.classList.remove("bg-yellow-600", "bg-blue-600");
-                btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
-                btnSubmit.disabled = true;
-              } else {
-                btnSubmit.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data EPID ${epid}`;
-                btnSubmit.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
-                btnSubmit.classList.add("bg-yellow-600");
-                btnSubmit.disabled = false;
-              }
 
       if (btnCancelEdit) {
         btnCancelEdit.addEventListener("click", function() {
