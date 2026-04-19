@@ -72,3 +72,5 @@
 - [x] Duplikasi blok imunisasi spesifik vs riwayat imunisasi generik dirapikan: MR/PERT kini memakai satu sumber data riwayat imunisasi generik, dan ringkasan imunisasi diubah jadi dokumentasi netral alih-alih kesimpulan kelengkapan diagnosis-spesifik
 - [x] Workflow form kini benar-benar dipisah per tahap kerja: tahap input awal menampilkan hanya section input, sedangkan verifikasi / hasil pemeriksaan / update status dibuka sebagai tahap lanjutan setelah record awal tersimpan atau existing record dibuka
 - [x] Role per tahap kerja sekarang didukung end-to-end: frontend mengenali role tahap-spesifik (inputer / verifikator / lab / updater status), dan backend menolak save jika role menyimpan tahap yang bukan kewenangannya
+- [x] Audit trail per tahap sekarang terekam ke record + AUDIT_LOG: tahap terakhir, label tahap, actor/role pengupdate, serta timestamp per tahap utama (input/verifikasi/hasil/status)
+- [x] Label role tahap-spesifik dinormalisasi agar lebih manusiawi di UI, dan TTL sesi role tahap-spesifik disetarakan dengan role operasional

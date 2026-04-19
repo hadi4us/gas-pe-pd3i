@@ -16,6 +16,20 @@ const Session_Manager = {
     const keyMap = {
       admin: "SESSION_TTL_ADMIN",
       petugas: "SESSION_TTL_PETUGAS",
+      surveilans: "SESSION_TTL_PETUGAS",
+      editor: "SESSION_TTL_PETUGAS",
+      koordinator: "SESSION_TTL_PETUGAS",
+      inputer: "SESSION_TTL_PETUGAS",
+      entry: "SESSION_TTL_PETUGAS",
+      registrasi: "SESSION_TTL_PETUGAS",
+      verifikator: "SESSION_TTL_PETUGAS",
+      verifier: "SESSION_TTL_PETUGAS",
+      epid: "SESSION_TTL_PETUGAS",
+      lab: "SESSION_TTL_PETUGAS",
+      laboratorium: "SESSION_TTL_PETUGAS",
+      status: "SESSION_TTL_PETUGAS",
+      followup: "SESSION_TTL_PETUGAS",
+      tindaklanjut: "SESSION_TTL_PETUGAS",
       viewer: "SESSION_TTL_VIEWER"
     };
     const r = String(role || "").toLowerCase();
@@ -27,6 +41,9 @@ const Session_Manager = {
       } catch (e) {
         // Config_Manager belum tersedia, gunakan default
       }
+    }
+    if (["surveilans", "editor", "koordinator", "inputer", "entry", "registrasi", "verifikator", "verifier", "epid", "lab", "laboratorium", "status", "followup", "tindaklanjut"].includes(r)) {
+      return defaults.petugas;
     }
     return defaults[r] || 1800;
   },

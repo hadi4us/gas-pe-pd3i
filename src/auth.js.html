@@ -89,11 +89,12 @@
 
         const role = String((user && user.role) || "").trim().toLowerCase();
         const adminMenuWrap = document.getElementById("admin-menu-wrap");
+        const roleLabel = (typeof getRoleDisplayLabel === "function") ? getRoleDisplayLabel(role) : role;
 
         if (userBadge) userBadge.classList.remove("hidden");
         if (userBadgeText) {
           const name = String((user && (user.nama || user.username)) || "");
-          userBadgeText.textContent = role ? `${name} • ${role}` : name;
+          userBadgeText.textContent = roleLabel ? `${name} • ${roleLabel}` : name;
         }
 
         if (adminMenuWrap) {

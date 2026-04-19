@@ -12,6 +12,8 @@ const AUDIT_HEADERS = [
   "DX",
   "Nomor EPID",
   "Aksi",
+  "Tahap Workflow",
+  "Label Tahap Workflow",
   "Ringkasan Perubahan"
 ];
 
@@ -28,15 +30,22 @@ function _getOrCreateAuditSheet_() {
     sheet = ss.insertSheet(AUDIT_SHEET_NAME);
     sheet.appendRow(AUDIT_HEADERS);
 
-    // Req 10.6: proteksi sheet agar tidak diedit sembarangan
-    // Gunakan setWarningOnly(true) karena GAS tidak bisa set editor ke akun spesifik
-    // tanpa OAuth scope tambahan (https://developers.google.com/apps-script/reference/spreadsheet/protection)
     try {
       sheet.protect()
         .setDescription("AUDIT_LOG — hanya admin")
         .setWarningOnly(true);
     } catch (e) {
       console.error("Audit: gagal menerapkan proteksi sheet AUDIT_LOG:", e);
+    }
+  } else {
+    try {
+      const headers = getTrimmedHeaders_(sheet);
+      const missing = AUDIT_HEADERS.filter(function(h) { return headers.indexOf(h) === -1; });
+      if (missing.length) {
+        sheet.getRange(1, headers.length + 1, 1, missing.length).setValues([missing]);
+      }
+    } catch (e) {
+      console.error("Audit: gagal sinkronkan header AUDIT_LOG:", e);
     }
   }
 
@@ -71,12 +80,14 @@ const Audit_Logger = {
    * @param {string} aksi   - "INSERT" atau "UPDATE"
    * @param {Object|null} diff - untuk UPDATE: { fieldName: { old: val, new: val } }
    */
-  logChange: function (user, dx, epid, aksi, diff) {
+  logChange: function (user, dx, epid, aksi, diff, meta) {
     try {
       const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
       const timestamp = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
       const username = user && user.username ? String(user.username) : "";
       const role = user && user.role ? String(user.role) : "";
+      const workflowStage = meta && meta.workflowStage ? String(meta.workflowStage) : "";
+      const workflowStageLabel = meta && meta.workflowStageLabel ? String(meta.workflowStageLabel) : "";
       const ringkasan = (aksi === "UPDATE" && diff && typeof diff === "object")
         ? JSON.stringify(diff)
         : "";
@@ -88,6 +99,8 @@ const Audit_Logger = {
         String(dx || ""),
         String(epid || ""),
         String(aksi || ""),
+        workflowStage,
+        workflowStageLabel,
         ringkasan
       ]);
     } catch (e) {
@@ -112,9 +125,11 @@ const Audit_Logger = {
         timestamp,
         username,
         role,
-        "",   // DX tidak relevan untuk LOGOUT
-        "",   // EPID tidak relevan untuk LOGOUT
+        "",
+        "",
         "LOGOUT",
+        "",
+        "",
         ""
       ]);
     } catch (e) {
@@ -128,7 +143,7 @@ const Audit_Logger = {
       const timestamp = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
       const username = user && user.username ? String(user.username) : "";
       const role = user && user.role ? String(user.role) : "";
-      _appendAuditRow_([timestamp, username, role, "", "", "LOGIN", ""]);
+      _appendAuditRow_([timestamp, username, role, "", "", "LOGIN", "", "", ""]);
     } catch (e) {
       console.error("Audit.logLogin: error tidak terduga:", e);
     }
@@ -138,7 +153,7 @@ const Audit_Logger = {
     try {
       const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
       const timestamp = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd HH:mm:ss");
-      _appendAuditRow_([timestamp, String(username || ""), "", "", "", "LOGIN_FAIL", String(reason || "")]);
+      _appendAuditRow_([timestamp, String(username || ""), "", "", "", "LOGIN_FAIL", "", "", String(reason || "")]);
     } catch (e) {
       console.error("Audit.logAuthFailed: error tidak terduga:", e);
     }
@@ -184,6 +199,8 @@ function getAuditLog(dx, epid, token) {
     const idxDx        = headers.indexOf("DX");
     const idxEpid      = headers.indexOf("Nomor EPID");
     const idxAksi      = headers.indexOf("Aksi");
+    const idxWorkflowStage = headers.indexOf("Tahap Workflow");
+    const idxWorkflowStageLabel = headers.indexOf("Label Tahap Workflow");
     const idxRingkasan = headers.indexOf("Ringkasan Perubahan");
 
     const epidFilter = String(epid || "").trim().toLowerCase();
@@ -205,6 +222,8 @@ function getAuditLog(dx, epid, token) {
         dx:                 idxDx        !== -1 ? String(row[idxDx]        || "") : "",
         epid:               idxEpid      !== -1 ? String(row[idxEpid]      || "") : "",
         aksi:               idxAksi      !== -1 ? String(row[idxAksi]      || "") : "",
+        workflowStage:      idxWorkflowStage !== -1 ? String(row[idxWorkflowStage] || "") : "",
+        workflowStageLabel: idxWorkflowStageLabel !== -1 ? String(row[idxWorkflowStageLabel] || "") : "",
         ringkasanPerubahan: idxRingkasan !== -1 ? String(row[idxRingkasan] || "") : ""
       });
     }

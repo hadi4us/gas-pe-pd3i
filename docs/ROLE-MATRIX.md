@@ -63,6 +63,7 @@ Catatan:
 - role tahap-spesifik tetap bisa login dan melihat record
 - tetapi backend akan menolak save jika role mencoba menyimpan tahap yang bukan kewenangannya
 - tahap verifikasi / hasil pemeriksaan / status hanya boleh untuk **record existing** (setelah input awal tersimpan)
+- setiap save tahap sekarang meninggalkan jejak audit yang lebih eksplisit: stage id, label stage, actor, role, dan timestamp per tahap
 
 ---
 

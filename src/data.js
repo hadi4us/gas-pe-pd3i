@@ -437,6 +437,7 @@ function saveDxRecord_(dx, data) {
   try {
     const aksi = rowIndex !== -1 ? "UPDATE" : "INSERT";
     const user = (data && data.__user) ? data.__user : { username: "system", role: "system" };
+    const auditMeta = (data && data.__auditMeta) ? data.__auditMeta : null;
     let diff = null;
     if (aksi === "UPDATE") {
       diff = {};
@@ -450,7 +451,7 @@ function saveDxRecord_(dx, data) {
       });
       if (Object.keys(diff).length === 0) diff = null;
     }
-    Audit_Logger.logChange(user, dx, epidValue, aksi, diff);
+    Audit_Logger.logChange(user, dx, epidValue, aksi, diff, auditMeta);
   } catch (e) {
     console.error("saveDxRecord_: gagal mencatat audit log:", e);
   }

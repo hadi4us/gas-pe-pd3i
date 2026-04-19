@@ -407,6 +407,8 @@ Gunakan akun contoh dengan role berbeda di `REF_USER`:
 - Tombol submit hanya aktif pada stage yang menjadi kewenangan role.
 - Backend menolak save jika role menyimpan stage di luar kewenangannya.
 - Tahap selain input tetap mensyaratkan record existing / EPID sudah ada.
+- Setelah save berhasil, field metadata tahap di raw sheet ikut terisi (stage terakhir, actor, role, timestamp tahap terkait).
+- AUDIT_LOG mencatat `Tahap Workflow` dan `Label Tahap Workflow` untuk INSERT/UPDATE terkait record.
 
 ### TC-WF-05 — Search result workflow badges
 - cari data existing

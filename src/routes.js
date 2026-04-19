@@ -627,6 +627,68 @@ function _getWritableWorkflowStagesForRole_(role) {
   return [];
 }
 
+function _getWorkflowStageLabel_(workflowStage) {
+  const normalized = _normalizeWorkflowStage_(workflowStage) || "section-pelapor";
+  const labels = {
+    "section-pelapor": "Input awal",
+    "section-verifikasi": "Verifikasi EPID",
+    "section-sampel": "Hasil pemeriksaan",
+    "section-status": "Update status"
+  };
+  return labels[normalized] || normalized;
+}
+
+function _applyWorkflowStageAuditFields_(data, sess, workflowStage) {
+  data = data || {};
+  sess = sess || {};
+  const user = sess.user || {};
+  const normalizedStage = _normalizeWorkflowStage_(workflowStage) || "section-pelapor";
+  const stageLabel = _getWorkflowStageLabel_(normalizedStage);
+  const actorName = String(user.nama || user.username || "").trim() || "unknown";
+  const actorRole = String(user.role || "").trim().toLowerCase() || "unknown";
+  const now = new Date();
+
+  data["Tahap Workflow Terakhir"] = normalizedStage;
+  data["Label Tahap Workflow Terakhir"] = stageLabel;
+  data["Diupdate Oleh Tahap Terakhir"] = actorName;
+  data["Role Pengupdate Tahap Terakhir"] = actorRole;
+  data["Waktu Update Tahap Terakhir"] = now;
+
+  const stageFieldMap = {
+    "section-pelapor": {
+      by: "Input Awal Diisi Oleh",
+      role: "Role Pengisi Input Awal",
+      at: "Waktu Input Awal"
+    },
+    "section-verifikasi": {
+      by: "Verifikasi EPID Diupdate Oleh",
+      role: "Role Pengupdate Verifikasi EPID",
+      at: "Waktu Update Verifikasi EPID"
+    },
+    "section-sampel": {
+      by: "Hasil Pemeriksaan Diupdate Oleh",
+      role: "Role Pengupdate Hasil Pemeriksaan",
+      at: "Waktu Update Hasil Pemeriksaan"
+    },
+    "section-status": {
+      by: "Status Kasus Diupdate Oleh",
+      role: "Role Pengupdate Status Kasus",
+      at: "Waktu Update Status Kasus"
+    }
+  };
+
+  const mapping = stageFieldMap[normalizedStage];
+  if (mapping) {
+    data[mapping.by] = actorName;
+    data[mapping.role] = actorRole;
+    data[mapping.at] = now;
+  }
+
+  data.__user = { username: String(user.username || "").trim(), role: actorRole, nama: actorName };
+  data.__auditMeta = { workflowStage: normalizedStage, workflowStageLabel: stageLabel };
+  return data;
+}
+
 function _requireWriteAccessFromSession_(sess, workflowStage, data) {
   if (!sess || !sess.user) throw new Error("Sesi tidak valid.");
   const role = String(sess.user.role || "").trim().toLowerCase();
@@ -753,6 +815,8 @@ function saveFormPayload_(data) {
   if (!dx) {
     return { status: "error", message: "dx wajib diisi." };
   }
+
+  data = _applyWorkflowStageAuditFields_(data, sess, data.__workflowStage);
 
   const saved = saveDxRecord_(dx, data);
   const printUrl = safeGetPdfPrintUrl_(dx, saved.epid, token);

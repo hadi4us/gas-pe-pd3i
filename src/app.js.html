@@ -1867,6 +1867,10 @@
     const viewerMode = !roleCaps.canWrite && roleCaps.canView;
     const latestStatus = getLatestStatusFromTimeline() || statusKasus;
     const nextStatusSummary = getNextAllowedStatusesSummary(dx, latestStatus);
+    const lastWorkflowStageLabel = getFieldValueSafe("Label Tahap Workflow Terakhir") || getFieldValueSafe("Tahap Workflow Terakhir") || "Belum ada jejak tahap";
+    const lastWorkflowActor = getFieldValueSafe("Diupdate Oleh Tahap Terakhir") || "";
+    const lastWorkflowRole = getFieldValueSafe("Role Pengupdate Tahap Terakhir") || "";
+    const lastWorkflowSummary = [lastWorkflowStageLabel, lastWorkflowActor ? `oleh ${lastWorkflowActor}` : "", lastWorkflowRole ? `(${getRoleDisplayLabel(lastWorkflowRole)})` : ""].filter(Boolean).join(" ");
 
     let issueCount = 0;
     try {
@@ -1890,6 +1894,7 @@
       authText = `Sesi aktif • timeout server ±${minutes} menit`;
     }
     setSummaryText("summary-auth-session", authText);
+    setSummaryText("summary-last-workflow-stage", lastWorkflowSummary || "Belum ada jejak tahap");
     setSummaryText("summary-status-kasus", statusKasus);
     setSummaryText("summary-next-statuses", nextStatusSummary);
     setSummaryText("summary-verifikasi-epid", statusVerifikasi);
@@ -2293,6 +2298,46 @@
     return getWorkflowStepDefinitions().map(function(step) { return step.id; });
   }
 
+  function getRoleDisplayLabel(role) {
+    const normalized = normalizeUiRole(role);
+    const labelMap = {
+      admin: "Admin",
+      petugas: "Petugas",
+      surveilans: "Petugas",
+      editor: "Petugas",
+      koordinator: "Koordinator",
+      viewer: "Viewer",
+      readonly: "Viewer",
+      read_only: "Viewer",
+      "read-only": "Viewer",
+      inputer: "Inputer",
+      entry: "Inputer",
+      registrasi: "Inputer",
+      operator_input: "Inputer",
+      "operator-input": "Inputer",
+      verifikator: "Verifikator",
+      verifier: "Verifikator",
+      epid: "Verifikator",
+      validator_epid: "Verifikator",
+      "validator-epid": "Verifikator",
+      lab: "Petugas Lab",
+      laboratorium: "Petugas Lab",
+      analislab: "Petugas Lab",
+      analis_lab: "Petugas Lab",
+      "analis-lab": "Petugas Lab",
+      status: "Updater Status",
+      updater_status: "Updater Status",
+      "updater-status": "Updater Status",
+      followup: "Updater Status",
+      follow_up: "Updater Status",
+      "follow-up": "Updater Status",
+      tindaklanjut: "Updater Status",
+      tindak_lanjut: "Updater Status",
+      "tindak-lanjut": "Updater Status"
+    };
+    return labelMap[normalized] || (role ? String(role) : "Tidak diketahui");
+  }
+
   function getScopedWorkflowWriteStagesForRole(role) {
     const normalized = normalizeUiRole(role);
     const allStages = getAllWorkflowStageIds();
@@ -2330,13 +2375,13 @@
       return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: allStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
     if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
-      return { roleLabel: role === "koordinator" ? "Koordinator" : "Petugas", canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • bisa input dan update semua tahap operasional, tanpa aksi admin" };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • bisa input dan update semua tahap operasional, tanpa aksi admin" };
     }
     if (writeStages.length === 1) {
-      return { roleLabel: role || "Role terbatas", canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${role} • hanya bisa ubah tahap ${stageSummary}` };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
     }
     if (role) {
-      return { roleLabel: role, canView: true, canWrite: canWrite, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: canWrite ? `${role} • akses operasional standar` : `${role} • hanya lihat data` };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: canWrite, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: canWrite ? `${getRoleDisplayLabel(role)} • akses operasional standar` : `${getRoleDisplayLabel(role)} • hanya lihat data` };
     }
     return { roleLabel: "Tidak diketahui", canView: false, canWrite: false, canAdmin: false, viewStages: [], writeStages: [], summary: "Belum ada sesi" };
   }
