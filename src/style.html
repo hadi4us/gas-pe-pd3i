@@ -599,6 +599,27 @@ body.modal-open {
   flex-direction: column;
   gap: 0.18rem;
   min-width: 0;
+  flex: 1;
+}
+
+.pd3i-workflow-intent-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 0.74rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.pd3i-workflow-intent-card.is-active .pd3i-workflow-intent-count {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .pd3i-workflow-intent-copy strong {

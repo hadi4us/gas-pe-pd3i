@@ -734,17 +734,18 @@ function searchRecords(dx, filters, token) {
     const query = filters || {};
     const qEpid = String(query.epid || "").trim().toLowerCase();
     const qNama = String(query.nama || "").trim().toLowerCase();
-    const qTglLahir = String(query.tanggalLahir || "").trim();
+    const qTglLahir = String(query.tglLahir || query.tanggalLahir || "").trim();
     const qOrtu = String(query.orangTua || "").trim().toLowerCase();
     const qAlamat = String(query.alamat || "").trim().toLowerCase();
     const qKelurahan = String(query.kelurahan || "").trim().toLowerCase();
+    const qStatusVerif = String(query.statusVerifikasi || "").trim().toLowerCase();
     const sortBy = String(query.sortBy || "updated_desc").trim().toLowerCase();
 
     // Req 9.1: pagination params
     const page = Math.max(1, parseInt(query.page || 1, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize || 30, 10) || 30));
 
-    if (!qEpid && !qNama && !qTglLahir && !qOrtu && !qAlamat && !qKelurahan) {
+    if (!qEpid && !qNama && !qTglLahir && !qOrtu && !qAlamat && !qKelurahan && !qStatusVerif) {
       return { results: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
     }
 
@@ -814,8 +815,9 @@ function searchRecords(dx, filters, token) {
       const matchOrtu = !qOrtu || orangTua.toLowerCase().includes(qOrtu);
       const matchAlamat = !qAlamat || alamat.toLowerCase().includes(qAlamat);
       const matchKelurahan = !qKelurahan || kelurahan.toLowerCase().includes(qKelurahan);
+      const matchStatusVerif = !qStatusVerif || statusVerif.toLowerCase() === qStatusVerif;
 
-      if (matchEpid && matchNama && matchTglLahir && matchOrtu && matchAlamat && matchKelurahan) {
+      if (matchEpid && matchNama && matchTglLahir && matchOrtu && matchAlamat && matchKelurahan && matchStatusVerif) {
         allResults.push({
           recordId: recordId,
           recordKey: recordId || epid,

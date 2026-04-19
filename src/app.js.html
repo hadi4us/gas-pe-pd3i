@@ -2027,7 +2027,7 @@
     if (titleEl) titleEl.textContent = cfg.title;
     if (badgeEl) badgeEl.textContent = cfg.badge;
     if (helperEl) helperEl.textContent = cfg.helper;
-    if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
+    if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper + ' Gunakan filter status verifikasi bila perlu.';
 
     if (!opts.skipStageSync && normalized === "section-pelapor") {
       updateFormStepperState("section-pelapor");
@@ -2139,6 +2139,22 @@
     const pendingVerification = (data && data.pendingVerification) || [];
     const revisionQueue = (data && data.revisionQueue) || [];
     const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0 };
+    const caps = getRoleCapabilities(SESSION_USER);
+    const verifCountEl = document.getElementById('intent-count-section-verifikasi');
+    const pelaporCountEl = document.getElementById('intent-count-section-pelapor');
+    const sampelCountEl = document.getElementById('intent-count-section-sampel');
+    const statusCountEl = document.getElementById('intent-count-section-status');
+
+    if (verifCountEl) {
+      verifCountEl.textContent = String(summary.pendingVerification || 0);
+      verifCountEl.classList.toggle('hidden', !(summary.pendingVerification > 0 && normalizeUiRole(SESSION_USER && SESSION_USER.role) === 'admin'));
+    }
+    if (pelaporCountEl) {
+      pelaporCountEl.textContent = String(summary.revisionQueue || 0);
+      pelaporCountEl.classList.toggle('hidden', !(summary.revisionQueue > 0 && normalizeUiRole(SESSION_USER && SESSION_USER.role) !== 'admin'));
+    }
+    if (sampelCountEl) sampelCountEl.classList.add('hidden');
+    if (statusCountEl) statusCountEl.classList.add('hidden');
 
     if (!pendingVerification.length && !revisionQueue.length) {
       box.classList.add('hidden');
@@ -2178,6 +2194,10 @@
     const box = document.getElementById('workflow-inbox');
     if (!box) return;
     if (!dx || !safeGsRun() || !SESSION_TOKEN) {
+      ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
       box.classList.add('hidden');
       box.innerHTML = '';
       return;

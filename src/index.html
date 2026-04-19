@@ -188,6 +188,7 @@
                 <strong>Input kasus baru</strong>
                 <small>Mulai dari form kosong untuk entri awal kasus</small>
               </span>
+              <span id="intent-count-section-pelapor" class="pd3i-workflow-intent-count hidden">0</span>
             </button>
             <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-verifikasi">
               <span class="pd3i-workflow-intent-index">2</span>
@@ -195,6 +196,7 @@
                 <strong>Verifikasi data existing</strong>
                 <small>Cari dulu record lama, lalu buka tahap verifikasi EPID</small>
               </span>
+              <span id="intent-count-section-verifikasi" class="pd3i-workflow-intent-count hidden">0</span>
             </button>
             <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-sampel">
               <span class="pd3i-workflow-intent-index">3</span>
@@ -202,6 +204,7 @@
                 <strong>Input hasil pemeriksaan</strong>
                 <small>Cari record pasien, lalu isi hasil pemeriksaan sampel</small>
               </span>
+              <span id="intent-count-section-sampel" class="pd3i-workflow-intent-count hidden">0</span>
             </button>
             <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-status">
               <span class="pd3i-workflow-intent-index">4</span>
@@ -209,6 +212,7 @@
                 <strong>Update status pasien</strong>
                 <small>Cari record existing, lalu fokus ke perubahan status kasus</small>
               </span>
+              <span id="intent-count-section-status" class="pd3i-workflow-intent-count hidden">0</span>
             </button>
           </div>
           <div id="workflow-search-helper" class="pd3i-helper-text mt-3">Pilih jalur kerja dulu. Input baru dimulai dari form, sedangkan verifikasi / hasil pemeriksaan / update status dimulai dari pencarian record existing.</div>
@@ -216,12 +220,18 @@
 
           <div id="search-container" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID">
+              <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID / ID Registrasi Kasus">
               <input type="text" id="search-nama" class="pd3i-shell-input" placeholder="Nama pasien">
               <input type="date" id="search-tgl-lahir" class="pd3i-shell-input">
               <input type="text" id="search-orang-tua" class="pd3i-shell-input" placeholder="Nama orang tua / wali">
               <input type="text" id="search-alamat" class="pd3i-shell-input" placeholder="Alamat / jalan / RT-RW">
               <input type="text" id="search-kelurahan" class="pd3i-shell-input" placeholder="Kelurahan / desa">
+              <select id="search-status-verifikasi" class="pd3i-shell-input">
+                <option value="">Semua status verifikasi</option>
+                <option value="Pending">Pending</option>
+                <option value="Terverifikasi">Terverifikasi</option>
+                <option value="Perlu Revisi">Perlu Revisi</option>
+              </select>
             </div>
             <div class="pd3i-search-actions">
               <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
