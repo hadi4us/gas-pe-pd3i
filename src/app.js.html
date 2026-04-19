@@ -1932,6 +1932,10 @@
       if (target === activeId) link.classList.add("is-active");
       else link.classList.remove("is-active");
     });
+    const dashboardBtn = document.getElementById('btn-sidebar-dashboard');
+    if (dashboardBtn) {
+      dashboardBtn.classList.toggle('is-active', activeId === 'section-dashboard');
+    }
   }
 
   let WORKFLOW_SEARCH_INTENT = "section-pelapor";
@@ -3491,7 +3495,7 @@
       });
 
       window.addEventListener("scroll", function() {
-        const sectionIds = ["section-overview", "section-search-shell", "section-pelapor", "section-pasien", "section-specific", "section-verifikasi", "section-sampel", "section-status"];
+        const sectionIds = ["section-overview", "section-search-shell", "section-dashboard", "section-pelapor", "section-pasien", "section-specific", "section-verifikasi", "section-sampel", "section-status"];
         let currentId = "section-overview";
         sectionIds.forEach(function(id) {
           const el = document.getElementById(id);
@@ -3683,9 +3687,8 @@
           btnDashboard.classList.remove("hidden");
           btnDashboard.addEventListener("click", function () {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
-            const modal = document.getElementById("dashboard-modal");
-            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-            if (typeof initDashboard === "function") initDashboard();
+            if (typeof openDashboardSection === "function") openDashboardSection({ autoLoad: false });
+            else if (typeof initDashboard === "function") initDashboard();
           });
         }
       }
@@ -3697,9 +3700,8 @@
             showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
             return;
           }
-          const modal = document.getElementById("dashboard-modal");
-          if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-          if (typeof initDashboard === "function") initDashboard();
+          if (typeof openDashboardSection === "function") openDashboardSection({ autoLoad: false });
+          else if (typeof initDashboard === "function") initDashboard();
         });
       }
 

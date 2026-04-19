@@ -91,3 +91,4 @@
 - [x] Audit ulang batch list kasus + dashboard: include script tervalidasi, render utama lolos `node --check`, dan output label/list diperketat dengan `escapeHtml` agar data nama/alamat/status tidak gampang merusak tampilan
 - [x] UX role untuk dashboard dan list kasus dipertegas: menu sidebar dashboard kini diselaraskan dengan akses admin-only, sementara render list kasus diberi fallback lokal + pesan error render agar tidak blank diam-diam saat helper global bermasalah
 - [x] Pemilihan diagnosa sekarang difokuskan hanya untuk mode input kasus baru; pencarian / inbox workflow bisa berjalan lintas semua diagnosa, hasil pencarian menampilkan kode DX, dan record existing akan otomatis memuat diagnosa saat dibuka
+- [x] Dashboard statistik diubah dari modal/pop-up menjadi section halaman penuh di HTML utama; klik sidebar atau menu admin sekarang mengarahkan ke workspace dashboard di page yang sama

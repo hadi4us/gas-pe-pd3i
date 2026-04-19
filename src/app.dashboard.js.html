@@ -328,6 +328,20 @@
 // DASHBOARD STATISTIK (Req 6.1–6.7)
 // ============================================================
 
+  function openDashboardSection(options) {
+    const opts = options || {};
+    const section = document.getElementById('section-dashboard');
+    if (section) section.classList.remove('hidden');
+    if (typeof initDashboard === 'function') initDashboard();
+    if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('section-dashboard');
+    if (section && opts.scroll !== false) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    const content = document.getElementById('dashboard-content');
+    const shouldAutoLoad = opts.autoLoad === true || (opts.autoLoad !== false && content && !content.dataset.loaded);
+    if (shouldAutoLoad) loadDashboard();
+  }
+
   function initDashboard() {
     // Isi dropdown tahun (5 tahun terakhir)
     const tahunEl = document.getElementById("dashboard-tahun");
@@ -347,12 +361,13 @@
       btnLoad.addEventListener("click", loadDashboard);
     }
 
-    const btnClose = document.getElementById("btn-close-dashboard");
-    if (btnClose && !btnClose.dataset.bound) {
-      btnClose.dataset.bound = "1";
-      btnClose.addEventListener("click", function () {
-        const modal = document.getElementById("dashboard-modal");
-        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    const btnBack = document.getElementById("btn-dashboard-back-to-workspace");
+    if (btnBack && !btnBack.dataset.bound) {
+      btnBack.dataset.bound = "1";
+      btnBack.addEventListener("click", function () {
+        const target = document.getElementById('section-overview');
+        if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('section-overview');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
 
@@ -360,11 +375,9 @@
     if (btnDashboard && !btnDashboard.dataset.bound) {
       btnDashboard.dataset.bound = "1";
       btnDashboard.addEventListener("click", function () {
-        const modal = document.getElementById("dashboard-modal");
-        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-        // Tutup dropdown admin
         const dd = document.getElementById("admin-menu-dropdown");
         if (dd) dd.classList.add("hidden");
+        openDashboardSection({ autoLoad: false });
       });
     }
 
@@ -382,6 +395,9 @@
     const content = document.getElementById("dashboard-content");
     if (!content) return;
 
+    const section = document.getElementById('section-dashboard');
+    if (section) section.classList.remove('hidden');
+    content.dataset.loaded = '';
     content.innerHTML = '<div class="text-center py-8 text-slate-400"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...</div>';
 
     if (!safeGsRun() || !SESSION_TOKEN) {
@@ -402,6 +418,7 @@
     if (!content) return;
 
     if (!stats || stats.status === "error") {
+      content.dataset.loaded = '';
       content.innerHTML = '<div class="text-center py-8 text-red-500 font-semibold">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
       return;
     }
@@ -723,6 +740,7 @@
       </div>`;
     }
 
+    content.dataset.loaded = '1';
     content.innerHTML = html;
     renderHotspotMap(stats, dx, tahun);
     renderAdminVerificationQueue(stats, dx);

@@ -571,15 +571,18 @@
     </div>
   </div>
 
-  <!-- Dashboard Modal (Req 6.1–6.7) -->
-  <div id="dashboard-modal" class="fixed inset-0 z-[110] hidden items-center justify-center modal-backdrop">
-    <div class="w-full max-w-4xl bg-white rounded-2xl p-6 md:p-8 modal-card mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-          <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik Kasus
-        </h2>
-        <button type="button" id="btn-close-dashboard" class="text-slate-400 hover:text-slate-600 text-xl">
-          <i class="fas fa-xmark"></i>
+  <section id="section-dashboard" class="hidden mt-6">
+    <div class="pd3i-shell-card">
+      <div class="pd3i-card-header-row mb-4">
+        <div>
+          <div class="pd3i-card-eyebrow">Dashboard statistik</div>
+          <h2 class="pd3i-card-title flex items-center gap-2">
+            <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik Kasus
+          </h2>
+          <div class="pd3i-helper-text mt-2">Workspace statistik sekarang tampil sebagai halaman/section penuh, bukan pop-up.</div>
+        </div>
+        <button type="button" id="btn-dashboard-back-to-workspace" class="pd3i-ghost-button pd3i-inline-button">
+          <i class="fas fa-arrow-up"></i> Kembali ke workspace
         </button>
       </div>
       <div class="flex flex-wrap gap-3 mb-5">
@@ -597,7 +600,7 @@
       </div>
       <div id="dashboard-content" class="text-sm text-slate-500 text-center py-8">Pilih DX dan tahun, lalu klik "Muat Data".</div>
     </div>
-  </div>
+  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
