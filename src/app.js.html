@@ -3904,20 +3904,20 @@
             : "Tidak ada sampel";
           html += `<div class="pd3i-search-result-card">
             <div class="min-w-0 flex-1">
-              <div class="font-extrabold text-slate-800 text-sm md:text-base">${item.nama || "-"}</div>
+              <div class="font-extrabold text-slate-800 text-sm md:text-base">${escapeHtml(item.nama || "-")}</div>
               <div class="pd3i-search-result-meta">
-                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${item.epid || item.recordId || "-"}</span>
-                <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${item.tanggalLahir || "-"}</span>
-                <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${item.kelurahan || "-"}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${escapeHtml(item.epid || item.recordId || "-")}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${escapeHtml(item.tanggalLahir || "-")}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${escapeHtml(item.kelurahan || "-")}</span>
               </div>
               <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
-                <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${statusKasus}</span>
-                <span class="pd3i-search-result-badge is-verify"><i class="fas fa-id-card-clip"></i> ${statusVerifikasi}</span>
-                <span class="pd3i-search-result-badge is-sample"><i class="fas fa-vials"></i> ${sampelState}</span>
+                <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${escapeHtml(statusKasus)}</span>
+                <span class="pd3i-search-result-badge is-verify"><i class="fas fa-id-card-clip"></i> ${escapeHtml(statusVerifikasi)}</span>
+                <span class="pd3i-search-result-badge is-sample"><i class="fas fa-vials"></i> ${escapeHtml(sampelState)}</span>
               </div>
               <div class="pd3i-search-result-copy mt-2">
-                ${item.orangTua ? `Ortu/Wali: <strong>${item.orangTua}</strong><br>` : ""}
-                ${item.alamat ? `Alamat: ${item.alamat}` : "Alamat belum tersedia"}
+                ${item.orangTua ? `Ortu/Wali: <strong>${escapeHtml(item.orangTua)}</strong><br>` : ""}
+                ${item.alamat ? `Alamat: ${escapeHtml(item.alamat)}` : "Alamat belum tersedia"}
               </div>
             </div>
             <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${dx}')">

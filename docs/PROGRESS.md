@@ -88,3 +88,4 @@
 - [x] Dashboard statistik sekarang punya hotspot map berbasis koordinat kasus: cluster titik koordinat, ranking hotspot teratas, dan ringkasan kasus bertitik koordinat vs data yang belum punya koordinat
 - [x] Dashboard statistik sekarang mendukung drill-down interaktif: klik kecamatan/kelurahan/RW/RT-RW atau hotspot untuk memuat daftar kasus terkait, lalu buka record langsung dari panel detail dashboard
 - [x] Susunan field semua diagnosa ditata ulang agar lebih konsisten dengan judul pengelompokan; section diagnosis sekarang juga dirender sebagai blok terpisah supaya field tidak terasa campur antar-subbagian
+- [x] Audit ulang batch list kasus + dashboard: include script tervalidasi, render utama lolos `node --check`, dan output label/list diperketat dengan `escapeHtml` agar data nama/alamat/status tidak gampang merusak tampilan
