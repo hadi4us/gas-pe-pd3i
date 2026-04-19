@@ -250,8 +250,6 @@ function _escapeCsvValue_(val) {
  * } | {status: string, message: string}}
  */
 function getDashboardStats(dx, tahun, token) {
-  const session = _getDashboardSession_(token);
-  _assertCanViewDashboardSession_(session);
   // Validasi sesi
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
@@ -635,8 +633,6 @@ function getDashboardStats(dx, tahun, token) {
 }
 
 function getDashboardDrilldown(dx, tahun, drilldown, token) {
-  const session = _getDashboardSession_(token);
-  _assertCanViewDashboardSession_(session);
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
     return { status: 'error', message: sess.message || 'Sesi tidak valid.' };
