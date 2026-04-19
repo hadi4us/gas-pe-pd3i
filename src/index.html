@@ -130,11 +130,11 @@
 
       <main class="pd3i-content">
         <section id="section-overview" class="pd3i-overview-grid">
-          <div class="pd3i-hero-card">
-            <div class="pd3i-hero-badge">Workspace Input Kasus</div>
-            <h2 class="pd3i-hero-title">Satu shell untuk input, edit, validasi, dan monitoring kasus PD3I</h2>
+          <div id="overview-hero-card" class="pd3i-hero-card">
+            <div class="pd3i-hero-badge">Workspace Form PD3I</div>
+            <h2 class="pd3i-hero-title">Satu shell kerja untuk input, review, update status, dan monitoring kasus PD3I</h2>
             <p class="pd3i-hero-copy">
-              Gunakan diagnosis selector untuk mulai input, lalu lanjutkan pengisian form secara bertahap. Search/edit dan panel ringkasan selalu tersedia supaya alur kerja lebih jelas.
+              Gunakan sidebar sebagai pengarah workspace. Input kasus baru dimulai dari menu <strong>Input Kasus</strong>, sedangkan verifikasi, hasil sampel, dan update status berjalan dari record existing.
             </p>
             <div class="pd3i-hero-metrics">
               <div class="pd3i-mini-stat">
@@ -151,12 +151,14 @@
               </div>
             </div>
           </div>
+        </section>
 
-          <div id="diagnosis-selector-card" class="pd3i-shell-card">
+        <section id="section-input-launcher" class="pd3i-shell-card hidden mt-6">
+          <div id="diagnosis-selector-card" class="pd3i-input-launcher-card">
             <div class="pd3i-card-header-row">
               <div>
-                <div class="pd3i-card-eyebrow">1. Pilih diagnosis</div>
-                <h3 class="pd3i-card-title">Jenis penyakit / kasus</h3>
+                <div class="pd3i-card-eyebrow">Input kasus baru</div>
+                <h3 class="pd3i-card-title">Pilih diagnosis / jenis penyakit</h3>
               </div>
               <span id="diagnosis-selector-badge" class="pd3i-badge-soft">Mandatory</span>
             </div>
@@ -169,7 +171,7 @@
               <option value="TN">Tetanus Neonatorum (TN)</option>
               <option value="AFP">Lumpuh Layuh Akut (AFP)</option>
             </select>
-            <div id="diagnosis-selector-helper" class="pd3i-helper-text">Pemilihan diagnosis akan memuat blok form spesifik dan rule validasi terkait.</div>
+            <div id="diagnosis-selector-helper" class="pd3i-helper-text">Pemilihan diagnosis hanya diperlukan untuk mulai input kasus baru dan memuat blok form spesifik yang sesuai.</div>
           </div>
         </section>
 

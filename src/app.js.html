@@ -2050,6 +2050,7 @@
     ACTIVE_SIDEBAR_WORKSPACE = normalized;
 
     const overviewSection = document.getElementById('section-overview');
+    const inputLauncherSection = document.getElementById('section-input-launcher');
     const searchSection = document.getElementById('section-search-shell');
     const form = document.getElementById('dynamic-form');
     const dashboardSection = document.getElementById('section-dashboard');
@@ -2060,7 +2061,8 @@
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
-    if (overviewSection) overviewSection.classList.toggle('hidden', !(normalized === 'overview' || isInputWorkspace));
+    if (overviewSection) overviewSection.classList.toggle('hidden', normalized !== 'overview');
+    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace);
     if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
     if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
 
@@ -2100,6 +2102,8 @@
     }
 
     if (normalized === 'overview') {
+      setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: false, skipStageSync: true });
+      updateFormStepperState('section-pelapor');
       applySidebarWorkspaceLayout('overview');
       applySearchShellCopyForWorkspace('overview');
       if (opts.scroll !== false) document.getElementById('section-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2120,7 +2124,7 @@
     applySidebarWorkspaceLayout(normalized);
     applySearchShellCopyForWorkspace(normalized);
     const targetEl = normalized === 'input'
-      ? (document.getElementById('section-overview') || document.getElementById('section-pelapor'))
+      ? (document.getElementById('section-input-launcher') || document.getElementById('section-pelapor'))
       : (document.getElementById('section-search-shell') || document.getElementById(targetStage));
     if (opts.scroll !== false && targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return normalized;
@@ -2202,8 +2206,7 @@
     const selector = document.getElementById('form-selector');
     const searchContainer = document.getElementById('search-container');
     const searchPlaceholder = document.getElementById('search-placeholder');
-    const normalizedIntent = normalizeWorkflowStepId(WORKFLOW_SEARCH_INTENT || getLandingWorkflowIntentForUser());
-    const requiresDiagnosis = normalizedIntent === 'section-pelapor' && !isEditMode && ACTIVE_SIDEBAR_WORKSPACE !== 'search';
+    const requiresDiagnosis = ACTIVE_SIDEBAR_WORKSPACE === 'input';
     const dx = String(selector?.value || '').trim().toUpperCase();
     const cfg = getDxConfigSafe(dx);
 
@@ -2211,7 +2214,7 @@
     if (selectorBadge) selectorBadge.textContent = requiresDiagnosis ? 'Mandatory' : 'Auto';
     if (selectorHelper) {
       selectorHelper.textContent = requiresDiagnosis
-        ? 'Pemilihan diagnosis akan memuat blok form spesifik dan rule validasi terkait.'
+        ? 'Pemilihan diagnosis hanya diperlukan untuk mulai input kasus baru dan memuat blok form spesifik yang sesuai.'
         : 'Diagnosis akan mengikuti record yang dibuka dari hasil pencarian, jadi tidak perlu dipilih manual di langkah ini.';
     }
 
