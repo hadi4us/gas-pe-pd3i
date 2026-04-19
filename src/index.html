@@ -35,31 +35,31 @@
       <div class="pd3i-sidebar-section">
         <div class="pd3i-sidebar-label">Navigasi Cepat</div>
         <nav class="pd3i-sidebar-nav">
-          <a href="#section-overview" class="pd3i-nav-link is-active">
+          <a href="#section-overview" data-sidebar-workspace="overview" class="pd3i-nav-link is-active">
             <i class="fas fa-house"></i>
-            <span>Dashboard Form</span>
+            <span>Beranda Form</span>
           </a>
-          <a href="#section-search-shell" class="pd3i-nav-link">
+          <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link">
             <i class="fas fa-magnifying-glass"></i>
             <span>Cari / Edit</span>
           </a>
-          <a href="#section-pelapor" class="pd3i-nav-link">
+          <a href="#section-pelapor" data-sidebar-workspace="input" class="pd3i-nav-link">
             <i class="fas fa-file-pen"></i>
             <span>Input Kasus</span>
           </a>
-          <a href="#section-verifikasi" class="pd3i-nav-link">
+          <a href="#section-verifikasi" data-sidebar-workspace="verifikasi" class="pd3i-nav-link">
             <i class="fas fa-id-card-clip"></i>
             <span>Verifikasi EPID</span>
           </a>
-          <a href="#section-sampel" class="pd3i-nav-link">
+          <a href="#section-sampel" data-sidebar-workspace="sampel" class="pd3i-nav-link">
             <i class="fas fa-vials"></i>
             <span>Hasil Sampel</span>
           </a>
-          <a href="#section-status" class="pd3i-nav-link">
+          <a href="#section-status" data-sidebar-workspace="status" class="pd3i-nav-link">
             <i class="fas fa-list-check"></i>
             <span>Status Pasien</span>
           </a>
-          <button id="btn-sidebar-dashboard" type="button" class="pd3i-nav-link pd3i-nav-button">
+          <button id="btn-sidebar-dashboard" data-sidebar-workspace="dashboard" type="button" class="pd3i-nav-link pd3i-nav-button">
             <i class="fas fa-chart-column"></i>
             <span>Dashboard Statistik</span>
           </button>
@@ -182,7 +182,7 @@
             <span id="workflow-search-badge" class="pd3i-badge-soft">Workflow workspace</span>
           </div>
 
-          <div id="workflow-intent-bar" class="pd3i-workflow-intent-grid">
+          <div id="workflow-intent-bar" class="pd3i-workflow-intent-grid hidden">
             <button type="button" class="pd3i-workflow-intent-card is-active" data-workflow-intent="section-pelapor">
               <span class="pd3i-workflow-intent-index">1</span>
               <span class="pd3i-workflow-intent-copy">

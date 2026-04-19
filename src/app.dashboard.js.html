@@ -331,9 +331,10 @@
   function openDashboardSection(options) {
     const opts = options || {};
     const section = document.getElementById('section-dashboard');
+    if (typeof applySidebarWorkspaceLayout === 'function') applySidebarWorkspaceLayout('dashboard');
     if (section) section.classList.remove('hidden');
     if (typeof initDashboard === 'function') initDashboard();
-    if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('section-dashboard');
+    if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('dashboard');
     if (section && opts.scroll !== false) {
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -365,8 +366,12 @@
     if (btnBack && !btnBack.dataset.bound) {
       btnBack.dataset.bound = "1";
       btnBack.addEventListener("click", function () {
+        if (typeof openSidebarWorkspace === 'function') {
+          openSidebarWorkspace('overview', { scroll: true });
+          return;
+        }
         const target = document.getElementById('section-overview');
-        if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('section-overview');
+        if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('overview');
         if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
