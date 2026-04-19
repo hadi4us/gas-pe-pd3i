@@ -2008,11 +2008,45 @@
     if (shell) shell.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function togglePreRecordWorkflowFocus(focusSearchOnly) {
+  function getSearchFirstBannerText(stepId) {
+    const normalized = normalizeWorkflowStepId(stepId);
+    const map = {
+      "section-verifikasi": "<strong>Mode review admin aktif.</strong> Cari dan buka kasus existing yang masih <strong>Pending</strong>, lalu lakukan verifikasi EPID.",
+      "section-sampel": "<strong>Mode input hasil pemeriksaan aktif.</strong> Cari record existing yang sudah lolos verifikasi, lalu isi hasil pemeriksaan sampel.",
+      "section-status": "<strong>Mode update status aktif.</strong> Cari record existing yang ingin diperbarui status pasien / kasusnya."
+    };
+    return map[normalized] || "";
+  }
+
+  function applySearchDefaultsForWorkflowIntent(stepId) {
+    const normalized = normalizeWorkflowStepId(stepId);
+    const statusFilter = document.getElementById('search-status-verifikasi');
+    if (!statusFilter) return;
+    if (normalized === 'section-verifikasi' && !statusFilter.value) {
+      statusFilter.value = 'Pending';
+      return;
+    }
+    if ((normalized === 'section-sampel' || normalized === 'section-status') && !statusFilter.value) {
+      statusFilter.value = 'Terverifikasi';
+      return;
+    }
+    if (normalized === 'section-pelapor' && (statusFilter.value === 'Pending' || statusFilter.value === 'Terverifikasi')) {
+      statusFilter.value = '';
+    }
+  }
+
+  function togglePreRecordWorkflowFocus(focusSearchOnly, stepId) {
     const searchCard = document.getElementById('section-search-shell');
     const form = document.getElementById('dynamic-form');
-    if (searchCard) searchCard.classList.toggle('is-workflow-focus', !!focusSearchOnly);
-    if (form) form.classList.toggle('pd3i-stage-hidden', !!focusSearchOnly);
+    const banner = document.getElementById('workflow-presearch-banner');
+    const shouldFocus = !!focusSearchOnly;
+    if (searchCard) searchCard.classList.toggle('is-workflow-focus', shouldFocus);
+    if (form) form.classList.toggle('pd3i-stage-hidden', shouldFocus);
+    if (banner) {
+      banner.innerHTML = shouldFocus ? getSearchFirstBannerText(stepId) : '';
+      banner.classList.toggle('hidden', !shouldFocus);
+    }
+    if (shouldFocus) applySearchDefaultsForWorkflowIntent(stepId);
   }
 
   function setWorkflowSearchIntent(intent, options) {
@@ -2037,7 +2071,7 @@
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper + ' Gunakan filter status verifikasi bila perlu.';
 
     const shouldFocusSearchOnly = normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages();
-    togglePreRecordWorkflowFocus(shouldFocusSearchOnly);
+    togglePreRecordWorkflowFocus(shouldFocusSearchOnly, normalized);
 
     if (!opts.skipStageSync && normalized === "section-pelapor") {
       updateFormStepperState("section-pelapor");
@@ -3675,7 +3709,7 @@
           if (searchContainer) searchContainer.classList.add("hidden");
           if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
           setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
-          togglePreRecordWorkflowFocus(false);
+          togglePreRecordWorkflowFocus(false, 'section-pelapor');
           updateFormStepperState("section-pelapor");
           updateUiShellSummary();
           return;
@@ -3686,7 +3720,7 @@
         if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
         const defaultIntent = getLandingWorkflowIntentForUser();
         setWorkflowSearchIntent(defaultIntent, { focusSearch: defaultIntent !== "section-pelapor", focusForm: defaultIntent === "section-pelapor" });
-        if (defaultIntent === 'section-pelapor') togglePreRecordWorkflowFocus(false);
+        if (defaultIntent === 'section-pelapor') togglePreRecordWorkflowFocus(false, defaultIntent);
         updateFormStepperState(defaultIntent === "section-pelapor" ? "section-pelapor" : "section-pelapor");
         updateSidebarActiveState("section-pelapor");
 
@@ -3942,7 +3976,7 @@
               ? requestedStage
               : getPreferredWorkflowStageForUser();
             setWorkflowSearchIntent(preferredStage, { focusSearch: false, focusForm: false, skipStageSync: true });
-            togglePreRecordWorkflowFocus(false);
+            togglePreRecordWorkflowFocus(false, preferredStage);
             updateFormStepperState(preferredStage);
             updateUiShellSummary();
             refreshWorkflowInbox();
