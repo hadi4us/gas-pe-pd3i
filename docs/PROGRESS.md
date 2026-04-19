@@ -83,3 +83,4 @@
 - [x] Ditambahkan inbox workflow: admin melihat daftar kasus pending verifikasi, sedangkan akun puskesmas melihat daftar kasus `Perlu Revisi` yang harus ditindaklanjuti
 - [x] Workflow review dipoles lagi: pencarian sekarang bisa difilter berdasarkan status verifikasi, dan jalur kerja menampilkan badge count untuk pending review / revisi agar antrian kerja lebih terlihat
 - [x] Dashboard admin sekarang punya queue verifikasi: list kasus Pending / Perlu Revisi / Terverifikasi dengan filter tab dan tombol Review langsung ke workspace admin review
+- [x] Queue verifikasi admin dipoles dengan filter `Puskesmas` dan `Tanggal Input` agar triage review lebih cepat
