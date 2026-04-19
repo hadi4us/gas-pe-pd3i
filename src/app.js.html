@@ -12,7 +12,7 @@
     const id = String(fieldId || "").trim().toLowerCase();
     if (!id) return "";
 
-    if (id === "nik pasien") return "Harus 16 digit angka.";
+    if (id === "nik" || id === "nik pasien") return "Harus 16 digit angka.";
     if (id === "rt" || id === "rw") return "Hanya angka. Otomatis format 3 digit (contoh: 001).";
 
     const phoneKeys = [
@@ -108,14 +108,20 @@
     if (field.type === "geo_button") {
       return `<div class="${widthClass}">
         <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${field.label}</label>
-        <div class="flex flex-col md:flex-row gap-3">
-          <button type="button" id="btn-ambil-lokasi"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
-            <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
-          </button>
+        <div class="flex flex-col lg:flex-row gap-3">
+          <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+            <button type="button" id="btn-ambil-lokasi"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
+              <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
+            </button>
+            <button type="button" id="btn-cari-lokasi-alamat"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
+              <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
+            </button>
+          </div>
           <div id="geo-status"
             class="flex-1 px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">
-            Klik tombol untuk mengambil titik koordinat.
+            Klik tombol untuk mengambil titik koordinat atau cari dari alamat domisili.
           </div>
         </div>
       </div>`;
@@ -133,13 +139,16 @@
     } else {
       const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
       let maxAttr = field.max ? `max="${field.max}"` : "";
+      const numericAttrs = (typeof isNumericOnlyFieldId === "function" && isNumericOnlyFieldId(field.id))
+        ? 'inputmode="numeric" autocomplete="off"'
+        : '';
 
       if (field.id === "Tanggal Lahir") {
         const today = new Date().toISOString().split("T")[0];
         maxAttr = `max="${today}"`;
       }
 
-      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} step="any">`;
+      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} step="any">`;
     }
 
     const numericHint = _getNumericFieldHintById(field.id);
@@ -311,8 +320,43 @@
   // ============================================================
   // GEOLOCATION
   // ============================================================
+  function buildDomisiliAddressQuery() {
+    const parts = [
+      document.getElementById("Alamat")?.value || "",
+      (() => {
+        const rt = document.getElementById("RT")?.value || "";
+        const rw = document.getElementById("RW")?.value || "";
+        if (!rt && !rw) return "";
+        const rtText = rt ? `RT ${rt}` : "";
+        const rwText = rw ? `RW ${rw}` : "";
+        return [rtText, rwText].filter(Boolean).join(" ");
+      })(),
+      document.getElementById("Kelurahan")?.value || "",
+      document.getElementById("Kecamatan")?.value || "",
+      document.getElementById("Kab/Kota Pasien")?.value || "",
+      document.getElementById("Provinsi Pasien")?.value || "",
+      "Indonesia"
+    ];
+
+    return parts.map(function(v) { return String(v || "").trim(); }).filter(Boolean).join(", ");
+  }
+
+  async function geocodeDomisiliAddress(query) {
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) {
+      throw new Error("Layanan pencarian lokasi sedang gagal.");
+    }
+    const rows = await res.json();
+    return Array.isArray(rows) ? rows[0] : null;
+  }
+
   function initGeoButton() {
     const btn = document.getElementById("btn-ambil-lokasi");
+    const btnCariAlamat = document.getElementById("btn-cari-lokasi-alamat");
     const latEl = document.getElementById("Latitude");
     const lonEl = document.getElementById("Longitude");
     const statusEl = document.getElementById("geo-status");
@@ -320,6 +364,7 @@
     if (!btn || !latEl || !lonEl || !statusEl) return;
     if (btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
+    if (btnCariAlamat) btnCariAlamat.dataset.bound = "1";
 
     btn.addEventListener("click", function() {
       if (!navigator.geolocation) {
@@ -351,6 +396,42 @@
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     });
+
+    if (btnCariAlamat) {
+      btnCariAlamat.addEventListener("click", async function() {
+        const query = buildDomisiliAddressQuery();
+        if (!query) {
+          statusEl.textContent = "Alamat domisili belum cukup lengkap untuk dicari. Isi alamat, wilayah, lalu coba lagi.";
+          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+          return;
+        }
+
+        btnCariAlamat.disabled = true;
+        btnCariAlamat.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+        statusEl.textContent = `Mencari koordinat dari alamat: ${query}`;
+        statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
+
+        try {
+          const match = await geocodeDomisiliAddress(query);
+          if (!match || !match.lat || !match.lon) {
+            throw new Error("Alamat tidak ditemukan.");
+          }
+
+          const lat = Number(match.lat).toFixed(6);
+          const lon = Number(match.lon).toFixed(6);
+          latEl.value = lat;
+          lonEl.value = lon;
+          statusEl.textContent = `Koordinat ditemukan dari alamat. Lat: ${lat}, Lon: ${lon}`;
+          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
+        } catch (err) {
+          statusEl.textContent = (err && err.message) || "Gagal mencari koordinat dari alamat.";
+          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+        } finally {
+          btnCariAlamat.disabled = false;
+          btnCariAlamat.innerHTML = '<i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat';
+        }
+      });
+    }
   }
 
   // ============================================================
@@ -1298,6 +1379,150 @@
     syncSchoolActivityOptionsByAge(res);
 
     return res;
+  }
+
+  const NUMERIC_ONLY_EXACT_IDS = [
+    "NIK",
+    "NIK Pasien",
+    "RT",
+    "RW",
+    "No Whatsapp Petugas",
+    "No. kontak orang tua/wali",
+    "No Telp/WA Orang Tua/Wali",
+    "No Telp Orang Tua/Wali",
+    "No. Telp Orang Tua/Wali",
+    "No. Kontak Pasien",
+    "No. Telepon Wali",
+    "No. Telp Dokter AFP"
+  ];
+
+  const NUMERIC_ONLY_KEYWORDS = [
+    "nik",
+    "whatsapp",
+    "no whatsapp",
+    "no. whatsapp",
+    "no telp",
+    "no. telp",
+    "kontak",
+    "rt",
+    "rw"
+  ];
+
+  function _normalizeFieldId_(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function isNumericOnlyFieldId(fieldId) {
+    const id = _normalizeFieldId_(fieldId);
+    if (!id) return false;
+
+    if (NUMERIC_ONLY_EXACT_IDS.some(x => _normalizeFieldId_(x) === id)) return true;
+    if (id === "rt" || id === "rw") return true;
+
+    return NUMERIC_ONLY_KEYWORDS.some(k => id.includes(k));
+  }
+
+  const NUMERIC_LENGTH_RULES = {
+    "nik": { exact: 16 },
+    "nik pasien": { exact: 16 },
+    "rt": { min: 1, max: 3, pad3: true },
+    "rw": { min: 1, max: 3, pad3: true },
+    "no whatsapp petugas": { min: 10, max: 15, phone: true },
+    "no. kontak orang tua/wali": { min: 10, max: 15, phone: true },
+    "no telp/wa orang tua/wali": { min: 10, max: 15, phone: true },
+    "no telp orang tua/wali": { min: 10, max: 15, phone: true },
+    "no. telp orang tua/wali": { min: 10, max: 15, phone: true },
+    "no. kontak pasien": { min: 10, max: 15, phone: true },
+    "no. telepon wali": { min: 10, max: 15, phone: true },
+    "no. telp dokter afp": { min: 10, max: 15, phone: true }
+  };
+
+  function _sanitizeNumericValue_(value) {
+    return String(value || "").replace(/\D+/g, "");
+  }
+
+  function _getNumericLengthRule_(fieldId) {
+    const id = _normalizeFieldId_(fieldId);
+    return NUMERIC_LENGTH_RULES[id] || null;
+  }
+
+  function _normalizePhonePrefix_(digits) {
+    const v = String(digits || "");
+    if (!v) return v;
+    if (v.startsWith("62")) return v;
+    if (v.startsWith("0")) return "62" + v.slice(1);
+    return v;
+  }
+
+  function enforceNumericOnlyInput(el, options) {
+    if (!el || !el.id || !isNumericOnlyFieldId(el.id)) return;
+    const opts = options || {};
+    const onBlur = opts.onBlur === true;
+
+    const rule = _getNumericLengthRule_(el.id);
+    let cleaned = _sanitizeNumericValue_(el.value);
+
+    if (rule && rule.phone && onBlur) {
+      cleaned = _normalizePhonePrefix_(cleaned);
+    }
+
+    if (rule && rule.exact) {
+      cleaned = cleaned.slice(0, Number(rule.exact));
+    } else if (rule && rule.max) {
+      cleaned = cleaned.slice(0, Number(rule.max));
+    }
+
+    if (rule && rule.pad3 && onBlur && cleaned) {
+      cleaned = cleaned.padStart(3, "0");
+    }
+
+    if (String(el.value || "") !== cleaned) {
+      el.value = cleaned;
+    }
+  }
+
+  function validateNumericOnlyRequiredFields() {
+    const invalids = [];
+    const form = document.getElementById("dynamic-form");
+    if (!form) return { ok: true, invalids: [] };
+
+    form.querySelectorAll("input[name], textarea[name]").forEach(function(el) {
+      if (!el || el.disabled || !el.id) return;
+      if (!isNumericOnlyFieldId(el.id)) return;
+
+      const raw = String(el.value || "").trim();
+      if (!raw) return;
+      if (!/^\d+$/.test(raw)) {
+        invalids.push(el.id + " (harus angka)");
+        return;
+      }
+
+      const rule = _getNumericLengthRule_(el.id);
+      if (!rule) return;
+
+      const len = raw.length;
+      if (rule.exact && len !== Number(rule.exact)) {
+        invalids.push(el.id + " (harus " + rule.exact + " digit)");
+        return;
+      }
+
+      if (rule.phone && !(raw.startsWith("08") || raw.startsWith("62"))) {
+        invalids.push(el.id + " (harus diawali 08 atau 62)");
+        return;
+      }
+
+      const min = Number(rule.min || 0);
+      const max = Number(rule.max || 0);
+      if (min && len < min) {
+        invalids.push(el.id + " (minimal " + min + " digit)");
+        return;
+      }
+      if (max && len > max) {
+        invalids.push(el.id + " (maksimal " + max + " digit)");
+      }
+    });
+
+    return { ok: invalids.length === 0, invalids: invalids };
   }
 
   function getAllowedSchoolActivityOptions(validationRes) {

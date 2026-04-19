@@ -64,3 +64,5 @@
 - [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin
 - [x] Regresi syntax di `app.js.html` yang memicu `Unexpected token 'if'` saat load Web App sudah diperbaiki (blok duplikat setelah load-record handler dihapus)
 - [x] Status sekolah/kegiatan sekarang dibatasi dinamis berdasarkan umur; bayi/balita tidak bisa memilih opsi sekolah/kuliah/bekerja yang tidak masuk akal, dan submit akan menolak kombinasi umur-status yang invalid
+- [x] RT/RW sekarang benar-benar disanitasi ke angka saja di level input/blur, dengan validasi panjang + padding 3 digit saat blur
+- [x] Lokasi GPS sekarang punya opsi pencarian koordinat dari alamat domisili selain ambil lokasi perangkat
