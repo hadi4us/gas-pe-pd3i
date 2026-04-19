@@ -48,6 +48,44 @@ function _verifyPinValue_(storedPin, suppliedPin) {
   return storedPin === suppliedPin;
 }
 
+function _normalizeAccessKelurahanKey_(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, " ");
+}
+
+function _parseAssignedKelurahanList_(raw) {
+  return String(raw || "")
+    .split(/[\n;,|]+/)
+    .map(function(v) { return _normalizeAccessKelurahanKey_(v); })
+    .filter(Boolean);
+}
+
+function _extractAssignedKelurahanFromUserRow_(row, headers) {
+  const headerCandidates = [
+    "Kelurahan Wilayah Kerja",
+    "Wilayah Kerja Kelurahan",
+    "KelurahanKerja",
+    "Kelurahan Wilayah",
+    "Wilayah Kelurahan",
+    "Kelurahan Tugas",
+    "Kelurahan",
+    "Kelurahan Domisili"
+  ];
+
+  const collected = [];
+  headerCandidates.forEach(function(name) {
+    const idx = headers.indexOf(name);
+    if (idx === -1) return;
+    _parseAssignedKelurahanList_(row[idx]).forEach(function(item) {
+      if (collected.indexOf(item) === -1) collected.push(item);
+    });
+  });
+
+  return collected;
+}
+
 function authLogin(username, pin) {
   try {
     username = String(username || "").trim();
@@ -112,7 +150,8 @@ function authLogin(username, pin) {
       found = {
         username: u,
         nama: (ixNama !== -1 ? String(r[ixNama] || "").trim() : u) || u,
-        role: ixRole !== -1 ? String(r[ixRole] || "").trim().toLowerCase() : ""
+        role: ixRole !== -1 ? String(r[ixRole] || "").trim().toLowerCase() : "",
+        wilayahKelurahan: _extractAssignedKelurahanFromUserRow_(r, headers)
       };
       break;
     }

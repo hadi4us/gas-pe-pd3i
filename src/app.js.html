@@ -1955,10 +1955,10 @@
       return "Tahap lanjutan belum dibuka. Simpan input awal dulu atau buka record existing untuk verifikasi, hasil pemeriksaan, dan update status.";
     }
     if (normalized === "section-verifikasi") {
-      return "Tahap verifikasi dipisah dari input awal. Fokuskan hanya pada pengesahan / penentuan EPID dan catatan verifikasi.";
+      return "Tahap verifikasi dipisah dari input awal dan hanya dapat disimpan oleh admin. Fokuskan pada pengesahan / penentuan EPID dan catatan verifikasi.";
     }
     if (normalized === "section-sampel") {
-      return "Tahap hasil pemeriksaan dipakai saat hasil lab/sampel sudah tersedia, tanpa mengganggu input awal dan verifikasi.";
+      return "Tahap hasil pemeriksaan dipakai saat hasil lab/sampel sudah tersedia. Tahap ini hanya bisa disimpan admin atau petugas dengan wilayah kerja kelurahan yang sesuai domisili pasien.";
     }
     if (normalized === "section-status") {
       return "Tahap update status dipakai untuk perubahan status kasus/pasien setelah ada tindak lanjut, verifikasi, atau hasil pemeriksaan.";
@@ -2055,7 +2055,17 @@
       if (!viewerMode && !canAccessLater && !canWriteThisStage) {
         helperText += " Role aktif tidak berwenang menyimpan tahap input awal; gunakan pencarian record existing atau login dengan role inputer/petugas.";
       } else if (!viewerMode && canAccessLater && !canWriteThisStage) {
-        helperText += " Role aktif bisa melihat tahap ini, tapi tidak berwenang menyimpan perubahan pada tahap ini.";
+        if (normalized === "section-verifikasi") {
+          helperText += " Verifikasi memang dibatasi admin saja.";
+        } else if (normalized === "section-sampel") {
+          const currentKelurahan = getFieldValueSafe("Kelurahan") || "kelurahan belum diketahui";
+          const assigned = getUserAssignedKelurahanKeys(SESSION_USER);
+          helperText += assigned.length
+            ? ` Kelurahan domisili record ini: ${currentKelurahan}. Akun aktif hanya bisa input hasil pemeriksaan untuk kelurahan wilayah kerja: ${assigned.join(", ")}.`
+            : " Akun aktif belum punya daftar kelurahan wilayah kerja di sesi login / REF_USER.";
+        } else {
+          helperText += " Role aktif bisa melihat tahap ini, tapi tidak berwenang menyimpan perubahan pada tahap ini.";
+        }
       }
       helperEl.textContent = helperText;
     }
@@ -2343,14 +2353,39 @@
     const allStages = getAllWorkflowStageIds();
 
     if (normalized === "admin") return allStages.slice();
-    if (["petugas", "surveilans", "editor", "koordinator"].includes(normalized)) return allStages.slice();
+    if (["petugas", "surveilans", "editor", "koordinator"].includes(normalized)) return ["section-pelapor", "section-sampel", "section-status"];
     if (["viewer", "readonly", "read_only", "read-only"].includes(normalized)) return [];
     if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(normalized)) return ["section-pelapor"];
-    if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(normalized)) return ["section-verifikasi"];
+    if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(normalized)) return [];
     if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(normalized)) return ["section-sampel"];
     if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(normalized)) return ["section-status"];
-    if (normalized) return allStages.slice();
+    if (normalized) return ["section-pelapor", "section-status"];
     return [];
+  }
+
+  function normalizeUiKelurahanKey(value) {
+    return String(value || "")
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, " ");
+  }
+
+  function getUserAssignedKelurahanKeys(user) {
+    const raw = user && Array.isArray(user.wilayahKelurahan) ? user.wilayahKelurahan : [];
+    return raw.map(function(v) { return normalizeUiKelurahanKey(v); }).filter(Boolean);
+  }
+
+  function getCurrentRecordKelurahanKey() {
+    return normalizeUiKelurahanKey(getFieldValueSafe("Kelurahan") || getFieldValueSafe("Kelurahan domisili") || "");
+  }
+
+  function canUserWriteSampleStageByKelurahan(user) {
+    const role = normalizeUiRole(user && user.role);
+    if (role === "admin") return true;
+    const currentKelurahan = getCurrentRecordKelurahanKey();
+    const assigned = getUserAssignedKelurahanKeys(user);
+    if (!currentKelurahan || !assigned.length) return false;
+    return assigned.indexOf(currentKelurahan) !== -1;
   }
 
   function getRoleCapabilities(user) {
@@ -2375,7 +2410,7 @@
       return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: allStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
     if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
-      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • bisa input dan update semua tahap operasional, tanpa aksi admin" };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi wilayah domisili, verifikasi admin-only" };
     }
     if (writeStages.length === 1) {
       return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
@@ -2389,7 +2424,12 @@
   function canWriteWorkflowStage(user, stageId) {
     const caps = getRoleCapabilities(user);
     const normalized = normalizeWorkflowStepId(stageId);
-    return caps.canWrite && caps.writeStages.indexOf(normalized) !== -1;
+    const role = normalizeUiRole(user && user.role);
+
+    if (!caps.canWrite || caps.writeStages.indexOf(normalized) === -1) return false;
+    if (normalized === "section-verifikasi") return role === "admin";
+    if (normalized === "section-sampel") return canUserWriteSampleStageByKelurahan(user);
+    return true;
   }
 
   function getPreferredWorkflowStageForUser() {

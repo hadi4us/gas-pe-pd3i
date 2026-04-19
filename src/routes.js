@@ -617,13 +617,13 @@ function _normalizeWorkflowStage_(workflowStage) {
 function _getWritableWorkflowStagesForRole_(role) {
   role = String(role || "").trim().toLowerCase();
   if (role === "admin") return WORKFLOW_STAGE_IDS_.slice();
-  if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) return WORKFLOW_STAGE_IDS_.slice();
+  if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) return ["section-pelapor", "section-sampel", "section-status"];
   if (["viewer", "readonly", "read_only", "read-only"].includes(role)) return [];
   if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(role)) return ["section-pelapor"];
-  if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(role)) return ["section-verifikasi"];
+  if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(role)) return [];
   if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(role)) return ["section-sampel"];
   if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(role)) return ["section-status"];
-  if (role) return WORKFLOW_STAGE_IDS_.slice();
+  if (role) return ["section-pelapor", "section-status"];
   return [];
 }
 
@@ -636,6 +636,69 @@ function _getWorkflowStageLabel_(workflowStage) {
     "section-status": "Update status"
   };
   return labels[normalized] || normalized;
+}
+
+function _normalizeAccessKelurahanKey_(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, " ");
+}
+
+function _getUserAssignedKelurahanKeys_(user) {
+  const rawList = user && Array.isArray(user.wilayahKelurahan) ? user.wilayahKelurahan : [];
+  return rawList.map(function(v) { return _normalizeAccessKelurahanKey_(v); }).filter(Boolean);
+}
+
+function _getKelurahanKeyForRecordAccess_(dx, data) {
+  const direct = _normalizeAccessKelurahanKey_((data && (data["Kelurahan"] || data["Kelurahan domisili"] || data["Kelurahan/Desa"])) || "");
+  if (direct) return direct;
+
+  const epid = String((data && data["Nomor EPID"]) || "").trim();
+  if (!dx || !epid) return "";
+
+  try {
+    const record = _getRowObjectByEpid_(dx, epid);
+    return _normalizeAccessKelurahanKey_(record["Kelurahan"] || record["Kelurahan domisili"] || record["Kelurahan/Desa"] || "");
+  } catch (e) {
+    return "";
+  }
+}
+
+function _canRoleWriteSampleStage_(role) {
+  role = String(role || "").trim().toLowerCase();
+  return ["petugas", "surveilans", "editor", "koordinator", "lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].indexOf(role) !== -1;
+}
+
+function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
+  const role = String((sess && sess.user && sess.user.role) || "").trim().toLowerCase();
+  if (role === "admin") return true;
+
+  if (normalizedStage === "section-verifikasi") {
+    throw new Error("Proses verifikasi hanya dapat dilakukan oleh admin.");
+  }
+
+  if (normalizedStage === "section-sampel") {
+    if (!_canRoleWriteSampleStage_(role)) {
+      throw new Error("Tahap hasil pemeriksaan hanya dapat diinput oleh admin atau petugas yang berwenang atas wilayah domisili pasien.");
+    }
+
+    const recordKelurahan = _getKelurahanKeyForRecordAccess_(dx, data);
+    if (!recordKelurahan) {
+      throw new Error("Kelurahan domisili pasien belum tersedia, sehingga hak input hasil pemeriksaan tidak bisa diverifikasi.");
+    }
+
+    const assignedKelurahan = _getUserAssignedKelurahanKeys_(sess.user);
+    if (!assignedKelurahan.length) {
+      throw new Error("Wilayah kerja kelurahan akun ini belum diatur di REF_USER.");
+    }
+
+    if (assignedKelurahan.indexOf(recordKelurahan) === -1) {
+      throw new Error("Petugas hanya boleh input hasil pemeriksaan untuk pasien dengan domisili kelurahan sesuai wilayah kerjanya.");
+    }
+  }
+
+  return true;
 }
 
 function _applyWorkflowStageAuditFields_(data, sess, workflowStage) {
@@ -696,6 +759,7 @@ function _requireWriteAccessFromSession_(sess, workflowStage, data) {
     throw new Error("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menambah/mengubah data.");
   }
 
+  const dx = String((data && data.dx) || "").trim().toUpperCase();
   const allowedStages = _getWritableWorkflowStagesForRole_(role);
   const normalizedStage = _normalizeWorkflowStage_(workflowStage);
   const isScopedStageRole = allowedStages.length === 1 && WORKFLOW_STAGE_IDS_.length > 1;
@@ -714,6 +778,8 @@ function _requireWriteAccessFromSession_(sess, workflowStage, data) {
   if (allowedStages.length && allowedStages.indexOf(normalizedStage) === -1) {
     throw new Error("Role aktif tidak berwenang menyimpan perubahan pada tahap kerja ini.");
   }
+
+  _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data);
 
   return role || "petugas";
 }

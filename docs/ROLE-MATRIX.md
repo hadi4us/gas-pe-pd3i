@@ -25,18 +25,20 @@ Hak utama:
 - mengakses dashboard penuh
 - retry sinkronisasi / notifikasi / telegram
 - export CSV
+- menjadi satu-satunya role yang boleh menyimpan tahap **Verifikasi EPID**
 
 ### Petugas
 Hak utama:
 - lihat data
 - input data baru
-- edit / update data
+- edit / update data operasional sesuai kewenangan
 - menggunakan workflow operasional sehari-hari
-- mengakses semua tahap kerja operasional (input, verifikasi, hasil pemeriksaan, status)
 
 Batasan:
 - tidak menjalankan aksi admin
 - tidak mengakses operasi retry admin / export admin yang dibatasi
+- **tidak boleh** menyimpan tahap verifikasi EPID
+- tahap **hasil pemeriksaan** hanya boleh disimpan bila kelurahan domisili pasien termasuk wilayah kerja kelurahan petugas di `REF_USER`
 
 ### Viewer
 Hak utama:
@@ -55,14 +57,15 @@ Role ini ditambahkan untuk menyesuaikan alur kerja nyata ketika input awal, veri
 
 Contoh role yang kini dikenali:
 - `inputer` / `entry` / `registrasi` → hanya boleh ubah tahap **Input awal**
-- `verifikator` / `verifier` / `epid` → hanya boleh ubah tahap **Verifikasi EPID**
 - `lab` / `laboratorium` / `analislab` → hanya boleh ubah tahap **Hasil pemeriksaan**
 - `status` / `updater_status` / `followup` / `tindaklanjut` → hanya boleh ubah tahap **Update status**
+- `verifikator` / `verifier` / `epid` → saat ini **tidak dipakai untuk save verifikasi**, karena verifikasi dibatasi **admin only**
 
 Catatan:
 - role tahap-spesifik tetap bisa login dan melihat record
 - tetapi backend akan menolak save jika role mencoba menyimpan tahap yang bukan kewenangannya
 - tahap verifikasi / hasil pemeriksaan / status hanya boleh untuk **record existing** (setelah input awal tersimpan)
+- tahap hasil pemeriksaan untuk non-admin harus lolos cek **kelurahan domisili pasien vs daftar kelurahan wilayah kerja user** dari `REF_USER`
 - setiap save tahap sekarang meninggalkan jejak audit yang lebih eksplisit: stage id, label stage, actor, role, dan timestamp per tahap
 
 ---
@@ -75,8 +78,8 @@ Catatan:
 | Cari / buka record | Ya | Ya | Ya | Ya |
 | Input data baru | Ya | Ya | Tidak | Sesuai role |
 | Edit / update data | Ya | Ya | Tidak | Hanya tahap yang diizinkan |
-| Verifikasi EPID | Ya | Ya | Tidak | Hanya role verifikator |
-| Input hasil sampel | Ya | Ya | Tidak | Hanya role lab |
+| Verifikasi EPID | Ya | Tidak | Tidak | Tidak |
+| Input hasil sampel | Ya | Ya, jika kelurahan match | Tidak | Hanya role lab + kelurahan match |
 | Update status pasien/kasus | Ya | Ya | Tidak | Hanya role status |
 | Dashboard statistik | Ya | Ya* | Ya* | Ya* |
 | Retry sinkronisasi/notifikasi | Ya | Tidak | Tidak | Tidak |

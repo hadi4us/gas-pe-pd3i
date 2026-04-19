@@ -74,3 +74,4 @@
 - [x] Role per tahap kerja sekarang didukung end-to-end: frontend mengenali role tahap-spesifik (inputer / verifikator / lab / updater status), dan backend menolak save jika role menyimpan tahap yang bukan kewenangannya
 - [x] Audit trail per tahap sekarang terekam ke record + AUDIT_LOG: tahap terakhir, label tahap, actor/role pengupdate, serta timestamp per tahap utama (input/verifikasi/hasil/status)
 - [x] Label role tahap-spesifik dinormalisasi agar lebih manusiawi di UI, dan TTL sesi role tahap-spesifik disetarakan dengan role operasional
+- [x] Otorisasi tahap diperketat lagi: verifikasi sekarang admin-only, sedangkan input hasil pemeriksaan untuk non-admin mensyaratkan kelurahan domisili pasien cocok dengan wilayah kerja kelurahan user dari `REF_USER`

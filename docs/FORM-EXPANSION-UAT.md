@@ -388,24 +388,26 @@ Uji minimal sekali per DX:
 - Saat satu tahap dipilih, hanya section tahap itu yang ditampilkan.
 - Tombol submit dan helper text mengikuti tahap aktif.
 
-### TC-WF-07 — Role tahap-spesifik
+### TC-WF-07 — Role tahap-spesifik / kewenangan wilayah
 Gunakan akun contoh dengan role berbeda di `REF_USER`:
-- `inputer`
-- `verifikator`
-- `lab`
+- `admin`
+- `petugas` dengan daftar kelurahan wilayah kerja
+- `lab` dengan daftar kelurahan wilayah kerja
 - `status`
 
 **Langkah uji**
-- Login sebagai `inputer`, pastikan hanya tahap input yang bisa disimpan.
-- Buka record existing sebagai `verifikator`, masuk ke tahap verifikasi lalu simpan perubahan.
-- Coba `verifikator` menyimpan tahap hasil pemeriksaan atau status.
-- Login sebagai `lab`, buka tahap hasil pemeriksaan lalu simpan perubahan.
+- Login sebagai `admin`, buka record existing, masuk ke tahap verifikasi lalu simpan perubahan.
+- Login sebagai `petugas`, buka record existing, coba simpan tahap verifikasi.
+- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan kelurahan domisili yang **match** wilayah kerja user.
+- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan kelurahan domisili yang **tidak match** wilayah kerja user.
+- Login sebagai `lab`, buka tahap hasil pemeriksaan lalu simpan perubahan pada record yang kelurahannya match.
 - Login sebagai `status`, buka tahap update status lalu simpan perubahan.
 
 **Expected**
-- Role tahap-spesifik tetap bisa membuka record dan berpindah stage untuk melihat konteks.
-- Tombol submit hanya aktif pada stage yang menjadi kewenangan role.
-- Backend menolak save jika role menyimpan stage di luar kewenangannya.
+- Verifikasi hanya bisa disimpan oleh admin.
+- Tombol submit tahap verifikasi non-admin harus terkunci.
+- Tahap hasil pemeriksaan untuk non-admin hanya aktif jika kelurahan domisili pasien cocok dengan daftar kelurahan wilayah kerja user di `REF_USER`.
+- Backend menolak save jika role menyimpan stage di luar kewenangannya atau jika kelurahan tidak match.
 - Tahap selain input tetap mensyaratkan record existing / EPID sudah ada.
 - Setelah save berhasil, field metadata tahap di raw sheet ikut terisi (stage terakhir, actor, role, timestamp tahap terkait).
 - AUDIT_LOG mencatat `Tahap Workflow` dan `Label Tahap Workflow` untuk INSERT/UPDATE terkait record.
