@@ -58,5 +58,7 @@
 - [x] Aturan transisi status kasus ditambahkan agar workflow tidak melompat seenaknya
 - [x] Summary panel sekarang memberi petunjuk transisi status berikutnya yang valid
 - [x] User badge kini menampilkan nama + role aktif
+- [x] Transisi status kasus kini dibuat lebih granular per diagnosis (MR/DIF/PERT/TN/AFP)
+- [x] Opsi dasar penetapan status kini mengikuti diagnosis + status secara lebih spesifik
 - [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`
 - [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin

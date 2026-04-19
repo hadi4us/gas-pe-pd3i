@@ -358,8 +358,22 @@ Checklist:
 - cek apakah opsi `Dasar Penetapan Status` menyesuaikan konteks status
 - cek apakah transisi status yang tidak valid ditolak
 - cek apakah summary panel menampilkan petunjuk transisi status berikutnya yang valid
+- cek apakah status terminal ditandai jelas (tidak ada transisi lanjutan / terminal)
 - cek apakah row baru muncul di `Riwayat Status Kasus`
 - simpan lalu edit ulang, pastikan timeline tetap ada
+
+### TC-WF-05 — Diagnosis-aware status flow
+Uji minimal sekali per DX:
+- MR: `Suspek -> Menunggu hasil lab/Klinis/Konfirmasi/Discarded`
+- DIF: `Suspek -> Probable/Menunggu hasil lab/Konfirmasi/Discarded`
+- PERT: `Suspek -> Probable/Menunggu hasil lab/Konfirmasi/Discarded`
+- TN: `Suspek -> Klinis/Konfirmasi/Discarded`
+- AFP: `Suspek -> Menunggu hasil lab/Klinis/Probable/Konfirmasi/Discarded/Follow up 60 hari`
+
+**Expected**
+- Opsi status yang tampil mengikuti diagnosis aktif.
+- Opsi `Dasar Penetapan Status` ikut berubah sesuai kombinasi diagnosis + status.
+- Transisi yang tidak sesuai diagnosis ditolak saat simpan.
 
 ### TC-WF-05 — Search result workflow badges
 - cari data existing

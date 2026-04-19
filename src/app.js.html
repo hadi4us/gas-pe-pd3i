@@ -1783,12 +1783,19 @@
       options = getCaseStatusOptions(dx);
     }
     options = (options || []).filter(Boolean);
-    if (!options.length) return "Tidak ada transisi lanjutan";
+    if (!options.length) {
+      if (currentStatus) return `Status terminal (${currentStatus})`;
+      return "Tidak ada transisi lanjutan";
+    }
     if (options.length <= 4) return options.join(", ");
     return options.slice(0, 4).join(", ") + ` +${options.length - 4} lagi`;
   }
 
   function getCaseStatusReasonOptions(dx, status) {
+    if (typeof getCaseStatusReasonOptionsByDx === "function") {
+      return getCaseStatusReasonOptionsByDx(dx, status);
+    }
+
     const statusNorm = String(status || "").trim().toLowerCase();
     const dxNorm = String(dx || "").trim().toUpperCase();
 

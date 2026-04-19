@@ -91,12 +91,55 @@
   const CASE_STATUS_TRANSITIONS = {
     DEFAULT: {
       "Suspek": ["Menunggu hasil lab", "Klinis", "Probable", "Konfirmasi", "Discarded", "Follow up", "Meninggal", "Lost to follow-up"],
-      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up", "Meninggal"],
+      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up", "Meninggal", "Lost to follow-up"],
       "Probable": ["Konfirmasi", "Discarded", "Follow up", "Meninggal", "Lost to follow-up"],
       "Klinis": ["Konfirmasi", "Discarded", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
       "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
-      "Follow up": ["Konfirmasi", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Sembuh", "Meninggal", "Lost to follow-up"],
       "Follow up 60 hari": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    },
+    MR: {
+      "Suspek": ["Menunggu hasil lab", "Klinis", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Meninggal", "Lost to follow-up"],
+      "Klinis": ["Konfirmasi", "Discarded", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    },
+    DIF: {
+      "Suspek": ["Probable", "Menunggu hasil lab", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Menunggu hasil lab": ["Probable", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Probable": ["Konfirmasi", "Discarded", "Follow up", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    },
+    PERT: {
+      "Suspek": ["Probable", "Menunggu hasil lab", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Menunggu hasil lab": ["Probable", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Probable": ["Konfirmasi", "Discarded", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Sembuh", "Meninggal", "Lost to follow-up"],
+      "Discarded": [],
+      "Sembuh": [],
+      "Meninggal": [],
+      "Lost to follow-up": []
+    },
+    TN: {
+      "Suspek": ["Klinis", "Konfirmasi", "Discarded", "Meninggal", "Lost to follow-up"],
+      "Klinis": ["Konfirmasi", "Discarded", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Follow up": ["Sembuh", "Meninggal", "Lost to follow-up"],
       "Discarded": [],
       "Sembuh": [],
       "Meninggal": [],
@@ -104,15 +147,86 @@
     },
     AFP: {
       "Suspek": ["Menunggu hasil lab", "Klinis", "Probable", "Konfirmasi", "Discarded", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
-      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up 60 hari", "Meninggal"],
+      "Menunggu hasil lab": ["Konfirmasi", "Discarded", "Klinis", "Probable", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
       "Probable": ["Konfirmasi", "Discarded", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
-      "Klinis": ["Konfirmasi", "Discarded", "Follow up 60 hari", "Sembuh", "Meninggal", "Lost to follow-up"],
-      "Konfirmasi": ["Follow up 60 hari", "Sembuh", "Meninggal", "Lost to follow-up"],
+      "Klinis": ["Konfirmasi", "Discarded", "Follow up 60 hari", "Meninggal", "Lost to follow-up"],
+      "Konfirmasi": ["Follow up 60 hari", "Meninggal", "Lost to follow-up"],
       "Follow up 60 hari": ["Sembuh", "Meninggal", "Lost to follow-up"],
       "Discarded": [],
       "Sembuh": [],
       "Meninggal": [],
       "Lost to follow-up": []
+    }
+  };
+
+  const CASE_STATUS_REASON_OPTIONS_BY_DX = {
+    DEFAULT: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Menunggu hasil lab": ["", "Laboratorium", "Verifikasi program"],
+      "Probable": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Klinis": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up": ["", "Klinis", "Verifikasi program"],
+      "Follow up 60 hari": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
+    },
+    MR: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Menunggu hasil lab": ["", "Laboratorium", "Verifikasi program"],
+      "Klinis": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
+    },
+    DIF: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Menunggu hasil lab": ["", "Laboratorium", "Verifikasi program"],
+      "Probable": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
+    },
+    PERT: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Menunggu hasil lab": ["", "Laboratorium", "Verifikasi program"],
+      "Probable": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
+    },
+    TN: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Klinis": ["", "Klinis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
+    },
+    AFP: {
+      "Suspek": ["", "Klinis", "Epidemiologis"],
+      "Menunggu hasil lab": ["", "Laboratorium", "Verifikasi program"],
+      "Probable": ["", "Klinis", "Epidemiologis", "Verifikasi program"],
+      "Klinis": ["", "Klinis", "Verifikasi program"],
+      "Konfirmasi": ["", "Laboratorium", "Verifikasi program"],
+      "Discarded": ["", "Laboratorium", "Klinis", "Verifikasi program"],
+      "Follow up 60 hari": ["", "Klinis", "Verifikasi program"],
+      "Sembuh": ["", "Klinis", "Verifikasi program"],
+      "Meninggal": ["", "Klinis", "Verifikasi program"],
+      "Lost to follow-up": ["", "Verifikasi program"]
     }
   };
 
@@ -124,6 +238,17 @@
     const allowed = map[current];
     if (!Array.isArray(allowed)) return getCaseStatusOptions(dx);
     return allowed.slice();
+  }
+
+  function getCaseStatusReasonOptionsByDx(dx, status) {
+    const key = String(dx || "").trim().toUpperCase();
+    const current = String(status || "").trim();
+    const map = CASE_STATUS_REASON_OPTIONS_BY_DX[key] || CASE_STATUS_REASON_OPTIONS_BY_DX.DEFAULT || {};
+    const allowed = map[current];
+    if (Array.isArray(allowed) && allowed.length) return allowed.slice();
+    const fallback = (CASE_STATUS_REASON_OPTIONS_BY_DX.DEFAULT || {})[current];
+    if (Array.isArray(fallback) && fallback.length) return fallback.slice();
+    return ["", "Klinis", "Epidemiologis", "Laboratorium", "Verifikasi program"];
   }
 
   const IMUNISASI_SECTION = {
