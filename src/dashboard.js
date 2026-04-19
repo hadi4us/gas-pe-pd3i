@@ -134,6 +134,19 @@ function _buildTopEntries_(bucket, limit) {
     .slice(0, limit);
 }
 
+function _parseCoordinateNumber_(value) {
+  if (value === null || value === undefined) return null;
+  var normalized = String(value).trim().replace(',', '.');
+  if (!normalized) return null;
+  var num = parseFloat(normalized);
+  return isNaN(num) ? null : num;
+}
+
+function _isValidLatLon_(lat, lon) {
+  return typeof lat === 'number' && !isNaN(lat) && typeof lon === 'number' && !isNaN(lon)
+    && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
+
 // ─── Helper: escape nilai CSV (RFC 4180) ─────────────────────────────────────
 
 /**
@@ -210,6 +223,7 @@ function getDashboardStats(dx, tahun, token) {
         qualityCards: { pendingVerification: 0, waitingSampleResult: 0, confirmed: 0, discarded: 0, clinical: 0 },
         epidemiology: { medianReportToTrackingDays: null, sameDayReportTrackingRate: null, medianOnsetToReportDays: null, workflowCompletenessRate: null },
         wilayahSummary: { kecamatanCount: 0, kelurahanCount: 0, rwCount: 0, rtRwCount: 0, topKecamatan: [], topKelurahan: [], topRw: [], topRtRw: [] },
+        coordinateSummary: { totalWithCoordinates: 0, missingCoordinates: 0, clusteredPointCount: 0, topHotspots: [], points: [] },
         perKelompokUmur: {},
         perJenisKelamin: {},
         verificationQueue: { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] },
@@ -246,6 +260,9 @@ function getDashboardStats(dx, tahun, token) {
     const idxEpid = headers.indexOf("Nomor EPID");
     const idxNama = headers.indexOf("Nama");
     const idxKelurahan = headers.indexOf("Kelurahan");
+    const idxLatitude = headers.indexOf("Latitude");
+    const idxLongitude = headers.indexOf("Longitude");
+    const idxKoordinat = headers.indexOf("Koordinat (lat,lon)");
     const idxPuskesmasPengampu = headers.indexOf("Puskesmas Pengampu");
     const idxCatatanVerif = headers.indexOf("Catatan Verifikasi EPID");
     const idxUpdated = headers.indexOf("Updated At");
@@ -276,6 +293,8 @@ function getDashboardStats(dx, tahun, token) {
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
     const isAdmin = String((sess.user && sess.user.role) || "").trim().toLowerCase() === "admin";
     const verificationQueue = { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] };
+    const coordinateBuckets = {};
+    let coordinateMissing = 0;
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -319,6 +338,38 @@ function getDashboardStats(dx, tahun, token) {
       }
       if (rw && rt) {
         _incrementCounter_(perRtRw, [kecamatan, kelurahan, 'RW ' + rw, 'RT ' + rt].filter(Boolean).join(' / '));
+      }
+
+      var lat = idxLatitude !== -1 ? _parseCoordinateNumber_(row[idxLatitude]) : null;
+      var lon = idxLongitude !== -1 ? _parseCoordinateNumber_(row[idxLongitude]) : null;
+      if ((lat === null || lon === null) && idxKoordinat !== -1) {
+        var rawCoord = String(row[idxKoordinat] || '').trim();
+        if (rawCoord) {
+          var coordParts = rawCoord.split(',');
+          if (coordParts.length >= 2) {
+            if (lat === null) lat = _parseCoordinateNumber_(coordParts[0]);
+            if (lon === null) lon = _parseCoordinateNumber_(coordParts[1]);
+          }
+        }
+      }
+      if (_isValidLatLon_(lat, lon)) {
+        var hotspotKey = lat.toFixed(3) + ',' + lon.toFixed(3);
+        if (!coordinateBuckets[hotspotKey]) {
+          coordinateBuckets[hotspotKey] = {
+            lat: parseFloat(lat.toFixed(6)),
+            lon: parseFloat(lon.toFixed(6)),
+            count: 0,
+            kecamatan: kecamatan,
+            kelurahan: kelurahan,
+            labels: {}
+          };
+        }
+        coordinateBuckets[hotspotKey].count++;
+        coordinateBuckets[hotspotKey].kecamatan = coordinateBuckets[hotspotKey].kecamatan || kecamatan;
+        coordinateBuckets[hotspotKey].kelurahan = coordinateBuckets[hotspotKey].kelurahan || kelurahan;
+        if (kelurahan) coordinateBuckets[hotspotKey].labels[kelurahan] = (coordinateBuckets[hotspotKey].labels[kelurahan] || 0) + 1;
+      } else {
+        coordinateMissing++;
       }
 
       if (idxKelompokUmur !== -1) {
@@ -456,6 +507,42 @@ function getDashboardStats(dx, tahun, token) {
       topRtRw: _buildTopEntries_(perRtRw, 10)
     };
 
+    const hotspotPoints = Object.keys(coordinateBuckets).map(function(key) {
+      var item = coordinateBuckets[key];
+      var topLabel = Object.keys(item.labels || {}).sort(function(a, b) {
+        var diff = (item.labels[b] || 0) - (item.labels[a] || 0);
+        if (diff) return diff;
+        return String(a || '').localeCompare(String(b || ''));
+      })[0] || item.kelurahan || item.kecamatan || 'Titik koordinat';
+      return {
+        key: key,
+        lat: item.lat,
+        lon: item.lon,
+        count: item.count,
+        kecamatan: item.kecamatan || '',
+        kelurahan: item.kelurahan || '',
+        label: topLabel
+      };
+    }).sort(function(a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return String(a.label || '').localeCompare(String(b.label || ''));
+    });
+
+    const coordinateSummary = {
+      totalWithCoordinates: hotspotPoints.reduce(function(sum, item) { return sum + (item.count || 0); }, 0),
+      missingCoordinates: coordinateMissing,
+      clusteredPointCount: hotspotPoints.length,
+      topHotspots: hotspotPoints.slice(0, 10).map(function(item) {
+        return {
+          label: [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || item.label,
+          count: item.count,
+          lat: item.lat,
+          lon: item.lon
+        };
+      }),
+      points: hotspotPoints.slice(0, 500)
+    };
+
     return {
       totalKasus: totalKasus,
       perKecamatan: perKecamatan,
@@ -468,6 +555,7 @@ function getDashboardStats(dx, tahun, token) {
       perJenisKelamin: perJenisKelamin,
       qualityCards: qualityCards,
       wilayahSummary: wilayahSummary,
+      coordinateSummary: coordinateSummary,
       verificationQueue: verificationQueue,
       epidemiology: {
         medianReportToTrackingDays: _medianNumber_(lagsReportToTracking),

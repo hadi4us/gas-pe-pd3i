@@ -85,3 +85,4 @@
 - [x] Dashboard admin sekarang punya queue verifikasi yang benar-benar terhubung end-to-end di modal dashboard: backend stats mengirim data queue, tab Pending / Perlu Revisi / Terverifikasi tampil, dan tombol Review langsung membuka workspace admin review
 - [x] Queue verifikasi admin dipoles dengan filter `Puskesmas` dan `Tanggal Input` agar triage review lebih cepat
 - [x] Dashboard statistik sekarang punya panel sebaran wilayah operasional: ringkasan kecamatan/kelurahan/RW aktif plus ranking top kecamatan, top kelurahan, top RW, dan top cluster RT/RW
+- [x] Dashboard statistik sekarang punya hotspot map berbasis koordinat kasus: cluster titik koordinat, ranking hotspot teratas, dan ringkasan kasus bertitik koordinat vs data yang belum punya koordinat

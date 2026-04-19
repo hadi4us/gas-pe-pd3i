@@ -25,10 +25,10 @@
    - Tambah drill-down/filter interaktif untuk kecamatan / kelurahan
    - Pertimbangkan sinkronisasi dengan data pengampu (`REF_PENGAMPU`) untuk overlay wilayah kerja puskesmas
 
-5. **Hotspot map dari koordinat**
-   - Peta titik kasus
-   - Layer heatmap / hotspot
-   - Filter diagnosis / periode
+5. **Hotspot map lanjutan**
+   - Pertimbangkan heat layer / density overlay yang lebih halus
+   - Tambah drill-down klik hotspot -> daftar kasus terkait
+   - Sinkronkan dengan filter wilayah (kecamatan/kelurahan) bila dashboard sudah punya drill-down
 
 6. **Polish dashboard admin review**
    - Tambah badge status verifikasi di kartu statistik utama
