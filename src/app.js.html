@@ -2156,7 +2156,7 @@
 
     const payload = collectCurrentFormPayload();
     payload['ID Registrasi Kasus'] = payload['ID Registrasi Kasus'] || (window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META['ID Registrasi Kasus']) || '';
-    const dx = String(document.getElementById('selector_dx')?.value || '').trim();
+    const dx = String(document.getElementById('form-selector')?.value || '').trim();
     if (!dx) return;
 
     if (!opts.silentLoading) {
@@ -2215,7 +2215,7 @@
     if (pendingVerification.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2 pd3i-inbox-list">';
       pendingVerification.forEach(function(item) {
-        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('selector_dx')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
+        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('form-selector')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2223,7 +2223,7 @@
     if (revisionQueue.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2 pd3i-inbox-list">';
       revisionQueue.forEach(function(item) {
-        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('selector_dx')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
+        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('form-selector')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2234,7 +2234,7 @@
   }
 
   function refreshWorkflowInbox() {
-    const dx = String(document.getElementById('selector_dx')?.value || '').trim();
+    const dx = String(document.getElementById('form-selector')?.value || '').trim();
     const box = document.getElementById('workflow-inbox');
     if (!box) return;
     if (!dx || !safeGsRun() || !SESSION_TOKEN) {
