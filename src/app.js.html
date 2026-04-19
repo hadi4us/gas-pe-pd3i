@@ -1951,6 +1951,60 @@
     return map[raw] || 'overview';
   }
 
+  function getRouteBootConfig() {
+    const body = document.body;
+    return {
+      initialView: String(body?.dataset.initialView || 'app').trim().toLowerCase(),
+      initialWorkspace: normalizeSidebarWorkspace(body?.dataset.initialWorkspace || 'overview'),
+      appUrl: String(body?.dataset.appUrl || '').trim(),
+      dashboardUrl: String(body?.dataset.dashboardUrl || '').trim()
+    };
+  }
+
+  function buildWorkspaceRouteUrl(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const boot = getRouteBootConfig();
+    const appUrl = boot.appUrl || window.location.href.split('?')[0];
+    if (normalized === 'dashboard') {
+      return boot.dashboardUrl || (appUrl ? appUrl + '?view=dashboard' : '');
+    }
+    if (normalized === 'overview') return appUrl;
+    return appUrl ? appUrl + '?workspace=' + encodeURIComponent(normalized) : '';
+  }
+
+  function applyInitialRouteView() {
+    const boot = getRouteBootConfig();
+    const requestedWorkspace = boot.initialView === 'dashboard' ? 'dashboard' : boot.initialWorkspace;
+    if (!SESSION_USER) {
+      return openSidebarWorkspace(requestedWorkspace, {
+        scroll: false,
+        useRoute: false,
+        autoLoad: false
+      });
+    }
+    const currentRole = String((SESSION_USER && SESSION_USER.role) || '').trim().toLowerCase();
+    if (requestedWorkspace === 'dashboard' && currentRole !== 'admin') {
+      try {
+        const fallbackUrl = buildWorkspaceRouteUrl('overview');
+        if (fallbackUrl && window.history && window.history.replaceState) {
+          window.history.replaceState({}, '', fallbackUrl);
+        }
+      } catch (e) {}
+      if (typeof showTopAlert === 'function') {
+        showTopAlert('Dashboard statistik saat ini hanya tersedia untuk role admin.', false);
+      }
+      openSidebarWorkspace('overview', { scroll: false, useRoute: false });
+      return 'overview';
+    }
+    return openSidebarWorkspace(requestedWorkspace, {
+      scroll: false,
+      useRoute: false,
+      autoLoad: requestedWorkspace === 'dashboard'
+    });
+  }
+
+  window.applyInitialRouteView = applyInitialRouteView;
+
   function getWorkspaceStageForSidebar(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
     const map = {
@@ -2007,6 +2061,15 @@
     const opts = options || {};
     const normalized = normalizeSidebarWorkspace(workspace);
     const targetStage = getWorkspaceStageForSidebar(normalized);
+
+    if (opts.useRoute) {
+      const targetUrl = buildWorkspaceRouteUrl(normalized);
+      const currentUrl = window.location.href.split('#')[0];
+      if (targetUrl && currentUrl !== targetUrl) {
+        window.location.assign(targetUrl);
+        return normalized;
+      }
+    }
 
     if (normalized === 'dashboard') {
       if (typeof openDashboardSection === 'function') {
@@ -3601,14 +3664,14 @@
       syncDiagnosisSelectorUi();
       updateSidebarActiveState("overview");
       updateFormStepperState("section-pelapor");
-      openSidebarWorkspace("overview", { scroll: false });
+      applyInitialRouteView();
 
       document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
         link.addEventListener('click', function(e) {
           e.preventDefault();
           const workspace = String(link.getAttribute('data-sidebar-workspace') || '').trim();
           if (!workspace) return;
-          openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard' });
+          openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
         });
       });
 
@@ -3788,7 +3851,7 @@
           btnDashboard.classList.remove("hidden");
           btnDashboard.addEventListener("click", function () {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
-            openSidebarWorkspace("dashboard", { autoLoad: true });
+            openSidebarWorkspace("dashboard", { autoLoad: true, useRoute: true });
           });
         }
       }
@@ -3800,7 +3863,7 @@
             showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
             return;
           }
-          openSidebarWorkspace("dashboard", { autoLoad: true });
+          openSidebarWorkspace("dashboard", { autoLoad: true, useRoute: true });
         });
       }
 

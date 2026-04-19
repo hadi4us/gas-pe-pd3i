@@ -15,7 +15,7 @@
     <?!= include('style'); ?>
   </style>
 </head>
-<body class="pd3i-body">
+<body class="pd3i-body" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
 
   <?!= include('login'); ?>
   <?!= include('pin'); ?>

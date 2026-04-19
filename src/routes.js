@@ -5,9 +5,25 @@ function doGet(e) {
     return handlePrintRequest_(e);
   }
 
-  return HtmlService.createTemplateFromFile("index")
+  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status"];
+  const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
+    ? "dashboard"
+    : "app";
+  const requestedWorkspace = String((e && e.parameter && e.parameter.workspace) || "").trim().toLowerCase();
+  const initialWorkspace = view === "dashboard"
+    ? "dashboard"
+    : (allowedWorkspaces.indexOf(requestedWorkspace) !== -1 ? requestedWorkspace : "overview");
+
+  const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
+  const template = HtmlService.createTemplateFromFile("index");
+  template.initialView = view;
+  template.initialWorkspace = initialWorkspace;
+  template.appUrl = serviceUrl || "";
+  template.dashboardUrl = serviceUrl ? (serviceUrl + "?view=dashboard") : "";
+
+  return template
     .evaluate()
-    .setTitle("Form PE Surveilans PD3I")
+    .setTitle(view === "dashboard" ? "Dashboard Statistik PD3I" : "Form PE Surveilans PD3I")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }

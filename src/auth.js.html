@@ -105,6 +105,9 @@
         if (typeof window.applyRoleUIState === "function") {
           window.applyRoleUIState();
         }
+        if (typeof window.applyInitialRouteView === "function") {
+          window.applyInitialRouteView();
+        }
       }
 
       function setLoggedOutUI() {
