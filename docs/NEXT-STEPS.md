@@ -16,15 +16,16 @@
    - Tandai gap yang sudah tertutup
    - Pisahkan gap tersisa: `high / medium / low`
 
-3. **Perbaiki issue hasil UAT**
-   - Fokus pada bug render, show/hide, save, edit, dan regressions
+3. **Review manual hasil migrasi referensi**
+   - Cek `REF_USER.Catatan Migrasi`
+   - Pastikan `UnitKerja`, `KodePuskesmas`, dan `ScopeLevel` sudah benar
+   - Gunakan `docs/REFERENCE-DATA-DICTIONARY.md` sebagai acuan perubahan
 
-4. **Lanjut ke validasi epidemiologis**
-   - Mandatory fields per diagnosis
-   - Validasi lintas-field yang penting
-   - Guardrail untuk konsistensi data surveilans
+4. **Dashboard sebaran wilayah**
+   - Agregasi per diagnosis untuk kecamatan / kelurahan / RW / RT
+   - Pastikan konsisten dengan model wilayah baru (`REF_PENGAMPU` + domisili pasien)
 
-5. **Hardening operasional**
-   - Review keamanan web app
-   - Monitoring deploy aktif
-   - Review kompatibilitas sheet existing
+5. **Hotspot map dari koordinat**
+   - Peta titik kasus
+   - Layer heatmap / hotspot
+   - Filter diagnosis / periode

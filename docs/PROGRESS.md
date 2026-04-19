@@ -78,3 +78,4 @@
 - [x] UX workflow dibuat lebih eksplisit lewat pilihan jalur kerja (input baru / verifikasi / hasil pemeriksaan / update status), sehingga user diarahkan sejak awal apakah harus mulai dari form kosong atau dari pencarian record existing
 - [x] `REF_USER` dan `REF_PENGAMPU` live sudah diarsipkan ke sheet legacy lalu dibentuk ulang ke model baru: `REF_PENGAMPU` sebagai source of truth wilayah (Kab/Kota + Kecamatan + Kelurahan -> puskesmas pengampu), `REF_USER` sebagai akun + role + unit/scope puskesmas/dinkes
 - [x] Rule akses hasil pemeriksaan kini disinkronkan ke model baru: non-admin dicek lewat puskesmas pengampu domisili pasien, bukan daftar kelurahan mentah di `REF_USER`
+- [x] Kamus sheet referensi dan relasi kolom dibuat di `docs/REFERENCE-DATA-DICTIONARY.md` agar perubahan `REF_USER` / `REF_PENGAMPU` berikutnya bisa diaudit dampaknya sebelum refactor
