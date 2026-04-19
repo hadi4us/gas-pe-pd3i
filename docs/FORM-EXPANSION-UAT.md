@@ -378,15 +378,17 @@ Uji minimal sekali per DX:
 ### TC-WF-06 — Pemisahan tahap kerja form
 - pilih DX lalu buka form baru
 - pastikan default yang tampil hanya tahap input (`section-pelapor`, `section-pasien`, `section-specific`)
+- gunakan pilihan jalur kerja: `Input kasus baru`, `Verifikasi data existing`, `Input hasil pemeriksaan`, `Update status pasien`
 - klik step `Verifikasi EPID`, `Hasil Sampel`, atau `Status Pasien` sebelum ada record awal
 - simpan input awal sampai EPID terbentuk / buka record existing lewat pencarian
 - setelah record existing dibuka, klik lagi step verifikasi / sampel / status
 
 **Expected**
 - Pada form baru, tahap lanjutan tidak boleh terasa aktif bersamaan dengan tahap input.
+- UX harus menjelaskan dengan tegas mana alur yang dimulai dari form kosong vs mana yang dimulai dari pencarian record existing.
 - Tahap verifikasi/sampel/status terkunci sampai record awal tersimpan atau existing record dibuka.
 - Saat satu tahap dipilih, hanya section tahap itu yang ditampilkan.
-- Tombol submit dan helper text mengikuti tahap aktif.
+- Tombol submit, helper text, dan CTA hasil pencarian mengikuti tahap aktif.
 
 ### TC-WF-07 — Role tahap-spesifik / kewenangan wilayah
 Gunakan akun contoh dengan role berbeda di `REF_USER`:

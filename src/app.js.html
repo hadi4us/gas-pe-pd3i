@@ -1924,6 +1924,8 @@
     });
   }
 
+  let WORKFLOW_SEARCH_INTENT = "section-pelapor";
+
   function getWorkflowStepDefinitions() {
     return [
       { id: "section-pelapor", label: "Input Kasus", sections: ["section-pelapor", "section-pasien", "section-specific"] },
@@ -1942,6 +1944,100 @@
   function canAccessDeferredWorkflowStages() {
     const epid = String(document.getElementById("Nomor EPID")?.value || "").trim();
     return !!epid || isEditMode || isViewerSession();
+  }
+
+  function getWorkflowIntentConfig(intent) {
+    const normalized = normalizeWorkflowStepId(intent);
+    const map = {
+      "section-pelapor": {
+        title: "Mulai input kasus baru",
+        badge: "Input workspace",
+        helper: "Mode ini dipakai untuk entri kasus baru. Fokus ke form input awal tanpa perlu mencari record lama.",
+        searchHelper: "Pencarian tetap tersedia kalau mau cek data existing, tapi alur utama saat ini adalah input kasus baru.",
+        actionLabel: "Buka untuk Edit",
+        successMessage: "Mode kerja diarahkan ke input kasus baru."
+      },
+      "section-verifikasi": {
+        title: "Cari data existing untuk verifikasi",
+        badge: "Verifikasi workspace",
+        helper: "Verifikasi dipisah dari input awal. Cari dan buka record existing dulu, lalu masuk ke tahap verifikasi EPID.",
+        searchHelper: "Cari record yang ingin diverifikasi. Setelah dibuka, form langsung diarahkan ke tahap verifikasi EPID.",
+        actionLabel: "Buka untuk Verifikasi",
+        successMessage: "Cari dulu record existing yang ingin diverifikasi."
+      },
+      "section-sampel": {
+        title: "Cari data existing untuk input hasil pemeriksaan",
+        badge: "Hasil pemeriksaan workspace",
+        helper: "Input hasil pemeriksaan dipisah dari input awal. Cari record pasien dulu, lalu isi hasil pemeriksaan pada tahap sampel.",
+        searchHelper: "Cari record pasien yang sudah ada. Setelah dibuka, form langsung diarahkan ke tahap hasil pemeriksaan.",
+        actionLabel: "Buka untuk Hasil",
+        successMessage: "Cari dulu record existing yang ingin diisi hasil pemeriksaannya."
+      },
+      "section-status": {
+        title: "Cari data existing untuk update status",
+        badge: "Status workspace",
+        helper: "Update status dipisah dari input awal. Cari record existing dulu, lalu fokus ke tahap update status pasien / kasus.",
+        searchHelper: "Cari record pasien yang ingin diubah statusnya. Setelah dibuka, form langsung diarahkan ke tahap update status.",
+        actionLabel: "Buka untuk Status",
+        successMessage: "Cari dulu record existing yang ingin diperbarui statusnya."
+      }
+    };
+    return map[normalized] || map["section-pelapor"];
+  }
+
+  function getLandingWorkflowIntentForUser() {
+    const caps = getRoleCapabilities(SESSION_USER);
+    if (caps.writeStages && caps.writeStages.length === 1) {
+      return normalizeWorkflowStepId(caps.writeStages[0]);
+    }
+    return "section-pelapor";
+  }
+
+  function focusSearchShell() {
+    const shell = document.getElementById("section-search-shell");
+    if (shell) shell.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function setWorkflowSearchIntent(intent, options) {
+    const opts = options || {};
+    const normalized = normalizeWorkflowStepId(intent);
+    const cfg = getWorkflowIntentConfig(normalized);
+    WORKFLOW_SEARCH_INTENT = normalized;
+
+    document.querySelectorAll(".pd3i-workflow-intent-card[data-workflow-intent]").forEach(function(btn) {
+      const target = normalizeWorkflowStepId(String(btn.getAttribute("data-workflow-intent") || "").trim());
+      btn.classList.toggle("is-active", target === normalized);
+    });
+
+    const titleEl = document.getElementById("workflow-search-title");
+    const badgeEl = document.getElementById("workflow-search-badge");
+    const helperEl = document.getElementById("workflow-search-helper");
+    const searchHelperEl = document.getElementById("search-context-helper");
+
+    if (titleEl) titleEl.textContent = cfg.title;
+    if (badgeEl) badgeEl.textContent = cfg.badge;
+    if (helperEl) helperEl.textContent = cfg.helper;
+    if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
+
+    if (!opts.skipStageSync && normalized === "section-pelapor") {
+      updateFormStepperState("section-pelapor");
+      if (opts.focusForm) {
+        const form = document.getElementById("dynamic-form");
+        if (form) form.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else if (opts.focusSearch !== false && normalized !== "section-pelapor") {
+      focusSearchShell();
+    }
+
+    return normalized;
+  }
+
+  function getWorkflowSearchActionLabel() {
+    return getWorkflowIntentConfig(WORKFLOW_SEARCH_INTENT).actionLabel || "Buka / Edit";
+  }
+
+  function getWorkflowSearchOpenSuccessMessage(intent) {
+    return getWorkflowIntentConfig(intent).successMessage || "Record existing berhasil dibuka.";
   }
 
   function getWorkflowStageHelperText(stepId) {
@@ -2170,7 +2266,8 @@
   function goToWorkflowStep(targetId) {
     const normalized = normalizeWorkflowStepId(targetId);
     if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
-      showTopAlert("Tahap verifikasi, hasil pemeriksaan, dan update status dibuka setelah input awal tersimpan / record existing dibuka.", false);
+      setWorkflowSearchIntent(normalized, { focusSearch: true });
+      showTopAlert(`Tahap ${getWorkflowStepDefinitions().find(function(step) { return step.id === normalized; })?.label || normalized} dimulai dari pencarian record existing. Cari dan buka record dulu, baru lanjut ke tahap ini.`, false);
       updateFormStepperState("section-pelapor");
       return;
     }
@@ -2180,6 +2277,7 @@
     const targetSectionId = (currentStep.sections || [normalized])[0] || normalized;
     const el = document.getElementById(targetSectionId);
     if (el) {
+      setWorkflowSearchIntent(normalized, { focusSearch: false, focusForm: false, skipStageSync: true });
       updateFormStepperState(normalized);
       updateSidebarActiveState(normalized);
       updateWorkflowProgressUI(normalized);
@@ -3009,6 +3107,7 @@
       const btnOpenPin = document.getElementById("btn-open-pin");
       const btnPrevStep = document.getElementById("btn-prev-step");
       const btnNextStep = document.getElementById("btn-next-step");
+      const workflowIntentButtons = Array.from(document.querySelectorAll('.pd3i-workflow-intent-card[data-workflow-intent]'));
 
       if (!selector || !formElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !btnSubmit) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
@@ -3062,7 +3161,8 @@
           else btnRetryTelegram.classList.remove("hidden");
         }
 
-        const currentActiveStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
+        const currentActiveStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getLandingWorkflowIntentForUser();
+        setWorkflowSearchIntent(currentActiveStage, { focusSearch: false, focusForm: false, skipStageSync: true });
         updateFormStepperState(currentActiveStage);
 
         return { isViewer, isAdmin, currentRole, caps };
@@ -3376,6 +3476,7 @@
           formElement.classList.add("hidden");
           if (searchContainer) searchContainer.classList.add("hidden");
           if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
+          setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
           updateFormStepperState("section-pelapor");
           updateUiShellSummary();
           return;
@@ -3384,7 +3485,9 @@
         formElement.classList.remove("hidden");
         if (searchContainer) searchContainer.classList.remove("hidden");
         if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
-        updateFormStepperState("section-pelapor");
+        const defaultIntent = getLandingWorkflowIntentForUser();
+        setWorkflowSearchIntent(defaultIntent, { focusSearch: defaultIntent !== "section-pelapor", focusForm: defaultIntent === "section-pelapor" });
+        updateFormStepperState(defaultIntent === "section-pelapor" ? "section-pelapor" : "section-pelapor");
         updateSidebarActiveState("section-pelapor");
 
         (COMMON.pelapor || []).forEach(f => {
@@ -3438,6 +3541,18 @@
 
           updateUiShellSummary();
         }, 50);
+      });
+
+      workflowIntentButtons.forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          const target = String(btn.getAttribute("data-workflow-intent") || "").trim();
+          const normalized = setWorkflowSearchIntent(target, { focusSearch: target !== "section-pelapor", focusForm: target === "section-pelapor" });
+          if (normalized === "section-pelapor") {
+            showTopAlert("Mode kerja diarahkan ke input kasus baru. Gunakan form utama untuk entri awal.", true);
+            return;
+          }
+          showTopAlert(getWorkflowSearchOpenSuccessMessage(normalized), true);
+        });
       });
 
       if (btnSearchEpid) {
@@ -3511,6 +3626,7 @@
         html += `<div class="pd3i-search-results-wrap">`;
 
         const isViewerMode = isViewerSession();
+        const workflowActionLabel = getWorkflowSearchActionLabel();
         results.forEach(function(item) {
           const safeEpid = (item.epid || "").replace(/'/g, "\\'");
           const statusKasus = item.statusKasus || "Belum ditentukan";
@@ -3537,7 +3653,7 @@
               </div>
             </div>
             <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeEpid}', '${dx}')">
-              <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : 'Buka / Edit'}
+              <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
             </button>
           </div>`;
         });
@@ -3604,14 +3720,15 @@
             forceBuildImunisasiWhenReady();
             hydrateDynamicTables(record);
             syncCaseStatusOptionsByDx(dx);
-            const activeStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
-            const preferredStage = canWriteWorkflowStage(SESSION_USER, activeStage) || isViewerSession()
-              ? activeStage
+            const requestedStage = WORKFLOW_SEARCH_INTENT || document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
+            const preferredStage = canWriteWorkflowStage(SESSION_USER, requestedStage) || isViewerSession()
+              ? requestedStage
               : getPreferredWorkflowStageForUser();
+            setWorkflowSearchIntent(preferredStage, { focusSearch: false, focusForm: false, skipStageSync: true });
             updateFormStepperState(preferredStage);
             updateUiShellSummary();
 
-            showTopAlert("Data berhasil dimuat. Tahap verifikasi / hasil pemeriksaan / status sekarang bisa dibuka sesuai kebutuhan.", true);
+            showTopAlert(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, true);
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {

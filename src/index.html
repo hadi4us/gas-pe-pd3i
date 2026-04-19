@@ -175,11 +175,43 @@
         <section id="section-search-shell" class="pd3i-shell-card pd3i-search-card">
           <div class="pd3i-card-header-row">
             <div>
-              <div class="pd3i-card-eyebrow">2. Cari / edit data</div>
-              <h3 class="pd3i-card-title">Pencarian cepat kasus existing</h3>
+              <div class="pd3i-card-eyebrow">2. Pilih alur kerja</div>
+              <h3 id="workflow-search-title" class="pd3i-card-title">Tentukan dulu kerja yang mau dilakukan</h3>
             </div>
-            <span class="pd3i-badge-soft">Search workspace</span>
+            <span id="workflow-search-badge" class="pd3i-badge-soft">Workflow workspace</span>
           </div>
+
+          <div id="workflow-intent-bar" class="pd3i-workflow-intent-grid">
+            <button type="button" class="pd3i-workflow-intent-card is-active" data-workflow-intent="section-pelapor">
+              <span class="pd3i-workflow-intent-index">1</span>
+              <span class="pd3i-workflow-intent-copy">
+                <strong>Input kasus baru</strong>
+                <small>Mulai dari form kosong untuk entri awal kasus</small>
+              </span>
+            </button>
+            <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-verifikasi">
+              <span class="pd3i-workflow-intent-index">2</span>
+              <span class="pd3i-workflow-intent-copy">
+                <strong>Verifikasi data existing</strong>
+                <small>Cari dulu record lama, lalu buka tahap verifikasi EPID</small>
+              </span>
+            </button>
+            <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-sampel">
+              <span class="pd3i-workflow-intent-index">3</span>
+              <span class="pd3i-workflow-intent-copy">
+                <strong>Input hasil pemeriksaan</strong>
+                <small>Cari record pasien, lalu isi hasil pemeriksaan sampel</small>
+              </span>
+            </button>
+            <button type="button" class="pd3i-workflow-intent-card" data-workflow-intent="section-status">
+              <span class="pd3i-workflow-intent-index">4</span>
+              <span class="pd3i-workflow-intent-copy">
+                <strong>Update status pasien</strong>
+                <small>Cari record existing, lalu fokus ke perubahan status kasus</small>
+              </span>
+            </button>
+          </div>
+          <div id="workflow-search-helper" class="pd3i-helper-text mt-3">Pilih jalur kerja dulu. Input baru dimulai dari form, sedangkan verifikasi / hasil pemeriksaan / update status dimulai dari pencarian record existing.</div>
 
           <div id="search-container" class="hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -192,7 +224,7 @@
             </div>
             <div class="pd3i-search-actions">
               <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
-                <i class="fas fa-search"></i> Cari Data
+                <i class="fas fa-search"></i> Cari Data Existing
               </button>
               <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact">
                 <option value="updated_desc">Urutkan: Terbaru dulu</option>
@@ -205,7 +237,7 @@
               </select>
             </div>
             <div id="search-results" class="hidden mt-4 border border-blue-200 rounded-lg bg-white overflow-hidden"></div>
-            <div class="pd3i-helper-text">Cari berdasarkan EPID, nama pasien, tanggal lahir, alamat, atau orang tua/wali.</div>
+            <div id="search-context-helper" class="pd3i-helper-text">Cari berdasarkan EPID, nama pasien, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing sesuai tahap kerja yang dipilih.</div>
           </div>
 
           <div id="search-placeholder" class="pd3i-empty-state">
