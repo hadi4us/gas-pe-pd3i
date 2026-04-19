@@ -115,6 +115,25 @@ function _medianNumber_(arr) {
   return Math.round(((arr[mid - 1] + arr[mid]) / 2) * 10) / 10;
 }
 
+function _incrementCounter_(bucket, key) {
+  key = String(key || "").trim();
+  if (!key) return;
+  bucket[key] = (bucket[key] || 0) + 1;
+}
+
+function _buildTopEntries_(bucket, limit) {
+  limit = limit || 10;
+  return Object.keys(bucket || {})
+    .map(function(key) {
+      return { label: key, count: bucket[key] || 0 };
+    })
+    .sort(function(a, b) {
+      if (b.count !== a.count) return b.count - a.count;
+      return String(a.label || "").localeCompare(String(b.label || ""));
+    })
+    .slice(0, limit);
+}
+
 // ─── Helper: escape nilai CSV (RFC 4180) ─────────────────────────────────────
 
 /**
@@ -183,10 +202,14 @@ function getDashboardStats(dx, tahun, token) {
       return {
         totalKasus: 0,
         perKecamatan: {},
+        perKelurahan: {},
+        perRw: {},
+        perRtRw: {},
         perBulan: {},
         perStatusKasus: {},
         qualityCards: { pendingVerification: 0, waitingSampleResult: 0, confirmed: 0, discarded: 0, clinical: 0 },
         epidemiology: { medianReportToTrackingDays: null, sameDayReportTrackingRate: null, medianOnsetToReportDays: null, workflowCompletenessRate: null },
+        wilayahSummary: { kecamatanCount: 0, kelurahanCount: 0, rwCount: 0, rtRwCount: 0, topKecamatan: [], topKelurahan: [], topRw: [], topRtRw: [] },
         perKelompokUmur: {},
         perJenisKelamin: {},
         verificationQueue: { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] },
@@ -209,6 +232,8 @@ function getDashboardStats(dx, tahun, token) {
       "Tanggal mulai sakit/gejala awal sebelum lumpuh"
     ]);
     const idxKecamatan = headers.indexOf("Kecamatan");
+    const idxRT = headers.indexOf("RT");
+    const idxRW = headers.indexOf("RW");
     const idxKelompokUmur = headers.indexOf("Kelompok Umur Epidemiologis");
     const idxJK = headers.indexOf("JK");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
@@ -229,6 +254,9 @@ function getDashboardStats(dx, tahun, token) {
     // Hasil agregasi
     let totalKasus = 0;
     const perKecamatan = {};
+    const perKelurahan = {};
+    const perRw = {};
+    const perRtRw = {};
     const perBulan = {};
     const perStatusKasus = {};
     const perKelompokUmur = {};
@@ -276,12 +304,21 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
+      const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || "").trim() : "";
+      const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || "").trim() : "";
+      const rw = idxRW !== -1 ? String(row[idxRW] || "").trim() : "";
+      const rt = idxRT !== -1 ? String(row[idxRT] || "").trim() : "";
+
       // Req 6.2: distribusi per kecamatan
-      if (idxKecamatan !== -1) {
-        const kec = String(row[idxKecamatan] || "").trim();
-        if (kec) {
-          perKecamatan[kec] = (perKecamatan[kec] || 0) + 1;
-        }
+      _incrementCounter_(perKecamatan, kecamatan);
+      if (kelurahan) {
+        _incrementCounter_(perKelurahan, (kecamatan ? kecamatan + ' / ' : '') + kelurahan);
+      }
+      if (rw) {
+        _incrementCounter_(perRw, [kecamatan, kelurahan, 'RW ' + rw].filter(Boolean).join(' / '));
+      }
+      if (rw && rt) {
+        _incrementCounter_(perRtRw, [kecamatan, kelurahan, 'RW ' + rw, 'RT ' + rt].filter(Boolean).join(' / '));
       }
 
       if (idxKelompokUmur !== -1) {
@@ -353,8 +390,8 @@ function getDashboardStats(dx, tahun, token) {
             epid: epid,
             nama: idxNama !== -1 ? String(row[idxNama] || "").trim() : "",
             puskesmas: idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || "").trim() : "",
-            kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || "").trim() : "",
-            kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || "").trim() : "",
+            kecamatan: kecamatan,
+            kelurahan: kelurahan,
             statusVerifikasi: verificationStatus,
             catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || "").trim() : "",
             inputAt: inputAt,
@@ -408,14 +445,29 @@ function getDashboardStats(dx, tahun, token) {
       verificationQueue[key] = verificationQueue[key].slice(0, 200);
     });
 
+    const wilayahSummary = {
+      kecamatanCount: Object.keys(perKecamatan).length,
+      kelurahanCount: Object.keys(perKelurahan).length,
+      rwCount: Object.keys(perRw).length,
+      rtRwCount: Object.keys(perRtRw).length,
+      topKecamatan: _buildTopEntries_(perKecamatan, 10),
+      topKelurahan: _buildTopEntries_(perKelurahan, 10),
+      topRw: _buildTopEntries_(perRw, 10),
+      topRtRw: _buildTopEntries_(perRtRw, 10)
+    };
+
     return {
       totalKasus: totalKasus,
       perKecamatan: perKecamatan,
+      perKelurahan: perKelurahan,
+      perRw: perRw,
+      perRtRw: perRtRw,
       perBulan: perBulan,
       perStatusKasus: perStatusKasus,
       perKelompokUmur: perKelompokUmur,
       perJenisKelamin: perJenisKelamin,
       qualityCards: qualityCards,
+      wilayahSummary: wilayahSummary,
       verificationQueue: verificationQueue,
       epidemiology: {
         medianReportToTrackingDays: _medianNumber_(lagsReportToTracking),

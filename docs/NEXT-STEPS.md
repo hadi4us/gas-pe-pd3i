@@ -21,9 +21,9 @@
    - Pastikan `UnitKerja`, `KodePuskesmas`, dan `ScopeLevel` sudah benar
    - Gunakan `docs/REFERENCE-DATA-DICTIONARY.md` sebagai acuan perubahan
 
-4. **Dashboard sebaran wilayah**
-   - Agregasi per diagnosis untuk kecamatan / kelurahan / RW / RT
-   - Pastikan konsisten dengan model wilayah baru (`REF_PENGAMPU` + domisili pasien)
+4. **Dashboard sebaran wilayah lanjutan**
+   - Tambah drill-down/filter interaktif untuk kecamatan / kelurahan
+   - Pertimbangkan sinkronisasi dengan data pengampu (`REF_PENGAMPU`) untuk overlay wilayah kerja puskesmas
 
 5. **Hotspot map dari koordinat**
    - Peta titik kasus

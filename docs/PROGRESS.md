@@ -84,3 +84,4 @@
 - [x] Workflow review dipoles lagi: pencarian sekarang bisa difilter berdasarkan status verifikasi, dan jalur kerja menampilkan badge count untuk pending review / revisi agar antrian kerja lebih terlihat
 - [x] Dashboard admin sekarang punya queue verifikasi yang benar-benar terhubung end-to-end di modal dashboard: backend stats mengirim data queue, tab Pending / Perlu Revisi / Terverifikasi tampil, dan tombol Review langsung membuka workspace admin review
 - [x] Queue verifikasi admin dipoles dengan filter `Puskesmas` dan `Tanggal Input` agar triage review lebih cepat
+- [x] Dashboard statistik sekarang punya panel sebaran wilayah operasional: ringkasan kecamatan/kelurahan/RW aktif plus ranking top kecamatan, top kelurahan, top RW, dan top cluster RT/RW
