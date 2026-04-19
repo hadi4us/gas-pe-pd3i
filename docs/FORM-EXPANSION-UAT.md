@@ -357,6 +357,7 @@ Checklist:
 - isi `Tanggal Update Status`
 - cek apakah opsi `Dasar Penetapan Status` menyesuaikan konteks status
 - cek apakah transisi status yang tidak valid ditolak
+- cek apakah summary panel menampilkan petunjuk transisi status berikutnya yang valid
 - cek apakah row baru muncul di `Riwayat Status Kasus`
 - simpan lalu edit ulang, pastikan timeline tetap ada
 

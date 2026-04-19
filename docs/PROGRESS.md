@@ -56,5 +56,7 @@
 - [x] Role model di UI dibuat lebih eksplisit lewat capability summary (Admin / Petugas / Viewer)
 - [x] Dasar penetapan status kini menyesuaikan diagnosis + status kasus agar workflow status lebih cerdas
 - [x] Aturan transisi status kasus ditambahkan agar workflow tidak melompat seenaknya
+- [x] Summary panel sekarang memberi petunjuk transisi status berikutnya yang valid
+- [x] User badge kini menampilkan nama + role aktif
 - [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`
 - [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin

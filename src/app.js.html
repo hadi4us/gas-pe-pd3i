@@ -1601,6 +1601,8 @@
     const authMeta = (typeof window !== "undefined" && window.__AUTH_SESSION_META) ? window.__AUTH_SESSION_META : null;
     const roleCaps = getRoleCapabilities(SESSION_USER);
     const viewerMode = !roleCaps.canWrite && roleCaps.canView;
+    const latestStatus = getLatestStatusFromTimeline() || statusKasus;
+    const nextStatusSummary = getNextAllowedStatusesSummary(dx, latestStatus);
 
     let issueCount = 0;
     try {
@@ -1625,6 +1627,7 @@
     }
     setSummaryText("summary-auth-session", authText);
     setSummaryText("summary-status-kasus", statusKasus);
+    setSummaryText("summary-next-statuses", nextStatusSummary);
     setSummaryText("summary-verifikasi-epid", statusVerifikasi);
     setSummaryText("summary-sampel-state", sampelState);
     setSummaryText("summary-dx-pill", dx ? `${dx} • ${dxTitle}` : "Belum dipilih");
@@ -1770,6 +1773,19 @@
     });
     const last = sorted[sorted.length - 1] || {};
     return String(last.Status || "").trim();
+  }
+
+  function getNextAllowedStatusesSummary(dx, currentStatus) {
+    let options = [];
+    if (typeof getAllowedStatusTransitions === "function") {
+      options = getAllowedStatusTransitions(dx, currentStatus);
+    } else if (typeof getCaseStatusOptions === "function") {
+      options = getCaseStatusOptions(dx);
+    }
+    options = (options || []).filter(Boolean);
+    if (!options.length) return "Tidak ada transisi lanjutan";
+    if (options.length <= 4) return options.join(", ");
+    return options.slice(0, 4).join(", ") + ` +${options.length - 4} lagi`;
   }
 
   function getCaseStatusReasonOptions(dx, status) {
