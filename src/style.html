@@ -497,6 +497,17 @@ body.modal-open {
   color: white;
 }
 
+.pd3i-stepper-item.is-disabled {
+  opacity: 0.52;
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+.pd3i-stepper-item.is-disabled:hover {
+  transform: none;
+  border-color: #d9e6f5;
+}
+
 .pd3i-stepper-index {
   width: 38px;
   height: 38px;
@@ -538,6 +549,10 @@ body.modal-open {
   flex-wrap: wrap;
   gap: 0.7rem;
   margin-top: 0.9rem;
+}
+
+.pd3i-stage-hidden {
+  display: none !important;
 }
 
 .pd3i-inline-button {

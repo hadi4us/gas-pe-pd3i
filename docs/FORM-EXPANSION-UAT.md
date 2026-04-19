@@ -375,6 +375,19 @@ Uji minimal sekali per DX:
 - Opsi `Dasar Penetapan Status` ikut berubah sesuai kombinasi diagnosis + status.
 - Transisi yang tidak sesuai diagnosis ditolak saat simpan.
 
+### TC-WF-06 — Pemisahan tahap kerja form
+- pilih DX lalu buka form baru
+- pastikan default yang tampil hanya tahap input (`section-pelapor`, `section-pasien`, `section-specific`)
+- klik step `Verifikasi EPID`, `Hasil Sampel`, atau `Status Pasien` sebelum ada record awal
+- simpan input awal sampai EPID terbentuk / buka record existing lewat pencarian
+- setelah record existing dibuka, klik lagi step verifikasi / sampel / status
+
+**Expected**
+- Pada form baru, tahap lanjutan tidak boleh terasa aktif bersamaan dengan tahap input.
+- Tahap verifikasi/sampel/status terkunci sampai record awal tersimpan atau existing record dibuka.
+- Saat satu tahap dipilih, hanya section tahap itu yang ditampilkan.
+- Tombol submit dan helper text mengikuti tahap aktif.
+
 ### TC-WF-05 — Search result workflow badges
 - cari data existing
 - pastikan hasil pencarian menampilkan:

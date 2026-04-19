@@ -1620,6 +1620,8 @@
         if (el.type === "hidden") return false;
         const wrapper = el.closest(".field-wrapper");
         if (wrapper && wrapper.classList.contains("hidden")) return false;
+        const hiddenStage = el.closest(".pd3i-stage-hidden");
+        if (hiddenStage) return false;
         return typeof el.checkValidity === "function" && !el.checkValidity();
       });
 
@@ -1932,6 +1934,88 @@
     return "section-pelapor";
   }
 
+  function canAccessDeferredWorkflowStages() {
+    const epid = String(document.getElementById("Nomor EPID")?.value || "").trim();
+    return !!epid || isEditMode || isViewerSession();
+  }
+
+  function getWorkflowStageHelperText(stepId) {
+    const normalized = normalizeWorkflowStepId(stepId);
+    const canAccessLater = canAccessDeferredWorkflowStages();
+
+    if (normalized === "section-pelapor") {
+      return "Tahap input awal dipakai untuk identitas kasus, pelapor, klinis, epidemiologi, dan data dasar pasien.";
+    }
+    if (!canAccessLater) {
+      return "Tahap lanjutan belum dibuka. Simpan input awal dulu atau buka record existing untuk verifikasi, hasil pemeriksaan, dan update status.";
+    }
+    if (normalized === "section-verifikasi") {
+      return "Tahap verifikasi dipisah dari input awal. Fokuskan hanya pada pengesahan / penentuan EPID dan catatan verifikasi.";
+    }
+    if (normalized === "section-sampel") {
+      return "Tahap hasil pemeriksaan dipakai saat hasil lab/sampel sudah tersedia, tanpa mengganggu input awal dan verifikasi.";
+    }
+    if (normalized === "section-status") {
+      return "Tahap update status dipakai untuk perubahan status kasus/pasien setelah ada tindak lanjut, verifikasi, atau hasil pemeriksaan.";
+    }
+    return "Form dipisah per tahap kerja agar input awal, verifikasi, dan hasil pemeriksaan tidak terasa terjadi di saat yang sama.";
+  }
+
+  function updateSubmitButtonForWorkflowStep(stepId) {
+    const btnSubmit = document.getElementById("btn-submit");
+    if (!btnSubmit || isViewerSession()) return;
+
+    const normalized = normalizeWorkflowStepId(stepId);
+    const labels = {
+      "section-pelapor": isEditMode
+        ? `<i class="fas fa-pen-to-square"></i> Simpan Tahap Input`
+        : `<i class="fas fa-save"></i> Simpan Input Awal`,
+      "section-verifikasi": `<i class="fas fa-id-card-clip"></i> Simpan Verifikasi EPID`,
+      "section-sampel": `<i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan`,
+      "section-status": `<i class="fas fa-list-check"></i> Simpan Update Status`
+    };
+
+    btnSubmit.innerHTML = labels[normalized] || (isEditMode
+      ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
+      : `<i class="fas fa-save"></i> Simpan Data ke Database`);
+  }
+
+  function resetSubmitButtonForCurrentStage() {
+    const btnSubmit = document.getElementById("btn-submit");
+    if (!btnSubmit) return;
+    btnSubmit.disabled = !!isViewerSession();
+    updateSubmitButtonForWorkflowStep(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
+  }
+
+  function applyWorkflowStageLayout(activeId) {
+    let normalized = normalizeWorkflowStepId(activeId);
+    if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
+      normalized = "section-pelapor";
+    }
+    const steps = getWorkflowStepDefinitions();
+    const current = steps.find(function(step) { return step.id === normalized; }) || steps[0];
+    const visibleSections = new Set((current && current.sections) || []);
+    const canAccessLater = canAccessDeferredWorkflowStages();
+    const helperEl = document.getElementById("workflow-stage-helper");
+
+    ["section-pelapor", "section-pasien", "section-specific", "section-verifikasi", "section-sampel", "section-status"].forEach(function(id) {
+      const section = document.getElementById(id);
+      if (!section) return;
+      section.classList.toggle("pd3i-stage-hidden", !visibleSections.has(id));
+    });
+
+    document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
+      const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
+      const locked = target !== "section-pelapor" && !canAccessLater;
+      item.classList.toggle("is-disabled", locked);
+      item.setAttribute("aria-disabled", locked ? "true" : "false");
+      item.setAttribute("title", locked ? "Simpan input awal dulu atau buka record existing untuk tahap ini." : "");
+    });
+
+    if (helperEl) helperEl.textContent = getWorkflowStageHelperText(normalized);
+    updateSubmitButtonForWorkflowStep(normalized);
+  }
+
   function countRequiredCompletionForSections(sectionIds) {
     const ids = Array.isArray(sectionIds) ? sectionIds : [];
     let total = 0;
@@ -2003,11 +2087,12 @@
     const btnPrev = document.getElementById("btn-prev-step");
     const btnNext = document.getElementById("btn-next-step");
 
+    const canAccessLater = canAccessDeferredWorkflowStages();
     if (currentLabel) currentLabel.textContent = `Langkah ${currentIndex + 1} dari ${totalSteps} • ${currentStep.label}`;
     if (progressLabel) progressLabel.textContent = `${completion.filled}/${completion.total} field wajib terisi • total ${overallPercent}%`;
     if (progressFill) progressFill.style.width = `${Math.max(0, Math.min(100, overallPercent))}%`;
     if (btnPrev) btnPrev.disabled = currentIndex === 0;
-    if (btnNext) btnNext.disabled = currentIndex === totalSteps - 1;
+    if (btnNext) btnNext.disabled = currentIndex === totalSteps - 1 || (!canAccessLater && currentId === "section-pelapor");
 
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
       const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
@@ -2018,12 +2103,21 @@
 
   function goToWorkflowStep(targetId) {
     const normalized = normalizeWorkflowStepId(targetId);
-    const el = document.getElementById(normalized);
+    if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
+      showTopAlert("Tahap verifikasi, hasil pemeriksaan, dan update status dibuka setelah input awal tersimpan / record existing dibuka.", false);
+      updateFormStepperState("section-pelapor");
+      return;
+    }
+
+    const steps = getWorkflowStepDefinitions();
+    const currentStep = steps.find(function(step) { return step.id === normalized; }) || steps[0];
+    const targetSectionId = (currentStep.sections || [normalized])[0] || normalized;
+    const el = document.getElementById(targetSectionId);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
       updateFormStepperState(normalized);
       updateSidebarActiveState(normalized);
       updateWorkflowProgressUI(normalized);
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
 
@@ -2126,13 +2220,17 @@
   }
 
   function updateFormStepperState(activeId) {
-    const normalized = normalizeWorkflowStepId(activeId);
+    let normalized = normalizeWorkflowStepId(activeId);
+    if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
+      normalized = "section-pelapor";
+    }
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
       const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
       if (!target) return;
       if (target === normalized) item.classList.add("is-active");
       else item.classList.remove("is-active");
     });
+    applyWorkflowStageLayout(normalized);
     updateWorkflowProgressUI(normalized);
   }
 
@@ -2789,14 +2887,15 @@
       updateFormStepperState("section-pelapor");
 
       document.querySelectorAll(".pd3i-nav-link[href^='#']").forEach(function(link) {
-        link.addEventListener("click", function() {
+        link.addEventListener("click", function(e) {
           const target = String(link.getAttribute("href") || "").replace(/^#/, "");
-          if (target) {
-            updateSidebarActiveState(target);
-            if (["section-pelapor", "section-verifikasi", "section-sampel", "section-status"].includes(target)) {
-              updateFormStepperState(target);
-            }
+          if (!target) return;
+          if (["section-pelapor", "section-verifikasi", "section-sampel", "section-status"].includes(target)) {
+            e.preventDefault();
+            goToWorkflowStep(target);
+            return;
           }
+          updateSidebarActiveState(target);
         });
       });
 
@@ -2806,6 +2905,7 @@
         sectionIds.forEach(function(id) {
           const el = document.getElementById(id);
           if (!el) return;
+          if (el.classList.contains("pd3i-stage-hidden")) return;
           const rect = el.getBoundingClientRect();
           if (rect.top <= 160) currentId = id;
         });
@@ -2821,7 +2921,8 @@
       }, { passive: true });
 
       document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
-        item.addEventListener("click", function() {
+        item.addEventListener("click", function(e) {
+          e.preventDefault();
           const target = String(item.getAttribute("data-step-target") || "").trim();
           if (target) {
             goToWorkflowStep(target);
@@ -3312,9 +3413,11 @@
             forceBuildImunisasiWhenReady();
             hydrateDynamicTables(record);
             syncCaseStatusOptionsByDx(dx);
+            const activeStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+            updateFormStepperState(activeStage);
             updateUiShellSummary();
 
-            showTopAlert("Data berhasil dimuat. Silakan lakukan perubahan.", true);
+            showTopAlert("Data berhasil dimuat. Tahap verifikasi / hasil pemeriksaan / status sekarang bisa dibuka sesuai kebutuhan.", true);
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {
@@ -3342,13 +3445,18 @@
           return;
         }
 
+        const activeStageOnSubmit = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
+        if (normalizeWorkflowStepId(activeStageOnSubmit) !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
+          showTopAlert("Tahap lanjutan hanya bisa disimpan setelah input awal tersimpan / record existing dibuka.", false);
+          resetSubmitButtonForCurrentStage();
+          return;
+        }
+
         const requiredCheck = validateRequiredVisibleFields(formElement);
         if (!requiredCheck.ok) {
           showTopAlert(requiredCheck.message || "Masih ada field wajib yang belum lengkap.", false);
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = isEditMode
-            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
-            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
           return;
         }
 
@@ -3362,9 +3470,7 @@
             false
           );
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = isEditMode
-            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
-            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
           return;
         }
 
@@ -3372,9 +3478,7 @@
 
         if (!birthValidation || !birthValidation.ok) {
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = isEditMode
-            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
-            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
           return;
         }
 
@@ -3382,9 +3486,7 @@
         if (!dxRuleCheck.ok) {
           showTopAlert(dxRuleCheck.errors.join(" "), false);
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = isEditMode
-            ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
-            : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
           return;
         }
 
@@ -3406,7 +3508,7 @@
         if (!dataObj["Nama unit pelapor"]) {
           showTopAlert("Nama Unit Pelapor wajib dipilih.", false);
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
           return;
         }
 
@@ -3488,6 +3590,10 @@
             console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
 
             clearFormDraft();
+            if (epidSaved) {
+              isEditMode = true;
+              updateFormStepperState(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
+            }
             updateUiShellSummary();
 
             showSuccessModal(
@@ -3498,15 +3604,13 @@
           } else {
             showTopAlert("Error: " + (res?.message || "Gagal menyimpan data."), false);
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = isEditMode
-              ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
-              : `<i class="fas fa-save"></i> Simpan Data ke Database`;
+            resetSubmitButtonForCurrentStage();
           }
         } catch (err) {
           console.error("submit failed:", err);
           showTopAlert("Gagal submit. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.", false);
           btnSubmit.disabled = false;
-          btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+          resetSubmitButtonForCurrentStage();
         }
       });
     }
