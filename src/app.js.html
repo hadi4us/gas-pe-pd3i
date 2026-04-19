@@ -1879,11 +1879,32 @@
     if (el) el.textContent = String(value || "");
   }
 
+  function getWorkspaceDisplayLabel(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const map = {
+      overview: 'Beranda form',
+      search: 'Cari / edit',
+      input: 'Input kasus',
+      verifikasi: 'Verifikasi EPID',
+      sampel: 'Hasil sampel',
+      status: 'Status pasien',
+      dashboard: 'Dashboard statistik'
+    };
+    return map[normalized] || 'Beranda form';
+  }
+
   function updateUiShellSummary() {
     const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
     const cfg = getDxConfigSafe(dx);
     const dxTitle = cfg && cfg.title ? cfg.title : "Belum dipilih";
-    const modeText = isEditMode ? "Mode edit" : "Input baru";
+    const workspaceLabel = getWorkspaceDisplayLabel(ACTIVE_SIDEBAR_WORKSPACE);
+    const modeText = isViewerSession()
+      ? `Mode lihat • ${workspaceLabel}`
+      : isEditMode
+        ? `Record existing • ${workspaceLabel}`
+        : ACTIVE_SIDEBAR_WORKSPACE === 'input'
+          ? 'Input baru • Input kasus'
+          : workspaceLabel;
     const epidText = getFieldValueSafe("Nomor EPID") || "Otomatis saat simpan";
     const ageText = getFieldValueSafe("Umur (auto)") || "-";
     const epiGroupText = getFieldValueSafe("Kelompok Umur Epidemiologis") || "-";
@@ -2330,18 +2351,63 @@
   }
 
   function applySearchShellCopyForWorkspace(workspace) {
+    const eyebrowEl = document.getElementById("workflow-search-eyebrow");
     const titleEl = document.getElementById("workflow-search-title");
     const badgeEl = document.getElementById("workflow-search-badge");
     const helperEl = document.getElementById("workflow-search-helper");
     const searchHelperEl = document.getElementById("search-context-helper");
     const normalized = normalizeSidebarWorkspace(workspace);
+    const config = {
+      overview: {
+        eyebrow: 'Workspace record existing',
+        title: 'Cari dan buka record existing',
+        badge: 'Search workspace',
+        helper: 'Gunakan workspace ini saat mau mencari record lama untuk dicek, diedit, atau dilanjutkan ke tahap berikutnya.',
+        searchHelper: 'Cari berdasarkan EPID, ID registrasi, nama, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing.'
+      },
+      search: {
+        eyebrow: 'Workspace record existing',
+        title: 'Cari dan buka record existing',
+        badge: 'Search workspace',
+        helper: 'Workspace ini khusus untuk mencari record existing lalu membukanya ke form yang sesuai. Sidebar jadi pengarah menu utama, bukan lagi campur dengan scroll section.',
+        searchHelper: 'Cari berdasarkan EPID, ID registrasi, nama, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing.'
+      },
+      input: {
+        eyebrow: 'Workspace input kasus',
+        title: 'Input kasus baru dimulai dari diagnosis',
+        badge: 'Input workspace',
+        helper: 'Pilih diagnosis di launcher input, lalu isi form input awal. Pencarian di area ini hanya opsional bila mau cek record lama sebelum input baru.',
+        searchHelper: 'Pencarian di sini bersifat tambahan untuk cek data existing. Alur utama workspace ini tetap input kasus baru.'
+      },
+      verifikasi: {
+        eyebrow: 'Workspace verifikasi',
+        title: 'Cari record untuk verifikasi EPID',
+        badge: 'Verifikasi workspace',
+        helper: 'Verifikasi dilakukan pada record existing. Diagnosis otomatis mengikuti record yang dibuka, jadi petugas cukup fokus cari kasus yang ingin direview.',
+        searchHelper: 'Cari record existing yang ingin diverifikasi. Gunakan filter status verifikasi bila perlu untuk mempercepat review admin.'
+      },
+      sampel: {
+        eyebrow: 'Workspace hasil sampel',
+        title: 'Cari record untuk input hasil pemeriksaan',
+        badge: 'Hasil sampel workspace',
+        helper: 'Tahap ini dipakai saat hasil pemeriksaan sudah tersedia. Diagnosis mengikuti record yang dibuka, jadi user cukup fokus mencari pasien yang tepat.',
+        searchHelper: 'Cari record existing yang sudah siap diisi hasil pemeriksaannya. Gunakan filter status verifikasi untuk menyaring record yang sudah lolos review.'
+      },
+      status: {
+        eyebrow: 'Workspace update status',
+        title: 'Cari record untuk update status pasien',
+        badge: 'Status workspace',
+        helper: 'Update status adalah tindak lanjut record existing. Diagnosis tidak perlu dipilih manual lagi karena akan ikut dari record pasien.',
+        searchHelper: 'Cari record existing yang ingin diperbarui status pasien / kasusnya. Gunakan filter status verifikasi bila perlu.'
+      }
+    };
+    const cfg = config[normalized] || config.search;
 
-    if (normalized === 'search') {
-      if (titleEl) titleEl.textContent = 'Cari dan buka data existing';
-      if (badgeEl) badgeEl.textContent = 'Search workspace';
-      if (helperEl) helperEl.textContent = 'Workspace ini khusus untuk mencari record existing lalu membukanya ke form yang sesuai. Sidebar jadi pengarah menu utama, bukan lagi campur dengan scroll section.';
-      if (searchHelperEl) searchHelperEl.textContent = 'Cari berdasarkan EPID, ID registrasi, nama, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing.';
-    }
+    if (eyebrowEl) eyebrowEl.textContent = cfg.eyebrow;
+    if (titleEl) titleEl.textContent = cfg.title;
+    if (badgeEl) badgeEl.textContent = cfg.badge;
+    if (helperEl) helperEl.textContent = cfg.helper;
+    if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
   }
 
   function getCurrentSessionActorName() {
@@ -4198,7 +4264,7 @@
             if (!record) {
               showTopAlert("Data tidak ditemukan.", false);
               btnSubmit.disabled = false;
-              btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+              resetSubmitButtonForCurrentStage();
               return;
             }
 
@@ -4272,7 +4338,7 @@
             console.error("getRecordByKey failed:", err);
             showTopAlert("Gagal memuat data.", false);
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+            resetSubmitButtonForCurrentStage();
           })
           .getRecordByKey(dx, recordKey, SESSION_TOKEN);
       };
