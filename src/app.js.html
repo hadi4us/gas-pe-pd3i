@@ -592,7 +592,7 @@
     }
 
     selectEl.disabled = false;
-    selectEl.innerHTML = '<option value="">-- Pilih Rumah Sakit --</option>';
+    selectEl.innerHTML = '<option value="">-- Pilih / ketik Rumah Sakit --</option>';
 
     const filtered = (MASTER_FASKES || []).filter(f =>
       String(f.jenis || "").trim().toUpperCase() === "RUMAH SAKIT"
@@ -606,13 +606,30 @@
       selectEl.appendChild(opt);
     });
 
+    if (keepValue) {
+      const exists = Array.from(selectEl.options).some(opt => String(opt.value || "").trim() === keepValue);
+      if (!exists) {
+        const manualOpt = document.createElement("option");
+        manualOpt.value = keepValue;
+        manualOpt.textContent = keepValue + " (manual)";
+        manualOpt.setAttribute("data-manual", "1");
+        selectEl.appendChild(manualOpt);
+      }
+    }
+
     rsChoicesInstance = new Choices(selectEl, {
       searchEnabled: true,
       itemSelectText: "",
       shouldSort: false,
       placeholder: true,
-      placeholderValue: "-- Pilih Rumah Sakit --",
-      searchPlaceholderValue: "Cari rumah sakit..."
+      placeholderValue: "-- Pilih / ketik Rumah Sakit --",
+      searchPlaceholderValue: "Cari atau ketik nama rumah sakit...",
+      noResultsText: "Tidak ditemukan. Tekan Enter untuk pakai nama yang diketik.",
+      noChoicesText: "Ketik nama rumah sakit jika belum ada di daftar.",
+      addItems: true,
+      addChoices: true,
+      duplicateItemsAllowed: false,
+      removeItemButton: true
     });
 
     selectEl.removeAttribute("required");
@@ -620,10 +637,7 @@
     if (keepValue) {
       setTimeout(() => {
         try {
-          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
-          if (exists) {
-            rsChoicesInstance.setChoiceByValue(keepValue);
-          }
+          rsChoicesInstance.setChoiceByValue(keepValue);
         } catch (e) {
           console.warn("Gagal restore Nama Rumah Sakit:", e);
         }
