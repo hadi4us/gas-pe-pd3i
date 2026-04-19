@@ -1,5 +1,25 @@
 <script>
 
+  function getSafeSessionToken() {
+    try {
+      if (typeof SESSION_TOKEN !== 'undefined') return SESSION_TOKEN || '';
+    } catch (e) {}
+    try {
+      if (typeof window !== 'undefined' && typeof window.__PD3I_SESSION_TOKEN !== 'undefined') return window.__PD3I_SESSION_TOKEN || '';
+    } catch (e) {}
+    return '';
+  }
+
+  function getSafeSessionUser() {
+    try {
+      if (typeof SESSION_USER !== 'undefined') return SESSION_USER || null;
+    } catch (e) {}
+    try {
+      if (typeof window !== 'undefined' && typeof window.__PD3I_SESSION_USER !== 'undefined') return window.__PD3I_SESSION_USER || null;
+    } catch (e) {}
+    return null;
+  }
+
   function escapeHtml(text) {
     return String(text || '')
       .replace(/&/g, '&amp;')
@@ -14,7 +34,7 @@
     if (!wrap) return;
 
     const queue = stats && stats.verificationQueue ? stats.verificationQueue : null;
-    const role = String((window.SESSION_USER && window.SESSION_USER.role) || '').trim().toLowerCase();
+    const role = String((getSafeSessionUser() && getSafeSessionUser().role) || '').trim().toLowerCase();
     if (!queue || role !== 'admin') {
       wrap.classList.add('hidden');
       wrap.innerHTML = '';
@@ -289,7 +309,7 @@
 
   function openDashboardDrilldown(type, key, label, dx, tahun) {
     const wrap = document.getElementById('dashboard-drilldown-panel');
-    if (!wrap || !safeGsRun() || !SESSION_TOKEN) return;
+    if (!wrap || !safeGsRun() || !getSafeSessionToken()) return;
     window.__DASHBOARD_DRILLDOWN_STATE = { type: type, key: key, label: label, dx: dx, tahun: tahun };
     wrap.classList.remove('hidden');
     wrap.innerHTML = '<div class="pd3i-empty-state"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kasus...</div>';
@@ -300,7 +320,7 @@
       .withFailureHandler(function(err) {
         renderDashboardDrilldownPanel({ status: 'error', message: String(err && err.message ? err.message : err) }, dx, tahun);
       })
-      .getDashboardDrilldown(dx, tahun, { type: type, key: key, label: label }, SESSION_TOKEN);
+      .getDashboardDrilldown(dx, tahun, { type: type, key: key, label: label }, getSafeSessionToken());
   }
 
   function bindDashboardDrilldownActions(dx, tahun) {
@@ -405,7 +425,7 @@
     content.dataset.loaded = '';
     content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
 
-    if (!safeGsRun() || !SESSION_TOKEN) {
+    if (!safeGsRun() || !getSafeSessionToken()) {
       content.innerHTML = '<div class="pd3i-dashboard-state is-error">Tidak dapat terhubung ke server.</div>';
       return;
     }
@@ -415,7 +435,7 @@
       .withFailureHandler(function (err) {
         content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
-      .getDashboardStats(dx, tahun, SESSION_TOKEN);
+      .getDashboardStats(dx, tahun, getSafeSessionToken());
   }
 
   function renderDashboard(stats, dx, tahun) {
@@ -428,8 +448,9 @@
       return;
     }
 
-    const isAdmin = window.SESSION_USER && window.SESSION_USER.role === "admin";
-    const isViewer = window.SESSION_USER && window.SESSION_USER.role === "viewer";
+    const safeUser = getSafeSessionUser();
+    const isAdmin = safeUser && safeUser.role === "admin";
+    const isViewer = safeUser && safeUser.role === "viewer";
 
     let html = '';
 
@@ -769,7 +790,7 @@
     const dx = document.getElementById("form-selector")?.value ||
                document.getElementById("dashboard-dx")?.value || "MR";
     if (!dx) { showTopAlert("Pilih jenis penyakit terlebih dahulu.", false); return; }
-    if (!safeGsRun() || !SESSION_TOKEN) return;
+    if (!safeGsRun() || !getSafeSessionToken()) return;
 
     const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
     const filename = dx + "_export_" + today + ".csv";
@@ -797,7 +818,7 @@
       .withFailureHandler(function (err) {
         showTopAlert("Gagal export: " + String(err), false);
       })
-      .exportToCsv(dx, {}, SESSION_TOKEN);
+      .exportToCsv(dx, {}, getSafeSessionToken());
   }
 
   // ============================================================

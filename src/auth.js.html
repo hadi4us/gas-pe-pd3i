@@ -81,6 +81,7 @@
 
       function setLoggedInUI(user) {
         SESSION_USER = user || null;
+        try { window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
 
         if (app) app.classList.remove("hidden");
         closeModal(loginModal);
@@ -113,6 +114,7 @@
       function setLoggedOutUI() {
         SESSION_TOKEN = "";
         SESSION_USER = null;
+        try { window.__PD3I_SESSION_TOKEN = ""; window.__PD3I_SESSION_USER = null; } catch (e) {}
         setAuthSessionMeta(null);
         loginAttempt = 0;
         MASTER_FASKES = [];
@@ -260,6 +262,7 @@
               loginAttempt = 0;
               SESSION_TOKEN = res.token || "";
               SESSION_USER = res.user || null;
+              try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
               setAuthSessionMeta({
                 ttlSec: Number(res.ttlSec || 0),
                 issuedAt: Number(res.issuedAt || 0),
@@ -431,6 +434,7 @@
 
             SESSION_TOKEN = savedToken;
             SESSION_USER = (res && res.user) || savedUser || null;
+            try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
             setAuthSessionMeta({
               ttlSec: Number(res.ttlSec || 0),
               issuedAt: Number(res.issuedAt || 0),
