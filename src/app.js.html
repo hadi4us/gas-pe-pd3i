@@ -2008,6 +2008,13 @@
     if (shell) shell.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function togglePreRecordWorkflowFocus(focusSearchOnly) {
+    const searchCard = document.getElementById('section-search-shell');
+    const form = document.getElementById('dynamic-form');
+    if (searchCard) searchCard.classList.toggle('is-workflow-focus', !!focusSearchOnly);
+    if (form) form.classList.toggle('pd3i-stage-hidden', !!focusSearchOnly);
+  }
+
   function setWorkflowSearchIntent(intent, options) {
     const opts = options || {};
     const normalized = normalizeWorkflowStepId(intent);
@@ -2028,6 +2035,9 @@
     if (badgeEl) badgeEl.textContent = cfg.badge;
     if (helperEl) helperEl.textContent = cfg.helper;
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper + ' Gunakan filter status verifikasi bila perlu.';
+
+    const shouldFocusSearchOnly = normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages();
+    togglePreRecordWorkflowFocus(shouldFocusSearchOnly);
 
     if (!opts.skipStageSync && normalized === "section-pelapor") {
       updateFormStepperState("section-pelapor");
@@ -2439,9 +2449,8 @@
   function goToWorkflowStep(targetId) {
     const normalized = normalizeWorkflowStepId(targetId);
     if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
-      setWorkflowSearchIntent(normalized, { focusSearch: true });
-      showTopAlert(`Tahap ${getWorkflowStepDefinitions().find(function(step) { return step.id === normalized; })?.label || normalized} dimulai dari pencarian record existing. Cari dan buka record dulu, baru lanjut ke tahap ini.`, false);
-      updateFormStepperState("section-pelapor");
+      setWorkflowSearchIntent(normalized, { focusSearch: true, skipStageSync: true });
+      showTopAlert(`Tahap ${getWorkflowStepDefinitions().find(function(step) { return step.id === normalized; })?.label || normalized} dimulai dari pencarian record existing. Form input awal disembunyikan dulu supaya fokus ke pencarian kasus yang akan direview.`, false);
       return;
     }
 
@@ -3666,6 +3675,7 @@
           if (searchContainer) searchContainer.classList.add("hidden");
           if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
           setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
+          togglePreRecordWorkflowFocus(false);
           updateFormStepperState("section-pelapor");
           updateUiShellSummary();
           return;
@@ -3676,6 +3686,7 @@
         if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
         const defaultIntent = getLandingWorkflowIntentForUser();
         setWorkflowSearchIntent(defaultIntent, { focusSearch: defaultIntent !== "section-pelapor", focusForm: defaultIntent === "section-pelapor" });
+        if (defaultIntent === 'section-pelapor') togglePreRecordWorkflowFocus(false);
         updateFormStepperState(defaultIntent === "section-pelapor" ? "section-pelapor" : "section-pelapor");
         updateSidebarActiveState("section-pelapor");
 
@@ -3931,6 +3942,7 @@
               ? requestedStage
               : getPreferredWorkflowStageForUser();
             setWorkflowSearchIntent(preferredStage, { focusSearch: false, focusForm: false, skipStageSync: true });
+            togglePreRecordWorkflowFocus(false);
             updateFormStepperState(preferredStage);
             updateUiShellSummary();
             refreshWorkflowInbox();
