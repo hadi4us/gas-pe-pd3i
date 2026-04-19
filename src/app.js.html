@@ -1896,7 +1896,8 @@
   function updateUiShellSummary() {
     const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
     const cfg = getDxConfigSafe(dx);
-    const dxTitle = cfg && cfg.title ? cfg.title : "Belum dipilih";
+    const isOverview = ACTIVE_SIDEBAR_WORKSPACE === 'overview';
+    const dxTitle = isOverview ? 'Tidak dipilih di beranda' : (cfg && cfg.title ? cfg.title : 'Belum dipilih');
     const workspaceLabel = getWorkspaceDisplayLabel(ACTIVE_SIDEBAR_WORKSPACE);
     const modeText = isViewerSession()
       ? `Mode lihat • ${workspaceLabel}`
@@ -1924,13 +1925,15 @@
     const lastWorkflowRole = getFieldValueSafe("Role Pengupdate Tahap Terakhir") || "";
     const lastWorkflowSummary = [lastWorkflowStageLabel, lastWorkflowActor ? `oleh ${lastWorkflowActor}` : "", lastWorkflowRole ? `(${getRoleDisplayLabel(lastWorkflowRole)})` : ""].filter(Boolean).join(" ");
 
-    let issueCount = 0;
-    try {
-      issueCount += (checkConsistencyWarnings() || []).length;
-      const ruleCheck = validateDxBusinessRules();
-      issueCount += ((ruleCheck && ruleCheck.warnings) || []).length;
-      issueCount += ((ruleCheck && ruleCheck.errors) || []).length;
-    } catch (e) {}
+    let issueCount = isOverview ? Number(window.__OVERVIEW_PENDING_COUNT || 0) : 0;
+    if (!isOverview) {
+      try {
+        issueCount += (checkConsistencyWarnings() || []).length;
+        const ruleCheck = validateDxBusinessRules();
+        issueCount += ((ruleCheck && ruleCheck.warnings) || []).length;
+        issueCount += ((ruleCheck && ruleCheck.errors) || []).length;
+      } catch (e) {}
+    }
 
     setSummaryText("summary-dx-name", dxTitle);
     setSummaryText("summary-dx-code", dx || "-");
@@ -1951,7 +1954,7 @@
     setSummaryText("summary-next-statuses", nextStatusSummary);
     setSummaryText("summary-verifikasi-epid", statusVerifikasi);
     setSummaryText("summary-sampel-state", sampelState);
-    setSummaryText("summary-dx-pill", dx ? `${dx} • ${dxTitle}` : "Belum dipilih");
+    setSummaryText("summary-dx-pill", isOverview ? dxTitle : (dx ? `${dx} • ${dxTitle}` : "Belum dipilih"));
     setSummaryText("summary-mode-pill", modeText);
     setSummaryText("summary-warning-count", issueCount > 0 ? `${issueCount} isu perlu dicek` : "0 warning");
     setSummaryText("summary-warning-pill", String(issueCount));
@@ -2138,6 +2141,7 @@
       updateFormStepperState('section-pelapor');
       applySidebarWorkspaceLayout('overview');
       applySearchShellCopyForWorkspace('overview');
+      renderOverviewWorkspace();
       if (opts.scroll !== false) document.getElementById('section-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
     }
@@ -2419,6 +2423,82 @@
     if (badgeEl) badgeEl.textContent = cfg.badge;
     if (helperEl) helperEl.textContent = cfg.helper;
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
+  }
+
+  function renderOverviewWorkspace() {
+    const quickWrap = document.getElementById('overview-quick-actions');
+    const roleWrap = document.getElementById('overview-role-summary');
+    const summaryWrap = document.getElementById('overview-work-summary');
+    const inboxWrap = document.getElementById('overview-work-inbox');
+    if (!quickWrap || !roleWrap || !summaryWrap || !inboxWrap) return;
+
+    const caps = getRoleCapabilities(SESSION_USER);
+    const quickActions = [
+      { workspace: 'input', icon: 'fa-plus-circle', title: 'Input kasus baru', copy: 'Mulai input form PE baru berdasarkan diagnosis.', show: caps.canWrite },
+      { workspace: 'search', icon: 'fa-magnifying-glass', title: 'Cari / edit record', copy: 'Temukan record existing untuk dicek atau dibuka ulang.', show: caps.canView },
+      { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Review record existing untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
+      { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil sampel', copy: 'Lanjutkan record existing saat hasil pemeriksaan sudah tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
+      { workspace: 'status', icon: 'fa-list-check', title: 'Update status', copy: 'Perbarui status pasien / kasus dari record existing.', show: caps.viewStages.indexOf('section-status') !== -1 },
+      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canAdmin }
+    ].filter(function(item) { return item.show; });
+
+    quickWrap.innerHTML = quickActions.map(function(item) {
+      return `<button type="button" class="pd3i-overview-action-btn" data-overview-workspace="${escapeHtml(item.workspace)}">
+        <div>
+          <div class="pd3i-overview-action-title">${escapeHtml(item.title)}</div>
+          <span class="pd3i-overview-action-copy">${escapeHtml(item.copy)}</span>
+        </div>
+        <i class="fas ${escapeHtml(item.icon)} text-slate-400"></i>
+      </button>`;
+    }).join('');
+
+    roleWrap.textContent = caps.summary || 'Belum ada sesi aktif.';
+    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat ringkasan kerja...</div>';
+    inboxWrap.innerHTML = '';
+
+    quickWrap.querySelectorAll('[data-overview-workspace]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const workspace = String(btn.getAttribute('data-overview-workspace') || '').trim();
+        if (!workspace) return;
+        openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
+      });
+    });
+
+    if (!safeGsRun() || !SESSION_TOKEN) {
+      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Ringkasan kerja belum tersedia karena sesi belum siap.</div>';
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        const summary = res && res.summary ? res.summary : { pendingVerification: 0, revisionQueue: 0 };
+        const pending = Number(summary.pendingVerification || 0);
+        const revisi = Number(summary.revisionQueue || 0);
+        window.__OVERVIEW_PENDING_COUNT = pending + revisi;
+        updateUiShellSummary();
+        summaryWrap.innerHTML = [
+          `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
+          `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`
+        ].join('');
+
+        const pendingItems = (res && res.pendingVerification) || [];
+        const revisionItems = (res && res.revisionQueue) || [];
+        const items = pendingItems.concat(revisionItems).slice(0, 6);
+        if (!items.length) {
+          inboxWrap.innerHTML = '<div class="pd3i-helper-text">Belum ada antrian kerja penting saat ini.</div>';
+          return;
+        }
+        inboxWrap.innerHTML = items.map(function(item) {
+          const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\'");
+          const safeDx = String(item.dx || '').replace(/'/g, "\'");
+          return `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
+        }).join('');
+      })
+      .withFailureHandler(function(err) {
+        console.error('renderOverviewWorkspace failed:', err);
+        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan kerja beranda.</div>';
+      })
+      .getWorkflowInbox('', SESSION_TOKEN);
   }
 
   function getCurrentSessionActorName() {
@@ -3766,6 +3846,7 @@
       updateSidebarActiveState("overview");
       updateFormStepperState("section-pelapor");
       applyInitialRouteView();
+      if (ACTIVE_SIDEBAR_WORKSPACE === 'overview') renderOverviewWorkspace();
 
       document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
         link.addEventListener('click', function(e) {
