@@ -809,7 +809,7 @@ function searchRecords(dx, filters, token) {
       const sampelDilakukan = idxSampelDilakukan !== -1 ? String(r[idxSampelDilakukan] || "").trim() : "";
       const interpretasiSampel = idxInterpretasiSampel !== -1 ? String(r[idxInterpretasiSampel] || "").trim() : "";
 
-      const matchEpid = !qEpid || epid.toLowerCase().includes(qEpid);
+      const matchEpid = !qEpid || epid.toLowerCase().includes(qEpid) || recordId.toLowerCase().includes(qEpid);
       const matchNama = !qNama || nama.toLowerCase().includes(qNama);
       const matchTglLahir = !qTglLahir || tglLahir === qTglLahir;
       const matchOrtu = !qOrtu || orangTua.toLowerCase().includes(qOrtu);

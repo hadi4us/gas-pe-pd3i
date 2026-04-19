@@ -3648,7 +3648,8 @@
 
       if (btnSidebarDashboard) {
         btnSidebarDashboard.addEventListener("click", function () {
-          if (!isAdminSession()) {
+          const currentRole = String((SESSION_USER && SESSION_USER.role) || "").trim().toLowerCase();
+          if (currentRole !== "admin") {
             showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
             return;
           }
