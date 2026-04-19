@@ -57,3 +57,4 @@
 - [x] Dasar penetapan status kini menyesuaikan diagnosis + status kasus agar workflow status lebih cerdas
 - [x] Aturan transisi status kasus ditambahkan agar workflow tidak melompat seenaknya
 - [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`
+- [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin

@@ -42,7 +42,7 @@ Hak utama:
 - lihat data
 - cari data
 - buka record existing dalam mode lihat
-- membaca dashboard sesuai izin yang tersedia
+- membaca dashboard sesuai izin yang tersedia (dengan sesi login yang valid)
 
 Batasan:
 - tidak boleh save/update data

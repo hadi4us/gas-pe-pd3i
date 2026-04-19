@@ -383,9 +383,10 @@ Checklist:
 - cari berdasarkan EPID/nama tetap jalan
 
 ### TC-REG-03 — Dashboard
-- dashboard tetap bisa dibuka
+- dashboard tetap bisa dibuka dengan sesi login valid
 - quality cards dan indikator epidemiologis muncul tanpa error
 - prioritas tindak lanjut tampil konsisten bila ambang masalah operasional terpenuhi
+- export dashboard ditolak bila role bukan admin
 
 ### TC-REG-04 — Retry admin
 - retry sync / notify / telegram tetap tampil untuk admin
