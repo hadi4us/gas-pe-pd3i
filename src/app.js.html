@@ -2343,6 +2343,12 @@
     const visibleSections = new Set((current && current.sections) || []);
     const canAccessLater = canAccessDeferredWorkflowStages();
     const helperEl = document.getElementById("workflow-stage-helper");
+    const verificationHelperEl = document.getElementById('verification-admin-helper');
+    const currentRole = normalizeUiRole(SESSION_USER && SESSION_USER.role);
+    const isAdminReviewWorkspace = normalized === 'section-verifikasi' && currentRole === 'admin' && canAccessLater;
+    if (isAdminReviewWorkspace) {
+      ['section-pelapor', 'section-pasien', 'section-specific', 'section-verifikasi'].forEach(function(id) { visibleSections.add(id); });
+    }
     const canWriteThisStage = canWriteWorkflowStage(SESSION_USER, normalized);
     const viewerMode = isViewerSession();
     const stageEditable = canWriteThisStage && !viewerMode;
@@ -2352,7 +2358,9 @@
       if (!section) return;
       const isVisible = visibleSections.has(id);
       section.classList.toggle("pd3i-stage-hidden", !isVisible);
-      applySectionStageAccess(section, isVisible && stageEditable);
+      const allowEdit = isVisible && (isAdminReviewWorkspace ? ['section-pelapor','section-pasien','section-specific','section-verifikasi'].includes(id) : stageEditable);
+      applySectionStageAccess(section, allowEdit);
+      section.classList.toggle('pd3i-admin-review-highlight', isAdminReviewWorkspace && ['section-pelapor','section-pasien','section-specific'].includes(id));
     });
 
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
@@ -2365,7 +2373,9 @@
 
     if (helperEl) {
       let helperText = getWorkflowStageHelperText(normalized);
-      if (!viewerMode && !canAccessLater && !canWriteThisStage) {
+      if (isAdminReviewWorkspace) {
+        helperText += ' Admin review workspace aktif: field input petugas dibuka agar admin bisa koreksi langsung sebelum memutuskan Terverifikasi atau Perlu Revisi.';
+      } else if (!viewerMode && !canAccessLater && !canWriteThisStage) {
         helperText += " Role aktif tidak berwenang menyimpan tahap input awal; gunakan pencarian record existing atau login dengan role inputer/petugas.";
       } else if (!viewerMode && canAccessLater && !canWriteThisStage) {
         if (normalized === "section-verifikasi") {
@@ -2381,6 +2391,11 @@
         }
       }
       helperEl.textContent = helperText;
+    }
+    if (verificationHelperEl) {
+      verificationHelperEl.textContent = isAdminReviewWorkspace
+        ? 'Admin review workspace aktif. Semua field input petugas dibuka untuk direview dan bisa diedit sebelum admin memilih Terverifikasi atau Perlu Revisi.'
+        : 'Admin mereview kelengkapan input petugas puskesmas. Jika lengkap, admin menetapkan status Terverifikasi dan memilih nomor EPID final (default dari rekomendasi sistem, tetap bisa di-override). Jika belum lengkap, pilih Perlu Revisi agar kasus masuk daftar revisi akun puskesmas.';
     }
     updateSubmitButtonForWorkflowStep(normalized);
 
