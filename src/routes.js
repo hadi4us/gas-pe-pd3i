@@ -297,34 +297,36 @@ function resolveLatestSavedMeta(payload) {
   if (!values || values.length < 2) return { status: "error", message: "Data belum ada." };
 
   const headers = values[0].map(h => String(h || "").trim());
+  const idxRecordId = headers.indexOf("ID Registrasi Kasus");
   const idxEpid = headers.indexOf("Nomor EPID");
   const idxNama = headers.indexOf("Nama");
   const idxPelacakan = headers.indexOf("Tanggal Pelacakan");
+  const idxStatusVerif = headers.indexOf("Status Verifikasi EPID");
   const idxPdf = headers.indexOf("Link PDF");
-  if (idxEpid === -1 || idxNama === -1) return { status: "error", message: "Kolom meta belum lengkap." };
+  if (idxNama === -1) return { status: "error", message: "Kolom meta belum lengkap." };
 
+  const targetRecordId = String((payload && payload["ID Registrasi Kasus"]) || "").trim();
   const targetNama = String((payload && payload["Nama"]) || "").trim();
   const targetPelacakan = String((payload && payload["Tanggal Pelacakan"]) || "").trim();
   const norm = (v) => String(v || "").trim().slice(0, 10);
 
   for (let i = values.length - 1; i >= 1; i--) {
+    const rowRecordId = idxRecordId !== -1 ? String(values[i][idxRecordId] || "").trim() : "";
     const rowNama = String(values[i][idxNama] || "").trim();
     const rowPelacakan = idxPelacakan !== -1 ? String(values[i][idxPelacakan] || "").trim() : "";
+    if (targetRecordId && rowRecordId && rowRecordId !== targetRecordId) continue;
     if (targetNama && rowNama !== targetNama) continue;
     if (targetPelacakan && rowPelacakan && norm(rowPelacakan) && norm(targetPelacakan) && norm(rowPelacakan) !== norm(targetPelacakan)) {
       continue;
     }
-    let epid = String(values[i][idxEpid] || "").trim();
-    if (!epid) {
-      epid = generateEpid_(dx);
-      if (idxEpid !== -1) sheet.getRange(i + 1, idxEpid + 1).setValue(epid);
-    }
+    const statusVerif = idxStatusVerif !== -1 ? String(values[i][idxStatusVerif] || '').trim() : '';
+    let epid = idxEpid !== -1 ? String(values[i][idxEpid] || "").trim() : '';
     let printUrl = idxPdf !== -1 ? String(values[i][idxPdf] || "").trim() : "";
     if (!printUrl && epid) {
       printUrl = safeGetPdfPrintUrl_(dx, epid, token);
       if (idxPdf !== -1) sheet.getRange(i + 1, idxPdf + 1).setValue(printUrl || "");
     }
-    return { status: "success", epid: epid, dx: dx, printUrl: printUrl };
+    return { status: "success", epid: epid, dx: dx, printUrl: printUrl, verificationStatus: statusVerif, recordId: rowRecordId };
   }
 
   return { status: "error", message: "Meta simpan terakhir tidak ditemukan." };
@@ -901,7 +903,8 @@ function saveFormPayload_(data) {
   data = _applyWorkflowStageAuditFields_(data, sess, data.__workflowStage);
 
   const saved = saveDxRecord_(dx, data);
-  const printUrl = safeGetPdfPrintUrl_(dx, saved.epid, token);
+  const hasFinalEpid = !!String(saved.epid || '').trim();
+  const printUrl = hasFinalEpid ? safeGetPdfPrintUrl_(dx, saved.epid, token) : '';
   try {
     const sheet = getSheetOrThrow_(dx + "_Raw");
     const headers = getTrimmedHeaders_(sheet);
@@ -914,46 +917,61 @@ function saveFormPayload_(data) {
   }
   let savedRecord = data;
   try {
-    savedRecord = _getRowObjectByEpid_(dx, saved.epid);
+    savedRecord = hasFinalEpid ? _getRowObjectByEpid_(dx, saved.epid) : data;
   } catch (e) {
     savedRecord = data;
   }
 
-  const pipelineFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
-  let pipelineResult = null;
+  let pipelineResult = {
+    pengampuNotification: { sent: false, reason: 'SKIPPED_NO_FINAL_EPID' },
+    pengampuSync: { synced: false, reason: 'SKIPPED_NO_FINAL_EPID' },
+    telegramNotification: { sent: false, reason: 'SKIPPED_NO_FINAL_EPID' },
+    idempotent: false,
+    queued: false
+  };
 
-  if (_isAsyncPipelineEnabled_() && typeof enqueuePipelineTask_ === "function") {
-    const queueRes = enqueuePipelineTask_(dx, saved.epid, pipelineFingerprint, { printUrl: printUrl });
-    const queuedPatch = {
-      "Nomor EPID": saved.epid,
-      "Status Notifikasi Pengampu": "QUEUED",
-      "Status Sinkronisasi Pengampu": "QUEUED",
-      "Status Notifikasi Telegram": "QUEUED",
-      "Reason Notifikasi Pengampu": "QUEUED_ASYNC",
-      "Reason Sinkronisasi Pengampu": "QUEUED_ASYNC",
-      "Reason Notifikasi Telegram": "QUEUED_ASYNC",
-      "Pipeline Fingerprint": pipelineFingerprint,
-      "Pipeline Last Run At": new Date()
-    };
-    try { saveDxRecord_(dx, queuedPatch); } catch (e) {}
+  if (hasFinalEpid) {
+    const pipelineFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
+    if (_isAsyncPipelineEnabled_() && typeof enqueuePipelineTask_ === "function") {
+      const queueRes = enqueuePipelineTask_(dx, saved.epid, pipelineFingerprint, { printUrl: printUrl });
+      const queuedPatch = {
+        "ID Registrasi Kasus": saved.recordId,
+        "Nomor EPID": saved.epid,
+        "Status Notifikasi Pengampu": "QUEUED",
+        "Status Sinkronisasi Pengampu": "QUEUED",
+        "Status Notifikasi Telegram": "QUEUED",
+        "Reason Notifikasi Pengampu": "QUEUED_ASYNC",
+        "Reason Sinkronisasi Pengampu": "QUEUED_ASYNC",
+        "Reason Notifikasi Telegram": "QUEUED_ASYNC",
+        "Pipeline Fingerprint": pipelineFingerprint,
+        "Pipeline Last Run At": new Date()
+      };
+      try { saveDxRecord_(dx, queuedPatch); } catch (e) {}
 
-    pipelineResult = {
-      pengampuNotification: { sent: false, reason: "QUEUED_ASYNC" },
-      pengampuSync: { synced: false, reason: "QUEUED_ASYNC" },
-      telegramNotification: { sent: false, reason: "QUEUED_ASYNC" },
-      idempotent: false,
-      queued: !!(queueRes && queueRes.queued)
-    };
-  } else {
-    pipelineResult = _runPostSavePipeline_(dx, savedRecord, saved, printUrl);
+      pipelineResult = {
+        pengampuNotification: { sent: false, reason: "QUEUED_ASYNC" },
+        pengampuSync: { synced: false, reason: "QUEUED_ASYNC" },
+        telegramNotification: { sent: false, reason: "QUEUED_ASYNC" },
+        idempotent: false,
+        queued: !!(queueRes && queueRes.queued)
+      };
+    } else {
+      pipelineResult = _runPostSavePipeline_(dx, savedRecord, saved, printUrl);
+    }
   }
+
+  const successMessage = saved.verificationStatus === 'Perlu Revisi'
+    ? 'Kasus ditandai Perlu Revisi dan masuk daftar tindak lanjut puskesmas.'
+    : (saved.verificationStatus === 'Terverifikasi'
+      ? 'Verifikasi selesai dan nomor EPID final berhasil ditetapkan.'
+      : (saved.isUpdate ? 'Data kasus berhasil diperbarui.' : 'Input awal kasus berhasil disimpan dengan status Pending.'));
 
   return {
     status: "success",
-    message: saved.isUpdate
-      ? "Data EPID " + saved.epid + " berhasil diperbarui!"
-      : "Data baru berhasil disimpan!",
+    message: successMessage,
     epid: saved.epid,
+    recordId: saved.recordId,
+    verificationStatus: saved.verificationStatus,
     dx: dx,
     printUrl: printUrl,
     pipelineIdempotent: !!pipelineResult.idempotent,

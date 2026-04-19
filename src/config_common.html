@@ -39,10 +39,13 @@
   ];
 
   const COMMON_VERIFIKASI_FIELDS = [
-    { id: "Status Verifikasi EPID", label: "Status Verifikasi EPID", type: "select", options: ["Belum diverifikasi", "Menunggu verifikasi", "Terverifikasi"], required: true },
+    { id: "Status Verifikasi EPID", label: "Status Verifikasi EPID", type: "select", options: ["Pending", "Terverifikasi", "Perlu Revisi"], required: true },
     { id: "Tanggal Verifikasi EPID", label: "Tanggal Verifikasi EPID", type: "date" },
     { id: "Petugas Verifikator", label: "Petugas Verifikator", type: "text" },
-    { id: "Catatan Verifikasi EPID", label: "Catatan Verifikasi EPID", type: "textarea", rows: 3, fullWidth: true }
+    { id: "Nomor EPID Rekomendasi", label: "Nomor EPID Rekomendasi", type: "text", readonly: true, showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi"] } },
+    { id: "Nomor EPID Final", label: "Nomor EPID Final (boleh override)", type: "text", showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi"] } },
+    { id: "Review Admin Terakhir", label: "Review Admin Terakhir", type: "text", readonly: true, showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi", "Perlu Revisi"] } },
+    { id: "Catatan Verifikasi EPID", label: "Catatan Verifikasi EPID / Alasan Revisi", type: "textarea", rows: 3, fullWidth: true }
   ];
 
   const COMMON_HASIL_SAMPEL_FIELDS = [

@@ -1657,6 +1657,13 @@
     }
 
     const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID");
+    const activeStage = normalizeWorkflowStepId(document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
+    if (activeStage === 'section-pelapor' && !statusVerifikasi) {
+      warnings.push("Status verifikasi EPID akan disimpan sebagai Pending sampai direview admin.");
+    }
+    if (activeStage === 'section-verifikasi' && statusVerifikasi === 'Pending') {
+      errors.push("Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.");
+    }
     if (statusVerifikasi === "Terverifikasi") {
       if (!isNonEmptyField("Tanggal Verifikasi EPID")) {
         errors.push("Tanggal verifikasi EPID wajib diisi jika status verifikasi sudah terverifikasi.");
@@ -1664,6 +1671,9 @@
       if (!isNonEmptyField("Petugas Verifikator")) {
         errors.push("Petugas verifikator wajib diisi jika status verifikasi sudah terverifikasi.");
       }
+    }
+    if (statusVerifikasi === 'Perlu Revisi' && !isNonEmptyField('Catatan Verifikasi EPID')) {
+      errors.push('Catatan verifikasi wajib diisi jika admin memilih Perlu Revisi.');
     }
 
     if (getFieldValueSafe("Pemeriksaan Sampel Dilakukan") === "Ya") {
@@ -1857,7 +1867,7 @@
     const ageText = getFieldValueSafe("Umur (auto)") || "-";
     const epiGroupText = getFieldValueSafe("Kelompok Umur Epidemiologis") || "-";
     const statusKasus = getFieldValueSafe("Status Pasien/Kasus") || "Belum ditentukan";
-    const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID") || "Belum diverifikasi";
+    const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID") || "Pending";
     const sampelState = getFieldValueSafe("Pemeriksaan Sampel Dilakukan") === "Ya"
       ? (getFieldValueSafe("Interpretasi Hasil Sampel") || "Menunggu hasil")
       : "Tidak ada sampel";
@@ -2040,6 +2050,149 @@
     return getWorkflowIntentConfig(intent).successMessage || "Record existing berhasil dibuka.";
   }
 
+  function getCurrentSessionActorName() {
+    return String((SESSION_USER && (SESSION_USER.nama || SESSION_USER.username || SESSION_USER.name)) || '').trim();
+  }
+
+  function getTodayInputValue() {
+    const dt = new Date();
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function collectCurrentFormPayload() {
+    const payload = {};
+    document.querySelectorAll('#dynamic-form input[name], #dynamic-form select[name], #dynamic-form textarea[name]').forEach(function(el) {
+      if (!el || !el.name) return;
+      payload[el.name] = el.value;
+    });
+    return payload;
+  }
+
+  function updateVerificationSectionState() {
+    const statusEl = document.getElementById('Status Verifikasi EPID');
+    const actorEl = document.getElementById('Petugas Verifikator');
+    const dateEl = document.getElementById('Tanggal Verifikasi EPID');
+    const reviewEl = document.getElementById('Review Admin Terakhir');
+    const finalEpidEl = document.getElementById('Nomor EPID Final');
+    const currentMainEpidEl = document.getElementById('Nomor EPID');
+    const status = String(statusEl?.value || '').trim();
+    const actorName = getCurrentSessionActorName();
+
+    if (!statusEl) return;
+    if (!statusEl.value) statusEl.value = 'Pending';
+
+    if (status === 'Terverifikasi') {
+      if (actorEl && !actorEl.value) actorEl.value = actorName;
+      if (dateEl && !dateEl.value) dateEl.value = getTodayInputValue();
+      if (reviewEl) reviewEl.value = actorName ? `Review admin oleh ${actorName}` : 'Review admin';
+      if (finalEpidEl && !finalEpidEl.value && currentMainEpidEl && currentMainEpidEl.value) {
+        finalEpidEl.value = currentMainEpidEl.value;
+      }
+    }
+
+    if (status === 'Perlu Revisi') {
+      if (actorEl && !actorEl.value) actorEl.value = actorName;
+      if (dateEl && !dateEl.value) dateEl.value = getTodayInputValue();
+      if (reviewEl) reviewEl.value = actorName ? `Perlu revisi oleh ${actorName}` : 'Perlu revisi';
+      if (finalEpidEl) finalEpidEl.value = '';
+      if (currentMainEpidEl) currentMainEpidEl.value = '';
+    }
+  }
+
+  function refreshRecommendedEpidPreview(options) {
+    const opts = options || {};
+    const recommendationEl = document.getElementById('Nomor EPID Rekomendasi');
+    const statusEl = document.getElementById('Status Verifikasi EPID');
+    if (!recommendationEl || !statusEl) return;
+    if (String(statusEl.value || '').trim() !== 'Terverifikasi') return;
+    if (!safeGsRun()) return;
+
+    const payload = collectCurrentFormPayload();
+    payload['ID Registrasi Kasus'] = payload['ID Registrasi Kasus'] || (window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META['ID Registrasi Kasus']) || '';
+    const dx = String(document.getElementById('selector_dx')?.value || '').trim();
+    if (!dx) return;
+
+    if (!opts.silentLoading) {
+      recommendationEl.value = recommendationEl.value || 'Menghitung rekomendasi...';
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.ok) return;
+        recommendationEl.value = String(res.recommendation || '').trim();
+        const finalEpidEl = document.getElementById('Nomor EPID Final');
+        if (finalEpidEl && !finalEpidEl.value) {
+          finalEpidEl.value = recommendationEl.value;
+        }
+      })
+      .withFailureHandler(function() {})
+      .previewRecommendedEpid(dx, payload, SESSION_TOKEN);
+  }
+
+  function renderWorkflowInbox(data) {
+    const box = document.getElementById('workflow-inbox');
+    if (!box) return;
+
+    const pendingVerification = (data && data.pendingVerification) || [];
+    const revisionQueue = (data && data.revisionQueue) || [];
+    const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0 };
+
+    if (!pendingVerification.length && !revisionQueue.length) {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      return;
+    }
+
+    let html = '<div class="pd3i-shell-card border border-amber-200 bg-amber-50/70">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-3">';
+    html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
+    html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${summary.pendingVerification || 0}</strong> • Perlu revisi: <strong>${summary.revisionQueue || 0}</strong></div>`;
+    html += '</div>';
+
+    if (pendingVerification.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2 pd3i-inbox-list">';
+      pendingVerification.forEach(function(item) {
+        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('selector_dx')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
+      });
+      html += '</div></div>';
+    }
+
+    if (revisionQueue.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2 pd3i-inbox-list">';
+      revisionQueue.forEach(function(item) {
+        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('selector_dx')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
+      });
+      html += '</div></div>';
+    }
+
+    html += '</div>';
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+  }
+
+  function refreshWorkflowInbox() {
+    const dx = String(document.getElementById('selector_dx')?.value || '').trim();
+    const box = document.getElementById('workflow-inbox');
+    if (!box) return;
+    if (!dx || !safeGsRun() || !SESSION_TOKEN) {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(function(res) {
+        renderWorkflowInbox(res || null);
+      })
+      .withFailureHandler(function() {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+      })
+      .getWorkflowInbox(dx, SESSION_TOKEN);
+  }
+
   function getWorkflowStageHelperText(stepId) {
     const normalized = normalizeWorkflowStepId(stepId);
     const canAccessLater = canAccessDeferredWorkflowStages();
@@ -2051,7 +2204,7 @@
       return "Tahap lanjutan belum dibuka. Simpan input awal dulu atau buka record existing untuk verifikasi, hasil pemeriksaan, dan update status.";
     }
     if (normalized === "section-verifikasi") {
-      return "Tahap verifikasi dipisah dari input awal dan hanya dapat disimpan oleh admin. Fokuskan pada pengesahan / penentuan EPID dan catatan verifikasi.";
+      return "Tahap verifikasi dipisah dari input awal dan hanya dapat disimpan oleh admin. Admin mereview data puskesmas yang masih Pending, lalu memilih Terverifikasi atau Perlu Revisi sambil menetapkan EPID final.";
     }
     if (normalized === "section-sampel") {
       return "Tahap hasil pemeriksaan dipakai saat hasil lab/sampel sudah tersedia. Tahap ini hanya bisa disimpan admin atau petugas dengan wilayah kerja kelurahan yang sesuai domisili pasien.";
@@ -3571,6 +3724,18 @@
         });
       });
 
+      ["Status Verifikasi EPID", "Kab/Kota Pasien", "Kab/Kota", "Kecamatan", "Kelurahan"].forEach(function(fieldId) {
+        document.addEventListener('change', function(ev) {
+          if (!ev || !ev.target || ev.target.id !== fieldId) return;
+          if (fieldId === 'Status Verifikasi EPID') {
+            updateVerificationSectionState();
+          }
+          if (["Status Verifikasi EPID", "Kab/Kota Pasien", "Kab/Kota", "Kecamatan", "Kelurahan"].includes(fieldId)) {
+            refreshRecommendedEpidPreview({ silentLoading: false });
+          }
+        });
+      });
+
       if (btnSearchEpid) {
         btnSearchEpid.addEventListener("click", function() {
           const dx = selector.value;
@@ -3644,9 +3809,9 @@
         const isViewerMode = isViewerSession();
         const workflowActionLabel = getWorkflowSearchActionLabel();
         results.forEach(function(item) {
-          const safeEpid = (item.epid || "").replace(/'/g, "\\'");
+          const safeRecordKey = String(item.recordKey || item.recordId || item.epid || "").replace(/'/g, "\\'");
           const statusKasus = item.statusKasus || "Belum ditentukan";
-          const statusVerifikasi = item.statusVerifikasi || "Belum diverifikasi";
+          const statusVerifikasi = item.statusVerifikasi || "Pending";
           const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
             ? (item.interpretasiSampel || "Menunggu hasil")
             : "Tidak ada sampel";
@@ -3654,7 +3819,7 @@
             <div class="min-w-0 flex-1">
               <div class="font-extrabold text-slate-800 text-sm md:text-base">${item.nama || "-"}</div>
               <div class="pd3i-search-result-meta">
-                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${item.epid || "-"}</span>
+                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${item.epid || item.recordId || "-"}</span>
                 <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${item.tanggalLahir || "-"}</span>
                 <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${item.kelurahan || "-"}</span>
               </div>
@@ -3668,7 +3833,7 @@
                 ${item.alamat ? `Alamat: ${item.alamat}` : "Alamat belum tersedia"}
               </div>
             </div>
-            <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeEpid}', '${dx}')">
+            <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${dx}')">
               <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
             </button>
           </div>`;
@@ -3678,8 +3843,8 @@
         box.innerHTML = html;
       }
 
-      window._loadRecordFromSearch_ = function(epid, dx) {
-        if (!epid || !dx) return;
+      window._loadRecordFromSearch_ = function(recordKey, dx) {
+        if (!recordKey || !dx) return;
         if (!safeGsRun()) return;
 
         const searchResultsBox = document.getElementById("search-results");
@@ -3712,7 +3877,7 @@
               btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
               btnSubmit.disabled = true;
             } else {
-              btnSubmit.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data EPID ${epid}`;
+              btnSubmit.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data ${recordKey}`;
               btnSubmit.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
               btnSubmit.classList.add("bg-yellow-600");
               btnSubmit.disabled = false;
@@ -3720,6 +3885,8 @@
 
             hydrateRecordToForm(record);
             applyAllShowIf();
+            updateVerificationSectionState();
+            refreshRecommendedEpidPreview({ silentLoading: true });
 
             if (record["Sumber Laporan"]) {
               initChoices(record["Sumber Laporan"], record["Nama unit pelapor"] || "");
@@ -3746,17 +3913,18 @@
             setWorkflowSearchIntent(preferredStage, { focusSearch: false, focusForm: false, skipStageSync: true });
             updateFormStepperState(preferredStage);
             updateUiShellSummary();
+            refreshWorkflowInbox();
 
             showTopAlert(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, true);
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {
-            console.error("getRecordByEpid failed:", err);
+            console.error("getRecordByKey failed:", err);
             showTopAlert("Gagal memuat data.", false);
             btnSubmit.disabled = false;
             btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
           })
-          .getRecordByEpid(dx, epid, SESSION_TOKEN);
+          .getRecordByKey(dx, recordKey, SESSION_TOKEN);
       };
 
       if (btnCancelEdit) {
@@ -3834,6 +4002,54 @@
         const formData = new FormData(this);
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit) };
         formData.forEach((v, k) => { dataObj[k] = v; });
+
+        if (!dataObj["ID Registrasi Kasus"] && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"]) {
+          dataObj["ID Registrasi Kasus"] = window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"];
+        }
+
+        const activeStageNormalized = normalizeWorkflowStepId(activeStageOnSubmit);
+        if (!dataObj["Status Verifikasi EPID"] && activeStageNormalized === 'section-pelapor') {
+          dataObj["Status Verifikasi EPID"] = 'Pending';
+        }
+        if (activeStageNormalized === 'section-verifikasi') {
+          const currentStatus = String(dataObj["Status Verifikasi EPID"] || '').trim();
+          if (!currentStatus || currentStatus === 'Pending') {
+            showTopAlert('Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.', false);
+            btnSubmit.disabled = false;
+            resetSubmitButtonForCurrentStage();
+            return;
+          }
+          if (!dataObj["Petugas Verifikator"]) dataObj["Petugas Verifikator"] = getCurrentSessionActorName();
+          if (!dataObj["Tanggal Verifikasi EPID"]) dataObj["Tanggal Verifikasi EPID"] = getTodayInputValue();
+          dataObj["Review Admin Terakhir"] = `${currentStatus} oleh ${getCurrentSessionActorName() || 'admin'}`;
+          if (currentStatus === 'Terverifikasi') {
+            dataObj["Nomor EPID Final"] = String(dataObj["Nomor EPID Final"] || dataObj["Nomor EPID Rekomendasi"] || '').trim();
+            if (!dataObj["Nomor EPID Final"]) {
+              showTopAlert('Nomor EPID final belum tersedia. Tunggu rekomendasi sistem atau isi manual.', false);
+              btnSubmit.disabled = false;
+              resetSubmitButtonForCurrentStage();
+              return;
+            }
+            dataObj["Nomor EPID"] = dataObj["Nomor EPID Final"];
+            dataObj["Status Notifikasi Pengampu"] = '';
+            dataObj["Reason Notifikasi Pengampu"] = '';
+            dataObj["Notifikasi Revisi Dibaca"] = 'Ya';
+          }
+          if (currentStatus === 'Perlu Revisi') {
+            if (!String(dataObj["Catatan Verifikasi EPID"] || '').trim()) {
+              showTopAlert('Catatan verifikasi wajib diisi jika status Perlu Revisi.', false);
+              btnSubmit.disabled = false;
+              resetSubmitButtonForCurrentStage();
+              return;
+            }
+            dataObj["Nomor EPID Final"] = '';
+            dataObj["Nomor EPID"] = '';
+            dataObj["Status Notifikasi Pengampu"] = 'REVISION_REQUIRED';
+            dataObj["Reason Notifikasi Pengampu"] = String(dataObj["Catatan Verifikasi EPID"] || '').trim();
+            dataObj["Waktu Permintaan Revisi"] = new Date().toISOString();
+            dataObj["Notifikasi Revisi Dibaca"] = 'Tidak';
+          }
+        }
 
         if (!dataObj["Nama unit pelapor"]) {
           showTopAlert("Nama Unit Pelapor wajib dipilih.", false);
@@ -3915,6 +4131,9 @@
               const epidInput = document.getElementById("Nomor EPID");
               if (epidInput) epidInput.value = epidSaved;
             }
+            if (typeof window !== 'undefined') {
+              window.__PD3I_ACTIVE_RECORD_META = Object.assign({}, window.__PD3I_ACTIVE_RECORD_META || {}, dataObj || {}, { "Nomor EPID": epidSaved || dataObj["Nomor EPID"] || '' });
+            }
 
             console.log("Save response:", res);
             console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
@@ -3925,6 +4144,7 @@
               updateFormStepperState(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
             }
             updateUiShellSummary();
+            refreshWorkflowInbox();
 
             showSuccessModal(
               res.message || "Data berhasil disimpan.",

@@ -393,16 +393,16 @@ Uji minimal sekali per DX:
 ### TC-WF-07 — Role tahap-spesifik / kewenangan wilayah
 Gunakan akun contoh dengan role berbeda di `REF_USER`:
 - `admin`
-- `petugas` dengan daftar kelurahan wilayah kerja
-- `lab` dengan daftar kelurahan wilayah kerja
+- `petugas` dengan scope puskesmas
+- `lab` dengan scope puskesmas
 - `status`
 
 **Langkah uji**
 - Login sebagai `admin`, buka record existing, masuk ke tahap verifikasi lalu simpan perubahan.
 - Login sebagai `petugas`, buka record existing, coba simpan tahap verifikasi.
-- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan kelurahan domisili yang **match** wilayah kerja user.
-- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan kelurahan domisili yang **tidak match** wilayah kerja user.
-- Login sebagai `lab`, buka tahap hasil pemeriksaan lalu simpan perubahan pada record yang kelurahannya match.
+- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan domisili yang **terpetakan** ke puskesmas user.
+- Login sebagai `petugas`, buka tahap hasil pemeriksaan pada record dengan domisili yang **tidak terpetakan** ke puskesmas user.
+- Login sebagai `lab`, buka tahap hasil pemeriksaan lalu simpan perubahan pada record yang puskesmas pengampunya match.
 - Login sebagai `status`, buka tahap update status lalu simpan perubahan.
 
 **Expected**
@@ -413,6 +413,36 @@ Gunakan akun contoh dengan role berbeda di `REF_USER`:
 - Tahap selain input tetap mensyaratkan record existing / EPID sudah ada.
 - Setelah save berhasil, field metadata tahap di raw sheet ikut terisi (stage terakhir, actor, role, timestamp tahap terkait).
 - AUDIT_LOG mencatat `Tahap Workflow` dan `Label Tahap Workflow` untuk INSERT/UPDATE terkait record.
+
+### TC-WF-08 — Review admin & penetapan EPID
+- simpan kasus baru dari tahap input awal
+- pastikan record tersimpan dengan `Status Verifikasi EPID = Pending`
+- cari record tersebut dari mode `Verifikasi data existing`
+- buka record sebagai admin
+- cek field `Nomor EPID Rekomendasi`
+- simpan dengan status `Terverifikasi` tanpa mengubah EPID final
+- ulangi pada record lain dengan mengisi `Nomor EPID Final` manual berbeda dari rekomendasi
+- uji juga status `Perlu Revisi` dengan catatan verifikasi terisi
+
+**Expected**
+- Record baru bisa disimpan tanpa EPID final.
+- Record existing tanpa EPID tetap bisa dibuka kembali lewat `ID Registrasi Kasus` / hasil pencarian.
+- Admin melihat rekomendasi EPID yang seharusnya.
+- Jika admin tidak override, EPID final mengikuti rekomendasi.
+- Jika admin override, EPID final mengikuti input admin.
+- Jika status `Perlu Revisi`, EPID final tetap kosong dan kasus masuk inbox revisi akun puskesmas.
+
+### TC-WF-09 — Inbox workflow
+- login sebagai admin dan pilih diagnosis yang punya beberapa record `Pending`
+- cek apakah muncul daftar `Menunggu review admin`
+- login sebagai akun puskesmas yang punya kasus `Perlu Revisi`
+- cek apakah muncul daftar `Kasus perlu revisi`
+- buka salah satu item dari inbox
+
+**Expected**
+- Admin melihat daftar kasus `Pending` untuk review verifikasi.
+- Akun puskesmas melihat daftar kasus `Perlu Revisi` sesuai unit kerjanya.
+- Tombol inbox membuka record existing ke konteks workflow yang sesuai.
 
 ### TC-WF-05 — Search result workflow badges
 - cari data existing

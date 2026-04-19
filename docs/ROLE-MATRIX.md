@@ -26,6 +26,7 @@ Hak utama:
 - retry sinkronisasi / notifikasi / telegram
 - export CSV
 - menjadi satu-satunya role yang boleh menyimpan tahap **Verifikasi EPID**
+- mereview kasus `Pending`, melihat rekomendasi EPID, lalu memilih `Terverifikasi` atau `Perlu Revisi`
 
 ### Petugas
 Hak utama:
@@ -38,7 +39,8 @@ Batasan:
 - tidak menjalankan aksi admin
 - tidak mengakses operasi retry admin / export admin yang dibatasi
 - **tidak boleh** menyimpan tahap verifikasi EPID
-- tahap **hasil pemeriksaan** hanya boleh disimpan bila kelurahan domisili pasien termasuk wilayah kerja kelurahan petugas di `REF_USER`
+- tahap **hasil pemeriksaan** hanya boleh disimpan bila domisili pasien terpetakan ke puskesmas pengampu yang sama dengan unit petugas
+- menerima daftar/inbox kasus `Perlu Revisi` untuk ditindaklanjuti
 
 ### Viewer
 Hak utama:

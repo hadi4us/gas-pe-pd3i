@@ -314,6 +314,7 @@ function _ensureSheetHeaders_(sheet, requiredHeaders) {
 const COMMON_PIPELINE_HEADERS_ = [
   "Kecamatan Pengampu",
   "Kelurahan Pengampu",
+  "KodePuskesmas Pengampu",
   "Puskesmas Pengampu",
   "Kepala Puskesmas Pengampu",
   "Email Kapus Pengampu",
@@ -339,6 +340,80 @@ const COMMON_PIPELINE_HEADERS_ = [
   "Pipeline Last Run At"
 ];
 
+const INTERNAL_TRACKING_HEADERS_ = [
+  "ID Registrasi Kasus",
+  "Nomor EPID Rekomendasi",
+  "Nomor EPID Final",
+  "Status Verifikasi Sebelumnya",
+  "Notifikasi Revisi Dibaca",
+  "Waktu Permintaan Revisi",
+  "Waktu Verifikasi Pending",
+  "Review Admin Terakhir"
+];
+
+function generateCaseRegistrationId_(dx) {
+  dx = String(dx || 'PD3I').trim().toUpperCase();
+  const tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
+  const stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMddHHmmss');
+  const rand = Math.floor(100 + Math.random() * 900);
+  return 'REG-' + dx + '-' + stamp + '-' + rand;
+}
+
+function recommendEpid_(dx, data) {
+  dx = String(dx || 'PD3I').trim().toUpperCase();
+  const tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
+
+  if (dx === 'MR') {
+    data = data || {};
+    const yy = Utilities.formatDate(new Date(), tz, 'yy');
+    const domisiliRaw = String(data['Kab/Kota Pasien'] || data['Kab/Kota'] || '').trim();
+    const domisiliCode = _normalizeKabKotaCode_(domisiliRaw);
+    const isDepok = domisiliCode === 'KOTADEPOK' || domisiliCode === 'DEPOK';
+    const kodeWilayah = isDepok ? ('DEPOK_' + yy) : (domisiliCode || 'LUAR_KOTA');
+
+    const sheet = getSheetOrThrow_('MR_Raw');
+    const headers = getTrimmedHeaders_(sheet);
+    const idxEpid = headers.indexOf('Nomor EPID');
+    const idxRecordId = headers.indexOf('ID Registrasi Kasus');
+    if (idxEpid === -1) throw new Error("Kolom 'Nomor EPID' belum ada di sheet MR_Raw");
+
+    const currentRecordId = String((data && data['ID Registrasi Kasus']) || '').trim();
+    let maxSeq = 0;
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const values = sheet.getRange(2, 1, lastRow - 1, Math.max(idxEpid, idxRecordId) + 1).getValues();
+      values.forEach(function(row) {
+        const existingRecordId = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '';
+        if (currentRecordId && existingRecordId && existingRecordId === currentRecordId) return;
+        const epid = String(row[idxEpid] || '').trim();
+        if (!epid) return;
+        if (isDepok) {
+          const mDepok = epid.match(/^C-1022(\d{2})(\d{3,})$/i);
+          if (mDepok && mDepok[1] === yy) {
+            const seqDepok = Number(mDepok[2] || 0);
+            if (seqDepok > maxSeq) maxSeq = seqDepok;
+          }
+        } else {
+          const escapedCode = kodeWilayah.replace(/[-[\]{}()*+?.,\^$|#\s]/g, '\$&');
+          const pattern = new RegExp('^C-' + escapedCode + '-(\d{3,})$', 'i');
+          const mCity = epid.match(pattern);
+          if (mCity) {
+            const seqCity = Number(mCity[1] || 0);
+            if (seqCity > maxSeq) maxSeq = seqCity;
+          }
+        }
+      });
+    }
+
+    const nextSeqStr = String(maxSeq + 1).padStart(3, '0');
+    if (isDepok) return 'C-1022' + yy + nextSeqStr;
+    return 'C-' + kodeWilayah + '-' + nextSeqStr;
+  }
+
+  const stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMddHHmmss');
+  return dx + '-REC-' + stamp;
+}
+
 // ─── saveDxRecord_ (Req 1.3, 10.1, 10.2) ────────────────────────────────────
 
 function saveDxRecord_(dx, data) {
@@ -356,8 +431,8 @@ function saveDxRecord_(dx, data) {
     });
 
   headers = _ensureSheetHeaders_(sheet, (dx === "MR"
-    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_)
-    : COMMON_PIPELINE_HEADERS_).concat(incomingFieldHeaders));
+    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_).concat(INTERNAL_TRACKING_HEADERS_)
+    : COMMON_PIPELINE_HEADERS_.concat(INTERNAL_TRACKING_HEADERS_)).concat(incomingFieldHeaders));
   data = _applyHeaderAliases_(dx, data || {}, headers);
 
   const kecamatanVal = data["Kecamatan"] || data["Kecamatan domisili"] || "";
@@ -369,7 +444,8 @@ function saveDxRecord_(dx, data) {
   if (pengampu.found) {
     data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
     data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
-    data["Puskesmas Pengampu"] = pengampu.pengampu || "";
+    data["KodePuskesmas Pengampu"] = pengampu.kodePuskesmas || "";
+    data["Puskesmas Pengampu"] = pengampu.namaPuskesmas || pengampu.pengampu || "";
     data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
     data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
     data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
@@ -378,25 +454,93 @@ function saveDxRecord_(dx, data) {
     data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
   }
 
+  const idxRecordId = headers.indexOf("ID Registrasi Kasus");
   const idxEpid = headers.indexOf("Nomor EPID");
   const idxTimestamp = headers.indexOf("Timestamp");
+  const idxStatusVerifikasi = headers.indexOf("Status Verifikasi EPID");
   if (idxEpid === -1) {
     throw new Error("Kolom 'Nomor EPID' belum ada di sheet " + dx + "_Raw");
   }
-
-  let epidValue = String(data["Nomor EPID"] || "").trim();
-  if (!epidValue) {
-    epidValue = generateEpid_(dx, data);
-    data["Nomor EPID"] = epidValue;
+  if (idxRecordId === -1) {
+    throw new Error("Kolom 'ID Registrasi Kasus' belum ada di sheet " + dx + "_Raw");
   }
 
-  // Req 2.1: bangun indeks in-memory saat pertama kali
-  const epidIndex = _getOrBuildEpidIndex_(sheet, idxEpid + 1);
-  const rowIndex = epidIndex.has(epidValue) ? epidIndex.get(epidValue) : -1;
+  let recordId = String(data["ID Registrasi Kasus"] || "").trim();
+  if (!recordId) {
+    recordId = generateCaseRegistrationId_(dx);
+    data["ID Registrasi Kasus"] = recordId;
+  }
+
+  const verificationStatus = String(data["Status Verifikasi EPID"] || "").trim() || "Pending";
+  data["Status Verifikasi EPID"] = verificationStatus;
+  if (!data["Nomor EPID Rekomendasi"]) {
+    try {
+      data["Nomor EPID Rekomendasi"] = recommendEpid_(dx, data);
+    } catch (e) {
+      data["Nomor EPID Rekomendasi"] = "";
+    }
+  }
+
+  let epidValue = String(data["Nomor EPID"] || data["Nomor EPID Final"] || "").trim();
+
+  let rowIndex = -1;
+  const lastRowForLookup = sheet.getLastRow();
+  if (lastRowForLookup >= 2) {
+    const lookupRange = sheet.getRange(2, 1, lastRowForLookup - 1, Math.max(idxRecordId, idxEpid) + 1).getValues();
+    for (var li = 0; li < lookupRange.length; li++) {
+      const rowRecordId = String(lookupRange[li][idxRecordId] || '').trim();
+      const rowEpid = String(lookupRange[li][idxEpid] || '').trim();
+      if ((recordId && rowRecordId === recordId) || (epidValue && rowEpid === epidValue)) {
+        rowIndex = li + 2;
+        break;
+      }
+    }
+  }
+
+  let existingRowObject = null;
+  if (rowIndex !== -1) {
+    try {
+      const existingValues = sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0];
+      existingRowObject = {};
+      headers.forEach(function(h, j) { existingRowObject[h] = existingValues[j]; });
+    } catch (e) {
+      existingRowObject = null;
+    }
+  }
+
+  if (existingRowObject) {
+    if (!String(data['Status Verifikasi EPID'] || '').trim()) {
+      data['Status Verifikasi EPID'] = String(existingRowObject['Status Verifikasi EPID'] || '').trim() || verificationStatus;
+    }
+    if (!String(data['Nomor EPID Rekomendasi'] || '').trim()) {
+      data['Nomor EPID Rekomendasi'] = String(existingRowObject['Nomor EPID Rekomendasi'] || '').trim();
+    }
+    if (!String(data['Nomor EPID Final'] || '').trim()) {
+      data['Nomor EPID Final'] = String(existingRowObject['Nomor EPID Final'] || '').trim();
+    }
+    if (!epidValue) {
+      epidValue = String(existingRowObject['Nomor EPID'] || '').trim();
+    }
+  }
+
+  const normalizedStatus = String(data['Status Verifikasi EPID'] || verificationStatus).trim() || 'Pending';
+  data['Status Verifikasi EPID'] = normalizedStatus;
+  if (normalizedStatus === 'Terverifikasi') {
+    epidValue = String(data['Nomor EPID Final'] || data['Nomor EPID'] || epidValue || '').trim();
+    if (!epidValue) {
+      epidValue = String(data['Nomor EPID Rekomendasi'] || '').trim() || recommendEpid_(dx, data);
+    }
+    data['Nomor EPID Final'] = epidValue;
+    data['Nomor EPID'] = epidValue;
+  } else if (rowIndex === -1 || String(data['__workflowStage'] || '').trim() === 'section-verifikasi') {
+    data['Nomor EPID Final'] = '';
+    data['Nomor EPID'] = '';
+    epidValue = '';
+  }
 
   if (headers.includes("Link PDF") && !data["Link PDF"]) {
     const token = String(data.__token || "").trim();
-    if (token) {
+    if (token && epidValue) {
       data["Link PDF"] = safeGetPdfPrintUrl_(dx, epidValue, token) || "";
     }
   }
@@ -419,6 +563,7 @@ function saveDxRecord_(dx, data) {
     if (!header) return "";
     if (header === "Timestamp") return rowIndex !== -1 ? (oldTimestamp || serialized["Timestamp"] || now) : (serialized["Timestamp"] || now);
     if (header === "dx") return dx;
+    if (header === "ID Registrasi Kasus") return recordId;
     if (header === "Nomor EPID") return epidValue;
     if (serialized[header] !== undefined) return serialized[header];
     return existingRow[idx] !== undefined ? existingRow[idx] : "";
@@ -432,7 +577,9 @@ function saveDxRecord_(dx, data) {
   }
 
   // Req 2.3: perbarui indeks setelah tulis
-  _updateEpidIndex_(sheet, epidValue, savedRowIndex);
+  if (epidValue) {
+    _updateEpidIndex_(sheet, epidValue, savedRowIndex);
+  }
 
   // Req 1.3: invalidasi cache setelah tulis berhasil
   try {
@@ -466,6 +613,8 @@ function saveDxRecord_(dx, data) {
 
   return {
     epid: epidValue,
+    recordId: recordId,
+    verificationStatus: verificationStatus,
     isUpdate: rowIndex !== -1,
     rowIndex: savedRowIndex
   };
@@ -525,14 +674,14 @@ function getHeadersForDx(dx, token) {
 
 // ─── getRecordByEpid ─────────────────────────────────────────────────────────
 
-function getRecordByEpid(dx, epid, token) {
+function getRecordByKey(dx, recordKey, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) return null;
 
   try {
     dx = String(dx || "").trim().toUpperCase();
-    epid = String(epid || "").trim();
-    if (!dx || !epid) return null;
+    recordKey = String(recordKey || "").trim();
+    if (!dx || !recordKey) return null;
 
     const sheet = getSheetOrNull_(dx + "_Raw");
     if (!sheet) return null;
@@ -541,11 +690,14 @@ function getRecordByEpid(dx, epid, token) {
     if (!data || data.length < 2) return null;
 
     const headers = data[0].map(h => String(h || "").trim());
+    const idxRecordId = headers.indexOf("ID Registrasi Kasus");
     const idxEpid = headers.indexOf("Nomor EPID");
-    if (idxEpid === -1) return null;
+    if (idxRecordId === -1 && idxEpid === -1) return null;
 
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idxEpid] || "").trim() === epid) {
+      const rowRecordId = idxRecordId !== -1 ? String(data[i][idxRecordId] || "").trim() : "";
+      const rowEpid = idxEpid !== -1 ? String(data[i][idxEpid] || "").trim() : "";
+      if ((rowRecordId && rowRecordId === recordKey) || (rowEpid && rowEpid === recordKey)) {
         return deserializeRecord_(data[i], headers);
       }
     }
@@ -554,6 +706,10 @@ function getRecordByEpid(dx, epid, token) {
   } catch (e) {
     return null;
   }
+}
+
+function getRecordByEpid(dx, epid, token) {
+  return getRecordByKey(dx, epid, token);
 }
 
 // ─── searchRecords (Req 9.1, 9.2) ────────────────────────────────────────────
@@ -601,6 +757,7 @@ function searchRecords(dx, filters, token) {
     const headers = data[0].map(h => String(h || "").trim());
     const rows = data.slice(1);
 
+    const idxRecordId = headers.indexOf("ID Registrasi Kasus");
     const idxEpid = headers.indexOf("Nomor EPID");
     const idxNama = headers.indexOf("Nama");
     const idxTglLahir = headers.indexOf("Tanggal Lahir");
@@ -618,6 +775,7 @@ function searchRecords(dx, filters, token) {
 
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
+      const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || "").trim() : "";
       const epid = idxEpid !== -1 ? String(r[idxEpid] || "").trim() : "";
       const nama = idxNama !== -1 ? String(r[idxNama] || "").trim() : "";
       const orangTua = idxOrtu !== -1 ? String(r[idxOrtu] || "").trim() : "";
@@ -659,6 +817,8 @@ function searchRecords(dx, filters, token) {
 
       if (matchEpid && matchNama && matchTglLahir && matchOrtu && matchAlamat && matchKelurahan) {
         allResults.push({
+          recordId: recordId,
+          recordKey: recordId || epid,
           epid: epid,
           nama: nama,
           tanggalLahir: tglLahir,
@@ -927,5 +1087,95 @@ function debugRefImun(token) {
     };
   } catch (e) {
     return { ok: false, reason: String(e), len: 0, sample: [] };
+  }
+}
+
+
+function getWorkflowInbox(dx, token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
+
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    if (!dx) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
+
+    const sheet = getSheetOrNull_(dx + '_Raw');
+    if (!sheet) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
+
+    const data = sheet.getDataRange().getValues();
+    if (!data || data.length < 2) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
+
+    const headers = data[0].map(function(h) { return String(h || '').trim(); });
+    const rows = data.slice(1);
+    const tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
+
+    const idxRecordId = headers.indexOf('ID Registrasi Kasus');
+    const idxEpid = headers.indexOf('Nomor EPID');
+    const idxNama = headers.indexOf('Nama');
+    const idxKel = headers.indexOf('Kelurahan');
+    const idxKec = headers.indexOf('Kecamatan');
+    const idxKab = headers.indexOf('Kab/Kota Pasien') !== -1 ? headers.indexOf('Kab/Kota Pasien') : headers.indexOf('Kab/Kota');
+    const idxTanggal = headers.indexOf('Timestamp');
+    const idxStatusVerif = headers.indexOf('Status Verifikasi EPID');
+    const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
+    const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
+    const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+
+    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+    const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
+    const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
+
+    const pendingVerification = [];
+    const revisionQueue = [];
+
+    rows.forEach(function(r) {
+      const statusVerif = idxStatusVerif !== -1 ? String(r[idxStatusVerif] || '').trim() : '';
+      const nama = idxNama !== -1 ? String(r[idxNama] || '').trim() : '';
+      const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || '').trim() : '';
+      const epid = idxEpid !== -1 ? String(r[idxEpid] || '').trim() : '';
+      const recordKey = recordId || epid;
+      const kel = idxKel !== -1 ? String(r[idxKel] || '').trim() : '';
+      const kec = idxKec !== -1 ? String(r[idxKec] || '').trim() : '';
+      const kab = idxKab !== -1 ? String(r[idxKab] || '').trim() : '';
+      const catatan = idxCatatanVerif !== -1 ? String(r[idxCatatanVerif] || '').trim() : '';
+      const pkmPengampu = idxPuskesmasPengampu !== -1 ? _normalizeWilayahKey_(r[idxPuskesmasPengampu]) : '';
+      const kodePkmPengampu = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(r[idxKodePuskesmas]) : '';
+      let timestamp = '';
+      if (idxTanggal !== -1) {
+        const raw = r[idxTanggal];
+        timestamp = raw instanceof Date ? Utilities.formatDate(raw, tz, 'yyyy-MM-dd HH:mm') : String(raw || '').trim();
+      }
+      const item = { recordKey: recordKey, recordId: recordId, epid: epid, nama: nama, kelurahan: kel, kecamatan: kec, kabKota: kab, statusVerifikasi: statusVerif, catatanVerifikasi: catatan, timestamp: timestamp };
+
+      if (role === 'admin' && (!statusVerif || statusVerif === 'Pending')) {
+        pendingVerification.push(item);
+      }
+
+      const scopeMatch = (userKode && kodePkmPengampu && userKode === kodePkmPengampu) || (userUnit && pkmPengampu && userUnit === pkmPengampu);
+      if (statusVerif === 'Perlu Revisi' && (role === 'admin' || scopeMatch)) {
+        revisionQueue.push(item);
+      }
+    });
+
+    return {
+      pendingVerification: pendingVerification.slice(0, 8),
+      revisionQueue: revisionQueue.slice(0, 8),
+      summary: { pendingVerification: pendingVerification.length, revisionQueue: revisionQueue.length }
+    };
+  } catch (e) {
+    return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 }, error: String(e) };
+  }
+}
+
+
+function previewRecommendedEpid(dx, payload, token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) return { ok: false, recommendation: '', message: 'Sesi tidak valid.' };
+  try {
+    const data = Object.assign({}, payload || {});
+    const recommendation = recommendEpid_(dx, data);
+    return { ok: true, recommendation: recommendation };
+  } catch (e) {
+    return { ok: false, recommendation: '', message: String(e && e.message || e) };
   }
 }
