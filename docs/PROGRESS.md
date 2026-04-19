@@ -63,3 +63,4 @@
 - [x] Role matrix diformalisasi di `docs/ROLE-MATRIX.md`
 - [x] Dashboard sekarang memakai token sesi dan role check di backend; export dashboard dibatasi untuk admin
 - [x] Regresi syntax di `app.js.html` yang memicu `Unexpected token 'if'` saat load Web App sudah diperbaiki (blok duplikat setelah load-record handler dihapus)
+- [x] Status sekolah/kegiatan sekarang dibatasi dinamis berdasarkan umur; bayi/balita tidak bisa memilih opsi sekolah/kuliah/bekerja yang tidak masuk akal, dan submit akan menolak kombinasi umur-status yang invalid

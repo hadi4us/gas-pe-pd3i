@@ -1275,6 +1275,7 @@
     if (!isCompleteDateValue(dobValue)) {
       if (umurEl) umurEl.value = "";
       if (epiEl) epiEl.value = "";
+      syncSchoolActivityOptionsByAge(null);
       return { ok: false, pending: true };
     }
 
@@ -1284,6 +1285,7 @@
     if (!res.ok) {
       if (umurEl) umurEl.value = "";
       if (epiEl) epiEl.value = "";
+      syncSchoolActivityOptionsByAge(null);
 
       if (!silent && hard) {
         showTopAlert(res.message, false);
@@ -1293,8 +1295,48 @@
 
     if (umurEl) umurEl.value = res.ageText || "";
     if (epiEl) epiEl.value = res.epiGroup || "";
+    syncSchoolActivityOptionsByAge(res);
 
     return res;
+  }
+
+  function getAllowedSchoolActivityOptions(validationRes) {
+    const baseOptions = ["Belum sekolah", "Sekolah", "Kuliah", "Bekerja", "Tidak sekolah/tidak bekerja"];
+    if (!validationRes || !validationRes.ok || !validationRes.age) return baseOptions.slice();
+
+    const age = validationRes.age || {};
+    const totalMonths = Number(age.totalMonths || 0);
+    if (totalMonths < 60) {
+      return ["Belum sekolah"];
+    }
+
+    return baseOptions.slice();
+  }
+
+  function syncSchoolActivityOptionsByAge(validationRes) {
+    const statusEl = document.getElementById("Apakah sekolah/bekerja?");
+    if (!statusEl) return;
+
+    const allowed = getAllowedSchoolActivityOptions(validationRes);
+    const currentValue = String(statusEl.value || "").trim();
+    const fallbackValue = allowed[0] || "";
+    const nextValue = allowed.includes(currentValue) ? currentValue : fallbackValue;
+
+    statusEl.innerHTML = allowed.map(function(opt) {
+      const selected = opt === nextValue ? ' selected' : '';
+      return `<option value="${opt}"${selected}>${opt}</option>`;
+    }).join("");
+    statusEl.value = nextValue;
+
+    if (!allowed.includes(currentValue)) {
+      const kelasEl = document.getElementById("Kelas Saat Ini");
+      const namaSekolahEl = document.getElementById("Nama sekolah/tempat bekerja");
+      if (kelasEl) kelasEl.value = "";
+      if (namaSekolahEl) namaSekolahEl.value = "";
+      if (typeof reevaluateShowIfFields === "function") {
+        reevaluateShowIfFields();
+      }
+    }
   }
 
   function checkConsistencyWarnings() {
@@ -1314,9 +1356,10 @@
     const age = val.age || {};
     const years = Number(age.years || 0);
     const totalDays = Number(age.totalDays || 0);
+    const allowedSchoolOptions = getAllowedSchoolActivityOptions(val);
 
-    if (statusSekolah === "Sekolah" && years < 5) {
-      warnings.push("Status kegiatan terisi 'Sekolah', tetapi umur pasien masih di bawah 5 tahun.");
+    if (statusSekolah && allowedSchoolOptions.indexOf(statusSekolah) === -1) {
+      warnings.push(`Status sekolah/kegiatan '${statusSekolah}' tidak sesuai dengan umur pasien (${val.ageText}).`);
     }
 
     const k = normalizeClassValue(kelasSaatIni);
@@ -1432,6 +1475,17 @@
       const allowedNext = getAllowedStatusTransitions(dx, latestStatus) || [];
       if (allowedNext.indexOf(statusKasusGlobal) === -1) {
         errors.push(`Transisi status dari '${latestStatus}' ke '${statusKasusGlobal}' tidak sesuai alur yang diizinkan.`);
+      }
+    }
+
+    const dobForSchool = document.getElementById("Tanggal Lahir")?.value || "";
+    const refForSchool = document.getElementById("Tanggal Pelacakan")?.value || "";
+    const schoolStatus = getFieldValueSafe("Apakah sekolah/bekerja?");
+    const schoolBirthVal = validateBirthDateEpi(dobForSchool, isCompleteDateValue(refForSchool) ? refForSchool : "");
+    if (schoolBirthVal && schoolBirthVal.ok) {
+      const allowedSchoolOptions = getAllowedSchoolActivityOptions(schoolBirthVal);
+      if (schoolStatus && allowedSchoolOptions.indexOf(schoolStatus) === -1) {
+        errors.push(`Status sekolah/kegiatan '${schoolStatus}' tidak sesuai dengan umur pasien (${schoolBirthVal.ageText}).`);
       }
     }
 
