@@ -354,6 +354,28 @@
     return Array.isArray(rows) ? rows[0] : null;
   }
 
+  function setCoordinateManualMode(enabled) {
+    const latEl = document.getElementById("Latitude");
+    const lonEl = document.getElementById("Longitude");
+    const editable = !!enabled && !isViewerSession();
+
+    [latEl, lonEl].forEach(function(el) {
+      if (!el) return;
+
+      el.classList.remove("bg-slate-100", "cursor-not-allowed", "font-extrabold", "text-slate-600", "bg-white", "focus:ring-blue-500", "focus:border-blue-500", "border-amber-300", "ring-1", "ring-amber-200");
+
+      if (editable) {
+        el.removeAttribute("readonly");
+        el.placeholder = "Isi manual jika titik tidak ditemukan";
+        el.classList.add("bg-white", "focus:ring-blue-500", "focus:border-blue-500", "border-amber-300", "ring-1", "ring-amber-200");
+      } else {
+        el.setAttribute("readonly", "readonly");
+        el.placeholder = "Akan terisi otomatis / bisa dibuka manual jika gagal";
+        el.classList.add("bg-slate-100", "cursor-not-allowed", "font-extrabold", "text-slate-600");
+      }
+    });
+  }
+
   function initGeoButton() {
     const btn = document.getElementById("btn-ambil-lokasi");
     const btnCariAlamat = document.getElementById("btn-cari-lokasi-alamat");
@@ -362,17 +384,20 @@
     const statusEl = document.getElementById("geo-status");
 
     if (!btn || !latEl || !lonEl || !statusEl) return;
+    setCoordinateManualMode(false);
     if (btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
     if (btnCariAlamat) btnCariAlamat.dataset.bound = "1";
 
     btn.addEventListener("click", function() {
       if (!navigator.geolocation) {
-        statusEl.textContent = "Geolocation tidak didukung di perangkat/browser ini.";
+        setCoordinateManualMode(true);
+        statusEl.textContent = "Geolocation tidak didukung di perangkat/browser ini. Isi latitude/longitude manual.";
         statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
         return;
       }
 
+      setCoordinateManualMode(false);
       statusEl.textContent = "Sedang mengambil lokasi...";
       statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
 
@@ -382,6 +407,7 @@
           const lon = position.coords.longitude.toFixed(6);
           latEl.value = lat;
           lonEl.value = lon;
+          setCoordinateManualMode(false);
           statusEl.textContent = `Lokasi berhasil diambil. Lat: ${lat}, Lon: ${lon}`;
           statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
         },
@@ -390,7 +416,8 @@
           if (error.code === 1) msg = "Izin lokasi ditolak.";
           else if (error.code === 2) msg = "Lokasi tidak tersedia.";
           else if (error.code === 3) msg = "Permintaan lokasi timeout.";
-          statusEl.textContent = msg;
+          setCoordinateManualMode(true);
+          statusEl.textContent = msg + " Isi latitude/longitude manual jika perlu.";
           statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -401,13 +428,15 @@
       btnCariAlamat.addEventListener("click", async function() {
         const query = buildDomisiliAddressQuery();
         if (!query) {
-          statusEl.textContent = "Alamat domisili belum cukup lengkap untuk dicari. Isi alamat, wilayah, lalu coba lagi.";
+          setCoordinateManualMode(true);
+          statusEl.textContent = "Alamat domisili belum cukup lengkap untuk dicari. Isi alamat, wilayah, atau koordinat manual.";
           statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
           return;
         }
 
         btnCariAlamat.disabled = true;
         btnCariAlamat.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+        setCoordinateManualMode(false);
         statusEl.textContent = `Mencari koordinat dari alamat: ${query}`;
         statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
 
@@ -421,10 +450,12 @@
           const lon = Number(match.lon).toFixed(6);
           latEl.value = lat;
           lonEl.value = lon;
+          setCoordinateManualMode(false);
           statusEl.textContent = `Koordinat ditemukan dari alamat. Lat: ${lat}, Lon: ${lon}`;
           statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
         } catch (err) {
-          statusEl.textContent = (err && err.message) || "Gagal mencari koordinat dari alamat.";
+          setCoordinateManualMode(true);
+          statusEl.textContent = ((err && err.message) || "Gagal mencari koordinat dari alamat.") + " Isi latitude/longitude manual jika perlu.";
           statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
         } finally {
           btnCariAlamat.disabled = false;

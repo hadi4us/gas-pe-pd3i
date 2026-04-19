@@ -67,3 +67,4 @@
 - [x] RT/RW sekarang benar-benar disanitasi ke angka saja di level input/blur, dengan validasi panjang + padding 3 digit saat blur
 - [x] Lokasi GPS sekarang punya opsi pencarian koordinat dari alamat domisili selain ambil lokasi perangkat
 - [x] `Nama Rumah Sakit` sekarang mendukung mode hybrid: tetap searchable dari master RS, tapi user juga bisa mengetik nama RS manual jika tidak ada di daftar
+- [x] Saat geocoding alamat gagal, field latitude/longitude otomatis dibuka ke mode input manual dengan petunjuk yang jelas di status box
