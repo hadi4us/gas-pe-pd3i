@@ -87,3 +87,4 @@
 - [x] Dashboard statistik sekarang punya panel sebaran wilayah operasional: ringkasan kecamatan/kelurahan/RW aktif plus ranking top kecamatan, top kelurahan, top RW, dan top cluster RT/RW
 - [x] Dashboard statistik sekarang punya hotspot map berbasis koordinat kasus: cluster titik koordinat, ranking hotspot teratas, dan ringkasan kasus bertitik koordinat vs data yang belum punya koordinat
 - [x] Dashboard statistik sekarang mendukung drill-down interaktif: klik kecamatan/kelurahan/RW/RT-RW atau hotspot untuk memuat daftar kasus terkait, lalu buka record langsung dari panel detail dashboard
+- [x] Susunan field semua diagnosa ditata ulang agar lebih konsisten dengan judul pengelompokan; section diagnosis sekarang juga dirender sebagai blok terpisah supaya field tidak terasa campur antar-subbagian

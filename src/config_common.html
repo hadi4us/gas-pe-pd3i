@@ -2,13 +2,13 @@
   const COMMON_PELAPOR_FIELDS = [
     { id: "Sumber Laporan", label: "Sumber Laporan", type: "select", options: ["RUMAH SAKIT", "PUSKESMAS", "KLINIK", "TPMB", "TPMD", "MASYARAKAT", "LAINNYA"], group: "pelapor", required: true },
     { id: "Nama unit pelapor", label: "Nama unit pelapor", type: "search_select", group: "pelapor", required: true },
+    { id: "Provinsi", label: "Provinsi", type: "select", options: [], group: "pelapor", required: true },
+    { id: "Kab/Kota", label: "Kab/Kota", type: "select", options: [], group: "pelapor", required: true },
     { id: "Nama Petugas", label: "Nama Petugas", type: "text", group: "pelapor", required: true },
     { id: "No Whatsapp Petugas", label: "No Whatsapp Petugas", type: "tel", group: "pelapor" },
     { id: "Email Petugas", label: "Email Petugas", type: "email", group: "pelapor", required: true },
-    { id: "Tanggal Pelacakan", label: "Tanggal Pelacakan", type: "date", max: todayStr, group: "pelapor", required: true },
     { id: "Tanggal terima laporan", label: "Tanggal terima laporan", type: "date", max: todayStr, group: "pelapor", required: true },
-    { id: "Provinsi", label: "Provinsi", type: "select", options: [], group: "pelapor", required: true },
-    { id: "Kab/Kota", label: "Kab/Kota", type: "select", options: [], group: "pelapor", required: true }
+    { id: "Tanggal Pelacakan", label: "Tanggal Pelacakan", type: "date", max: todayStr, group: "pelapor", required: true }
   ];
 
   const COMMON_PASIEN_FIELDS = [
@@ -19,13 +19,13 @@
     { id: "Tanggal Lahir", label: "Tanggal Lahir", type: "date", max: todayStr, group: "pasien", required: true },
     { id: "Umur (auto)", label: "Umur", type: "text", group: "pasien", readonly: true },
     { id: "Kelompok Umur Epidemiologis", label: "Kelompok Umur Epidemiologis", type: "text", group: "pasien", readonly: true },
-    { id: "Tinggi Badan (cm)", label: "Tinggi Badan (cm)", type: "number", group: "pasien" },
-    { id: "Berat Badan (kg)", label: "Berat Badan (kg)", type: "number", group: "pasien" },
+    { id: "Nama orang tua/wali", label: "Nama Orang Tua/Wali", type: "text", group: "pasien", required: true },
+    { id: "No. kontak orang tua/wali", label: "No. Kontak Orang Tua/Wali", type: "tel", pattern: "^[0-9+ ]{8,20}$", group: "pasien" },
     { id: "Apakah sekolah/bekerja?", label: "Status sekolah/kegiatan", type: "select", options: ["Belum sekolah", "Sekolah", "Kuliah", "Bekerja", "Tidak sekolah/tidak bekerja"], group: "pasien", required: true },
     { id: "Kelas Saat Ini", label: "Kelas Saat Ini", type: "select", options: ["", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"], group: "pasien", required: true, showIf: { field: "Apakah sekolah/bekerja?", values: ["Sekolah"] } },
     { id: "Nama sekolah/tempat bekerja", label: "Nama sekolah/kampus/tempat bekerja", type: "text", fullWidth: true, group: "pasien", required: true, showIf: { field: "Apakah sekolah/bekerja?", values: ["Sekolah", "Kuliah", "Bekerja"] } },
-    { id: "Nama orang tua/wali", label: "Nama Orang Tua/Wali", type: "text", group: "pasien", required: true },
-    { id: "No. kontak orang tua/wali", label: "No. Kontak Orang Tua/Wali", type: "tel", pattern: "^[0-9+ ]{8,20}$", group: "pasien" },
+    { id: "Tinggi Badan (cm)", label: "Tinggi Badan (cm)", type: "number", group: "pasien" },
+    { id: "Berat Badan (kg)", label: "Berat Badan (kg)", type: "number", group: "pasien" },
     { id: "Alamat", label: "Alamat Lengkap", type: "text", fullWidth: true, group: "pasien", required: true },
     { id: "RT", label: "RT", type: "text", group: "pasien" },
     { id: "RW", label: "RW", type: "text", group: "pasien" },

@@ -9,7 +9,11 @@
         fields: [
           { id: "Tanggal mulai sakit/gejala awal", label: "Tanggal mulai sakit/gejala awal sebelum lumpuh", type: "date" },
           { id: "Tgl mulai lumpuh", label: "Tanggal mulai lemah/lumpuh", type: "date", required: true },
-          { id: "Tanggal meninggal AFP", label: "Tanggal meninggal", type: "date" },
+          { id: "Sifat akut", label: "Apakah kelemahan/kelumpuhan sifatnya akut (1-14 hari)?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Lumpuh layuh", label: "Apakah kelemahan/kelumpuhan sifatnya layuh (flaccid)?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Asimetris", label: "Asimetris?", type: "select", options: ["Ya", "Tidak"] },
+          { id: "Demam saat onset", label: "Apakah penderita demam sebelum lemah/lumpuh?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] },
+          { id: "Rudapaksa AFP", label: "Apakah kelemahan/kelumpuhan disebabkan rudapaksa?", type: "select", options: ["", "Ya", "Tidak"] },
           { id: "Pengobatan tradisional AFP", label: "Setelah lemah/lumpuh, apakah menjalani pengobatan tradisional/alternatif?", type: "select", options: ["", "Ya", "Tidak"] },
           { id: "Nama tempat pengobatan tradisional AFP", label: "Nama tempat pengobatan tradisional", type: "text", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
           { id: "Tanggal berkunjung pengobatan tradisional AFP", label: "Tanggal berkunjung pengobatan tradisional", type: "date", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
@@ -18,11 +22,7 @@
           { id: "Tanggal berobat AFP", label: "Tanggal berobat", type: "date", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
           { id: "Diagnosis AFP", label: "Diagnosis", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "No. rekam medik", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
-          { id: "Sifat akut", label: "Apakah kelemahan/kelumpuhan sifatnya akut (1-14 hari)?", type: "select", options: ["Ya", "Tidak"] },
-          { id: "Lumpuh layuh", label: "Apakah kelemahan/kelumpuhan sifatnya layuh (flaccid)?", type: "select", options: ["Ya", "Tidak"] },
-          { id: "Rudapaksa AFP", label: "Apakah kelemahan/kelumpuhan disebabkan rudapaksa?", type: "select", options: ["", "Ya", "Tidak"] },
-          { id: "Asimetris", label: "Asimetris?", type: "select", options: ["Ya", "Tidak"] },
-          { id: "Demam saat onset", label: "Apakah penderita demam sebelum lemah/lumpuh?", type: "select", options: ["Ya", "Tidak", "Tidak tahu"] }
+          { id: "Tanggal meninggal AFP", label: "Tanggal meninggal", type: "date" }
         ]
       },
       {

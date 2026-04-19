@@ -20,18 +20,18 @@
         title: "Informasi Kelahiran Bayi",
         fields: [
           { id: "Apakah bayi lahir hidup", label: "Apakah bayi lahir hidup?", type: "select", options: ["", "Ya", "Tidak"] },
-          { id: "Tanggal mulai sakit", label: "Tanggal mulai sakit", type: "date", required: true },
-          { id: "Tanggal meninggal TN", label: "Bila bayi meninggal, tanggal meninggal", type: "date" },
-          { id: "Umur bayi meninggal (hari)", label: "Umur bayi meninggal (hari)", type: "number" },
           { id: "Bayi menangis saat lahir", label: "Waktu lahir apakah bayi menangis?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
           { id: "Tanda kelahiran hidup", label: "Apakah terlihat tanda-tanda kelahiran hidup?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"], showIf: { field: "Bayi menangis saat lahir", values: ["Tidak Tahu"] } },
           { id: "Bayi bisa menyusu dengan baik", label: "Setelah lahir apakah bayi bisa menyusu/minum dengan baik?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
           { id: "Mulut mencucu dan tidak bisa menyusu", label: "Apakah 3 hari kemudian mulut bayi mencucu dan tidak bisa menyusu?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
           { id: "Bayi mudah kejang", label: "Apakah bayi mudah kejang jika disentuh/kena sinar/mendengar bunyi?", type: "select", options: ["", "Ya", "Tidak", "Tidak Tahu"] },
+          { id: "Tanggal mulai sakit", label: "Tanggal mulai sakit", type: "date", required: true },
           { id: "Apakah bayi dirawat", label: "Apakah bayi dirawat?", type: "select", options: ["", "Ya", "Tidak"] },
           { id: "Tempat perawatan TN", label: "Tempat perawatan", type: "text", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
           { id: "Tanggal mulai dirawat TN", label: "Tanggal mulai dirawat", type: "date", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
-          { id: "Keadaan bayi setelah dirawat", label: "Keadaan bayi setelah dirawat", type: "select", options: ["", "Sembuh", "Meninggal"] }
+          { id: "Keadaan bayi setelah dirawat", label: "Keadaan bayi setelah dirawat", type: "select", options: ["", "Sembuh", "Meninggal"] },
+          { id: "Tanggal meninggal TN", label: "Bila bayi meninggal, tanggal meninggal", type: "date" },
+          { id: "Umur bayi meninggal (hari)", label: "Umur bayi meninggal (hari)", type: "number" }
         ]
       },
       {

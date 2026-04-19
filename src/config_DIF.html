@@ -15,15 +15,15 @@
         title: "Identitas Penderita & Kontak Darurat",
         fields: [
           { id: "No. kontak pasien", label: "No. Kontak Pasien", type: "tel" },
-          { id: "Pekerjaan", label: "Pekerjaan", type: "text" },
-          { id: "Alamat tempat kerja", label: "Alamat Tempat Kerja", type: "text", fullWidth: true },
           { id: "Orang tua/Wali/Saudara dekat", label: "Orang tua / wali / saudara dekat yang dapat dihubungi", type: "text", fullWidth: true },
+          { id: "No. Telepon Wali", label: "Nomor Telepon / HP Wali", type: "tel" },
           { id: "Alamat Lengkap Wali", label: "Alamat Lengkap Wali", type: "text", fullWidth: true },
           { id: "Desa/Kelurahan Wali", label: "Desa/Kelurahan Wali", type: "text" },
           { id: "Kecamatan Wali", label: "Kecamatan Wali", type: "text" },
           { id: "Kab/Kota Wali", label: "Kabupaten/Kota Wali", type: "text" },
           { id: "Provinsi Wali", label: "Provinsi Wali", type: "text" },
-          { id: "No. Telepon Wali", label: "Nomor Telepon / HP Wali", type: "tel" }
+          { id: "Pekerjaan", label: "Pekerjaan", type: "text" },
+          { id: "Alamat tempat kerja", label: "Alamat Tempat Kerja", type: "text", fullWidth: true }
         ]
       },
       {
@@ -44,8 +44,7 @@
           { id: "Tanggal pseudomembran", label: "Tanggal Pseudomembran", type: "date", showIf: { field: "Pseudomembran?", values: ["Ya"] } },
           { id: "Lokasi pseudomembran", label: "Lokasi Pseudomembran", type: "text", showIf: { field: "Pseudomembran?", values: ["Ya"] } },
           { id: "Gejala lain DIF", label: "Gejala Lain", type: "text", fullWidth: true },
-          { id: "Status Gizi", label: "Status Gizi", type: "select", options: ["Buruk", "Kurang", "Baik"] },
-          { id: "Rawat inap?", label: "Rawat Inap?", type: "select", options: OPT_YA_TIDAK }
+          { id: "Status Gizi", label: "Status Gizi", type: "select", options: ["Buruk", "Kurang", "Baik"] }
         ]
       },
       IMUNISASI_SECTION,
@@ -62,8 +61,9 @@
       },
       {
         key: "pengobatan",
-        title: "Riwayat Pengobatan",
+        title: "Riwayat Pengobatan / Perawatan",
         fields: [
+          { id: "Rawat inap?", label: "Rawat Inap?", type: "select", options: OPT_YA_TIDAK },
           { id: "Berobat ke RS?", label: "Berobat ke Rumah Sakit?", type: "select", options: OPT_YA_TIDAK },
           { id: "Tanggal berobat RS", label: "Tanggal Berobat ke RS", type: "date", showIf: { field: "Berobat ke RS?", values: ["Ya"] } },
           { id: "Tracheostomi", label: "Tracheostomi?", type: "select", options: OPT_YA_TIDAK, showIf: { field: "Berobat ke RS?", values: ["Ya"] } },

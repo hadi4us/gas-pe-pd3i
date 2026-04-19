@@ -2849,10 +2849,17 @@
     if (!cfg || !Array.isArray(cfg.sections)) return;
 
     cfg.sections.forEach(section => {
-      container.innerHTML += renderSectionTitle(section.title);
-      (section.fields || []).forEach(field => {
-        container.innerHTML += generateHTML(field);
-      });
+      const fieldsHtml = (section.fields || []).map(function(field) {
+        return generateHTML(field);
+      }).join("");
+
+      container.innerHTML += `
+        <div class="pd3i-diagnosis-section">
+          ${renderSectionTitle(section.title)}
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-diagnosis-section-grid">
+            ${fieldsHtml}
+          </div>
+        </div>`;
     });
   }
 
