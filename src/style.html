@@ -1488,6 +1488,86 @@ textarea {
 
 
 
+
+.pd3i-dashboard-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.pd3i-dashboard-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.pd3i-dashboard-block-title {
+  margin: 0;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pd3i-dashboard-block-title.is-sub {
+  margin-bottom: 0.9rem;
+}
+
+.pd3i-dashboard-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pd3i-dashboard-metric-card,
+.pd3i-dashboard-panel,
+.pd3i-dashboard-alert {
+  border-radius: 22px;
+  border: 1px solid #e4edf8;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.pd3i-dashboard-metric-card {
+  padding: 1rem 1.05rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,251,255,0.98) 100%);
+}
+
+.pd3i-dashboard-metric-card.is-hero {
+  padding: 1.15rem 1.15rem;
+}
+
+.pd3i-dashboard-metric-card.tone-neutral {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border-color: #dbe6f3;
+}
+
+.pd3i-dashboard-metric-card.tone-emerald { background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
+.pd3i-dashboard-metric-card.tone-blue { background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe; }
+.pd3i-dashboard-metric-card.tone-purple { background: linear-gradient(180deg, #faf5ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+.pd3i-dashboard-metric-card.tone-amber { background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%); border-color: #fde68a; }
+.pd3i-dashboard-metric-card.tone-sky { background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd; }
+.pd3i-dashboard-metric-card.tone-rose { background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%); border-color: #fecdd3; }
+.pd3i-dashboard-metric-card.tone-indigo { background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%); border-color: #c7d2fe; }
+
+.pd3i-dashboard-panel {
+  padding: 1rem 1.05rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.pd3i-dashboard-panel-table {
+  padding: 1.15rem 1.1rem;
+}
+
+.pd3i-dashboard-alert {
+  padding: 1.05rem 1.1rem;
+  background: linear-gradient(180deg, #fff9e8 0%, #fff4d6 100%);
+  border-color: #fde68a;
+}
+
+.pd3i-dashboard-export {
+  min-height: 46px;
+}
 .pd3i-dashboard-section {
   position: relative;
 }
@@ -1794,5 +1874,12 @@ textarea {
   .pd3i-dashboard-load {
     width: 100%;
     max-width: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .pd3i-dashboard-overview-grid,
+  .pd3i-dashboard-two-column {
+    grid-template-columns: 1fr;
   }
 }
