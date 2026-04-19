@@ -63,22 +63,22 @@
         extraHtml = `
           <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <div class="text-xs font-extrabold uppercase tracking-wide text-blue-800">Kesimpulan Status Imunisasi</div>
-              <div id="imun-summary-text" class="mt-2 text-lg font-black text-blue-900">Belum dinilai</div>
+              <div class="text-xs font-extrabold uppercase tracking-wide text-blue-800">Ringkasan Dokumentasi Imunisasi</div>
+              <div id="imun-summary-text" class="mt-2 text-lg font-black text-blue-900">Belum diringkas</div>
               <div id="imun-summary-subtext" class="mt-1 text-xs font-semibold text-blue-700">
-                Menunggu data tanggal lahir / tanggal pelacakan / kelas
+                Menunggu data tanggal lahir / tanggal pelacakan / kelas untuk menandai item imunisasi yang relevan
               </div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Jumlah Dosis sesuai jadwal</div>
+              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Item Imunisasi Relevan</div>
               <div id="imun-summary-due" class="mt-2 text-2xl font-black text-slate-900">0</div>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Sudah Dijawab "Ya"</div>
+              <div class="text-xs font-extrabold uppercase tracking-wide text-slate-700">Tercatat Ya</div>
               <div id="imun-summary-yes" class="mt-2 text-2xl font-black text-slate-900">0</div>
             </div>
           </div>
-          <input type="hidden" id="Kesimpulan Status Imunisasi" name="Kesimpulan Status Imunisasi" value="">
+          <input type="hidden" id="Ringkasan Riwayat Imunisasi" name="Ringkasan Riwayat Imunisasi" value="">
         `;
       }
 
@@ -1016,130 +1016,63 @@
     return "";
   }
 
-  function getMrSpecificImmunizationConclusionText() {
-    const getVal = (id) => String(document.getElementById(id)?.value || "").trim();
-    const yesNo = (v) => String(v || "").trim().toUpperCase();
-
-    const d1 = getVal("Imunisasi campak-rubela dosis 1");
-    const s1 = getVal("Sumber Informasi (Dosis 1)");
-    const d2 = getVal("Imunisasi campak-rubela dosis 2");
-    const s2 = getVal("Sumber Informasi (Dosis 2)");
-    const bias = getVal("Imunisasi campak-rubela saat BIAS");
-    const sBias = getVal("Sumber Informasi (BIAS)");
-    const mmr = getVal("Pernah menerima imunisasi MMR sebelumnya?");
-    const sMmr = getVal("Sumber Informasi (MMR)");
-    const tambahan = getVal("Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?");
-    const sTambahan = getVal("Sumber Informasi (Imunisasi tambahan)");
-    const tglTerakhir = getVal("Tanggal imunisasi campak-rubela terakhir");
-
-    const positiveItems = [];
-    const negativeItems = [];
-    const unknownItems = [];
-    const sourceItems = [];
-
-    const collect = (label, value, source) => {
-      const norm = yesNo(value);
-      if (norm === "YA") {
-        positiveItems.push(label);
-        if (source) sourceItems.push(`${label}: ${source}`);
-      } else if (norm === "TIDAK") {
-        negativeItems.push(label);
-      } else if (norm === "TIDAK TAHU") {
-        unknownItems.push(label);
-      }
-    };
-
-    collect("dosis 1", d1, s1);
-    collect("dosis 2", d2, s2);
-    collect("BIAS", bias, sBias);
-    collect("MMR sebelumnya", mmr, sMmr);
-    collect("imunisasi tambahan", tambahan, sTambahan);
-
-    const lines = [];
-
-    if (positiveItems.length >= 2) {
-      lines.push(`Riwayat imunisasi campak-rubela spesifik terdokumentasi cukup baik; ditemukan ${positiveItems.length} riwayat positif: ${positiveItems.join(", ")}.`);
-    } else if (positiveItems.length === 1) {
-      lines.push(`Riwayat imunisasi campak-rubela spesifik terdokumentasi sebagian; baru ditemukan 1 riwayat positif yaitu ${positiveItems[0]}.`);
-    } else if (negativeItems.length >= 3 && unknownItems.length === 0) {
-      lines.push("Pada isian imunisasi MR spesifik tidak ditemukan riwayat imunisasi campak-rubela yang positif.");
-    } else if (negativeItems.length || unknownItems.length || tglTerakhir) {
-      lines.push("Riwayat imunisasi campak-rubela spesifik belum dapat disimpulkan lengkap dari isian yang tersedia.");
-    }
-
-    if (negativeItems.length) {
-      lines.push(`Jawaban tidak/negatif pada: ${negativeItems.join(", ")}.`);
-    }
-
-    if (unknownItems.length) {
-      lines.push(`Data masih tidak diketahui pada: ${unknownItems.join(", ")}.`);
-    }
-
-    if (tglTerakhir) {
-      lines.push(`Tanggal imunisasi campak-rubela terakhir yang dicatat: ${tglTerakhir}.`);
-    }
-
-    if (sourceItems.length) {
-      lines.push(`Sumber informasi riwayat positif: ${sourceItems.join("; ")}.`);
-    }
-
-    return lines.join(" ").trim();
-  }
-
   function updateImunisasiSummary() {
     const tbody = document.getElementById("tbody-Riwayat Imunisasi");
     const txt = document.getElementById("imun-summary-text");
     const sub = document.getElementById("imun-summary-subtext");
     const dueEl = document.getElementById("imun-summary-due");
     const yesEl = document.getElementById("imun-summary-yes");
-    const hidden = document.getElementById("Kesimpulan Status Imunisasi");
+    const hidden = document.getElementById("Ringkasan Riwayat Imunisasi");
 
     if (!tbody || !txt || !sub || !dueEl || !yesEl || !hidden) return;
 
     const rows = Array.from(tbody.querySelectorAll("tr"));
-    let dueCount = 0;
+    let relevantCount = 0;
+    let documentedCount = 0;
     let yesCount = 0;
+    let noCount = 0;
+    let unknownCount = 0;
 
     rows.forEach(row => {
-      const status = row.querySelector('select[data-name="Status"]')?.value || "";
-      if (status === "Belum cukup umur" || status === "Tidak sesuai sasaran") return;
-      dueCount++;
+      const status = String(row.querySelector('select[data-name="Status"]')?.value || "").trim();
+      if (!status || status === "Belum cukup umur" || status === "Tidak sesuai sasaran") return;
+      relevantCount++;
+      if (["Ya", "Tidak"].includes(status)) documentedCount++;
       if (status === "Ya") yesCount++;
+      else if (status === "Tidak") noCount++;
+      else unknownCount++;
     });
 
-    dueEl.textContent = String(dueCount);
+    dueEl.textContent = String(relevantCount);
     yesEl.textContent = String(yesCount);
 
     const umurText = document.getElementById("Umur (auto)")?.value || "umur tidak diketahui";
     const jkText = document.getElementById("JK")?.value || "jenis kelamin tidak diketahui";
 
-    let summary = "Belum dinilai";
-    let subParts = [`Kesimpulan untuk anak dengan usia ${umurText} dan jenis kelamin ${jkText}.`];
+    let summary = "Belum diringkas";
+    const subParts = [`Ringkasan riwayat imunisasi untuk pasien usia ${umurText} dengan jenis kelamin ${jkText}.`];
 
     if (rows.length === 0) {
-      summary = "Belum dinilai";
-      subParts.push("Data riwayat imunisasi belum tersedia.");
-    } else if (dueCount === 0) {
-      summary = "Lengkap";
-      subParts.push("Belum ada imunisasi yang sesuai jadwal sesuai usia/sasaran.");
-    } else if (yesCount === dueCount) {
-      summary = "Lengkap";
-      subParts.push(`Semua ${dueCount} imunisasi yang sudah sesuai jadwal telah terisi \"Ya\".`);
+      summary = "Belum ada data";
+      subParts.push("Baris riwayat imunisasi belum tersedia.");
+    } else if (relevantCount === 0) {
+      summary = "Belum ada item relevan";
+      subParts.push("Belum ada item imunisasi yang relevan untuk usia/sasaran saat ini.");
     } else {
-      summary = "Tidak lengkap";
-      subParts.push(`${yesCount} dari ${dueCount} imunisasi yang sudah sesuai jadwal terisi \"Ya\".`);
+      summary = `${documentedCount}/${relevantCount} item terdokumentasi`;
+      subParts.push(`${documentedCount} dari ${relevantCount} item imunisasi yang relevan sudah punya status dokumentasi.`);
+      if (yesCount) subParts.push(`${yesCount} item tercatat Ya.`);
+      if (noCount) subParts.push(`${noCount} item tercatat Tidak.`);
+      if (unknownCount) subParts.push(`${unknownCount} item masih kosong / belum dipastikan.`);
     }
-
-    const mrSpecific = getMrSpecificImmunizationConclusionText();
-    if (mrSpecific) subParts.push(mrSpecific);
 
     txt.textContent = summary;
     sub.textContent = subParts.join(" ");
     hidden.value = `${summary} — ${subParts.join(" ")}`;
 
-    if (summary === "Lengkap") txt.className = "mt-2 text-lg font-black text-green-700";
-    else if (summary === "Tidak lengkap") txt.className = "mt-2 text-lg font-black text-red-700";
-    else txt.className = "mt-2 text-lg font-black text-blue-900";
+    if (documentedCount === 0) txt.className = "mt-2 text-lg font-black text-blue-900";
+    else if (documentedCount < relevantCount) txt.className = "mt-2 text-lg font-black text-amber-700";
+    else txt.className = "mt-2 text-lg font-black text-green-700";
   }
 
   function buildRiwayatImunisasiRows() {
@@ -2476,22 +2409,6 @@
       if (warns.length > 0) {
         showTopAlert(warns.join(" "), false);
       }
-    }
-
-    if ([
-      "Imunisasi campak-rubela dosis 1",
-      "Sumber Informasi (Dosis 1)",
-      "Imunisasi campak-rubela dosis 2",
-      "Sumber Informasi (Dosis 2)",
-      "Imunisasi campak-rubela saat BIAS",
-      "Sumber Informasi (BIAS)",
-      "Pernah menerima imunisasi MMR sebelumnya?",
-      "Sumber Informasi (MMR)",
-      "Pernah menerima imunisasi campak-rubela saat imunisasi tambahan?",
-      "Sumber Informasi (Imunisasi tambahan)",
-      "Tanggal imunisasi campak-rubela terakhir"
-    ].includes(e.target.id)) {
-      updateImunisasiSummary();
     }
 
     reevaluateShowIfFields();

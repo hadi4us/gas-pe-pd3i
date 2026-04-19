@@ -69,3 +69,4 @@
 - [x] `Nama Rumah Sakit` sekarang mendukung mode hybrid: tetap searchable dari master RS, tapi user juga bisa mengetik nama RS manual jika tidak ada di daftar
 - [x] Saat geocoding alamat gagal, field latitude/longitude otomatis dibuka ke mode input manual dengan petunjuk yang jelas di status box
 - [x] Layout field dirapikan: grid form sekarang dense/non-bolong, field `showIf` collapse total saat hidden, dan field lanjutan diberi styling yang lebih menyatu dengan template agar alur input lebih nyaman
+- [x] Duplikasi blok imunisasi spesifik vs riwayat imunisasi generik dirapikan: MR/PERT kini memakai satu sumber data riwayat imunisasi generik, dan ringkasan imunisasi diubah jadi dokumentasi netral alih-alih kesimpulan kelengkapan diagnosis-spesifik
