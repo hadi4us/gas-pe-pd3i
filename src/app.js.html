@@ -1188,6 +1188,27 @@
 
   const FORM_DRAFT_TTL_MS = 30 * 60 * 1000;
 
+  function _formHasData_() {
+    try {
+      var form = document.getElementById("dynamic-form");
+      if (!form || form.classList.contains("hidden")) return false;
+      var inputs = form.querySelectorAll("input[name], select[name], textarea[name]");
+      for (var i = 0; i < inputs.length; i++) {
+        var el = inputs[i];
+        if (el.type === "hidden") continue;
+        if (el.readOnly) continue;
+        if (String(el.value || "").trim()) return true;
+      }
+      var tbodies = form.querySelectorAll("tbody");
+      for (var j = 0; j < tbodies.length; j++) {
+        if (tbodies[j].querySelectorAll("tr").length > 0) return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function saveFormDraft() {
     try {
       const selector = document.getElementById("form-selector");
