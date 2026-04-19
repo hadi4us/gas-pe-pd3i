@@ -2003,6 +2003,44 @@
     return "section-pelapor";
   }
 
+  function syncDiagnosisSelectorUi() {
+    const selectorCard = document.getElementById('diagnosis-selector-card');
+    const selectorBadge = document.getElementById('diagnosis-selector-badge');
+    const selectorHelper = document.getElementById('diagnosis-selector-helper');
+    const selector = document.getElementById('form-selector');
+    const searchContainer = document.getElementById('search-container');
+    const searchPlaceholder = document.getElementById('search-placeholder');
+    const normalizedIntent = normalizeWorkflowStepId(WORKFLOW_SEARCH_INTENT || getLandingWorkflowIntentForUser());
+    const requiresDiagnosis = normalizedIntent === 'section-pelapor' && !isEditMode;
+    const dx = String(selector?.value || '').trim().toUpperCase();
+    const cfg = getDxConfigSafe(dx);
+
+    if (selectorCard) selectorCard.classList.toggle('hidden', !requiresDiagnosis);
+    if (selectorBadge) selectorBadge.textContent = requiresDiagnosis ? 'Mandatory' : 'Auto';
+    if (selectorHelper) {
+      selectorHelper.textContent = requiresDiagnosis
+        ? 'Pemilihan diagnosis akan memuat blok form spesifik dan rule validasi terkait.'
+        : 'Diagnosis akan mengikuti record yang dibuka dari hasil pencarian, jadi tidak perlu dipilih manual di langkah ini.';
+    }
+
+    if (!requiresDiagnosis) {
+      if (searchContainer) searchContainer.classList.remove('hidden');
+      if (searchPlaceholder) searchPlaceholder.classList.add('hidden');
+      return;
+    }
+
+    if (!dx || !cfg) {
+      if (searchContainer) searchContainer.classList.add('hidden');
+      if (searchPlaceholder) {
+        searchPlaceholder.textContent = 'Pilih diagnosis dulu untuk mulai input kasus baru.';
+        searchPlaceholder.classList.remove('hidden');
+      }
+    } else {
+      if (searchContainer) searchContainer.classList.remove('hidden');
+      if (searchPlaceholder) searchPlaceholder.classList.add('hidden');
+    }
+  }
+
   function focusSearchShell() {
     const shell = document.getElementById("section-search-shell");
     if (shell) shell.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2072,6 +2110,7 @@
 
     const shouldFocusSearchOnly = normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages();
     togglePreRecordWorkflowFocus(shouldFocusSearchOnly, normalized);
+    syncDiagnosisSelectorUi();
 
     if (!opts.skipStageSync && normalized === "section-pelapor") {
       updateFormStepperState("section-pelapor");
@@ -2215,7 +2254,9 @@
     if (pendingVerification.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2 pd3i-inbox-list">';
       pendingVerification.forEach(function(item) {
-        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('form-selector')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
+        const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
+        const safeDx = String(item.dx || '').replace(/'/g, "\\'");
+        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.dx || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2223,7 +2264,9 @@
     if (revisionQueue.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2 pd3i-inbox-list">';
       revisionQueue.forEach(function(item) {
-        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${String(item.recordKey || '').replace(/'/g, "\'")}', '${String(document.getElementById('form-selector')?.value || '')}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
+        const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
+        const safeDx = String(item.dx || '').replace(/'/g, "\\'");
+        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.dx || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2237,7 +2280,7 @@
     const dx = String(document.getElementById('form-selector')?.value || '').trim();
     const box = document.getElementById('workflow-inbox');
     if (!box) return;
-    if (!dx || !safeGsRun() || !SESSION_TOKEN) {
+    if (!safeGsRun() || !SESSION_TOKEN) {
       ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -3430,6 +3473,7 @@
       setReadonlyFormMode(isViewer);
       syncStatusRulesByContext(document.getElementById("form-selector")?.value || "");
       updateUiShellSummary();
+      syncDiagnosisSelectorUi();
       updateSidebarActiveState("section-overview");
       updateFormStepperState("section-pelapor");
 
@@ -3735,18 +3779,19 @@
         }
         if (!dx || !cfg) {
           formElement.classList.add("hidden");
-          if (searchContainer) searchContainer.classList.add("hidden");
-          if (searchPlaceholder) searchPlaceholder.classList.remove("hidden");
-          setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
-          togglePreRecordWorkflowFocus(false, 'section-pelapor');
-          updateFormStepperState("section-pelapor");
+          syncDiagnosisSelectorUi();
+          if (normalizeWorkflowStepId(WORKFLOW_SEARCH_INTENT || 'section-pelapor') === 'section-pelapor') {
+            setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
+            togglePreRecordWorkflowFocus(false, 'section-pelapor');
+            updateFormStepperState("section-pelapor");
+          }
           updateUiShellSummary();
+          refreshWorkflowInbox();
           return;
         }
 
         formElement.classList.remove("hidden");
-        if (searchContainer) searchContainer.classList.remove("hidden");
-        if (searchPlaceholder) searchPlaceholder.classList.add("hidden");
+        syncDiagnosisSelectorUi();
         const defaultIntent = getLandingWorkflowIntentForUser();
         setWorkflowSearchIntent(defaultIntent, { focusSearch: defaultIntent !== "section-pelapor", focusForm: defaultIntent === "section-pelapor" });
         if (defaultIntent === 'section-pelapor') togglePreRecordWorkflowFocus(false, defaultIntent);
@@ -3847,10 +3892,6 @@
           const hasFilter = filters.epid || filters.nama || filters.tanggalLahir ||
                             filters.orangTua || filters.alamat || filters.kelurahan;
 
-          if (!dx) {
-            showTopAlert("Pilih Jenis Penyakit terlebih dahulu.", false);
-            return;
-          }
           if (!hasFilter) {
             showTopAlert("Isi minimal satu kriteria pencarian.", false);
             return;
@@ -3939,7 +3980,7 @@
                   ${item.alamat ? `Alamat: ${safeEscape(item.alamat)}` : "Alamat belum tersedia"}
                 </div>
               </div>
-              <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${dx}')">
+              <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${String(item.dx || dx || '').trim()}')">
                 <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
               </button>
             </div>`;
@@ -3957,6 +3998,7 @@
         if (!recordKey || !dx) return;
         if (!safeGsRun()) return;
 
+        const requestedStageBeforeLoad = WORKFLOW_SEARCH_INTENT || document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
         const searchResultsBox = document.getElementById("search-results");
         if (searchResultsBox) searchResultsBox.classList.add("hidden");
 
@@ -3970,6 +4012,13 @@
               btnSubmit.disabled = false;
               btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
               return;
+            }
+
+            const resolvedDx = String(dx || record.dx || '').trim().toUpperCase();
+            if (resolvedDx && String(selector.value || '').trim().toUpperCase() !== resolvedDx) {
+              selector.value = resolvedDx;
+              selector.dispatchEvent(new Event('change', { bubbles: true }));
+              await new Promise(function(resolve) { setTimeout(resolve, 220); });
             }
 
             isEditMode = !isViewer;
@@ -3993,6 +4042,7 @@
               btnSubmit.disabled = false;
             }
 
+            syncDiagnosisSelectorUi();
             hydrateRecordToForm(record);
             applyAllShowIf();
             updateVerificationSectionState();
@@ -4016,7 +4066,7 @@
             forceBuildImunisasiWhenReady();
             hydrateDynamicTables(record);
             syncCaseStatusOptionsByDx(dx);
-            const requestedStage = WORKFLOW_SEARCH_INTENT || document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
+            const requestedStage = requestedStageBeforeLoad;
             const preferredStage = canWriteWorkflowStage(SESSION_USER, requestedStage) || isViewerSession()
               ? requestedStage
               : getPreferredWorkflowStageForUser();

@@ -729,7 +729,9 @@ function searchRecords(dx, filters, token) {
 
   try {
     dx = String(dx || "").trim().toUpperCase();
-    if (!dx) return { results: [], total: 0, page: 1, pageSize: 30, totalPages: 0 };
+    const dxList = (dx && ["MR", "DIF", "PERT", "TN", "AFP"].indexOf(dx) !== -1)
+      ? [dx]
+      : ["MR", "DIF", "PERT", "TN", "AFP"];
 
     const query = filters || {};
     const qEpid = String(query.epid || "").trim().toLowerCase();
@@ -741,7 +743,6 @@ function searchRecords(dx, filters, token) {
     const qStatusVerif = String(query.statusVerifikasi || "").trim().toLowerCase();
     const sortBy = String(query.sortBy || "updated_desc").trim().toLowerCase();
 
-    // Req 9.1: pagination params
     const page = Math.max(1, parseInt(query.page || 1, 10) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize || 30, 10) || 30));
 
@@ -749,99 +750,98 @@ function searchRecords(dx, filters, token) {
       return { results: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
     }
 
-    const sheet = getSheetOrNull_(dx + "_Raw");
-    if (!sheet) return { results: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
-
-    const data = sheet.getDataRange().getValues();
-    if (!data || data.length < 2) return { results: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
-
-    const headers = data[0].map(h => String(h || "").trim());
-    const rows = data.slice(1);
-
-    const idxRecordId = headers.indexOf("ID Registrasi Kasus");
-    const idxEpid = headers.indexOf("Nomor EPID");
-    const idxNama = headers.indexOf("Nama");
-    const idxTglLahir = headers.indexOf("Tanggal Lahir");
-    const idxOrtu = headers.indexOf("Nama orang tua/wali");
-    const idxAlamat = headers.indexOf("Alamat");
-    const idxKelurahan = headers.indexOf("Kelurahan");
-    const idxTimestamp = headers.indexOf("Timestamp");
-    const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
-    const idxStatusVerifikasi = headers.indexOf("Status Verifikasi EPID");
-    const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
-    const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
-
     const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
     const allResults = [];
 
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || "").trim() : "";
-      const epid = idxEpid !== -1 ? String(r[idxEpid] || "").trim() : "";
-      const nama = idxNama !== -1 ? String(r[idxNama] || "").trim() : "";
-      const orangTua = idxOrtu !== -1 ? String(r[idxOrtu] || "").trim() : "";
-      const alamat = idxAlamat !== -1 ? String(r[idxAlamat] || "").trim() : "";
-      const kelurahan = idxKelurahan !== -1 ? String(r[idxKelurahan] || "").trim() : "";
+    dxList.forEach(function(currentDx) {
+      const sheet = getSheetOrNull_(currentDx + "_Raw");
+      if (!sheet) return;
 
-      let tglLahir = "";
-      if (idxTglLahir !== -1) {
-        const raw = r[idxTglLahir];
-        if (raw instanceof Date) {
-          tglLahir = Utilities.formatDate(raw, tz, "yyyy-MM-dd");
-        } else {
-          tglLahir = String(raw || "").trim();
+      const data = sheet.getDataRange().getValues();
+      if (!data || data.length < 2) return;
+
+      const headers = data[0].map(function(h) { return String(h || "").trim(); });
+      const rows = data.slice(1);
+
+      const idxRecordId = headers.indexOf("ID Registrasi Kasus");
+      const idxEpid = headers.indexOf("Nomor EPID");
+      const idxNama = headers.indexOf("Nama");
+      const idxTglLahir = headers.indexOf("Tanggal Lahir");
+      const idxOrtu = headers.indexOf("Nama orang tua/wali");
+      const idxAlamat = headers.indexOf("Alamat");
+      const idxKelurahan = headers.indexOf("Kelurahan");
+      const idxTimestamp = headers.indexOf("Timestamp");
+      const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
+      const idxStatusVerifikasi = headers.indexOf("Status Verifikasi EPID");
+      const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
+      const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || "").trim() : "";
+        const epid = idxEpid !== -1 ? String(r[idxEpid] || "").trim() : "";
+        const nama = idxNama !== -1 ? String(r[idxNama] || "").trim() : "";
+        const orangTua = idxOrtu !== -1 ? String(r[idxOrtu] || "").trim() : "";
+        const alamat = idxAlamat !== -1 ? String(r[idxAlamat] || "").trim() : "";
+        const kelurahan = idxKelurahan !== -1 ? String(r[idxKelurahan] || "").trim() : "";
+
+        let tglLahir = "";
+        if (idxTglLahir !== -1) {
+          const raw = r[idxTglLahir];
+          if (raw instanceof Date) tglLahir = Utilities.formatDate(raw, tz, "yyyy-MM-dd");
+          else tglLahir = String(raw || "").trim();
+        }
+
+        let timestampValue = 0;
+        if (idxTimestamp !== -1) {
+          const rawTs = r[idxTimestamp];
+          if (rawTs instanceof Date) timestampValue = rawTs.getTime();
+          else {
+            const parsedTs = new Date(rawTs);
+            timestampValue = isNaN(parsedTs.getTime()) ? 0 : parsedTs.getTime();
+          }
+        }
+
+        const statusKasus = idxStatusKasus !== -1 ? String(r[idxStatusKasus] || "").trim() : "";
+        const statusVerifikasi = idxStatusVerifikasi !== -1 ? String(r[idxStatusVerifikasi] || "").trim() : "";
+        const sampelDilakukan = idxSampelDilakukan !== -1 ? String(r[idxSampelDilakukan] || "").trim() : "";
+        const interpretasiSampel = idxInterpretasiSampel !== -1 ? String(r[idxInterpretasiSampel] || "").trim() : "";
+
+        const matchEpid = !qEpid || epid.toLowerCase().includes(qEpid) || recordId.toLowerCase().includes(qEpid);
+        const matchNama = !qNama || nama.toLowerCase().includes(qNama);
+        const matchTglLahir = !qTglLahir || tglLahir === qTglLahir;
+        const matchOrtu = !qOrtu || orangTua.toLowerCase().includes(qOrtu);
+        const matchAlamat = !qAlamat || alamat.toLowerCase().includes(qAlamat);
+        const matchKelurahan = !qKelurahan || kelurahan.toLowerCase().includes(qKelurahan);
+        const matchStatusVerif = !qStatusVerif || statusVerifikasi.toLowerCase() === qStatusVerif;
+
+        if (matchEpid && matchNama && matchTglLahir && matchOrtu && matchAlamat && matchKelurahan && matchStatusVerif) {
+          allResults.push({
+            dx: currentDx,
+            recordId: recordId,
+            recordKey: recordId || epid,
+            epid: epid,
+            nama: nama,
+            tanggalLahir: tglLahir,
+            orangTua: orangTua,
+            alamat: alamat,
+            kelurahan: kelurahan,
+            statusKasus: statusKasus,
+            statusVerifikasi: statusVerifikasi,
+            sampelDilakukan: sampelDilakukan,
+            interpretasiSampel: interpretasiSampel,
+            timestampValue: Number(timestampValue || 0),
+            rowIndex: i + 2
+          });
         }
       }
-
-      let timestampValue = 0;
-      if (idxTimestamp !== -1) {
-        const rawTs = r[idxTimestamp];
-        if (rawTs instanceof Date) {
-          timestampValue = rawTs.getTime();
-        } else {
-          const parsedTs = new Date(rawTs);
-          timestampValue = isNaN(parsedTs.getTime()) ? 0 : parsedTs.getTime();
-        }
-      }
-
-      const statusKasus = idxStatusKasus !== -1 ? String(r[idxStatusKasus] || "").trim() : "";
-      const statusVerifikasi = idxStatusVerifikasi !== -1 ? String(r[idxStatusVerifikasi] || "").trim() : "";
-      const sampelDilakukan = idxSampelDilakukan !== -1 ? String(r[idxSampelDilakukan] || "").trim() : "";
-      const interpretasiSampel = idxInterpretasiSampel !== -1 ? String(r[idxInterpretasiSampel] || "").trim() : "";
-
-      const matchEpid = !qEpid || epid.toLowerCase().includes(qEpid) || recordId.toLowerCase().includes(qEpid);
-      const matchNama = !qNama || nama.toLowerCase().includes(qNama);
-      const matchTglLahir = !qTglLahir || tglLahir === qTglLahir;
-      const matchOrtu = !qOrtu || orangTua.toLowerCase().includes(qOrtu);
-      const matchAlamat = !qAlamat || alamat.toLowerCase().includes(qAlamat);
-      const matchKelurahan = !qKelurahan || kelurahan.toLowerCase().includes(qKelurahan);
-      const matchStatusVerif = !qStatusVerif || statusVerif.toLowerCase() === qStatusVerif;
-
-      if (matchEpid && matchNama && matchTglLahir && matchOrtu && matchAlamat && matchKelurahan && matchStatusVerif) {
-        allResults.push({
-          recordId: recordId,
-          recordKey: recordId || epid,
-          epid: epid,
-          nama: nama,
-          tanggalLahir: tglLahir,
-          orangTua: orangTua,
-          alamat: alamat,
-          kelurahan: kelurahan,
-          statusKasus: statusKasus,
-          statusVerifikasi: statusVerifikasi,
-          sampelDilakukan: sampelDilakukan,
-          interpretasiSampel: interpretasiSampel,
-          timestampValue: Number(timestampValue || 0),
-          rowIndex: i + 2
-        });
-      }
-    }
+    });
 
     allResults.sort(function (a, b) {
       if (sortBy === "name_asc") return String(a.nama || "").localeCompare(String(b.nama || ""), "id");
       if (sortBy === "name_desc") return String(b.nama || "").localeCompare(String(a.nama || ""), "id");
-      if (sortBy === "epid_asc") return String(a.epid || "").localeCompare(String(b.epid || ""), "id");
-      if (sortBy === "epid_desc") return String(b.epid || "").localeCompare(String(a.epid || ""), "id");
+      if (sortBy === "epid_asc") return String(a.epid || a.recordId || "").localeCompare(String(b.epid || b.recordId || ""), "id");
+      if (sortBy === "epid_desc") return String(b.epid || b.recordId || "").localeCompare(String(a.epid || a.recordId || ""), "id");
       if (sortBy === "birth_asc") return String(a.tanggalLahir || "").localeCompare(String(b.tanggalLahir || ""), "id");
       if (sortBy === "birth_desc") return String(b.tanggalLahir || "").localeCompare(String(a.tanggalLahir || ""), "id");
       return Number(b.timestampValue || 0) - Number(a.timestampValue || 0);
@@ -1099,29 +1099,10 @@ function getWorkflowInbox(dx, token) {
 
   try {
     dx = String(dx || '').trim().toUpperCase();
-    if (!dx) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
-
-    const sheet = getSheetOrNull_(dx + '_Raw');
-    if (!sheet) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
-
-    const data = sheet.getDataRange().getValues();
-    if (!data || data.length < 2) return { pendingVerification: [], revisionQueue: [], summary: { pendingVerification: 0, revisionQueue: 0 } };
-
-    const headers = data[0].map(function(h) { return String(h || '').trim(); });
-    const rows = data.slice(1);
+    const dxList = (dx && ['MR', 'DIF', 'PERT', 'TN', 'AFP'].indexOf(dx) !== -1)
+      ? [dx]
+      : ['MR', 'DIF', 'PERT', 'TN', 'AFP'];
     const tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
-
-    const idxRecordId = headers.indexOf('ID Registrasi Kasus');
-    const idxEpid = headers.indexOf('Nomor EPID');
-    const idxNama = headers.indexOf('Nama');
-    const idxKel = headers.indexOf('Kelurahan');
-    const idxKec = headers.indexOf('Kecamatan');
-    const idxKab = headers.indexOf('Kab/Kota Pasien') !== -1 ? headers.indexOf('Kab/Kota Pasien') : headers.indexOf('Kab/Kota');
-    const idxTanggal = headers.indexOf('Timestamp');
-    const idxStatusVerif = headers.indexOf('Status Verifikasi EPID');
-    const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
-    const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
-    const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
 
     const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
@@ -1130,33 +1111,56 @@ function getWorkflowInbox(dx, token) {
     const pendingVerification = [];
     const revisionQueue = [];
 
-    rows.forEach(function(r) {
-      const statusVerif = idxStatusVerif !== -1 ? String(r[idxStatusVerif] || '').trim() : '';
-      const nama = idxNama !== -1 ? String(r[idxNama] || '').trim() : '';
-      const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || '').trim() : '';
-      const epid = idxEpid !== -1 ? String(r[idxEpid] || '').trim() : '';
-      const recordKey = recordId || epid;
-      const kel = idxKel !== -1 ? String(r[idxKel] || '').trim() : '';
-      const kec = idxKec !== -1 ? String(r[idxKec] || '').trim() : '';
-      const kab = idxKab !== -1 ? String(r[idxKab] || '').trim() : '';
-      const catatan = idxCatatanVerif !== -1 ? String(r[idxCatatanVerif] || '').trim() : '';
-      const pkmPengampu = idxPuskesmasPengampu !== -1 ? _normalizeWilayahKey_(r[idxPuskesmasPengampu]) : '';
-      const kodePkmPengampu = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(r[idxKodePuskesmas]) : '';
-      let timestamp = '';
-      if (idxTanggal !== -1) {
-        const raw = r[idxTanggal];
-        timestamp = raw instanceof Date ? Utilities.formatDate(raw, tz, 'yyyy-MM-dd HH:mm') : String(raw || '').trim();
-      }
-      const item = { recordKey: recordKey, recordId: recordId, epid: epid, nama: nama, kelurahan: kel, kecamatan: kec, kabKota: kab, statusVerifikasi: statusVerif, catatanVerifikasi: catatan, timestamp: timestamp };
+    dxList.forEach(function(currentDx) {
+      const sheet = getSheetOrNull_(currentDx + '_Raw');
+      if (!sheet) return;
 
-      if (role === 'admin' && (!statusVerif || statusVerif === 'Pending')) {
-        pendingVerification.push(item);
-      }
+      const data = sheet.getDataRange().getValues();
+      if (!data || data.length < 2) return;
 
-      const scopeMatch = (userKode && kodePkmPengampu && userKode === kodePkmPengampu) || (userUnit && pkmPengampu && userUnit === pkmPengampu);
-      if (statusVerif === 'Perlu Revisi' && (role === 'admin' || scopeMatch)) {
-        revisionQueue.push(item);
-      }
+      const headers = data[0].map(function(h) { return String(h || '').trim(); });
+      const rows = data.slice(1);
+
+      const idxRecordId = headers.indexOf('ID Registrasi Kasus');
+      const idxEpid = headers.indexOf('Nomor EPID');
+      const idxNama = headers.indexOf('Nama');
+      const idxKel = headers.indexOf('Kelurahan');
+      const idxKec = headers.indexOf('Kecamatan');
+      const idxKab = headers.indexOf('Kab/Kota Pasien') !== -1 ? headers.indexOf('Kab/Kota Pasien') : headers.indexOf('Kab/Kota');
+      const idxTanggal = headers.indexOf('Timestamp');
+      const idxStatusVerif = headers.indexOf('Status Verifikasi EPID');
+      const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
+      const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
+      const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+
+      rows.forEach(function(r) {
+        const statusVerif = idxStatusVerif !== -1 ? String(r[idxStatusVerif] || '').trim() : '';
+        const nama = idxNama !== -1 ? String(r[idxNama] || '').trim() : '';
+        const recordId = idxRecordId !== -1 ? String(r[idxRecordId] || '').trim() : '';
+        const epid = idxEpid !== -1 ? String(r[idxEpid] || '').trim() : '';
+        const recordKey = recordId || epid;
+        const kel = idxKel !== -1 ? String(r[idxKel] || '').trim() : '';
+        const kec = idxKec !== -1 ? String(r[idxKec] || '').trim() : '';
+        const kab = idxKab !== -1 ? String(r[idxKab] || '').trim() : '';
+        const catatan = idxCatatanVerif !== -1 ? String(r[idxCatatanVerif] || '').trim() : '';
+        const pkmPengampu = idxPuskesmasPengampu !== -1 ? _normalizeWilayahKey_(r[idxPuskesmasPengampu]) : '';
+        const kodePkmPengampu = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(r[idxKodePuskesmas]) : '';
+        let timestamp = '';
+        if (idxTanggal !== -1) {
+          const raw = r[idxTanggal];
+          timestamp = raw instanceof Date ? Utilities.formatDate(raw, tz, 'yyyy-MM-dd HH:mm') : String(raw || '').trim();
+        }
+        const item = { dx: currentDx, recordKey: recordKey, recordId: recordId, epid: epid, nama: nama, kelurahan: kel, kecamatan: kec, kabKota: kab, statusVerifikasi: statusVerif, catatanVerifikasi: catatan, timestamp: timestamp };
+
+        if (role === 'admin' && (!statusVerif || statusVerif === 'Pending')) {
+          pendingVerification.push(item);
+        }
+
+        const scopeMatch = (userKode && kodePkmPengampu && userKode === kodePkmPengampu) || (userUnit && pkmPengampu && userUnit === pkmPengampu);
+        if (statusVerif === 'Perlu Revisi' && (role === 'admin' || scopeMatch)) {
+          revisionQueue.push(item);
+        }
+      });
     });
 
     return {
