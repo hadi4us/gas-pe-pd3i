@@ -3411,6 +3411,10 @@
           if (!isAdmin) btnRetryTelegram.classList.add("hidden");
           else btnRetryTelegram.classList.remove("hidden");
         }
+        if (btnSidebarDashboard) {
+          if (!isAdmin) btnSidebarDashboard.classList.add("hidden");
+          else btnSidebarDashboard.classList.remove("hidden");
+        }
 
         const currentActiveStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getLandingWorkflowIntentForUser();
         setWorkflowSearchIntent(currentActiveStage, { focusSearch: false, focusForm: false, skipStageSync: true });
@@ -3644,11 +3648,13 @@
 
       if (btnSidebarDashboard) {
         btnSidebarDashboard.addEventListener("click", function () {
-          if (btnDashboard && !btnDashboard.classList.contains("hidden")) {
-            btnDashboard.click();
-          } else {
+          if (!isAdminSession()) {
             showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
+            return;
           }
+          const modal = document.getElementById("dashboard-modal");
+          if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+          if (typeof initDashboard === "function") initDashboard();
         });
       }
 
@@ -3883,51 +3889,67 @@
         const box = document.getElementById("search-results");
         if (!box) return;
 
+        const safeEscape = typeof escapeHtml === "function"
+          ? escapeHtml
+          : function(value) {
+              return String(value || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+            };
+
         box.classList.remove("hidden");
 
-        if (!results || results.length === 0) {
-          box.innerHTML = `<div class="p-4 text-sm text-slate-500 font-semibold text-center">Tidak ada data yang cocok dengan kriteria pencarian.</div>`;
-          return;
+        try {
+          if (!results || results.length === 0) {
+            box.innerHTML = `<div class="p-4 text-sm text-slate-500 font-semibold text-center">Tidak ada data yang cocok dengan kriteria pencarian.</div>`;
+            return;
+          }
+
+          let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${results.length} dari ${total} hasil</div>`;
+          html += `<div class="pd3i-search-results-wrap">`;
+
+          const isViewerMode = isViewerSession();
+          const workflowActionLabel = getWorkflowSearchActionLabel();
+          results.forEach(function(item) {
+            const safeRecordKey = String(item.recordKey || item.recordId || item.epid || "").replace(/'/g, "\\'");
+            const statusKasus = item.statusKasus || "Belum ditentukan";
+            const statusVerifikasi = item.statusVerifikasi || "Pending";
+            const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
+              ? (item.interpretasiSampel || "Menunggu hasil")
+              : "Tidak ada sampel";
+            html += `<div class="pd3i-search-result-card">
+              <div class="min-w-0 flex-1">
+                <div class="font-extrabold text-slate-800 text-sm md:text-base">${safeEscape(item.nama || "-")}</div>
+                <div class="pd3i-search-result-meta">
+                  <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${safeEscape(item.epid || item.recordId || "-")}</span>
+                  <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${safeEscape(item.tanggalLahir || "-")}</span>
+                  <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${safeEscape(item.kelurahan || "-")}</span>
+                </div>
+                <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
+                  <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${safeEscape(statusKasus)}</span>
+                  <span class="pd3i-search-result-badge is-verify"><i class="fas fa-id-card-clip"></i> ${safeEscape(statusVerifikasi)}</span>
+                  <span class="pd3i-search-result-badge is-sample"><i class="fas fa-vials"></i> ${safeEscape(sampelState)}</span>
+                </div>
+                <div class="pd3i-search-result-copy mt-2">
+                  ${item.orangTua ? `Ortu/Wali: <strong>${safeEscape(item.orangTua)}</strong><br>` : ""}
+                  ${item.alamat ? `Alamat: ${safeEscape(item.alamat)}` : "Alamat belum tersedia"}
+                </div>
+              </div>
+              <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${dx}')">
+                <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
+              </button>
+            </div>`;
+          });
+
+          html += `</div>`;
+          box.innerHTML = html;
+        } catch (err) {
+          console.error("_renderSearchResultsList failed:", err);
+          box.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">List kasus gagal dirender. Silakan refresh lalu coba lagi.</div>`;
         }
-
-        let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${results.length} dari ${total} hasil</div>`;
-        html += `<div class="pd3i-search-results-wrap">`;
-
-        const isViewerMode = isViewerSession();
-        const workflowActionLabel = getWorkflowSearchActionLabel();
-        results.forEach(function(item) {
-          const safeRecordKey = String(item.recordKey || item.recordId || item.epid || "").replace(/'/g, "\\'");
-          const statusKasus = item.statusKasus || "Belum ditentukan";
-          const statusVerifikasi = item.statusVerifikasi || "Pending";
-          const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
-            ? (item.interpretasiSampel || "Menunggu hasil")
-            : "Tidak ada sampel";
-          html += `<div class="pd3i-search-result-card">
-            <div class="min-w-0 flex-1">
-              <div class="font-extrabold text-slate-800 text-sm md:text-base">${escapeHtml(item.nama || "-")}</div>
-              <div class="pd3i-search-result-meta">
-                <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${escapeHtml(item.epid || item.recordId || "-")}</span>
-                <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${escapeHtml(item.tanggalLahir || "-")}</span>
-                <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${escapeHtml(item.kelurahan || "-")}</span>
-              </div>
-              <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
-                <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${escapeHtml(statusKasus)}</span>
-                <span class="pd3i-search-result-badge is-verify"><i class="fas fa-id-card-clip"></i> ${escapeHtml(statusVerifikasi)}</span>
-                <span class="pd3i-search-result-badge is-sample"><i class="fas fa-vials"></i> ${escapeHtml(sampelState)}</span>
-              </div>
-              <div class="pd3i-search-result-copy mt-2">
-                ${item.orangTua ? `Ortu/Wali: <strong>${escapeHtml(item.orangTua)}</strong><br>` : ""}
-                ${item.alamat ? `Alamat: ${escapeHtml(item.alamat)}` : "Alamat belum tersedia"}
-              </div>
-            </div>
-            <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${dx}')">
-              <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
-            </button>
-          </div>`;
-        });
-
-        html += `</div>`;
-        box.innerHTML = html;
       }
 
       window._loadRecordFromSearch_ = function(recordKey, dx) {

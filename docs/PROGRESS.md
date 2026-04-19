@@ -89,3 +89,4 @@
 - [x] Dashboard statistik sekarang mendukung drill-down interaktif: klik kecamatan/kelurahan/RW/RT-RW atau hotspot untuk memuat daftar kasus terkait, lalu buka record langsung dari panel detail dashboard
 - [x] Susunan field semua diagnosa ditata ulang agar lebih konsisten dengan judul pengelompokan; section diagnosis sekarang juga dirender sebagai blok terpisah supaya field tidak terasa campur antar-subbagian
 - [x] Audit ulang batch list kasus + dashboard: include script tervalidasi, render utama lolos `node --check`, dan output label/list diperketat dengan `escapeHtml` agar data nama/alamat/status tidak gampang merusak tampilan
+- [x] UX role untuk dashboard dan list kasus dipertegas: menu sidebar dashboard kini diselaraskan dengan akses admin-only, sementara render list kasus diberi fallback lokal + pesan error render agar tidak blank diam-diam saat helper global bermasalah
