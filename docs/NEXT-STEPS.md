@@ -21,14 +21,14 @@
    - Pastikan `UnitKerja`, `KodePuskesmas`, dan `ScopeLevel` sudah benar
    - Gunakan `docs/REFERENCE-DATA-DICTIONARY.md` sebagai acuan perubahan
 
-4. **Dashboard sebaran wilayah lanjutan**
-   - Tambah drill-down/filter interaktif untuk kecamatan / kelurahan
+4. **Dashboard wilayah/hotspot lanjutan**
+   - Tambah filter drill-down lintas panel (klik kecamatan otomatis menyaring hotspot, dst.)
    - Pertimbangkan sinkronisasi dengan data pengampu (`REF_PENGAMPU`) untuk overlay wilayah kerja puskesmas
 
 5. **Hotspot map lanjutan**
    - Pertimbangkan heat layer / density overlay yang lebih halus
-   - Tambah drill-down klik hotspot -> daftar kasus terkait
-   - Sinkronkan dengan filter wilayah (kecamatan/kelurahan) bila dashboard sudah punya drill-down
+   - Tambah popup/aksi batch dari hotspot drill-down bila perlu
+   - Sinkronkan dengan filter wilayah (kecamatan/kelurahan) secara dua arah
 
 6. **Polish dashboard admin review**
    - Tambah badge status verifikasi di kartu statistik utama

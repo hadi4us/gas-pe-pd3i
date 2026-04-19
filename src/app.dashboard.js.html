@@ -154,7 +154,7 @@
     }
   }
 
-  function renderHotspotMap(stats) {
+  function renderHotspotMap(stats, dx, tahun) {
     const mapWrap = document.getElementById('dashboard-hotspot-map');
     const listWrap = document.getElementById('dashboard-hotspot-list');
     const summary = stats && stats.coordinateSummary ? stats.coordinateSummary : null;
@@ -177,13 +177,13 @@
 
     listWrap.innerHTML = topHotspots.length
       ? topHotspots.map(function(item, idx) {
-          return `<div class="pd3i-hotspot-list-item">
+          return `<button type="button" class="pd3i-hotspot-list-item" data-dashboard-drilldown-type="hotspot" data-dashboard-drilldown-key="${escapeHtml(item.key || '')}" data-dashboard-drilldown-label="${escapeHtml(item.label || 'Hotspot')}">
             <div>
               <div class="pd3i-hotspot-rank">#${idx + 1} ${escapeHtml(item.label || 'Titik koordinat')}</div>
               <div class="pd3i-helper-text">Lat ${escapeHtml(item.lat)} • Lon ${escapeHtml(item.lon)}</div>
             </div>
             <div class="pd3i-hotspot-count">${item.count || 0}</div>
-          </div>`;
+          </button>`;
         }).join('')
       : '<div class="pd3i-empty-state">Belum ada hotspot yang bisa ditampilkan.</div>';
 
@@ -212,7 +212,10 @@
         fillColor: color,
         fillOpacity: 0.3
       }).addTo(map);
-      marker.bindPopup(`<strong>${escapeHtml(point.label || 'Hotspot')}</strong><br>${escapeHtml([point.kecamatan, point.kelurahan].filter(Boolean).join(' / ') || 'Wilayah tidak diketahui')}<br>Kasus: ${count}<br>Lat: ${escapeHtml(point.lat)}<br>Lon: ${escapeHtml(point.lon)}`);
+      marker.bindPopup(`<strong>${escapeHtml(point.label || 'Hotspot')}</strong><br>${escapeHtml([point.kecamatan, point.kelurahan].filter(Boolean).join(' / ') || 'Wilayah tidak diketahui')}<br>Kasus: ${count}<br>Lat: ${escapeHtml(point.lat)}<br>Lon: ${escapeHtml(point.lon)}<br><small>Klik marker untuk lihat daftar kasus.</small>`);
+      marker.on('click', function() {
+        openDashboardDrilldown('hotspot', point.key, [point.kecamatan, point.kelurahan].filter(Boolean).join(' / ') || point.label || 'Hotspot', dx, tahun);
+      });
       bounds.push([point.lat, point.lon]);
     });
 
@@ -224,6 +227,99 @@
     setTimeout(function() {
       try { map.invalidateSize(); } catch (e) {}
     }, 0);
+  }
+
+
+  function renderDashboardDrilldownPanel(result, dx, tahun) {
+    const wrap = document.getElementById('dashboard-drilldown-panel');
+    if (!wrap) return;
+
+    if (!result || result.status === 'error') {
+      wrap.classList.remove('hidden');
+      wrap.innerHTML = `<div class="pd3i-empty-state">${escapeHtml((result && result.message) || 'Gagal memuat detail dashboard.')}</div>`;
+      return;
+    }
+
+    const items = Array.isArray(result.items) ? result.items : [];
+    const listHtml = items.length
+      ? items.map(function(item) {
+          const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
+          const dxArg = JSON.stringify(String(dx || 'MR'));
+          return `<div class="pd3i-dashboard-drilldown-item">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <strong>${escapeHtml(item.nama || '-')}</strong>
+                <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml([item.kecamatan, item.kelurahan, item.rw ? 'RW ' + item.rw : '', item.rt ? 'RT ' + item.rt : ''].filter(Boolean).join(' / ') || '-')}</small>
+              </div>
+              <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg})'><i class="fas fa-folder-open"></i> Buka</button>
+            </div>
+            <div class="pd3i-admin-queue-meta">
+              ${item.statusVerifikasi ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi)}</span>` : ''}
+              ${item.statusKasus ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusKasus)}</span>` : ''}
+              ${item.inputAt ? `<span class="pd3i-admin-queue-pill">Input ${escapeHtml(String(item.inputAt).slice(0, 10))}</span>` : ''}
+              ${item.updatedAt ? `<span class="pd3i-admin-queue-pill">Update ${escapeHtml(String(item.updatedAt).slice(0, 10))}</span>` : ''}
+            </div>
+            ${item.alamat ? `<small>${escapeHtml(item.alamat)}</small>` : ''}
+          </div>`;
+        }).join('')
+      : '<div class="pd3i-empty-state">Belum ada kasus pada drill-down ini.</div>';
+
+    wrap.innerHTML = `
+      <div class="pd3i-card-header-row mt-4">
+        <div>
+          <div class="pd3i-card-eyebrow">Dashboard drill-down</div>
+          <h3 class="pd3i-card-title">${escapeHtml(result.label || 'Detail kasus')}</h3>
+          <div class="pd3i-helper-text mt-1">Menampilkan <strong>${items.length}</strong> dari total <strong>${result.total || 0}</strong> kasus untuk filter ini.</div>
+        </div>
+        <button type="button" id="dashboard-drilldown-close" class="pd3i-ghost-button pd3i-inline-button"><i class="fas fa-xmark"></i> Tutup</button>
+      </div>
+      <div class="pd3i-dashboard-drilldown-list">${listHtml}</div>
+    `;
+    wrap.classList.remove('hidden');
+    const closeBtn = wrap.querySelector('#dashboard-drilldown-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        window.__DASHBOARD_DRILLDOWN_STATE = null;
+        wrap.classList.add('hidden');
+        wrap.innerHTML = '';
+      });
+    }
+  }
+
+  function openDashboardDrilldown(type, key, label, dx, tahun) {
+    const wrap = document.getElementById('dashboard-drilldown-panel');
+    if (!wrap || !safeGsRun() || !SESSION_TOKEN) return;
+    window.__DASHBOARD_DRILLDOWN_STATE = { type: type, key: key, label: label, dx: dx, tahun: tahun };
+    wrap.classList.remove('hidden');
+    wrap.innerHTML = '<div class="pd3i-empty-state"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kasus...</div>';
+    google.script.run
+      .withSuccessHandler(function(res) {
+        renderDashboardDrilldownPanel(res, dx, tahun);
+      })
+      .withFailureHandler(function(err) {
+        renderDashboardDrilldownPanel({ status: 'error', message: String(err && err.message ? err.message : err) }, dx, tahun);
+      })
+      .getDashboardDrilldown(dx, tahun, { type: type, key: key, label: label }, SESSION_TOKEN);
+  }
+
+  function bindDashboardDrilldownActions(dx, tahun) {
+    window.__openAdminQueueRecord = function(recordKey, dxValue) {
+      if (typeof window._loadRecordFromSearch_ === 'function') {
+        window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR');
+      } else {
+        showTopAlert('Fungsi buka record belum siap. Coba lagi sebentar.', false);
+      }
+    };
+
+    document.querySelectorAll('[data-dashboard-drilldown-type]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const type = String(btn.getAttribute('data-dashboard-drilldown-type') || '').trim();
+        const key = String(btn.getAttribute('data-dashboard-drilldown-key') || '').trim();
+        const label = String(btn.getAttribute('data-dashboard-drilldown-label') || key).trim();
+        if (!type || !key) return;
+        openDashboardDrilldown(type, key, label, dx, tahun);
+      });
+    });
   }
 
 
@@ -451,6 +547,8 @@
       </div>`;
     }
 
+    html += `<div id="dashboard-drilldown-panel" class="mb-6 hidden"></div>`;
+
     if (isAdmin) {
       html += `<div id="dashboard-admin-queue" class="mb-6"></div>`;
     }
@@ -460,13 +558,13 @@
     const topKelurahan = Array.isArray(wilayah.topKelurahan) ? wilayah.topKelurahan : [];
     const topRw = Array.isArray(wilayah.topRw) ? wilayah.topRw : [];
     const topRtRw = Array.isArray(wilayah.topRtRw) ? wilayah.topRtRw : [];
-    function renderWilayahRows(items, emptyLabel) {
+    function renderWilayahRows(items, emptyLabel, type) {
       if (!items || !items.length) {
         return `<tr><td colspan="2" class="px-3 py-4 text-sm text-slate-400">${emptyLabel}</td></tr>`;
       }
       return items.map(function(item) {
         return `<tr class="border-b border-slate-100 hover:bg-slate-50">
-          <td class="px-3 py-2 font-semibold text-slate-700">${escapeHtml(item.label || '-')}</td>
+          <td class="px-3 py-2 font-semibold text-slate-700"><button type="button" class="pd3i-dashboard-link-button" data-dashboard-drilldown-type="${escapeHtml(type || '')}" data-dashboard-drilldown-key="${escapeHtml(item.label || '')}" data-dashboard-drilldown-label="${escapeHtml(item.label || '')}">${escapeHtml(item.label || '-')}</button></td>
           <td class="px-3 py-2 text-right font-extrabold text-emerald-700">${item.count || 0}</td>
         </tr>`;
       }).join('');
@@ -497,28 +595,28 @@
             <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Top Kecamatan</div>
             <table class="w-full text-sm">
               <thead><tr class="bg-slate-100"><th class="text-left px-3 py-2 font-extrabold text-slate-600">Wilayah</th><th class="text-right px-3 py-2 font-extrabold text-slate-600">Kasus</th></tr></thead>
-              <tbody>${renderWilayahRows(topKecamatan, 'Belum ada data kecamatan.')}</tbody>
+              <tbody>${renderWilayahRows(topKecamatan, 'Belum ada data kecamatan.', 'kecamatan')}</tbody>
             </table>
           </div>
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm overflow-x-auto">
             <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Top Kelurahan</div>
             <table class="w-full text-sm">
               <thead><tr class="bg-slate-100"><th class="text-left px-3 py-2 font-extrabold text-slate-600">Wilayah</th><th class="text-right px-3 py-2 font-extrabold text-slate-600">Kasus</th></tr></thead>
-              <tbody>${renderWilayahRows(topKelurahan, 'Belum ada data kelurahan.')}</tbody>
+              <tbody>${renderWilayahRows(topKelurahan, 'Belum ada data kelurahan.', 'kelurahan')}</tbody>
             </table>
           </div>
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm overflow-x-auto">
             <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Top RW</div>
             <table class="w-full text-sm">
               <thead><tr class="bg-slate-100"><th class="text-left px-3 py-2 font-extrabold text-slate-600">Cluster</th><th class="text-right px-3 py-2 font-extrabold text-slate-600">Kasus</th></tr></thead>
-              <tbody>${renderWilayahRows(topRw, 'Belum ada data RW.')}</tbody>
+              <tbody>${renderWilayahRows(topRw, 'Belum ada data RW.', 'rw')}</tbody>
             </table>
           </div>
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm overflow-x-auto">
             <div class="text-sm font-extrabold text-slate-700 mb-3 uppercase tracking-wide">Top Cluster RT/RW</div>
             <table class="w-full text-sm">
               <thead><tr class="bg-slate-100"><th class="text-left px-3 py-2 font-extrabold text-slate-600">Cluster</th><th class="text-right px-3 py-2 font-extrabold text-slate-600">Kasus</th></tr></thead>
-              <tbody>${renderWilayahRows(topRtRw, 'Belum ada data RT/RW lengkap.')}</tbody>
+              <tbody>${renderWilayahRows(topRtRw, 'Belum ada data RT/RW lengkap.', 'rtrw')}</tbody>
             </table>
           </div>
         </div>
@@ -626,8 +724,18 @@
     }
 
     content.innerHTML = html;
-    renderHotspotMap(stats);
+    renderHotspotMap(stats, dx, tahun);
     renderAdminVerificationQueue(stats, dx);
+    bindDashboardDrilldownActions(dx, tahun);
+    if (window.__DASHBOARD_DRILLDOWN_STATE && window.__DASHBOARD_DRILLDOWN_STATE.dx === dx && String(window.__DASHBOARD_DRILLDOWN_STATE.tahun) === String(tahun)) {
+      openDashboardDrilldown(
+        window.__DASHBOARD_DRILLDOWN_STATE.type,
+        window.__DASHBOARD_DRILLDOWN_STATE.key,
+        window.__DASHBOARD_DRILLDOWN_STATE.label,
+        dx,
+        tahun
+      );
+    }
   }
 
   // ============================================================

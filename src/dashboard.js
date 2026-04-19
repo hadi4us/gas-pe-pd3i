@@ -147,6 +147,66 @@ function _isValidLatLon_(lat, lon) {
     && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
 }
 
+
+function _buildDashboardRecordSummary_(row, idxMap) {
+  var kecamatan = idxMap.idxKecamatan !== -1 ? String(row[idxMap.idxKecamatan] || '').trim() : '';
+  var kelurahan = idxMap.idxKelurahan !== -1 ? String(row[idxMap.idxKelurahan] || '').trim() : '';
+  var rw = idxMap.idxRW !== -1 ? String(row[idxMap.idxRW] || '').trim() : '';
+  var rt = idxMap.idxRT !== -1 ? String(row[idxMap.idxRT] || '').trim() : '';
+  var lat = idxMap.idxLatitude !== -1 ? _parseCoordinateNumber_(row[idxMap.idxLatitude]) : null;
+  var lon = idxMap.idxLongitude !== -1 ? _parseCoordinateNumber_(row[idxMap.idxLongitude]) : null;
+  if ((lat === null || lon === null) && idxMap.idxKoordinat !== -1) {
+    var rawCoord = String(row[idxMap.idxKoordinat] || '').trim();
+    if (rawCoord) {
+      var coordParts = rawCoord.split(',');
+      if (coordParts.length >= 2) {
+        if (lat === null) lat = _parseCoordinateNumber_(coordParts[0]);
+        if (lon === null) lon = _parseCoordinateNumber_(coordParts[1]);
+      }
+    }
+  }
+  return {
+    recordKey: idxMap.idxRecordId !== -1 ? String(row[idxMap.idxRecordId] || '').trim() : (idxMap.idxEpid !== -1 ? String(row[idxMap.idxEpid] || '').trim() : ''),
+    recordId: idxMap.idxRecordId !== -1 ? String(row[idxMap.idxRecordId] || '').trim() : '',
+    epid: idxMap.idxEpid !== -1 ? String(row[idxMap.idxEpid] || '').trim() : '',
+    nama: idxMap.idxNama !== -1 ? String(row[idxMap.idxNama] || '').trim() : '',
+    alamat: idxMap.idxAlamat !== -1 ? String(row[idxMap.idxAlamat] || '').trim() : '',
+    kecamatan: kecamatan,
+    kelurahan: kelurahan,
+    rw: rw,
+    rt: rt,
+    statusVerifikasi: idxMap.idxVerifikasi !== -1 ? String(row[idxMap.idxVerifikasi] || '').trim() : '',
+    statusKasus: idxMap.idxStatusKasus !== -1 ? String(row[idxMap.idxStatusKasus] || '').trim() : '',
+    inputAt: idxMap.idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxMap.idxTimestamp]) : '',
+    updatedAt: idxMap.idxUpdated !== -1 ? _formatDateTimeValue_(row[idxMap.idxUpdated]) : '',
+    lat: _isValidLatLon_(lat, lon) ? parseFloat(lat.toFixed(6)) : null,
+    lon: _isValidLatLon_(lat, lon) ? parseFloat(lon.toFixed(6)) : null,
+    hotspotKey: _isValidLatLon_(lat, lon) ? (lat.toFixed(3) + ',' + lon.toFixed(3)) : ''
+  };
+}
+
+function _matchesDashboardDrilldown_(record, type, key) {
+  var normalizedType = String(type || '').trim().toLowerCase();
+  var rawKey = String(key || '').trim();
+  if (!normalizedType || !rawKey) return false;
+  if (normalizedType === 'kecamatan') {
+    return String(record.kecamatan || '') === rawKey;
+  }
+  if (normalizedType === 'kelurahan') {
+    return [record.kecamatan, record.kelurahan].filter(Boolean).join(' / ') === rawKey;
+  }
+  if (normalizedType === 'rw') {
+    return [record.kecamatan, record.kelurahan, record.rw ? ('RW ' + record.rw) : ''].filter(Boolean).join(' / ') === rawKey;
+  }
+  if (normalizedType === 'rtrw') {
+    return [record.kecamatan, record.kelurahan, record.rw ? ('RW ' + record.rw) : '', record.rt ? ('RT ' + record.rt) : ''].filter(Boolean).join(' / ') === rawKey;
+  }
+  if (normalizedType === 'hotspot') {
+    return String(record.hotspotKey || '') === rawKey;
+  }
+  return false;
+}
+
 // ─── Helper: escape nilai CSV (RFC 4180) ─────────────────────────────────────
 
 /**
@@ -534,6 +594,7 @@ function getDashboardStats(dx, tahun, token) {
       clusteredPointCount: hotspotPoints.length,
       topHotspots: hotspotPoints.slice(0, 10).map(function(item) {
         return {
+          key: item.key,
           label: [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || item.label,
           count: item.count,
           lat: item.lat,
@@ -570,6 +631,92 @@ function getDashboardStats(dx, tahun, token) {
   } catch (e) {
     console.error("[getDashboardStats] Error:", e);
     return { status: "error", message: String(e) };
+  }
+}
+
+function getDashboardDrilldown(dx, tahun, drilldown, token) {
+  const session = _getDashboardSession_(token);
+  _assertCanViewDashboardSession_(session);
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) {
+    return { status: 'error', message: sess.message || 'Sesi tidak valid.' };
+  }
+
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    if (SUPPORTED_DX_.indexOf(dx) === -1) {
+      return { status: 'error', message: 'DX tidak didukung: ' + dx };
+    }
+
+    const type = String(drilldown && drilldown.type || '').trim().toLowerCase();
+    const key = String(drilldown && drilldown.key || '').trim();
+    const label = String(drilldown && drilldown.label || key || '').trim();
+    if (!type || !key) {
+      return { status: 'error', message: 'Filter drilldown tidak lengkap.' };
+    }
+
+    const tahunNum = parseInt(tahun, 10);
+    const filterTahun = !isNaN(tahunNum) && tahunNum > 0;
+    const sheetData = _readSheetWithCache_(dx + '_Raw');
+    if (!sheetData) {
+      return { status: 'ok', label: label, total: 0, items: [] };
+    }
+
+    const headers = sheetData.headers;
+    const rows = sheetData.rows;
+    const idxMap = {
+      idxTglPelacakan: headers.indexOf('Tanggal Pelacakan'),
+      idxKecamatan: headers.indexOf('Kecamatan'),
+      idxKelurahan: headers.indexOf('Kelurahan'),
+      idxRW: headers.indexOf('RW'),
+      idxRT: headers.indexOf('RT'),
+      idxLatitude: headers.indexOf('Latitude'),
+      idxLongitude: headers.indexOf('Longitude'),
+      idxKoordinat: headers.indexOf('Koordinat (lat,lon)'),
+      idxRecordId: headers.indexOf('ID Registrasi Kasus'),
+      idxEpid: headers.indexOf('Nomor EPID'),
+      idxNama: headers.indexOf('Nama'),
+      idxAlamat: headers.indexOf('Alamat lengkap'),
+      idxVerifikasi: headers.indexOf('Status Verifikasi EPID'),
+      idxStatusKasus: headers.indexOf('Status Pasien/Kasus'),
+      idxTimestamp: headers.indexOf('Timestamp'),
+      idxUpdated: headers.indexOf('Updated At')
+    };
+
+    const matches = [];
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (filterTahun && idxMap.idxTglPelacakan !== -1) {
+        var tglStr = _formatDateValue_(row[idxMap.idxTglPelacakan]);
+        if (!tglStr) continue;
+        var rowTahun = parseInt(tglStr.substring(0, 4), 10);
+        if (rowTahun !== tahunNum) continue;
+      }
+      var record = _buildDashboardRecordSummary_(row, idxMap);
+      if (!record.recordKey) continue;
+      if (_matchesDashboardDrilldown_(record, type, key)) {
+        matches.push(record);
+      }
+    }
+
+    matches.sort(function(a, b) {
+      var aa = String(a.updatedAt || a.inputAt || '');
+      var bb = String(b.updatedAt || b.inputAt || '');
+      if (aa === bb) return String(a.nama || '').localeCompare(String(b.nama || ''));
+      return aa < bb ? 1 : -1;
+    });
+
+    return {
+      status: 'ok',
+      type: type,
+      key: key,
+      label: label,
+      total: matches.length,
+      items: matches.slice(0, 100)
+    };
+  } catch (e) {
+    console.error('[getDashboardDrilldown] Error:', e);
+    return { status: 'error', message: String(e) };
   }
 }
 
