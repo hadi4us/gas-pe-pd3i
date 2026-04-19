@@ -42,7 +42,7 @@
       ? `data-parent="${field.showIf.field}" data-parent-vals='${JSON.stringify(field.showIf.values)}' data-required="${field.required ? "true" : "false"}"`
       : "";
 
-    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "hidden" : ""}`;
+    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
     const cls = `pd3i-generated-control border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
       field.readonly
         ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
@@ -153,7 +153,12 @@
 
     const numericHint = _getNumericFieldHintById(field.id);
 
+    const dependentMeta = field.showIf
+      ? `<div class="pd3i-field-context"><i class="fas fa-turn-up text-[10px]"></i> Field lanjutan · aktif jika <strong>${field.showIf.field}</strong> sesuai</div>`
+      : "";
+
     return `<div class="${wrapperClass}" ${showIfAttr}>
+      ${dependentMeta}
       <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
         ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
       </label>
@@ -2362,16 +2367,26 @@
     document.querySelectorAll(".field-wrapper[data-parent]").forEach(function(wrapper) {
       const parentId = wrapper.getAttribute("data-parent");
       const parent = document.getElementById(parentId);
+      const parentValue = getShowIfParentValue(parentId);
       const vals = JSON.parse(wrapper.getAttribute("data-parent-vals") || "[]");
       const required = wrapper.getAttribute("data-required") === "true";
       const inp = wrapper.querySelector("input, select, textarea");
 
-      if (parent && vals.includes(parent.value)) {
+      let shouldShow = !!parent && matchesShowIf(parentValue, vals, parentId);
+
+      if (!shouldShow && parentId === "JK") {
+        const jkNorm = String(parentValue || "").trim().toLowerCase();
+        const wantsPerempuan = vals.some(v => String(v || "").trim().toLowerCase() === "perempuan");
+        if (wantsPerempuan && (jkNorm === "perempuan" || jkNorm === "p")) {
+          shouldShow = true;
+        }
+      }
+
+      if (shouldShow) {
         wrapper.classList.remove("hidden");
         if (required && inp) inp.required = true;
 
-        // Khusus: inisialisasi Choices.js untuk Nama Rumah Sakit jika muncul
-        if (parentId === "Apakah dirawat inap?" && parent.value === "Ya" && wrapper.querySelector("#Nama\\ Rumah\\ Sakit")) {
+        if (parentId === "Apakah dirawat inap?" && String(parentValue || "").trim() === "Ya" && wrapper.querySelector("#Nama\\ Rumah\\ Sakit")) {
           setTimeout(function() {
             const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
             if (typeof initChoicesRumahSakit === "function") initChoicesRumahSakit(currentRs);

@@ -690,11 +690,21 @@ body.modal-open {
 }
 
 .pd3i-field-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 100%;
   padding: 0.95rem 1rem;
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid #e4edf8;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.pd3i-field-card-dependent {
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f8ff 100%);
+  border: 1px dashed #b8d1ee;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.06);
 }
 
 .pd3i-field-card-full {
@@ -1009,14 +1019,32 @@ body.modal-open {
 /* -----------------------------
    Dynamic wrapper show / hide
 ------------------------------ */
+.pd3i-field-grid {
+  align-items: start;
+  grid-auto-flow: row dense;
+}
+
+.pd3i-field-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .field-wrapper {
-  transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   opacity: 1;
-  max-height: 2400px;
   overflow: visible;
 }
 
 .field-wrapper.hidden {
+  display: none !important;
   opacity: 0;
   max-height: 0;
   padding-top: 0 !important;
@@ -1139,6 +1167,9 @@ body.modal-open {
 #pelapor-fields-container,
 #pasien-fields-container,
 #specific-fields-container,
+#verifikasi-fields-container,
+#sampel-fields-container,
+#status-fields-container,
 .pd3i-shell-card,
 .rounded-lg,
 .rounded-xl,
