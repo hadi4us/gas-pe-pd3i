@@ -1987,6 +1987,34 @@
     updateSubmitButtonForWorkflowStep(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
   }
 
+  function applySectionStageAccess(sectionEl, editable) {
+    if (!sectionEl) return;
+    sectionEl.querySelectorAll("input, select, textarea, button").forEach(function(el) {
+      if (!el || el.type === "hidden") return;
+      if (el.id === "btn-submit" || el.id === "btn-prev-step" || el.id === "btn-next-step" || el.id === "btn-cancel-edit") return;
+      if (el.dataset.stageOrigDisabled === undefined) el.dataset.stageOrigDisabled = el.disabled ? "1" : "0";
+      if (el.dataset.stageOrigReadonly === undefined) el.dataset.stageOrigReadonly = el.readOnly ? "1" : "0";
+
+      const origDisabled = el.dataset.stageOrigDisabled === "1";
+      const origReadonly = el.dataset.stageOrigReadonly === "1";
+
+      if (!editable) {
+        el.setAttribute("disabled", "disabled");
+        if (el.tagName !== "SELECT" && el.type !== "checkbox" && el.type !== "radio") {
+          el.setAttribute("readonly", "readonly");
+        }
+      } else {
+        if (origDisabled) el.setAttribute("disabled", "disabled");
+        else el.removeAttribute("disabled");
+
+        if (el.tagName !== "SELECT" && el.type !== "checkbox" && el.type !== "radio") {
+          if (origReadonly) el.setAttribute("readonly", "readonly");
+          else el.removeAttribute("readonly");
+        }
+      }
+    });
+  }
+
   function applyWorkflowStageLayout(activeId) {
     let normalized = normalizeWorkflowStepId(activeId);
     if (normalized !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
@@ -1997,23 +2025,46 @@
     const visibleSections = new Set((current && current.sections) || []);
     const canAccessLater = canAccessDeferredWorkflowStages();
     const helperEl = document.getElementById("workflow-stage-helper");
+    const canWriteThisStage = canWriteWorkflowStage(SESSION_USER, normalized);
+    const viewerMode = isViewerSession();
+    const stageEditable = canWriteThisStage && !viewerMode;
 
     ["section-pelapor", "section-pasien", "section-specific", "section-verifikasi", "section-sampel", "section-status"].forEach(function(id) {
       const section = document.getElementById(id);
       if (!section) return;
-      section.classList.toggle("pd3i-stage-hidden", !visibleSections.has(id));
+      const isVisible = visibleSections.has(id);
+      section.classList.toggle("pd3i-stage-hidden", !isVisible);
+      applySectionStageAccess(section, isVisible && stageEditable);
     });
 
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
       const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
-      const locked = target !== "section-pelapor" && !canAccessLater;
-      item.classList.toggle("is-disabled", locked);
-      item.setAttribute("aria-disabled", locked ? "true" : "false");
-      item.setAttribute("title", locked ? "Simpan input awal dulu atau buka record existing untuk tahap ini." : "");
+      const lockedByDeferredFlow = target !== "section-pelapor" && !canAccessLater;
+      item.classList.toggle("is-disabled", lockedByDeferredFlow);
+      item.setAttribute("aria-disabled", lockedByDeferredFlow ? "true" : "false");
+      item.setAttribute("title", lockedByDeferredFlow ? "Simpan input awal dulu atau buka record existing untuk tahap ini." : "");
     });
 
-    if (helperEl) helperEl.textContent = getWorkflowStageHelperText(normalized);
+    if (helperEl) {
+      let helperText = getWorkflowStageHelperText(normalized);
+      if (!viewerMode && !canAccessLater && !canWriteThisStage) {
+        helperText += " Role aktif tidak berwenang menyimpan tahap input awal; gunakan pencarian record existing atau login dengan role inputer/petugas.";
+      } else if (!viewerMode && canAccessLater && !canWriteThisStage) {
+        helperText += " Role aktif bisa melihat tahap ini, tapi tidak berwenang menyimpan perubahan pada tahap ini.";
+      }
+      helperEl.textContent = helperText;
+    }
     updateSubmitButtonForWorkflowStep(normalized);
+
+    const btnSubmit = document.getElementById("btn-submit");
+    if (btnSubmit && !viewerMode) {
+      btnSubmit.disabled = !stageEditable;
+      btnSubmit.classList.toggle("opacity-60", !stageEditable);
+      btnSubmit.classList.toggle("cursor-not-allowed", !stageEditable);
+      if (!stageEditable) {
+        btnSubmit.innerHTML = `<i class="fas fa-lock"></i> Tidak punya hak ubah tahap ini`;
+      }
+    }
   }
 
   function countRequiredCompletionForSections(sectionIds) {
@@ -2238,21 +2289,72 @@
     return String(role || "").trim().toLowerCase();
   }
 
+  function getAllWorkflowStageIds() {
+    return getWorkflowStepDefinitions().map(function(step) { return step.id; });
+  }
+
+  function getScopedWorkflowWriteStagesForRole(role) {
+    const normalized = normalizeUiRole(role);
+    const allStages = getAllWorkflowStageIds();
+
+    if (normalized === "admin") return allStages.slice();
+    if (["petugas", "surveilans", "editor", "koordinator"].includes(normalized)) return allStages.slice();
+    if (["viewer", "readonly", "read_only", "read-only"].includes(normalized)) return [];
+    if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(normalized)) return ["section-pelapor"];
+    if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(normalized)) return ["section-verifikasi"];
+    if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(normalized)) return ["section-sampel"];
+    if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(normalized)) return ["section-status"];
+    if (normalized) return allStages.slice();
+    return [];
+  }
+
   function getRoleCapabilities(user) {
     const role = normalizeUiRole(user && user.role);
+    const allStages = getAllWorkflowStageIds();
+    const writeStages = getScopedWorkflowWriteStagesForRole(role);
+    const canView = !!role && !["", "unknown"].includes(role) ? true : false;
+    const canWrite = writeStages.length > 0;
+    const canAdmin = role === "admin";
+    const stageLabelMap = {
+      "section-pelapor": "Input awal",
+      "section-verifikasi": "Verifikasi EPID",
+      "section-sampel": "Hasil pemeriksaan",
+      "section-status": "Update status"
+    };
+    const stageSummary = writeStages.map(function(id) { return stageLabelMap[id] || id; }).join(", ");
+
     if (role === "admin") {
-      return { roleLabel: "Admin", canView: true, canWrite: true, canAdmin: true, summary: "Admin • akses penuh (lihat, ubah, dan aksi admin)" };
+      return { roleLabel: "Admin", canView: true, canWrite: true, canAdmin: true, viewStages: allStages, writeStages: writeStages, summary: "Admin • akses penuh (lihat, ubah, aksi admin, semua tahap kerja)" };
     }
-    if (role === "viewer" || role === "readonly" || role === "read_only" || role === "read-only") {
-      return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
+    if (["viewer", "readonly", "read_only", "read-only"].includes(role)) {
+      return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: allStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
-    if (role === "petugas" || role === "surveilans" || role === "editor") {
-      return { roleLabel: "Petugas", canView: true, canWrite: true, canAdmin: false, summary: "Petugas • bisa input dan update data, tanpa aksi admin" };
+    if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
+      return { roleLabel: role === "koordinator" ? "Koordinator" : "Petugas", canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • bisa input dan update semua tahap operasional, tanpa aksi admin" };
+    }
+    if (writeStages.length === 1) {
+      return { roleLabel: role || "Role terbatas", canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${role} • hanya bisa ubah tahap ${stageSummary}` };
     }
     if (role) {
-      return { roleLabel: role, canView: true, canWrite: true, canAdmin: false, summary: `${role} • akses operasional standar` };
+      return { roleLabel: role, canView: true, canWrite: canWrite, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: canWrite ? `${role} • akses operasional standar` : `${role} • hanya lihat data` };
     }
-    return { roleLabel: "Tidak diketahui", canView: false, canWrite: false, canAdmin: false, summary: "Belum ada sesi" };
+    return { roleLabel: "Tidak diketahui", canView: false, canWrite: false, canAdmin: false, viewStages: [], writeStages: [], summary: "Belum ada sesi" };
+  }
+
+  function canWriteWorkflowStage(user, stageId) {
+    const caps = getRoleCapabilities(user);
+    const normalized = normalizeWorkflowStepId(stageId);
+    return caps.canWrite && caps.writeStages.indexOf(normalized) !== -1;
+  }
+
+  function getPreferredWorkflowStageForUser() {
+    const caps = getRoleCapabilities(SESSION_USER);
+    const canAccessLater = canAccessDeferredWorkflowStages();
+    if (caps.writeStages.length === 1) {
+      const onlyStage = normalizeWorkflowStepId(caps.writeStages[0]);
+      if (onlyStage === "section-pelapor" || canAccessLater) return onlyStage;
+    }
+    return "section-pelapor";
   }
 
   function isViewerSession() {
@@ -2829,8 +2931,9 @@
       }
 
       window.applyRoleUIState = function applyRoleUIState() {
+        const caps = getRoleCapabilities(SESSION_USER);
         const currentRole = String((SESSION_USER && SESSION_USER.role) || "").trim().toLowerCase();
-        const isViewer = currentRole === "viewer";
+        const isViewer = !caps.canWrite && caps.canView;
         const isAdmin = currentRole === "admin";
 
         if (isViewer) {
@@ -2874,7 +2977,10 @@
           else btnRetryTelegram.classList.remove("hidden");
         }
 
-        return { isViewer, isAdmin, currentRole };
+        const currentActiveStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
+        updateFormStepperState(currentActiveStage);
+
+        return { isViewer, isAdmin, currentRole, caps };
       };
 
       const { isViewer, isAdmin } = window.applyRoleUIState();
@@ -3413,8 +3519,11 @@
             forceBuildImunisasiWhenReady();
             hydrateDynamicTables(record);
             syncCaseStatusOptionsByDx(dx);
-            const activeStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
-            updateFormStepperState(activeStage);
+            const activeStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getPreferredWorkflowStageForUser();
+            const preferredStage = canWriteWorkflowStage(SESSION_USER, activeStage) || isViewerSession()
+              ? activeStage
+              : getPreferredWorkflowStageForUser();
+            updateFormStepperState(preferredStage);
             updateUiShellSummary();
 
             showTopAlert("Data berhasil dimuat. Tahap verifikasi / hasil pemeriksaan / status sekarang bisa dibuka sesuai kebutuhan.", true);
@@ -3502,7 +3611,7 @@
         btnSubmit.disabled = true;
 
         const formData = new FormData(this);
-        const dataObj = { dx: selector.value, __token: SESSION_TOKEN };
+        const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit) };
         formData.forEach((v, k) => { dataObj[k] = v; });
 
         if (!dataObj["Nama unit pelapor"]) {

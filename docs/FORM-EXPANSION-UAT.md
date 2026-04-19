@@ -388,6 +388,26 @@ Uji minimal sekali per DX:
 - Saat satu tahap dipilih, hanya section tahap itu yang ditampilkan.
 - Tombol submit dan helper text mengikuti tahap aktif.
 
+### TC-WF-07 — Role tahap-spesifik
+Gunakan akun contoh dengan role berbeda di `REF_USER`:
+- `inputer`
+- `verifikator`
+- `lab`
+- `status`
+
+**Langkah uji**
+- Login sebagai `inputer`, pastikan hanya tahap input yang bisa disimpan.
+- Buka record existing sebagai `verifikator`, masuk ke tahap verifikasi lalu simpan perubahan.
+- Coba `verifikator` menyimpan tahap hasil pemeriksaan atau status.
+- Login sebagai `lab`, buka tahap hasil pemeriksaan lalu simpan perubahan.
+- Login sebagai `status`, buka tahap update status lalu simpan perubahan.
+
+**Expected**
+- Role tahap-spesifik tetap bisa membuka record dan berpindah stage untuk melihat konteks.
+- Tombol submit hanya aktif pada stage yang menjadi kewenangan role.
+- Backend menolak save jika role menyimpan stage di luar kewenangannya.
+- Tahap selain input tetap mensyaratkan record existing / EPID sudah ada.
+
 ### TC-WF-05 — Search result workflow badges
 - cari data existing
 - pastikan hasil pencarian menampilkan:

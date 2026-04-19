@@ -605,10 +605,54 @@ function _sendPengampuNotification_(dx, data, saved, printUrl) {
 }
 
 // ─── Validasi akses tulis ─────────────────────────────────────────────────────
-function _requireWriteAccessFromSession_(sess) {
+const WORKFLOW_STAGE_IDS_ = ["section-pelapor", "section-verifikasi", "section-sampel", "section-status"];
+
+function _normalizeWorkflowStage_(workflowStage) {
+  const value = String(workflowStage || "").trim();
+  if (["section-pelapor", "section-pasien", "section-specific"].includes(value)) return "section-pelapor";
+  if (WORKFLOW_STAGE_IDS_.indexOf(value) !== -1) return value;
+  return "";
+}
+
+function _getWritableWorkflowStagesForRole_(role) {
+  role = String(role || "").trim().toLowerCase();
+  if (role === "admin") return WORKFLOW_STAGE_IDS_.slice();
+  if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) return WORKFLOW_STAGE_IDS_.slice();
+  if (["viewer", "readonly", "read_only", "read-only"].includes(role)) return [];
+  if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(role)) return ["section-pelapor"];
+  if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(role)) return ["section-verifikasi"];
+  if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(role)) return ["section-sampel"];
+  if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(role)) return ["section-status"];
+  if (role) return WORKFLOW_STAGE_IDS_.slice();
+  return [];
+}
+
+function _requireWriteAccessFromSession_(sess, workflowStage, data) {
   if (!sess || !sess.user) throw new Error("Sesi tidak valid.");
   const role = String(sess.user.role || "").trim().toLowerCase();
-  if (role === "viewer") throw new Error("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menambah/mengubah data.");
+  if (["viewer", "readonly", "read_only", "read-only"].includes(role)) {
+    throw new Error("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menambah/mengubah data.");
+  }
+
+  const allowedStages = _getWritableWorkflowStagesForRole_(role);
+  const normalizedStage = _normalizeWorkflowStage_(workflowStage);
+  const isScopedStageRole = allowedStages.length === 1 && WORKFLOW_STAGE_IDS_.length > 1;
+
+  if (!normalizedStage) {
+    if (isScopedStageRole) {
+      throw new Error("Role aktif memakai pembatasan tahap kerja. Refresh aplikasi lalu simpan lewat tahap yang sesuai.");
+    }
+    return role || "petugas";
+  }
+
+  if (normalizedStage !== "section-pelapor" && !String((data && data["Nomor EPID"]) || "").trim()) {
+    throw new Error("Tahap verifikasi / hasil pemeriksaan / update status hanya boleh untuk record existing setelah input awal tersimpan.");
+  }
+
+  if (allowedStages.length && allowedStages.indexOf(normalizedStage) === -1) {
+    throw new Error("Role aktif tidak berwenang menyimpan perubahan pada tahap kerja ini.");
+  }
+
   return role || "petugas";
 }
 
@@ -703,7 +747,7 @@ function saveFormPayload_(data) {
   if (!sess.ok) {
     return { status: "error", message: sess.message || "Sesi habis. Silakan login ulang." };
   }
-  _requireWriteAccessFromSession_(sess);
+  _requireWriteAccessFromSession_(sess, data.__workflowStage, data);
 
   const dx = String(data.dx || "").trim().toUpperCase();
   if (!dx) {

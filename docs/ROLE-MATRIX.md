@@ -32,6 +32,7 @@ Hak utama:
 - input data baru
 - edit / update data
 - menggunakan workflow operasional sehari-hari
+- mengakses semua tahap kerja operasional (input, verifikasi, hasil pemeriksaan, status)
 
 Batasan:
 - tidak menjalankan aksi admin
@@ -49,23 +50,37 @@ Batasan:
 - tidak boleh menjalankan aksi admin
 - form harus tampil read-only
 
+### Role tahap-spesifik (opsional)
+Role ini ditambahkan untuk menyesuaikan alur kerja nyata ketika input awal, verifikasi, hasil pemeriksaan, dan update status dikerjakan oleh orang yang berbeda.
+
+Contoh role yang kini dikenali:
+- `inputer` / `entry` / `registrasi` → hanya boleh ubah tahap **Input awal**
+- `verifikator` / `verifier` / `epid` → hanya boleh ubah tahap **Verifikasi EPID**
+- `lab` / `laboratorium` / `analislab` → hanya boleh ubah tahap **Hasil pemeriksaan**
+- `status` / `updater_status` / `followup` / `tindaklanjut` → hanya boleh ubah tahap **Update status**
+
+Catatan:
+- role tahap-spesifik tetap bisa login dan melihat record
+- tetapi backend akan menolak save jika role mencoba menyimpan tahap yang bukan kewenangannya
+- tahap verifikasi / hasil pemeriksaan / status hanya boleh untuk **record existing** (setelah input awal tersimpan)
+
 ---
 
 ## 3. Ringkasan capability
 
-| Capability | Admin | Petugas | Viewer |
-|---|---|---:|---:|
-| Lihat data | Ya | Ya | Ya |
-| Cari / buka record | Ya | Ya | Ya |
-| Input data baru | Ya | Ya | Tidak |
-| Edit / update data | Ya | Ya | Tidak |
-| Verifikasi EPID | Ya | Ya | Tidak |
-| Input hasil sampel | Ya | Ya | Tidak |
-| Update status pasien/kasus | Ya | Ya | Tidak |
-| Dashboard statistik | Ya | Ya* | Ya* |
-| Retry sinkronisasi/notifikasi | Ya | Tidak | Tidak |
-| Export CSV | Ya | Tidak | Tidak |
-| Akses admin menu | Ya | Tidak | Tidak |
+| Capability | Admin | Petugas | Viewer | Role tahap-spesifik |
+|---|---|---:|---:|---:|
+| Lihat data | Ya | Ya | Ya | Ya |
+| Cari / buka record | Ya | Ya | Ya | Ya |
+| Input data baru | Ya | Ya | Tidak | Sesuai role |
+| Edit / update data | Ya | Ya | Tidak | Hanya tahap yang diizinkan |
+| Verifikasi EPID | Ya | Ya | Tidak | Hanya role verifikator |
+| Input hasil sampel | Ya | Ya | Tidak | Hanya role lab |
+| Update status pasien/kasus | Ya | Ya | Tidak | Hanya role status |
+| Dashboard statistik | Ya | Ya* | Ya* | Ya* |
+| Retry sinkronisasi/notifikasi | Ya | Tidak | Tidak | Tidak |
+| Export CSV | Ya | Tidak | Tidak | Tidak |
+| Akses admin menu | Ya | Tidak | Tidak | Tidak |
 
 > Catatan: akses dashboard untuk non-admin bisa dibatasi lagi sesuai kebijakan berikutnya.
 
