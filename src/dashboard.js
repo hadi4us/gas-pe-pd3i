@@ -67,6 +67,15 @@ function _formatDateValue_(val) {
   return String(val).trim();
 }
 
+function _formatDateTimeValue_(val) {
+  if (!val) return "";
+  if (val instanceof Date) {
+    const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    return Utilities.formatDate(val, tz, "yyyy-MM-dd HH:mm");
+  }
+  return String(val).trim();
+}
+
 // ─── Helper: parse tanggal dari string yyyy-MM-dd ─────────────────────────────
 
 /**
@@ -180,6 +189,7 @@ function getDashboardStats(dx, tahun, token) {
         epidemiology: { medianReportToTrackingDays: null, sameDayReportTrackingRate: null, medianOnsetToReportDays: null, workflowCompletenessRate: null },
         perKelompokUmur: {},
         perJenisKelamin: {},
+        verificationQueue: { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] },
         statusNotifikasi: dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null,
         statusSinkronisasi: dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null
       };
@@ -207,6 +217,14 @@ function getDashboardStats(dx, tahun, token) {
     const idxVerifikasi = headers.indexOf("Status Verifikasi EPID");
     const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
     const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
+    const idxRecordId = headers.indexOf("ID Registrasi Kasus");
+    const idxEpid = headers.indexOf("Nomor EPID");
+    const idxNama = headers.indexOf("Nama");
+    const idxKelurahan = headers.indexOf("Kelurahan");
+    const idxPuskesmasPengampu = headers.indexOf("Puskesmas Pengampu");
+    const idxCatatanVerif = headers.indexOf("Catatan Verifikasi EPID");
+    const idxUpdated = headers.indexOf("Updated At");
+    const idxTimestamp = headers.indexOf("Timestamp");
 
     // Hasil agregasi
     let totalKasus = 0;
@@ -228,6 +246,8 @@ function getDashboardStats(dx, tahun, token) {
     let completenessWorkflowFilled = 0;
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
+    const isAdmin = String((sess.user && sess.user.role) || "").trim().toLowerCase() === "admin";
+    const verificationQueue = { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] };
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -317,6 +337,40 @@ function getDashboardStats(dx, tahun, token) {
       if (idxSampelDilakukan !== -1 && String(row[idxSampelDilakukan] || "").trim()) workflowFieldsPresent++;
       completenessWorkflowFilled += workflowFieldsPresent;
 
+      if (isAdmin) {
+        const rawVerificationStatus = idxVerifikasi !== -1 ? String(row[idxVerifikasi] || "").trim() : "";
+        const verificationStatus = rawVerificationStatus || "Pending";
+        const normalizedVerification = verificationStatus.toUpperCase();
+        const recordId = idxRecordId !== -1 ? String(row[idxRecordId] || "").trim() : "";
+        const epid = idxEpid !== -1 ? String(row[idxEpid] || "").trim() : "";
+        const recordKey = recordId || epid;
+        if (recordKey) {
+          const inputAt = idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxTimestamp]) : "";
+          const updatedAt = idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : "";
+          const queueItem = {
+            recordKey: recordKey,
+            recordId: recordId,
+            epid: epid,
+            nama: idxNama !== -1 ? String(row[idxNama] || "").trim() : "",
+            puskesmas: idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || "").trim() : "",
+            kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || "").trim() : "",
+            kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || "").trim() : "",
+            statusVerifikasi: verificationStatus,
+            catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || "").trim() : "",
+            inputAt: inputAt,
+            updatedAt: updatedAt
+          };
+
+          if (!normalizedVerification || normalizedVerification === "PENDING") {
+            verificationQueue.pending.push(queueItem);
+          } else if (normalizedVerification === "PERLU REVISI") {
+            verificationQueue.perluRevisi.push(queueItem);
+          } else if (normalizedVerification === "TERVERIFIKASI") {
+            verificationQueue.terverifikasi.push(queueItem);
+          }
+        }
+      }
+
       // Status notifikasi/sinkronisasi dihitung jika kolom tersedia
       if (idxStatusNotif !== -1 && statusNotifikasi) {
         const statusN = String(row[idxStatusNotif] || "").trim().toUpperCase();
@@ -343,6 +397,17 @@ function getDashboardStats(dx, tahun, token) {
       }
     }
 
+    ["pending", "perluRevisi", "terverifikasi"].forEach(function(key) {
+      verificationQueue[key].sort(function(a, b) {
+        const aa = String(a.updatedAt || a.inputAt || "");
+        const bb = String(b.updatedAt || b.inputAt || "");
+        if (aa === bb) return String(a.nama || "").localeCompare(String(b.nama || ""));
+        return aa < bb ? 1 : -1;
+      });
+      verificationQueue.counts[key] = verificationQueue[key].length;
+      verificationQueue[key] = verificationQueue[key].slice(0, 200);
+    });
+
     return {
       totalKasus: totalKasus,
       perKecamatan: perKecamatan,
@@ -351,6 +416,7 @@ function getDashboardStats(dx, tahun, token) {
       perKelompokUmur: perKelompokUmur,
       perJenisKelamin: perJenisKelamin,
       qualityCards: qualityCards,
+      verificationQueue: verificationQueue,
       epidemiology: {
         medianReportToTrackingDays: _medianNumber_(lagsReportToTracking),
         sameDayReportTrackingRate: lagsReportToTracking.length ? Math.round((sameDayReportTracking / lagsReportToTracking.length) * 100) : null,

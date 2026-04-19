@@ -8,7 +8,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  function renderAdminVerificationQueue(stats) {
+  function renderAdminVerificationQueue(stats, dx) {
     const wrap = document.getElementById('dashboard-admin-queue');
     if (!wrap) return;
 
@@ -21,13 +21,37 @@
     }
 
     const counts = queue.counts || { pending: 0, perluRevisi: 0, terverifikasi: 0 };
-    const activeFilter = (window.__ADMIN_QUEUE_FILTER || 'pending');
+    const activeFilter = String(window.__ADMIN_QUEUE_FILTER || 'pending');
     const filterMap = {
-      pending: queue.pending || [],
-      perluRevisi: queue.perluRevisi || [],
-      terverifikasi: queue.terverifikasi || []
+      pending: Array.isArray(queue.pending) ? queue.pending : [],
+      perluRevisi: Array.isArray(queue.perluRevisi) ? queue.perluRevisi : [],
+      terverifikasi: Array.isArray(queue.terverifikasi) ? queue.terverifikasi : []
     };
-    const rows = filterMap[activeFilter] || [];
+    const allRows = filterMap.pending.concat(filterMap.perluRevisi, filterMap.terverifikasi);
+    const seenPuskesmas = {};
+    const puskesmasOptions = [];
+    allRows.forEach(function(item) {
+      const name = String(item && item.puskesmas || '').trim();
+      if (!name || seenPuskesmas[name]) return;
+      seenPuskesmas[name] = true;
+      puskesmasOptions.push(name);
+    });
+    puskesmasOptions.sort(function(a, b) { return a.localeCompare(b); });
+
+    const selectedPuskesmas = seenPuskesmas[String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()]
+      ? String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()
+      : '';
+    if (selectedPuskesmas !== String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()) {
+      window.__ADMIN_QUEUE_PUSKESMAS = selectedPuskesmas;
+    }
+    const selectedDate = String(window.__ADMIN_QUEUE_DATE || '').trim();
+    const baseRows = filterMap[activeFilter] || [];
+    const rows = baseRows.filter(function(item) {
+      const puskesmasMatch = !selectedPuskesmas || String(item.puskesmas || '').trim() === selectedPuskesmas;
+      const dateValue = String(item.inputAt || '').trim().slice(0, 10);
+      const dateMatch = !selectedDate || dateValue === selectedDate;
+      return puskesmasMatch && dateMatch;
+    });
 
     function renderCard(label, count, cls) {
       return `<div class="pd3i-admin-queue-card ${cls}"><div class="pd3i-helper-text font-extrabold uppercase">${label}</div><div class="pd3i-admin-queue-count">${count}</div></div>`;
@@ -38,27 +62,38 @@
       return `<button type="button" class="pd3i-admin-queue-tab${active}" data-admin-queue-filter="${key}">${label} (${count})</button>`;
     }
 
+    const puskesmasOptionsHtml = ['<option value="">Semua puskesmas</option>']
+      .concat(puskesmasOptions.map(function(name) {
+        const selectedAttr = name === selectedPuskesmas ? ' selected' : '';
+        return `<option value="${escapeHtml(name)}"${selectedAttr}>${escapeHtml(name)}</option>`;
+      }))
+      .join('');
+
     const listHtml = rows.length
       ? rows.map(function(item) {
-          const safeKey = String(item.recordKey || item.recordId || item.epid || '').replace(/'/g, "\'");
-          const dx = String(document.getElementById('dashboard-dx-filter')?.value || '').trim();
+          const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
+          const dxArg = JSON.stringify(String(dx || document.getElementById('dashboard-dx')?.value || 'MR').trim());
+          const inputDateText = String(item.inputAt || '').trim();
+          const updatedDateText = String(item.updatedAt || '').trim();
           return `<div class="pd3i-admin-queue-row">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <strong>${escapeHtml(item.nama || '-')}</strong>
                 <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml(item.puskesmas || '-')}</small>
               </div>
-              <button type="button" class="pd3i-search-result-action" onclick="window.__openAdminQueueRecord && window.__openAdminQueueRecord('${safeKey}', '${escapeHtml(dx)}')"><i class="fas fa-folder-open"></i> Review</button>
+              <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg})'><i class="fas fa-folder-open"></i> Review</button>
             </div>
             <div class="pd3i-admin-queue-meta">
               <span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi || '-')}</span>
               <span class="pd3i-admin-queue-pill">${escapeHtml(item.kecamatan || '-')} / ${escapeHtml(item.kelurahan || '-')}</span>
               ${item.epid ? `<span class="pd3i-admin-queue-pill">EPID ${escapeHtml(item.epid)}</span>` : '<span class="pd3i-admin-queue-pill">Belum ada EPID final</span>'}
+              ${inputDateText ? `<span class="pd3i-admin-queue-pill">Input ${escapeHtml(inputDateText.slice(0, 10))}</span>` : ''}
+              ${updatedDateText ? `<span class="pd3i-admin-queue-pill">Update ${escapeHtml(updatedDateText.slice(0, 10))}</span>` : ''}
             </div>
             ${item.catatanVerifikasi ? `<small>Catatan: ${escapeHtml(item.catatanVerifikasi)}</small>` : ''}
           </div>`;
         }).join('')
-      : '<div class="pd3i-helper-text mt-3">Belum ada kasus pada filter ini.</div>';
+      : '<div class="pd3i-empty-state">Belum ada kasus pada kombinasi filter ini.</div>';
 
     wrap.innerHTML = `
       <div class="pd3i-card-header-row mt-4">
@@ -78,6 +113,12 @@
         ${renderTab('perluRevisi', 'Perlu Revisi', counts.perluRevisi || 0)}
         ${renderTab('terverifikasi', 'Terverifikasi', counts.terverifikasi || 0)}
       </div>
+      <div class="pd3i-admin-queue-filterbar mt-3">
+        <select id="dashboard-admin-queue-puskesmas" class="pd3i-shell-input">${puskesmasOptionsHtml}</select>
+        <input id="dashboard-admin-queue-date" type="date" class="pd3i-shell-input" value="${escapeHtml(selectedDate)}">
+        <button type="button" id="dashboard-admin-queue-reset" class="pd3i-ghost-button pd3i-inline-button"><i class="fas fa-rotate-left"></i> Reset filter</button>
+      </div>
+      <div class="pd3i-helper-text mt-3">Menampilkan <strong>${rows.length}</strong> dari <strong>${baseRows.length}</strong> kasus pada tab <strong>${escapeHtml(activeFilter)}</strong>.</div>
       <div class="pd3i-admin-queue-list">${listHtml}</div>
     `;
     wrap.classList.remove('hidden');
@@ -85,9 +126,32 @@
     wrap.querySelectorAll('[data-admin-queue-filter]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         window.__ADMIN_QUEUE_FILTER = String(btn.getAttribute('data-admin-queue-filter') || 'pending');
-        renderAdminVerificationQueue(stats);
+        renderAdminVerificationQueue(stats, dx);
       });
     });
+
+    const puskesmasSelect = wrap.querySelector('#dashboard-admin-queue-puskesmas');
+    const dateInput = wrap.querySelector('#dashboard-admin-queue-date');
+    const resetBtn = wrap.querySelector('#dashboard-admin-queue-reset');
+    if (puskesmasSelect) {
+      puskesmasSelect.addEventListener('change', function() {
+        window.__ADMIN_QUEUE_PUSKESMAS = String(puskesmasSelect.value || '').trim();
+        renderAdminVerificationQueue(stats, dx);
+      });
+    }
+    if (dateInput) {
+      dateInput.addEventListener('change', function() {
+        window.__ADMIN_QUEUE_DATE = String(dateInput.value || '').trim();
+        renderAdminVerificationQueue(stats, dx);
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function() {
+        window.__ADMIN_QUEUE_PUSKESMAS = '';
+        window.__ADMIN_QUEUE_DATE = '';
+        renderAdminVerificationQueue(stats, dx);
+      });
+    }
   }
 
 <script>
@@ -278,6 +342,10 @@
       html += `</ul></div>`;
     }
 
+    if (isAdmin) {
+      html += `<div id="dashboard-admin-queue" class="mb-6"></div>`;
+    }
+
     const perStatus = stats.perStatusKasus || {};
     const statusKeys = Object.keys(perStatus).sort(function(a, b) { return perStatus[b] - perStatus[a]; });
     if (statusKeys.length > 0) {
@@ -379,6 +447,7 @@
     }
 
     content.innerHTML = html;
+    renderAdminVerificationQueue(stats, dx);
   }
 
   // ============================================================

@@ -31,6 +31,6 @@
    - Filter diagnosis / periode
 
 6. **Polish dashboard admin review**
-   - Tambah filter puskesmas / tanggal input pada queue verifikasi
    - Tambah badge status verifikasi di kartu statistik utama
    - Pertimbangkan bulk triage / quick-open dari queue
+   - Tambah indikator antrian revisi/pending di topbar atau entry dashboard
