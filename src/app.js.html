@@ -3639,7 +3639,7 @@
       const searchEpid = document.getElementById("search-epid");
       const searchResults = document.getElementById("search-results");
 
-      if (editBadge) editBadge.classList.add("hidden");
+      if (editBadge) editBadge.hidden = true;
       if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
       if (searchEpid) searchEpid.value = "";
       if (searchResults) {
@@ -3932,8 +3932,8 @@
       };
 
       const { isViewer, isAdmin } = window.applyRoleUIState();
-      if (editBadge && isViewer) editBadge.classList.add("hidden");
-      if (viewerBadge) viewerBadge.classList.toggle("hidden", !isViewer);
+      if (editBadge && isViewer) editBadge.hidden = true;
+      if (viewerBadge) viewerBadge.hidden = !isViewer;
       setReadonlyFormMode(isViewer);
       syncStatusRulesByContext(document.getElementById("form-selector")?.value || "");
       updateUiShellSummary();
@@ -4220,7 +4220,7 @@
         hideTopAlert();
 
         isEditMode = false;
-        if (editBadge) editBadge.classList.add("hidden");
+        if (editBadge) editBadge.hidden = true;
         if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
         btnSubmit.disabled = false;
         btnSubmit.classList.remove("bg-yellow-600");
@@ -4284,8 +4284,8 @@
         renderDiagnosisSections(cfg, specificContainer);
         syncCaseStatusOptionsByDx(dx);
         setReadonlyFormMode(isViewerSession());
-        if (viewerBadge) viewerBadge.classList.toggle("hidden", !isViewerSession());
-        if (editBadge && isViewerSession()) editBadge.classList.add("hidden");
+        if (viewerBadge) viewerBadge.hidden = !isViewerSession();
+        if (editBadge && isViewerSession()) editBadge.hidden = true;
 
         setTimeout(async () => {
           addDefaultRowsForDynamicTables();
@@ -4512,8 +4512,7 @@
 
             isEditMode = !isViewer;
             if (editBadge) {
-              if (isViewer) editBadge.classList.add("hidden");
-              else editBadge.classList.remove("hidden");
+              editBadge.hidden = !!isViewer;
             }
             if (btnCancelEdit) {
               if (isViewer) btnCancelEdit.classList.add("hidden");
