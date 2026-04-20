@@ -259,6 +259,140 @@ function getFaskesFromSheet(token) {
 // ─── Daftar semua DX yang didukung ───────────────────────────────────────────
 const ALL_DX = ["MR", "DIF", "PERT", "TN", "AFP"];
 
+function _searchNormalizeText_(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function _searchNormalizeDate_(value) {
+  return String(value || "").trim().slice(0, 10);
+}
+
+function _searchIncludes_(haystack, needle) {
+  const source = _searchNormalizeText_(haystack);
+  const target = _searchNormalizeText_(needle);
+  if (!target) return true;
+  return source.indexOf(target) !== -1;
+}
+
+function _mapSearchResultItem_(dx, record) {
+  const getFirst = function(keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var val = record[keys[i]];
+      if (val !== undefined && val !== null && String(val).trim() !== '') {
+        return String(val).trim();
+      }
+    }
+    return '';
+  };
+
+  const recordId = getFirst(['ID Registrasi Kasus']);
+  const epid = getFirst(['Nomor EPID']);
+  return {
+    dx: String(dx || '').trim().toUpperCase(),
+    recordKey: recordId || epid,
+    recordId: recordId,
+    epid: epid,
+    nama: getFirst(['Nama']),
+    tanggalLahir: getFirst(['Tanggal Lahir']),
+    orangTua: getFirst(['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu']),
+    alamat: getFirst(['Alamat', 'Alamat Domisili', 'Alamat Lengkap']),
+    kelurahan: getFirst(['Kelurahan']),
+    kecamatan: getFirst(['Kecamatan']),
+    statusKasus: getFirst(['Status Pasien/Kasus', 'Keadaan saat ini']),
+    statusVerifikasi: getFirst(['Status Verifikasi EPID']),
+    sampelDilakukan: getFirst(['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil']),
+    interpretasiSampel: getFirst(['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab']),
+    inputAt: getFirst(['Timestamp']),
+    updatedAt: getFirst(['Updated At'])
+  };
+}
+
+function searchRecords(dx, filters, token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || 'Sesi tidak valid.');
+
+  dx = String(dx || '').trim().toUpperCase();
+  filters = filters || {};
+  const dxList = ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice();
+  const epidNeedle = String(filters.epid || '').trim();
+  const namaNeedle = String(filters.nama || '').trim();
+  const tanggalNeedle = _searchNormalizeDate_(filters.tanggalLahir || '');
+  const orangTuaNeedle = String(filters.orangTua || '').trim();
+  const alamatNeedle = String(filters.alamat || '').trim();
+  const kelurahanNeedle = String(filters.kelurahan || '').trim();
+  const statusVerifikasiNeedle = String(filters.statusVerifikasi || '').trim();
+  const sortBy = String(filters.sortBy || 'updated_desc').trim();
+  const page = Math.max(1, parseInt(filters.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
+  const results = [];
+
+  dxList.forEach(function(dxItem) {
+    var headers = [];
+    var rows = [];
+
+    if (typeof _readSheetWithCache_ === 'function') {
+      var sheetData = _readSheetWithCache_(dxItem + '_Raw');
+      if (!sheetData || !sheetData.headers || !sheetData.rows || !sheetData.rows.length) return;
+      headers = sheetData.headers;
+      rows = sheetData.rows;
+    } else {
+      var sheet = getSheetOrNull_(dxItem + '_Raw');
+      if (!sheet) return;
+      var values = sheet.getDataRange().getValues();
+      if (!values || values.length < 2) return;
+      headers = values[0].map(function(h) { return String(h || '').trim(); });
+      rows = values.slice(1);
+    }
+
+    rows.forEach(function(row) {
+      const record = (typeof deserializeRecord_ === 'function')
+        ? deserializeRecord_(row, headers)
+        : (function() {
+            const obj = {};
+            headers.forEach(function(h, idx) { obj[h] = row[idx]; });
+            return obj;
+          })();
+
+      const item = _mapSearchResultItem_(dxItem, record);
+      if (!item.recordKey) return;
+      if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
+      if (!_searchIncludes_(item.nama, namaNeedle)) return;
+      if (tanggalNeedle && _searchNormalizeDate_(item.tanggalLahir) !== tanggalNeedle) return;
+      if (!_searchIncludes_(item.orangTua, orangTuaNeedle)) return;
+      if (!_searchIncludes_(item.alamat, alamatNeedle)) return;
+      if (!_searchIncludes_(item.kelurahan, kelurahanNeedle)) return;
+      if (!_searchIncludes_(item.statusVerifikasi, statusVerifikasiNeedle)) return;
+
+      results.push(item);
+    });
+  });
+
+  const compareText = function(a, b) {
+    return String(a || '').localeCompare(String(b || ''), 'id', { sensitivity: 'base' });
+  };
+
+  results.sort(function(a, b) {
+    if (sortBy === 'name_asc') return compareText(a.nama, b.nama);
+    if (sortBy === 'name_desc') return compareText(b.nama, a.nama);
+    if (sortBy === 'birth_asc') return compareText(a.tanggalLahir, b.tanggalLahir);
+    if (sortBy === 'birth_desc') return compareText(b.tanggalLahir, a.tanggalLahir);
+    if (sortBy === 'epid_asc') return compareText(a.epid || a.recordId, b.epid || b.recordId);
+    if (sortBy === 'epid_desc') return compareText(b.epid || b.recordId, a.epid || a.recordId);
+    return compareText(b.updatedAt || b.inputAt, a.updatedAt || a.inputAt);
+  });
+
+  const total = results.length;
+  const start = (page - 1) * pageSize;
+  const pagedResults = results.slice(start, start + pageSize);
+  return {
+    results: pagedResults,
+    total: total,
+    page: page,
+    pageSize: pageSize,
+    totalPages: Math.ceil(total / pageSize)
+  };
+}
+
 // ─── Pipeline policy per DX (Phase-1: config-driven orchestration) ───────────
 const DX_PIPELINE_POLICY = {
   MR:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
