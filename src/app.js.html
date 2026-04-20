@@ -4353,29 +4353,42 @@
 
         try {
           if (!results || results.length === 0) {
-            box.innerHTML = `<div class="p-4 text-sm text-slate-500 font-semibold text-center">Tidak ada data yang cocok dengan kriteria pencarian.</div>`;
+            box.innerHTML = `<div class="pd3i-empty-state">Tidak ada data yang cocok dengan kriteria pencarian. Coba longgarkan filter atau ganti kata kunci.</div>`;
             return;
           }
 
-          let html = `<div class="px-4 pt-3 pb-1 text-xs text-slate-500 font-semibold">Menampilkan ${results.length} dari ${total} hasil</div>`;
-          html += `<div class="pd3i-search-results-wrap">`;
-
           const isViewerMode = isViewerSession();
           const workflowActionLabel = getWorkflowSearchActionLabel();
-          results.forEach(function(item) {
+          let html = `<div class="pd3i-search-results-head">
+            <div>
+              <div class="pd3i-card-eyebrow">Hasil pencarian</div>
+              <div class="pd3i-search-results-title">Menampilkan ${results.length} dari ${total} record</div>
+            </div>
+            <span class="pd3i-badge-soft">${safeEscape(workflowActionLabel)}</span>
+          </div>`;
+          html += `<div class="pd3i-search-results-wrap">`;
+
+          results.forEach(function(item, index) {
             const safeRecordKey = String(item.recordKey || item.recordId || item.epid || "").replace(/'/g, "\\'");
             const statusKasus = item.statusKasus || "Belum ditentukan";
             const statusVerifikasi = item.statusVerifikasi || "Pending";
             const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
               ? (item.interpretasiSampel || "Menunggu hasil")
               : "Tidak ada sampel";
+            const resolvedDx = String(item.dx || dx || '').trim();
             html += `<div class="pd3i-search-result-card">
+              <div class="pd3i-search-result-leading">
+                <span class="pd3i-search-result-index">${index + 1}</span>
+              </div>
               <div class="min-w-0 flex-1">
-                <div class="font-extrabold text-slate-800 text-sm md:text-base">${safeEscape(item.nama || "-")}</div>
+                <div class="pd3i-search-result-title-row">
+                  <div class="font-extrabold text-slate-800 text-sm md:text-base">${safeEscape(item.nama || "-")}</div>
+                  <span class="pd3i-search-result-dx">${safeEscape(resolvedDx || '-')}</span>
+                </div>
                 <div class="pd3i-search-result-meta">
                   <span class="pd3i-search-result-badge"><i class="fas fa-fingerprint"></i> ${safeEscape(item.epid || item.recordId || "-")}</span>
                   <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${safeEscape(item.tanggalLahir || "-")}</span>
-                  <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${safeEscape(item.kelurahan || "-")}</span>
+                  <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${safeEscape([item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || "-")}</span>
                 </div>
                 <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
                   <span class="pd3i-search-result-badge is-status"><i class="fas fa-list-check"></i> ${safeEscape(statusKasus)}</span>
@@ -4387,9 +4400,11 @@
                   ${item.alamat ? `Alamat: ${safeEscape(item.alamat)}` : "Alamat belum tersedia"}
                 </div>
               </div>
-              <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${String(item.dx || dx || '').trim()}')">
-                <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
-              </button>
+              <div class="pd3i-search-result-cta-wrap">
+                <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${resolvedDx}')">
+                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
+                </button>
+              </div>
             </div>`;
           });
 

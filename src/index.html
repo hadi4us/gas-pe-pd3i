@@ -261,36 +261,45 @@
           <div id="workflow-inbox" class="hidden mt-4"></div>
 
           <div id="search-container" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID / ID Registrasi Kasus">
-              <input type="text" id="search-nama" class="pd3i-shell-input" placeholder="Nama pasien">
-              <input type="date" id="search-tgl-lahir" class="pd3i-shell-input">
-              <input type="text" id="search-orang-tua" class="pd3i-shell-input" placeholder="Nama orang tua / wali">
-              <input type="text" id="search-alamat" class="pd3i-shell-input" placeholder="Alamat / jalan / RT-RW">
-              <input type="text" id="search-kelurahan" class="pd3i-shell-input" placeholder="Kelurahan / desa">
-              <select id="search-status-verifikasi" class="pd3i-shell-input">
-                <option value="">Semua status verifikasi</option>
-                <option value="Pending">Pending</option>
-                <option value="Terverifikasi">Terverifikasi</option>
-                <option value="Perlu Revisi">Perlu Revisi</option>
-              </select>
+            <div class="pd3i-search-toolbar">
+              <div class="pd3i-search-toolbar-head">
+                <div>
+                  <div class="pd3i-card-eyebrow">Filter record</div>
+                  <h4 class="pd3i-search-toolbar-title">Cari record existing dengan cepat</h4>
+                </div>
+                <span class="pd3i-badge-soft">Record-first workflow</span>
+              </div>
+              <div class="pd3i-search-filter-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID / ID Registrasi Kasus">
+                <input type="text" id="search-nama" class="pd3i-shell-input" placeholder="Nama pasien">
+                <input type="date" id="search-tgl-lahir" class="pd3i-shell-input">
+                <input type="text" id="search-orang-tua" class="pd3i-shell-input" placeholder="Nama orang tua / wali">
+                <input type="text" id="search-alamat" class="pd3i-shell-input" placeholder="Alamat / jalan / RT-RW">
+                <input type="text" id="search-kelurahan" class="pd3i-shell-input" placeholder="Kelurahan / desa">
+                <select id="search-status-verifikasi" class="pd3i-shell-input">
+                  <option value="">Semua status verifikasi</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Terverifikasi">Terverifikasi</option>
+                  <option value="Perlu Revisi">Perlu Revisi</option>
+                </select>
+              </div>
+              <div class="pd3i-search-actions">
+                <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
+                  <i class="fas fa-search"></i> Cari Data Existing
+                </button>
+                <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact pd3i-search-sort-select">
+                  <option value="updated_desc">Urutkan: Terbaru dulu</option>
+                  <option value="name_asc">Urutkan: Nama A-Z</option>
+                  <option value="name_desc">Urutkan: Nama Z-A</option>
+                  <option value="birth_asc">Urutkan: Tanggal lahir lama → baru</option>
+                  <option value="birth_desc">Urutkan: Tanggal lahir baru → lama</option>
+                  <option value="epid_asc">Urutkan: EPID A-Z</option>
+                  <option value="epid_desc">Urutkan: EPID Z-A</option>
+                </select>
+              </div>
             </div>
-            <div class="pd3i-search-actions">
-              <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
-                <i class="fas fa-search"></i> Cari Data Existing
-              </button>
-              <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact">
-                <option value="updated_desc">Urutkan: Terbaru dulu</option>
-                <option value="name_asc">Urutkan: Nama A-Z</option>
-                <option value="name_desc">Urutkan: Nama Z-A</option>
-                <option value="birth_asc">Urutkan: Tanggal lahir lama → baru</option>
-                <option value="birth_desc">Urutkan: Tanggal lahir baru → lama</option>
-                <option value="epid_asc">Urutkan: EPID A-Z</option>
-                <option value="epid_desc">Urutkan: EPID Z-A</option>
-              </select>
-            </div>
-            <div id="search-results" class="hidden mt-4 border border-blue-200 rounded-lg bg-white overflow-hidden"></div>
-            <div id="search-context-helper" class="pd3i-helper-text">Cari berdasarkan EPID, nama pasien, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing sesuai tahap kerja yang dipilih.</div>
+            <div id="search-results" class="hidden mt-4 pd3i-search-results-panel"></div>
+            <div id="search-context-helper" class="pd3i-helper-text pd3i-search-context-helper">Cari berdasarkan EPID, nama pasien, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing sesuai tahap kerja yang dipilih.</div>
           </div>
 
           <div id="search-placeholder" class="pd3i-empty-state">
@@ -562,20 +571,27 @@
                 <div id="workflow-stage-helper" class="pd3i-helper-text mt-3">Tahap input, verifikasi, hasil pemeriksaan, dan update status dipisah. Simpan input awal dulu, lalu buka record existing untuk tahap lanjutan.</div>
               </div>
 
-              <div class="pd3i-shell-card pd3i-sticky-card">
+              <div class="pd3i-shell-card pd3i-sticky-card pd3i-action-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Aksi utama</div>
                     <h3 class="pd3i-card-title">Submit & kontrol</h3>
                   </div>
+                  <span class="pd3i-badge-soft">Safe submit</span>
                 </div>
-                <button type="submit" id="btn-submit" class="pd3i-submit-button">
-                  <i class="fas fa-save"></i> Simpan Data ke Database
-                </button>
-                <button type="button" id="btn-cancel-edit" class="hidden pd3i-cancel-button">
-                  Batal Edit / Reset Form
-                </button>
-                <div class="pd3i-helper-text mt-3">Submit akan melewati validasi form, numeric guard, dan rule epidemiologis awal sebelum disimpan.</div>
+                <div class="pd3i-action-panel-note">
+                  <i class="fas fa-shield-heart"></i>
+                  <span>Simpan record setelah lolos validasi wajib, numeric guard, dan rule epidemiologis awal.</span>
+                </div>
+                <div class="pd3i-submit-stack">
+                  <button type="submit" id="btn-submit" class="pd3i-submit-button">
+                    <i class="fas fa-save"></i> Simpan Data ke Database
+                  </button>
+                  <button type="button" id="btn-cancel-edit" class="hidden pd3i-cancel-button">
+                    <i class="fas fa-rotate-left"></i> Batal Edit / Reset Form
+                  </button>
+                </div>
+                <div class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke form/input bersih.</div>
               </div>
 
               <div class="pd3i-shell-card pd3i-sticky-card">
