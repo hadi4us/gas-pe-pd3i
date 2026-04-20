@@ -2485,7 +2485,7 @@
     setTimeout(function() {
       if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
       if (String(summaryWrap.textContent || '').indexOf('Memuat ringkasan kerja') !== -1) {
-        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-amber-700">Ringkasan kerja terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda Form.</div>';
+        summaryWrap.innerHTML = '<div class="pd3i-empty-state">Ringkasan kerja terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda Form.</div>';
       }
     }, 8000);
 
@@ -2511,9 +2511,9 @@
             return;
           }
           inboxWrap.innerHTML = items.map(function(item) {
-            const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\'");
-            const safeDx = String(item.dx || '').replace(/'/g, "\'");
-            return `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
+            const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
+            const dxArg = JSON.stringify(String(item.dx || ''));
+            return `<button type="button" class="pd3i-inbox-item" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
           }).join('');
         } catch (err) {
           console.error('renderOverviewWorkspace success handler failed:', err);
@@ -2649,8 +2649,8 @@
     if (pendingVerification.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2 pd3i-inbox-list">';
       pendingVerification.forEach(function(item) {
-        const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
-        const safeDx = String(item.dx || '').replace(/'/g, "\\'");
+        const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
+        const dxArg = JSON.stringify(String(item.dx || ''));
         const safeTitle = escapeHtml(item.nama || '-');
         const safeMeta = escapeHtml([
           [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
@@ -2658,7 +2658,7 @@
           item.recordId || item.epid || '-',
           'status ' + (item.statusVerifikasi || 'Pending')
         ].filter(Boolean).join(' • '));
-        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
+        html += `<button type="button" class="pd3i-inbox-item" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2666,8 +2666,8 @@
     if (revisionQueue.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2 pd3i-inbox-list">';
       revisionQueue.forEach(function(item) {
-        const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
-        const safeDx = String(item.dx || '').replace(/'/g, "\\'");
+        const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
+        const dxArg = JSON.stringify(String(item.dx || ''));
         const safeTitle = escapeHtml(item.nama || '-');
         const safeMeta = escapeHtml([
           [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
@@ -2675,7 +2675,7 @@
           item.recordId || item.epid || '-',
           item.catatanVerifikasi ? ('Catatan: ' + item.catatanVerifikasi) : ''
         ].filter(Boolean).join(' • '));
-        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
+        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -4329,7 +4329,7 @@
           const searchResultsBox = document.getElementById("search-results");
           if (searchResultsBox) {
             searchResultsBox.classList.remove("hidden");
-            searchResultsBox.innerHTML = `<div class="p-4 text-sm text-slate-500 text-center"><i class="fas fa-spinner fa-spin mr-2"></i>Mencari data...</div>`;
+            searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Mencari data existing...</span></div>`;
           }
 
           google.script.run
@@ -4342,7 +4342,7 @@
             .withFailureHandler(function(err) {
               console.error("searchRecords failed:", err);
               if (searchResultsBox) {
-                searchResultsBox.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">Gagal mencari data. Silakan coba lagi.</div>`;
+                searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-error">Gagal mencari data. Silakan coba lagi.</div>`;
               }
             })
             .searchRecords(dx, filters, SESSION_TOKEN);
@@ -4387,13 +4387,14 @@
           html += `<div class="pd3i-search-results-wrap">`;
 
           results.forEach(function(item, index) {
-            const safeRecordKey = String(item.recordKey || item.recordId || item.epid || "").replace(/'/g, "\\'");
+            const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ""));
             const statusKasus = item.statusKasus || "Belum ditentukan";
             const statusVerifikasi = item.statusVerifikasi || "Pending";
             const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
               ? (item.interpretasiSampel || "Menunggu hasil")
               : "Tidak ada sampel";
             const resolvedDx = String(item.dx || dx || '').trim();
+            const dxArg = JSON.stringify(resolvedDx);
             html += `<div class="pd3i-search-result-card">
               <div class="pd3i-search-result-leading">
                 <span class="pd3i-search-result-index">${index + 1}</span>
@@ -4419,7 +4420,7 @@
                 </div>
               </div>
               <div class="pd3i-search-result-cta-wrap">
-                <button type="button" class="pd3i-search-result-action" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${resolvedDx}')">
+                <button type="button" class="pd3i-search-result-action" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>
                   <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
                 </button>
               </div>
