@@ -185,6 +185,124 @@ function _buildDashboardRecordSummary_(row, idxMap) {
   };
 }
 
+function getOverviewSummary(token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) {
+    return { summary: { pendingVerification: 0, revisionQueue: 0 }, pendingVerification: [], revisionQueue: [] };
+  }
+
+  try {
+    var cache = null;
+    try {
+      cache = CacheService.getScriptCache();
+    } catch (cacheErr) {
+      cache = null;
+    }
+
+    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+    const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
+    const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
+    const cacheKey = ['overview-summary', role, userUnit, userKode].join(':');
+
+    if (cache) {
+      try {
+        const cached = cache.get(cacheKey);
+        if (cached) return JSON.parse(cached);
+      } catch (readErr) {}
+    }
+
+    const pendingVerification = [];
+    const revisionQueue = [];
+
+    (SUPPORTED_DX_ || []).forEach(function(dx) {
+      const sheetData = _readSheetWithCache_(dx + '_Raw');
+      if (!sheetData || !sheetData.headers || !sheetData.rows || !sheetData.rows.length) return;
+
+      const headers = sheetData.headers;
+      const rows = sheetData.rows;
+      const idxRecordId = headers.indexOf('ID Registrasi Kasus');
+      const idxEpid = headers.indexOf('Nomor EPID');
+      const idxNama = headers.indexOf('Nama');
+      const idxKecamatan = headers.indexOf('Kecamatan');
+      const idxKelurahan = headers.indexOf('Kelurahan');
+      const idxVerifikasi = headers.indexOf('Status Verifikasi EPID');
+      const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
+      const idxTimestamp = headers.indexOf('Timestamp');
+      const idxUpdated = headers.indexOf('Updated At');
+      const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
+      const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+
+      rows.forEach(function(row) {
+        const recordKey = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : (idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '');
+        if (!recordKey) return;
+
+        const statusVerifikasi = idxVerifikasi !== -1 ? String(row[idxVerifikasi] || '').trim() : '';
+        const normalizedStatus = String(statusVerifikasi || 'Pending').trim().toUpperCase();
+        const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? _normalizeWilayahKey_(row[idxPuskesmasPengampu]) : '';
+        const kodePuskesmas = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(row[idxKodePuskesmas]) : '';
+        const scopeMatch = (userKode && kodePuskesmas && userKode === kodePuskesmas) || (userUnit && puskesmasPengampu && userUnit === puskesmasPengampu);
+
+        const item = {
+          dx: dx,
+          recordKey: recordKey,
+          recordId: idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '',
+          epid: idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '',
+          nama: idxNama !== -1 ? String(row[idxNama] || '').trim() : '',
+          kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '',
+          kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '',
+          statusVerifikasi: statusVerifikasi || 'Pending',
+          catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || '').trim() : '',
+          inputAt: idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxTimestamp]) : '',
+          updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
+        };
+
+        if (role === 'admin' && normalizedStatus === 'PENDING') {
+          pendingVerification.push(item);
+        }
+        if (normalizedStatus === 'PERLU REVISI' && (role === 'admin' || scopeMatch)) {
+          revisionQueue.push(item);
+        }
+      });
+    });
+
+    function sortQueue(items) {
+      return (items || []).sort(function(a, b) {
+        const aa = String(a.updatedAt || a.inputAt || '');
+        const bb = String(b.updatedAt || b.inputAt || '');
+        if (aa === bb) return String(a.nama || '').localeCompare(String(b.nama || ''));
+        return aa < bb ? 1 : -1;
+      });
+    }
+
+    const pendingSorted = sortQueue(pendingVerification);
+    const revisionSorted = sortQueue(revisionQueue);
+    const result = {
+      summary: {
+        pendingVerification: pendingSorted.length,
+        revisionQueue: revisionSorted.length
+      },
+      pendingVerification: pendingSorted.slice(0, 6),
+      revisionQueue: revisionSorted.slice(0, 6)
+    };
+
+    if (cache) {
+      try {
+        cache.put(cacheKey, JSON.stringify(result), 120);
+      } catch (writeErr) {}
+    }
+
+    return result;
+  } catch (e) {
+    console.error('[getOverviewSummary] Error:', e);
+    return {
+      summary: { pendingVerification: 0, revisionQueue: 0 },
+      pendingVerification: [],
+      revisionQueue: [],
+      error: String(e)
+    };
+  }
+}
+
 function _matchesDashboardDrilldown_(record, type, key) {
   var normalizedType = String(type || '').trim().toLowerCase();
   var rawKey = String(key || '').trim();
