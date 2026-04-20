@@ -2651,7 +2651,14 @@
       pendingVerification.forEach(function(item) {
         const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
         const safeDx = String(item.dx || '').replace(/'/g, "\\'");
-        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.dx || '-'} • ${item.recordId || item.epid || '-'} • status ${item.statusVerifikasi || 'Pending'}</small></button>`;
+        const safeTitle = escapeHtml(item.nama || '-');
+        const safeMeta = escapeHtml([
+          [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
+          item.dx || '-',
+          item.recordId || item.epid || '-',
+          'status ' + (item.statusVerifikasi || 'Pending')
+        ].filter(Boolean).join(' • '));
+        html += `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -2661,7 +2668,14 @@
       revisionQueue.forEach(function(item) {
         const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\\'");
         const safeDx = String(item.dx || '').replace(/'/g, "\\'");
-        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${item.nama || '-'}</strong><small>${item.kecamatan || '-'} / ${item.kelurahan || '-'} • ${item.dx || '-'} • ${item.recordId || item.epid || '-'}${item.catatanVerifikasi ? ` • Catatan: ${item.catatanVerifikasi}` : ''}</small></button>`;
+        const safeTitle = escapeHtml(item.nama || '-');
+        const safeMeta = escapeHtml([
+          [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
+          item.dx || '-',
+          item.recordId || item.epid || '-',
+          item.catatanVerifikasi ? ('Catatan: ' + item.catatanVerifikasi) : ''
+        ].filter(Boolean).join(' • '));
+        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
       });
       html += '</div></div>';
     }
@@ -3440,7 +3454,11 @@
         .then(res => res.json())
         .then(data => {
           data.forEach(item => {
-            nextEl.innerHTML += `<option value="${item.name}" data-id="${item.id}">${item.name}</option>`;
+            const option = document.createElement('option');
+            option.value = String(item && item.name || '');
+            option.setAttribute('data-id', String(item && item.id || ''));
+            option.textContent = String(item && item.name || '');
+            nextEl.appendChild(option);
           });
         })
         .catch(err => console.error("load wilayah failed:", err));
