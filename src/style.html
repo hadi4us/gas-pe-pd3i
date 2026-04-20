@@ -3194,3 +3194,340 @@ body.pd3i-body {
     width: 100%;
   }
 }
+
+/* ==========================================================
+   TABLER SCALE-UP PASS 5 — MOBILE / FINAL CONSISTENCY
+   ========================================================== */
+.pd3i-card-header-row {
+  gap: 0.85rem;
+}
+
+.pd3i-card-header-row.compact {
+  gap: 0.75rem;
+}
+
+.pd3i-badge-soft {
+  min-height: 32px;
+  padding: 0.42rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.pd3i-helper-text {
+  line-height: 1.6;
+}
+
+.pd3i-empty-state,
+.pd3i-dashboard-state {
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.82);
+}
+
+.pd3i-primary-button,
+.pd3i-ghost-button,
+.pd3i-admin-button,
+.pd3i-search-result-action,
+.pd3i-wizard-button,
+.pd3i-submit-button,
+.pd3i-cancel-button,
+.pd3i-inline-button {
+  min-height: 48px;
+}
+
+.pd3i-overview-panel,
+.pd3i-search-card,
+.pd3i-input-launcher-card,
+.pd3i-dashboard-shell,
+.pd3i-sidebar-workcard,
+.pd3i-form-card-section {
+  scroll-margin-top: 92px;
+}
+
+.pd3i-search-result-copy,
+.pd3i-inbox-item small,
+.pd3i-admin-queue-row small,
+.pd3i-hotspot-legend-item {
+  line-height: 1.55;
+}
+
+.pd3i-search-result-card,
+.pd3i-admin-queue-row,
+.pd3i-dashboard-drilldown-item,
+.pd3i-hotspot-list-item,
+.pd3i-inbox-item,
+.pd3i-overview-action-btn,
+.pd3i-overview-summary-card,
+.pd3i-summary-item,
+.pd3i-workflow-status-item {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.pd3i-search-result-card:hover,
+.pd3i-admin-queue-row:hover,
+.pd3i-dashboard-drilldown-item:hover,
+.pd3i-hotspot-list-item:hover,
+.pd3i-inbox-item:hover,
+.pd3i-overview-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+  .pd3i-card-header-row,
+  .pd3i-card-header-row.compact {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pd3i-badge-soft {
+    align-self: flex-start;
+  }
+
+  .pd3i-topbar-actions {
+    gap: 0.55rem;
+  }
+
+  .pd3i-topbar-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .pd3i-user-badge,
+  .pd3i-ghost-button,
+  .pd3i-primary-button,
+  .pd3i-admin-button {
+    justify-content: center;
+  }
+
+  .pd3i-search-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pd3i-search-sort-select,
+  #btn-search-epid {
+    width: 100%;
+    max-width: none;
+  }
+
+  .pd3i-admin-queue-filterbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pd3i-admin-queue-filterbar .pd3i-shell-input,
+  .pd3i-admin-queue-filterbar .pd3i-inline-button {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .pd3i-topbar {
+    margin: 0.6rem 0.6rem 0;
+    padding: 0.8rem;
+    border-radius: 20px;
+  }
+
+  .pd3i-page-title {
+    font-size: 1.45rem;
+    line-height: 1.15;
+  }
+
+  .pd3i-page-subtitle,
+  .pd3i-hero-copy,
+  .pd3i-dashboard-hero-copy {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .pd3i-topbar-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pd3i-topbar-actions > * {
+    width: 100%;
+  }
+
+  .pd3i-user-badge,
+  .pd3i-ghost-button,
+  .pd3i-primary-button,
+  .pd3i-admin-button,
+  #btn-dashboard-back-to-workspace,
+  .pd3i-dashboard-export {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pd3i-admin-dropdown {
+    position: static;
+    width: 100%;
+    margin-top: 0.55rem;
+    box-shadow: var(--pd3i-shadow-sm);
+  }
+
+  .pd3i-content {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+    padding-bottom: 0.85rem;
+  }
+
+  .pd3i-shell-card,
+  .pd3i-overview-panel,
+  .pd3i-dashboard-shell,
+  .pd3i-search-card,
+  .pd3i-input-launcher-card,
+  .pd3i-sidebar-workcard,
+  .pd3i-form-card-section,
+  .pd3i-search-toolbar,
+  .pd3i-dashboard-toolbar-panel,
+  .pd3i-search-results-panel {
+    border-radius: 18px;
+  }
+
+  .pd3i-hero-card {
+    padding: 1.1rem 1rem;
+  }
+
+  .pd3i-hero-metrics,
+  .pd3i-overview-summary-grid,
+  .pd3i-overview-actions,
+  .pd3i-dashboard-submetric-grid {
+    gap: 0.7rem;
+  }
+
+  .pd3i-mini-stat,
+  .pd3i-overview-summary-card,
+  .pd3i-overview-action-btn,
+  .pd3i-summary-item,
+  .pd3i-workflow-status-item,
+  .pd3i-search-result-card,
+  .pd3i-admin-queue-row,
+  .pd3i-dashboard-drilldown-item,
+  .pd3i-hotspot-list-item,
+  .pd3i-inbox-item {
+    border-radius: 16px;
+  }
+
+  .pd3i-search-results-head,
+  .pd3i-search-results-wrap,
+  .pd3i-dashboard-toolbar-panel,
+  .pd3i-search-toolbar,
+  .pd3i-dashboard-panel,
+  .pd3i-dashboard-metric-card,
+  .pd3i-dashboard-alert,
+  .pd3i-wizard-progress-wrap,
+  .pd3i-action-panel-note {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .pd3i-search-results-wrap,
+  .pd3i-dashboard-content {
+    gap: 0.75rem;
+  }
+
+  .pd3i-workflow-intent-card,
+  .pd3i-stepper-item {
+    padding: 0.85rem 0.9rem;
+    border-radius: 16px;
+  }
+
+  .pd3i-stepper-index,
+  .pd3i-workflow-intent-index,
+  .pd3i-search-result-index {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+
+  .pd3i-search-result-meta,
+  .pd3i-admin-queue-meta {
+    gap: 0.4rem;
+  }
+
+  .pd3i-search-result-badge,
+  .pd3i-admin-queue-pill,
+  .pd3i-badge-soft {
+    font-size: 0.7rem;
+  }
+
+  .pd3i-dashboard-month-row {
+    grid-template-columns: 64px minmax(0, 1fr) 28px;
+    gap: 0.55rem;
+  }
+
+  .pd3i-dashboard-month-label,
+  .pd3i-dashboard-month-value {
+    font-size: 0.72rem;
+  }
+
+  .pd3i-hotspot-map {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pd3i-page-title {
+    font-size: 1.28rem;
+  }
+
+  .pd3i-card-title,
+  .pd3i-dashboard-toolbar-title {
+    font-size: 1rem;
+  }
+
+  .pd3i-card-eyebrow,
+  .pd3i-page-eyebrow,
+  .pd3i-hero-badge {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
+  .pd3i-helper-text,
+  .pd3i-note-copy,
+  .pd3i-overview-action-copy,
+  .pd3i-search-result-copy,
+  .pd3i-dashboard-state,
+  .pd3i-empty-state {
+    font-size: 0.84rem;
+  }
+
+  .pd3i-topbar,
+  .pd3i-shell-card,
+  .pd3i-overview-panel,
+  .pd3i-dashboard-shell,
+  .pd3i-search-card,
+  .pd3i-input-launcher-card,
+  .pd3i-sidebar-workcard,
+  .pd3i-form-card-section {
+    border-radius: 16px;
+  }
+
+  .pd3i-search-toolbar,
+  .pd3i-dashboard-toolbar-panel,
+  .pd3i-search-results-panel,
+  .pd3i-admin-dropdown,
+  .pd3i-summary-item,
+  .pd3i-workflow-status-item,
+  .pd3i-search-result-card,
+  .pd3i-admin-queue-row,
+  .pd3i-dashboard-drilldown-item,
+  .pd3i-hotspot-list-item,
+  .pd3i-inbox-item,
+  .pd3i-overview-action-btn,
+  .pd3i-overview-summary-card,
+  .pd3i-empty-state,
+  .pd3i-dashboard-state {
+    border-radius: 14px;
+  }
+
+  .pd3i-mobile-nav-toggle,
+  .pd3i-sidebar-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+}
