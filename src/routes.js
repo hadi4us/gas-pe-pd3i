@@ -204,6 +204,39 @@ function fetchRefImunData(token) {
   return getRefImunisasi(token);
 }
 
+function _collectFaskesFallbackFromSheet_(sheetName, fieldCandidates) {
+  const sheet = getSheetOrNull_(sheetName);
+  if (!sheet) return [];
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return [];
+  const headers = values[0].map(function(h) { return String(h || '').trim(); });
+  const rows = values.slice(1);
+  const findIdx = function(candidates) {
+    for (var i = 0; i < candidates.length; i++) {
+      var idx = headers.indexOf(candidates[i]);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+  const idxNama = findIdx(fieldCandidates.names || []);
+  const idxKode = findIdx(fieldCandidates.codes || []);
+  const idxAktif = findIdx(fieldCandidates.active || []);
+  if (idxNama === -1) return [];
+
+  return rows.map(function(row) {
+    const nama = String(row[idxNama] || '').trim();
+    const kode = idxKode !== -1 ? String(row[idxKode] || '').trim() : '';
+    const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
+    if (!nama) return null;
+    if (aktif && ['0', 'FALSE', 'NO', 'N', 'TIDAK', 'NONAKTIF'].indexOf(aktif) !== -1) return null;
+    return {
+      nama: nama,
+      jenis: 'PUSKESMAS',
+      key: kode || _normalizeRefKey_(nama)
+    };
+  }).filter(Boolean);
+}
+
 function getFaskesFromSheet(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
@@ -217,58 +250,89 @@ function getFaskesFromSheet(token) {
 
   if (!raw) {
     const sheet = getSheetOrNull_('REF_FASKES');
-    if (!sheet) return [];
-    raw = sheet.getDataRange().getValues();
-    try {
-      if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.setSheetData === 'function') {
-        Cache_Manager.setSheetData('REF_FASKES', raw);
-      }
-    } catch (e) {}
+    if (sheet) {
+      raw = sheet.getDataRange().getValues();
+      try {
+        if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.setSheetData === 'function') {
+          Cache_Manager.setSheetData('REF_FASKES', raw);
+        }
+      } catch (e) {}
+    }
   }
 
-  if (!raw || raw.length < 2) return [];
+  var items = [];
+  if (raw && raw.length >= 2) {
+    const headers = raw[0].map(function(h) { return String(h || '').trim(); });
+    const rows = raw.slice(1);
+    const findIdx = function(candidates) {
+      for (var i = 0; i < candidates.length; i++) {
+        var idx = headers.indexOf(candidates[i]);
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
 
-  const headers = raw[0].map(function(h) { return String(h || '').trim(); });
-  const rows = raw.slice(1);
-  const findIdx = function(candidates) {
-    for (var i = 0; i < candidates.length; i++) {
-      var idx = headers.indexOf(candidates[i]);
-      if (idx !== -1) return idx;
-    }
-    return -1;
-  };
+    const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
+    const idxNama = findIdx(['Nama', 'Nama Faskes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit']);
+    const idxKey = findIdx(['Key', 'FaskesKey', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
+    const idxAktif = findIdx(['Aktif', 'Status Aktif', 'IsActive', 'Active']);
 
-  const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
-  const idxNama = findIdx(['Nama', 'Nama Faskes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit']);
-  const idxKey = findIdx(['Key', 'FaskesKey', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
-  const idxAktif = findIdx(['Aktif', 'Status Aktif', 'IsActive', 'Active']);
+    items = rows
+      .map(function(row) {
+        const nama = idxNama !== -1 ? String(row[idxNama] || '').trim() : '';
+        const jenis = idxJenis !== -1 ? _normalizeFaskesJenis_(row[idxJenis]) : '';
+        const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
+        const key = idxKey !== -1 ? String(row[idxKey] || '').trim() : _normalizeRefKey_(nama);
+        if (!nama) return null;
+        if (aktif && ['0', 'FALSE', 'NO', 'N', 'TIDAK', 'NONAKTIF'].indexOf(aktif) !== -1) return null;
 
-  return rows
-    .map(function(row) {
-      const nama = idxNama !== -1 ? String(row[idxNama] || '').trim() : '';
-      const jenis = idxJenis !== -1 ? _normalizeFaskesJenis_(row[idxJenis]) : '';
-      const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
-      const key = idxKey !== -1 ? String(row[idxKey] || '').trim() : _normalizeRefKey_(nama);
-      if (!nama) return null;
-      if (aktif && ['0', 'FALSE', 'NO', 'N', 'TIDAK', 'NONAKTIF'].indexOf(aktif) !== -1) return null;
+        const item = {
+          nama: nama,
+          jenis: jenis,
+          key: key
+        };
+        headers.forEach(function(h, idx) {
+          if (!h) return;
+          item[h] = row[idx];
+        });
+        return item;
+      })
+      .filter(Boolean);
+  }
 
-      const item = {
-        nama: nama,
-        jenis: jenis,
-        key: key
-      };
-      headers.forEach(function(h, idx) {
-        if (!h) return;
-        item[h] = row[idx];
-      });
-      return item;
-    })
-    .filter(Boolean)
-    .sort(function(a, b) {
-      const jenisA = String(a.jenis || '').localeCompare(String(b.jenis || ''));
-      if (jenisA !== 0) return jenisA;
-      return String(a.nama || '').localeCompare(String(b.nama || ''));
+  const fallbackPuskesmas = []
+    .concat(_collectFaskesFallbackFromSheet_('REF_PENGAMPU', {
+      names: ['NamaPuskesmas', 'Puskesmas Pengampu', 'Nama Unit'],
+      codes: ['KodePuskesmas'],
+      active: ['Status']
+    }))
+    .concat(_collectFaskesFallbackFromSheet_('REF_USER', {
+      names: ['UnitKerja', 'Nama'],
+      codes: ['KodePuskesmas'],
+      active: ['StatusAktif']
+    }));
+
+  const merged = [];
+  const seen = {};
+  items.concat(fallbackPuskesmas).forEach(function(item) {
+    const nama = String(item && item.nama || '').trim();
+    if (!nama) return;
+    const jenis = _normalizeFaskesJenis_(item.jenis || 'PUSKESMAS');
+    const uniqueKey = jenis + '::' + _normalizeRefKey_(item.key || nama);
+    if (seen[uniqueKey]) return;
+    seen[uniqueKey] = true;
+    merged.push({
+      nama: nama,
+      jenis: jenis,
+      key: String(item.key || _normalizeRefKey_(nama)).trim()
     });
+  });
+
+  return merged.sort(function(a, b) {
+    const jenisA = String(a.jenis || '').localeCompare(String(b.jenis || ''));
+    if (jenisA !== 0) return jenisA;
+    return String(a.nama || '').localeCompare(String(b.nama || ''));
+  });
 }
 
 // ─── Daftar semua DX yang didukung ───────────────────────────────────────────
