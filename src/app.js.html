@@ -2112,7 +2112,7 @@
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
     if (overviewSection) overviewSection.classList.toggle('hidden', normalized !== 'overview');
-    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace);
+    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace || hasOpenRecord);
     if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
     if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
 
@@ -2252,10 +2252,13 @@
     const selector = document.getElementById('form-selector');
     const searchContainer = document.getElementById('search-container');
     const searchPlaceholder = document.getElementById('search-placeholder');
-    const requiresDiagnosis = ACTIVE_SIDEBAR_WORKSPACE === 'input';
+    const launcherSection = document.getElementById('section-input-launcher');
+    const hasOpenRecord = isEditMode || isViewerSession();
+    const requiresDiagnosis = ACTIVE_SIDEBAR_WORKSPACE === 'input' && !hasOpenRecord;
     const dx = String(selector?.value || '').trim().toUpperCase();
     const cfg = getDxConfigSafe(dx);
 
+    if (launcherSection) launcherSection.classList.toggle('hidden', !requiresDiagnosis);
     if (selectorCard) selectorCard.classList.toggle('hidden', !requiresDiagnosis);
     if (selectorBadge) selectorBadge.textContent = requiresDiagnosis ? 'Mandatory' : 'Auto';
     if (selectorHelper) {
