@@ -100,6 +100,21 @@ function _normalizeRefKey_(value) {
     .replace(/[^A-Z0-9]+/g, "");
 }
 
+function _normalizeFaskesJenis_(value) {
+  var raw = String(value || '').trim().toUpperCase();
+  if (!raw) return '';
+  raw = raw.replace(/[\/_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (raw === 'PKM' || raw.indexOf('PUSKESMAS') !== -1) return 'PUSKESMAS';
+  if (raw === 'RS' || raw.indexOf('RUMAH SAKIT') !== -1 || raw.indexOf('HOSPITAL') !== -1) return 'RUMAH SAKIT';
+  if (raw.indexOf('KLINIK') !== -1) return 'KLINIK';
+  if (raw.indexOf('TPMB') !== -1 || raw.indexOf('BPM') !== -1 || raw.indexOf('BIDAN PRAKTIK') !== -1) return 'TPMB';
+  if (raw.indexOf('PRAKTIK') !== -1 || raw.indexOf('DOKTER') !== -1) return 'PRAKTIK MANDIRI';
+  if (raw.indexOf('LAB') !== -1) return 'LABORATORIUM';
+  if (raw.indexOf('MASYARAKAT') !== -1) return 'MASYARAKAT';
+  if (raw.indexOf('LAIN') !== -1) return 'LAINNYA';
+  return raw;
+}
+
 function getRecordByKey(dx, recordKey, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
@@ -223,7 +238,7 @@ function getFaskesFromSheet(token) {
     return -1;
   };
 
-  const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Tipe', 'Kategori']);
+  const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
   const idxNama = findIdx(['Nama', 'Nama Faskes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit']);
   const idxKey = findIdx(['Key', 'FaskesKey', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
   const idxAktif = findIdx(['Aktif', 'Status Aktif', 'IsActive', 'Active']);
@@ -231,7 +246,7 @@ function getFaskesFromSheet(token) {
   return rows
     .map(function(row) {
       const nama = idxNama !== -1 ? String(row[idxNama] || '').trim() : '';
-      const jenis = idxJenis !== -1 ? String(row[idxJenis] || '').trim() : '';
+      const jenis = idxJenis !== -1 ? _normalizeFaskesJenis_(row[idxJenis]) : '';
       const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
       const key = idxKey !== -1 ? String(row[idxKey] || '').trim() : _normalizeRefKey_(nama);
       if (!nama) return null;

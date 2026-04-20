@@ -102,6 +102,20 @@
       .getFaskesFromSheet(SESSION_TOKEN);
   };
 
+  function normalizeFaskesJenisLabel(value) {
+    const raw = String(value || "").trim().toUpperCase().replace(/[\/_-]+/g, " ").replace(/\s+/g, " ").trim();
+    if (!raw) return "";
+    if (raw === "PKM" || raw.includes("PUSKESMAS")) return "PUSKESMAS";
+    if (raw === "RS" || raw.includes("RUMAH SAKIT") || raw.includes("HOSPITAL")) return "RUMAH SAKIT";
+    if (raw.includes("KLINIK")) return "KLINIK";
+    if (raw.includes("TPMB") || raw.includes("BPM") || raw.includes("BIDAN PRAKTIK")) return "TPMB";
+    if (raw.includes("PRAKTIK") || raw.includes("DOKTER")) return "PRAKTIK MANDIRI";
+    if (raw.includes("LAB")) return "LABORATORIUM";
+    if (raw.includes("MASYARAKAT")) return "MASYARAKAT";
+    if (raw.includes("LAIN")) return "LAINNYA";
+    return raw;
+  }
+
   function initChoices(jenis, selectedValue) {
     const selectEl = document.getElementById("Nama unit pelapor");
     if (!selectEl) return;
@@ -116,13 +130,13 @@
     selectEl.disabled = false;
     selectEl.innerHTML = '<option value="">-- Pilih Unit --</option>';
 
-    const upper = String(jenis || "").trim().toUpperCase();
+    const upper = normalizeFaskesJenisLabel(jenis);
 
     if (!upper) {
       selectEl.disabled = true;
       selectEl.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
     } else if (!["MASYARAKAT", "LAINNYA"].includes(upper)) {
-      const filtered = (MASTER_FASKES || []).filter(f => String(f.jenis || "").trim().toUpperCase() === upper);
+      const filtered = (MASTER_FASKES || []).filter(f => normalizeFaskesJenisLabel(f.jenis) === upper);
 
       filtered.forEach(f => {
         const opt = document.createElement("option");
@@ -185,7 +199,7 @@
     selectEl.innerHTML = '<option value="">-- Pilih Rumah Sakit --</option>';
 
     const filtered = (MASTER_FASKES || []).filter(f =>
-      String(f.jenis || "").trim().toUpperCase() === "RUMAH SAKIT"
+      normalizeFaskesJenisLabel(f.jenis) === "RUMAH SAKIT"
     );
 
     filtered.forEach(f => {
