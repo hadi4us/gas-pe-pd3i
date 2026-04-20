@@ -378,7 +378,7 @@
                 </div>
               </section>
 
-              <section id="section-pelapor" class="pd3i-shell-card pd3i-form-card">
+              <section id="section-pelapor" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 1A</div>
@@ -389,7 +389,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container"></div>
               </section>
 
-              <section id="section-pasien" class="pd3i-shell-card pd3i-form-card">
+              <section id="section-pasien" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 1B</div>
@@ -400,7 +400,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container"></div>
               </section>
 
-              <section id="section-specific" class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight">
+              <section id="section-specific" class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 1C</div>
@@ -411,7 +411,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container"></div>
               </section>
 
-              <section id="section-verifikasi" class="pd3i-shell-card pd3i-form-card">
+              <section id="section-verifikasi" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-verifikasi">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 2</div>
@@ -423,7 +423,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="verifikasi-fields-container"></div>
               </section>
 
-              <section id="section-sampel" class="pd3i-shell-card pd3i-form-card">
+              <section id="section-sampel" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-sampel">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 3</div>
@@ -434,7 +434,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="sampel-fields-container"></div>
               </section>
 
-              <section id="section-status" class="pd3i-shell-card pd3i-form-card">
+              <section id="section-status" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-status">
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 4</div>
@@ -473,12 +473,13 @@
 
               <div id="alert-box" class="hidden pd3i-alert-card"></div>
 
-              <div class="pd3i-shell-card pd3i-sticky-card">
+              <div class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-summary-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Ringkasan kasus</div>
                     <h3 class="pd3i-card-title">Summary Panel</h3>
                   </div>
+                  <span class="pd3i-badge-soft">Live summary</span>
                 </div>
                 <div class="pd3i-summary-grid">
                   <div class="pd3i-summary-item">
@@ -544,12 +545,13 @@
                 </div>
               </div>
 
-              <div class="pd3i-shell-card pd3i-sticky-card">
+              <div class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-wizard-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Wizard</div>
                     <h3 class="pd3i-card-title">Navigasi langkah</h3>
                   </div>
+                  <span class="pd3i-badge-soft">Step control</span>
                 </div>
                 <div class="pd3i-wizard-progress-wrap">
                   <div class="pd3i-wizard-progress-meta">
@@ -594,12 +596,13 @@
                 <div class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke form/input bersih.</div>
               </div>
 
-              <div class="pd3i-shell-card pd3i-sticky-card">
+              <div class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-workflow-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Workflow</div>
                     <h3 class="pd3i-card-title">Ringkasan alur record aktif</h3>
                   </div>
+                  <span class="pd3i-badge-soft">Stage tracker</span>
                 </div>
                 <div class="pd3i-workflow-status-list">
                   <div class="pd3i-workflow-status-item">
