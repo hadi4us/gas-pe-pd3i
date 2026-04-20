@@ -2439,6 +2439,9 @@
   }
 
   function getQueueBucketMeta(item) {
+    if (item && item.__queueStatusLabel) {
+      return { label: String(item.__queueStatusLabel || '').trim() || 'Aktif', className: String(item.__queueStatusClass || 'is-warning').trim() || 'is-warning' };
+    }
     const status = String(item && item.statusVerifikasi || '').trim();
     if (status === 'Perlu Revisi') {
       return { label: 'Perlu revisi', className: 'is-danger' };
@@ -2452,6 +2455,7 @@
   function renderQueueTable(items, options) {
     const opts = options || {};
     const rows = Array.isArray(items) ? items : [];
+    const actionLabel = String(opts.actionLabel || 'Buka').trim() || 'Buka';
     if (!rows.length) {
       return `<div class="pd3i-empty-state">${escapeHtml(opts.emptyText || 'Belum ada antrian kerja penting saat ini.')}</div>`;
     }
@@ -2486,7 +2490,7 @@
         <div class="pd3i-queue-col" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></div>
         <div class="pd3i-queue-col" data-label="Update">${escapeHtml(updateText)}</div>
         <div class="pd3i-queue-col pd3i-queue-col-action" data-label="Aksi">
-          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>Buka</button>
+          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>${escapeHtml(actionLabel)}</button>
         </div>
       </div>`;
     });
@@ -2675,7 +2679,9 @@
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const pendingVerification = (data && data.pendingVerification) || [];
     const revisionQueue = (data && data.revisionQueue) || [];
-    const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0 };
+    const sampleQueue = (data && data.sampleQueue) || [];
+    const statusQueue = (data && data.statusQueue) || [];
+    const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 };
     const verifCountEl = document.getElementById('intent-count-section-verifikasi');
     const pelaporCountEl = document.getElementById('intent-count-section-pelapor');
     const sampelCountEl = document.getElementById('intent-count-section-sampel');
@@ -2689,19 +2695,30 @@
       pelaporCountEl.textContent = String(summary.revisionQueue || 0);
       pelaporCountEl.classList.toggle('hidden', !(summary.revisionQueue > 0 && normalizeUiRole(SESSION_USER && SESSION_USER.role) !== 'admin'));
     }
-    if (sampelCountEl) sampelCountEl.classList.add('hidden');
-    if (statusCountEl) statusCountEl.classList.add('hidden');
-
-    if (workspace === 'sampel' || workspace === 'status') {
-      box.classList.add('hidden');
-      box.innerHTML = '';
-      return;
+    if (sampelCountEl) {
+      sampelCountEl.textContent = String(summary.sampleQueue || 0);
+      sampelCountEl.classList.toggle('hidden', !(summary.sampleQueue > 0));
+    }
+    if (statusCountEl) {
+      statusCountEl.textContent = String(summary.statusQueue || 0);
+      statusCountEl.classList.toggle('hidden', !(summary.statusQueue > 0));
     }
 
     const visiblePending = workspace === 'verifikasi' ? pendingVerification : [];
     const visibleRevision = (workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? revisionQueue : [];
+    const visibleSample = workspace === 'sampel' ? sampleQueue : [];
+    const visibleStatus = workspace === 'status' ? statusQueue : [];
 
-    if (!visiblePending.length && !visibleRevision.length) {
+    if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleStatus.length) {
+      if (workspace === 'sampel' || workspace === 'status') {
+        let emptyTitle = workspace === 'sampel' ? 'Belum ada kasus siap hasil sampel' : 'Belum ada kasus siap update status';
+        let emptyCopy = workspace === 'sampel'
+          ? 'Kasus akan muncul di sini setelah terverifikasi dan memang relevan untuk tindak lanjut hasil sampel.'
+          : 'Kasus akan muncul di sini setelah terverifikasi dan siap ditindaklanjuti pada tahap update status.';
+        box.innerHTML = `<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Antrian kerja</div><h4 class="pd3i-card-title text-lg">${emptyTitle}</h4></div></div><div class="pd3i-empty-state">${emptyCopy}</div></div>`;
+        box.classList.remove('hidden');
+        return;
+      }
       box.classList.add('hidden');
       box.innerHTML = '';
       return;
@@ -2710,7 +2727,13 @@
     let html = '<div class="pd3i-shell-card border border-amber-200 bg-amber-50/70">';
     html += '<div class="flex flex-wrap items-center justify-between gap-3">';
     html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
-    html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${workspace === 'verifikasi' ? (summary.pendingVerification || 0) : 0}</strong> • Perlu revisi: <strong>${(workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? (summary.revisionQueue || 0) : 0}</strong></div>`;
+    if (workspace === 'sampel') {
+      html += `<div class="pd3i-helper-text">Kasus siap hasil sampel: <strong>${summary.sampleQueue || 0}</strong></div>`;
+    } else if (workspace === 'status') {
+      html += `<div class="pd3i-helper-text">Kasus siap update status: <strong>${summary.statusQueue || 0}</strong></div>`;
+    } else {
+      html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${workspace === 'verifikasi' ? (summary.pendingVerification || 0) : 0}</strong> • Perlu revisi: <strong>${(workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? (summary.revisionQueue || 0) : 0}</strong></div>`;
+    }
     html += '</div>';
 
     if (visiblePending.length) {
@@ -2726,6 +2749,18 @@
       html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
       }), { emptyText: 'Belum ada kasus revisi.' });
+      html += '</div></div>';
+    }
+
+    if (visibleSample.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Kasus siap input hasil sampel</div><div class="mt-2">';
+      html += renderQueueTable(visibleSample, { emptyText: 'Belum ada kasus siap hasil sampel.', actionLabel: 'Input hasil' });
+      html += '</div></div>';
+    }
+
+    if (visibleStatus.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Kasus siap update status</div><div class="mt-2">';
+      html += renderQueueTable(visibleStatus, { emptyText: 'Belum ada kasus siap update status.', actionLabel: 'Update status' });
       html += '</div></div>';
     }
 

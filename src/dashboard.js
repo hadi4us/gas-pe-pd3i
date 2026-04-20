@@ -193,6 +193,8 @@ function _buildWorkflowInboxData_(sess, dx) {
   const dxList = (SUPPORTED_DX_ || []).indexOf(dxNorm) !== -1 ? [dxNorm] : (SUPPORTED_DX_ || []).slice();
   const pendingVerification = [];
   const revisionQueue = [];
+  const sampleQueue = [];
+  const statusQueue = [];
 
   dxList.forEach(function(dxItem) {
     const sheetData = _readSheetWithCache_(dxItem + '_Raw');
@@ -211,6 +213,14 @@ function _buildWorkflowInboxData_(sess, dx) {
     const idxUpdated = headers.indexOf('Updated At');
     const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
     const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+    const idxStatusKasus = headers.indexOf('Status Pasien/Kasus');
+    const idxSampelDilakukan = headers.indexOf('Pemeriksaan Sampel Dilakukan');
+    const idxInterpretasiSampel = headers.indexOf('Interpretasi Hasil Sampel');
+    const specimenFlagIdxs = headers.reduce(function(list, header, idx) {
+      const name = String(header || '').trim();
+      if (/spesimen/i.test(name) && /(diambil|dikirim)/i.test(name)) list.push(idx);
+      return list;
+    }, []);
 
     rows.forEach(function(row) {
       const recordKey = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : (idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '');
@@ -222,6 +232,19 @@ function _buildWorkflowInboxData_(sess, dx) {
       const kodePuskesmas = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(row[idxKodePuskesmas]) : '';
       const scopeMatch = (userKode && kodePuskesmas && userKode === kodePuskesmas) || (userUnit && puskesmasPengampu && userUnit === puskesmasPengampu);
 
+      const statusKasus = idxStatusKasus !== -1 ? String(row[idxStatusKasus] || '').trim() : '';
+      const sampelDilakukan = idxSampelDilakukan !== -1 ? String(row[idxSampelDilakukan] || '').trim() : '';
+      const interpretasiSampel = idxInterpretasiSampel !== -1 ? String(row[idxInterpretasiSampel] || '').trim() : '';
+      const specimenRequested = specimenFlagIdxs.some(function(idx) {
+        return String(row[idx] || '').trim().toUpperCase() === 'YA';
+      });
+      const normalizedStatusKasus = String(statusKasus || '').trim().toUpperCase();
+      const normalizedSampelDilakukan = String(sampelDilakukan || '').trim().toUpperCase();
+      const normalizedInterpretasi = String(interpretasiSampel || '').trim().toUpperCase();
+      const sampleRelevant = specimenRequested || normalizedStatusKasus === 'MENUNGGU HASIL LAB' || normalizedSampelDilakukan === 'YA';
+      const sampleDone = normalizedSampelDilakukan === 'TIDAK' || (normalizedSampelDilakukan === 'YA' && !!normalizedInterpretasi && normalizedInterpretasi !== 'BELUM KELUAR');
+      const isFinalStatus = ['DISCARDED', 'SEMBUH', 'MENINGGAL', 'LOST TO FOLLOW-UP', 'LOST TO FOLLOW UP'].indexOf(normalizedStatusKasus) !== -1;
+
       const item = {
         dx: dxItem,
         recordKey: recordKey,
@@ -231,6 +254,9 @@ function _buildWorkflowInboxData_(sess, dx) {
         kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '',
         kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '',
         statusVerifikasi: statusVerifikasi || 'Pending',
+        statusKasus: statusKasus,
+        sampelDilakukan: sampelDilakukan,
+        interpretasiSampel: interpretasiSampel,
         catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || '').trim() : '',
         inputAt: idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxTimestamp]) : '',
         updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
@@ -241,6 +267,18 @@ function _buildWorkflowInboxData_(sess, dx) {
       }
       if (normalizedStatus === 'PERLU REVISI' && (role === 'admin' || scopeMatch)) {
         revisionQueue.push(item);
+      }
+      if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && sampleRelevant && !sampleDone) {
+        sampleQueue.push(Object.assign({}, item, {
+          __queueStatusLabel: normalizedSampelDilakukan === 'YA' ? 'Menunggu hasil sampel' : 'Perlu tindak lanjut sampel',
+          __queueStatusClass: 'is-warning'
+        }));
+      }
+      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && (!sampleRelevant || sampleDone || normalizedSampelDilakukan === 'TIDAK')) {
+        statusQueue.push(Object.assign({}, item, {
+          __queueStatusLabel: statusKasus || 'Siap update status',
+          __queueStatusClass: normalizedStatusKasus === 'KONFIRMASI' ? 'is-success' : 'is-warning'
+        }));
       }
     });
   });
@@ -256,20 +294,26 @@ function _buildWorkflowInboxData_(sess, dx) {
 
   const pendingSorted = sortQueue(pendingVerification);
   const revisionSorted = sortQueue(revisionQueue);
+  const sampleSorted = sortQueue(sampleQueue);
+  const statusSorted = sortQueue(statusQueue);
   return {
     summary: {
       pendingVerification: pendingSorted.length,
-      revisionQueue: revisionSorted.length
+      revisionQueue: revisionSorted.length,
+      sampleQueue: sampleSorted.length,
+      statusQueue: statusSorted.length
     },
     pendingVerification: pendingSorted,
-    revisionQueue: revisionSorted
+    revisionQueue: revisionSorted,
+    sampleQueue: sampleSorted,
+    statusQueue: statusSorted
   };
 }
 
 function getWorkflowInbox(dx, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
-    return { summary: { pendingVerification: 0, revisionQueue: 0 }, pendingVerification: [], revisionQueue: [] };
+    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
   }
 
   try {
@@ -297,7 +341,9 @@ function getWorkflowInbox(dx, token) {
     const cachedResult = {
       summary: result.summary,
       pendingVerification: (result.pendingVerification || []).slice(0, 8),
-      revisionQueue: (result.revisionQueue || []).slice(0, 8)
+      revisionQueue: (result.revisionQueue || []).slice(0, 8),
+      sampleQueue: (result.sampleQueue || []).slice(0, 8),
+      statusQueue: (result.statusQueue || []).slice(0, 8)
     };
 
     if (cache) {
@@ -310,9 +356,11 @@ function getWorkflowInbox(dx, token) {
   } catch (e) {
     console.error('[getWorkflowInbox] Error:', e);
     return {
-      summary: { pendingVerification: 0, revisionQueue: 0 },
+      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 },
       pendingVerification: [],
       revisionQueue: [],
+      sampleQueue: [],
+      statusQueue: [],
       error: String(e)
     };
   }
