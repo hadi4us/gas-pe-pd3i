@@ -4384,8 +4384,19 @@
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Data...`;
 
+        const recordLoadRequestId = Date.now();
+        window.__RECORD_LOAD_REQUEST_ID = recordLoadRequestId;
+        setTimeout(function() {
+          if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
+          if (!btnSubmit.disabled) return;
+          btnSubmit.disabled = false;
+          resetSubmitButtonForCurrentStage();
+          showTopAlert('Membuka record terlalu lama. Coba ulangi dari hasil pencarian.', false);
+        }, 10000);
+
         google.script.run
           .withSuccessHandler(async function(record) {
+            if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             if (!record) {
               showTopAlert("Data tidak ditemukan.", false);
               btnSubmit.disabled = false;
@@ -4460,6 +4471,7 @@
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {
+            if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             console.error("getRecordByKey failed:", err);
             showTopAlert("Gagal memuat data.", false);
             btnSubmit.disabled = false;
