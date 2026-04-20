@@ -905,7 +905,7 @@ body.modal-open {
 
 .pd3i-form-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
 }
@@ -918,15 +918,15 @@ body.modal-open {
 }
 
 .pd3i-form-sidebar {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
-  align-self: start;
-  position: sticky;
-  top: 6.25rem;
-  max-height: calc(100vh - 7rem);
-  overflow-y: auto;
-  padding-right: 0.2rem;
+  align-self: stretch;
+  position: static;
+  top: auto;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .pd3i-form-card-highlight {
@@ -1017,6 +1017,14 @@ body.modal-open {
 .pd3i-sticky-card {
   position: static;
   top: auto;
+}
+
+#edit-badge,
+#viewer-badge,
+#alert-box,
+.pd3i-summary-panel-card,
+.pd3i-workflow-panel-card {
+  grid-column: 1 / -1;
 }
 
 .pd3i-edit-badge {
@@ -1523,8 +1531,8 @@ textarea {
    Responsive
 ------------------------------ */
 @media (max-width: 1280px) {
-  .pd3i-form-layout {
-    grid-template-columns: minmax(0, 1fr) 310px;
+  .pd3i-form-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1915,12 +1923,13 @@ textarea {
   }
 
   .pd3i-workflow-intent-grid,
-  .pd3i-admin-queue-grid {
+  .pd3i-admin-queue-grid,
+  .pd3i-form-sidebar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .pd3i-form-sidebar {
-    order: -1;
+    order: 2;
     position: static;
     top: auto;
     max-height: none;
