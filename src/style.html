@@ -3765,3 +3765,146 @@ body.pd3i-body {
     align-items: flex-start;
   }
 }
+
+/* ==========================================================
+   TOPBAR + INPUT LAUNCHER POLISH
+   ========================================================== */
+.pd3i-topbar-actions {
+  align-items: stretch;
+  gap: 0.7rem;
+}
+
+.pd3i-user-badge,
+.pd3i-ghost-button,
+.pd3i-primary-button,
+.pd3i-admin-button {
+  min-height: 48px;
+  border-radius: 16px;
+  box-shadow: var(--pd3i-shadow-sm);
+}
+
+.pd3i-user-badge {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(247,250,255,0.98) 100%);
+}
+
+.pd3i-topbar-admin-wrap {
+  min-width: 0;
+}
+
+.pd3i-admin-button {
+  background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(247,250,255,0.98) 100%);
+}
+
+.pd3i-admin-button::after {
+  content: "▾";
+  font-size: 0.78rem;
+  opacity: 0.72;
+  margin-left: 0.1rem;
+}
+
+.pd3i-admin-dropdown {
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(249,251,255,0.98) 100%);
+}
+
+.pd3i-admin-dropdown-item {
+  min-height: 50px;
+  font-size: 0.88rem;
+}
+
+#section-input-launcher {
+  overflow: visible;
+}
+
+.pd3i-input-launcher-card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.25rem 1.2rem;
+  background: linear-gradient(180deg, rgba(248,251,255,0.99) 0%, rgba(238,246,255,0.98) 100%);
+}
+
+.pd3i-input-launcher-card::after {
+  content: "";
+  position: absolute;
+  right: -38px;
+  top: -38px;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(37,99,235,0.16) 0%, rgba(37,99,235,0) 72%);
+  pointer-events: none;
+}
+
+.pd3i-input-launcher-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+#diagnosis-selector-card .pd3i-shell-select {
+  max-width: 520px;
+}
+
+.pd3i-launcher-flow-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.pd3i-launcher-flow-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.85rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(219, 230, 242, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.88);
+}
+
+.pd3i-launcher-flow-item span {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid rgba(147, 197, 253, 0.95);
+  color: var(--pd3i-primary-strong);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.pd3i-launcher-flow-item strong {
+  display: block;
+  color: var(--pd3i-text-strong);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.pd3i-launcher-flow-item small {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--pd3i-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.48;
+}
+
+@media (max-width: 960px) {
+  .pd3i-launcher-flow-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pd3i-input-launcher-card,
+  .pd3i-admin-dropdown,
+  .pd3i-launcher-flow-item {
+    border-radius: 18px;
+  }
+}
