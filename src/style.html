@@ -3342,18 +3342,32 @@ body.pd3i-body {
 
   .pd3i-topbar-actions {
     width: 100%;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
     align-items: stretch;
   }
 
   .pd3i-topbar-actions > * {
     width: 100%;
+    min-width: 0;
   }
 
   .pd3i-user-badge,
   .pd3i-ghost-button,
   .pd3i-primary-button,
-  .pd3i-admin-button,
+  .pd3i-admin-button {
+    min-height: 42px;
+    padding: 0.68rem 0.8rem;
+    border-radius: 14px;
+    font-size: 0.82rem;
+    justify-content: center;
+  }
+
+  .pd3i-user-badge {
+    grid-column: 1 / -1;
+  }
+
   #btn-dashboard-back-to-workspace,
   .pd3i-dashboard-export {
     width: 100%;
@@ -3472,6 +3486,10 @@ body.pd3i-body {
 @media (max-width: 420px) {
   .pd3i-page-title {
     font-size: 1.28rem;
+  }
+
+  .pd3i-topbar-actions {
+    grid-template-columns: 1fr;
   }
 
   .pd3i-card-title,
