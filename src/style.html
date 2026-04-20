@@ -3323,17 +3323,20 @@ body.pd3i-body {
 
 @media (max-width: 640px) {
   .pd3i-topbar {
-    margin: 0.6rem 0.6rem 0;
-    padding: 0.8rem;
-    border-radius: 20px;
+    margin: 0.5rem 0.5rem 0;
+    padding: 0.72rem;
+    border-radius: 18px;
   }
 
   .pd3i-page-title {
-    font-size: 1.45rem;
-    line-height: 1.15;
+    font-size: 1.28rem;
+    line-height: 1.12;
   }
 
-  .pd3i-page-subtitle,
+  .pd3i-page-subtitle {
+    display: none;
+  }
+
   .pd3i-hero-copy,
   .pd3i-dashboard-hero-copy {
     font-size: 0.9rem;
@@ -3344,7 +3347,7 @@ body.pd3i-body {
     width: 100%;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
+    gap: 0.45rem;
     align-items: stretch;
   }
 
@@ -3357,15 +3360,20 @@ body.pd3i-body {
   .pd3i-ghost-button,
   .pd3i-primary-button,
   .pd3i-admin-button {
-    min-height: 42px;
-    padding: 0.68rem 0.8rem;
-    border-radius: 14px;
-    font-size: 0.82rem;
+    min-height: 38px;
+    padding: 0.55rem 0.65rem;
+    border-radius: 12px;
+    font-size: 0.76rem;
     justify-content: center;
+    gap: 0.4rem;
+    box-shadow: var(--pd3i-shadow-sm);
   }
 
   .pd3i-user-badge {
-    grid-column: 1 / -1;
+    grid-column: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   #btn-dashboard-back-to-workspace,
@@ -3377,7 +3385,7 @@ body.pd3i-body {
   .pd3i-admin-dropdown {
     position: static;
     width: 100%;
-    margin-top: 0.55rem;
+    margin-top: 0.4rem;
     box-shadow: var(--pd3i-shadow-sm);
   }
 
@@ -3485,11 +3493,12 @@ body.pd3i-body {
 
 @media (max-width: 420px) {
   .pd3i-page-title {
-    font-size: 1.28rem;
+    font-size: 1.18rem;
   }
 
   .pd3i-topbar-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
   }
 
   .pd3i-card-title,
