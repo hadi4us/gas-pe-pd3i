@@ -2672,10 +2672,10 @@
     const box = document.getElementById('workflow-inbox');
     if (!box) return;
 
+    const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const pendingVerification = (data && data.pendingVerification) || [];
     const revisionQueue = (data && data.revisionQueue) || [];
     const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0 };
-    const caps = getRoleCapabilities(SESSION_USER);
     const verifCountEl = document.getElementById('intent-count-section-verifikasi');
     const pelaporCountEl = document.getElementById('intent-count-section-pelapor');
     const sampelCountEl = document.getElementById('intent-count-section-sampel');
@@ -2692,7 +2692,16 @@
     if (sampelCountEl) sampelCountEl.classList.add('hidden');
     if (statusCountEl) statusCountEl.classList.add('hidden');
 
-    if (!pendingVerification.length && !revisionQueue.length) {
+    if (workspace === 'sampel' || workspace === 'status') {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      return;
+    }
+
+    const visiblePending = workspace === 'verifikasi' ? pendingVerification : [];
+    const visibleRevision = (workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? revisionQueue : [];
+
+    if (!visiblePending.length && !visibleRevision.length) {
       box.classList.add('hidden');
       box.innerHTML = '';
       return;
@@ -2701,20 +2710,20 @@
     let html = '<div class="pd3i-shell-card border border-amber-200 bg-amber-50/70">';
     html += '<div class="flex flex-wrap items-center justify-between gap-3">';
     html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
-    html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${summary.pendingVerification || 0}</strong> • Perlu revisi: <strong>${summary.revisionQueue || 0}</strong></div>`;
+    html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${workspace === 'verifikasi' ? (summary.pendingVerification || 0) : 0}</strong> • Perlu revisi: <strong>${(workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? (summary.revisionQueue || 0) : 0}</strong></div>`;
     html += '</div>';
 
-    if (pendingVerification.length) {
+    if (visiblePending.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2">';
-      html += renderQueueTable(pendingVerification.map(function(item) {
+      html += renderQueueTable(visiblePending.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'pending' });
       }), { emptyText: 'Belum ada antrian review admin.' });
       html += '</div></div>';
     }
 
-    if (revisionQueue.length) {
+    if (visibleRevision.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2">';
-      html += renderQueueTable(revisionQueue.map(function(item) {
+      html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
       }), { emptyText: 'Belum ada kasus revisi.' });
       html += '</div></div>';
