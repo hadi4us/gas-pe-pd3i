@@ -107,6 +107,7 @@
       return;
     }
 
+    alertBox.hidden = false;
     alertBox.className = `pd3i-alert-card ${
       ok ? "is-success" : "is-error"
     }`;
@@ -115,14 +116,14 @@
       ok ? "fa-check-circle" : "fa-exclamation-circle"
     } mr-2"></i> ${escapeHtml(safeMsg)}`;
 
-    alertBox.classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function hideTopAlert() {
     const alertBox = byId("alert-box");
     if (!alertBox) return;
-    alertBox.className = "hidden pd3i-alert-card";
+    alertBox.hidden = true;
+    alertBox.className = "pd3i-alert-card";
     alertBox.innerHTML = "";
   }
 
