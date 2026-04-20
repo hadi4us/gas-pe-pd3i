@@ -2435,6 +2435,63 @@
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
   }
 
+  function getQueueBucketMeta(item) {
+    const status = String(item && item.statusVerifikasi || '').trim();
+    if (status === 'Perlu Revisi') {
+      return { label: 'Perlu revisi', className: 'is-danger' };
+    }
+    if (status === 'Terverifikasi') {
+      return { label: 'Terverifikasi', className: 'is-success' };
+    }
+    return { label: 'Pending review', className: 'is-warning' };
+  }
+
+  function renderQueueTable(items, options) {
+    const opts = options || {};
+    const rows = Array.isArray(items) ? items : [];
+    if (!rows.length) {
+      return `<div class="pd3i-empty-state">${escapeHtml(opts.emptyText || 'Belum ada antrian kerja penting saat ini.')}</div>`;
+    }
+
+    let html = '<div class="pd3i-queue-table">';
+    html += '<div class="pd3i-queue-table-head">';
+    html += '<div>Nama kasus</div>';
+    html += '<div>Wilayah / DX</div>';
+    html += '<div>ID record</div>';
+    html += '<div>Status</div>';
+    html += '<div>Update</div>';
+    html += '<div>Aksi</div>';
+    html += '</div>';
+    html += '<div class="pd3i-queue-table-body">';
+
+    rows.forEach(function(item) {
+      const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
+      const dxArg = JSON.stringify(String(item && item.dx || ''));
+      const bucket = getQueueBucketMeta(item);
+      const wilayahText = [item && item.dx, item && item.kecamatan, item && item.kelurahan].filter(Boolean).join(' • ') || '-';
+      const recordText = String(item && (item.recordId || item.epid) || '-');
+      const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
+      const noteText = String(item && item.catatanVerifikasi || '').trim();
+
+      html += `<div class="pd3i-queue-table-row ${bucket.className}">
+        <div class="pd3i-queue-col pd3i-queue-col-main">
+          <div class="pd3i-queue-row-title">${escapeHtml(item && item.nama || '-')}</div>
+          ${noteText ? `<div class="pd3i-queue-row-subtitle">${escapeHtml(noteText)}</div>` : ''}
+        </div>
+        <div class="pd3i-queue-col" data-label="Wilayah / DX">${escapeHtml(wilayahText)}</div>
+        <div class="pd3i-queue-col" data-label="ID record">${escapeHtml(recordText)}</div>
+        <div class="pd3i-queue-col" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></div>
+        <div class="pd3i-queue-col" data-label="Update">${escapeHtml(updateText)}</div>
+        <div class="pd3i-queue-col pd3i-queue-col-action" data-label="Aksi">
+          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>Buka</button>
+        </div>
+      </div>`;
+    });
+
+    html += '</div></div>';
+    return html;
+  }
+
   function renderOverviewWorkspace() {
     const quickWrap = document.getElementById('overview-quick-actions');
     const roleWrap = document.getElementById('overview-role-summary');
@@ -2503,18 +2560,16 @@
             `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`
           ].join('');
 
-          const pendingItems = (res && res.pendingVerification) || [];
-          const revisionItems = (res && res.revisionQueue) || [];
+          const pendingItems = ((res && res.pendingVerification) || []).map(function(item) {
+            return Object.assign({}, item, { __queueBucket: 'pending' });
+          });
+          const revisionItems = ((res && res.revisionQueue) || []).map(function(item) {
+            return Object.assign({}, item, { __queueBucket: 'revision' });
+          });
           const items = pendingItems.concat(revisionItems).slice(0, 6);
-          if (!items.length) {
-            inboxWrap.innerHTML = '<div class="pd3i-helper-text">Belum ada antrian kerja penting saat ini.</div>';
-            return;
-          }
-          inboxWrap.innerHTML = items.map(function(item) {
-            const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
-            const dxArg = JSON.stringify(String(item.dx || ''));
-            return `<button type="button" class="pd3i-inbox-item" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
-          }).join('');
+          inboxWrap.innerHTML = renderQueueTable(items, {
+            emptyText: 'Belum ada antrian kerja penting saat ini.'
+          });
         } catch (err) {
           console.error('renderOverviewWorkspace success handler failed:', err);
           summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Ringkasan kerja gagal dirender.</div>';
@@ -2647,36 +2702,18 @@
     html += '</div>';
 
     if (pendingVerification.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2 pd3i-inbox-list">';
-      pendingVerification.forEach(function(item) {
-        const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
-        const dxArg = JSON.stringify(String(item.dx || ''));
-        const safeTitle = escapeHtml(item.nama || '-');
-        const safeMeta = escapeHtml([
-          [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
-          item.dx || '-',
-          item.recordId || item.epid || '-',
-          'status ' + (item.statusVerifikasi || 'Pending')
-        ].filter(Boolean).join(' • '));
-        html += `<button type="button" class="pd3i-inbox-item" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
-      });
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2">';
+      html += renderQueueTable(pendingVerification.map(function(item) {
+        return Object.assign({}, item, { __queueBucket: 'pending' });
+      }), { emptyText: 'Belum ada antrian review admin.' });
       html += '</div></div>';
     }
 
     if (revisionQueue.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2 pd3i-inbox-list">';
-      revisionQueue.forEach(function(item) {
-        const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
-        const dxArg = JSON.stringify(String(item.dx || ''));
-        const safeTitle = escapeHtml(item.nama || '-');
-        const safeMeta = escapeHtml([
-          [item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || '-',
-          item.dx || '-',
-          item.recordId || item.epid || '-',
-          item.catatanVerifikasi ? ('Catatan: ' + item.catatanVerifikasi) : ''
-        ].filter(Boolean).join(' • '));
-        html += `<button type="button" class="pd3i-inbox-item is-revision" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'><strong>${safeTitle}</strong><small>${safeMeta}</small></button>`;
-      });
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2">';
+      html += renderQueueTable(revisionQueue.map(function(item) {
+        return Object.assign({}, item, { __queueBucket: 'revision' });
+      }), { emptyText: 'Belum ada kasus revisi.' });
       html += '</div></div>';
     }
 
