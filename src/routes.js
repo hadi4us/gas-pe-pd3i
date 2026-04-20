@@ -93,6 +93,121 @@ function _requireAdminFromToken_(token) {
   return sess.user;
 }
 
+function _normalizeRefKey_(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
+function getRecordByKey(dx, recordKey, token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
+
+  dx = String(dx || "").trim().toUpperCase();
+  recordKey = String(recordKey || "").trim();
+  if (!dx) throw new Error("DX wajib diisi.");
+  if (!recordKey) throw new Error("recordKey wajib diisi.");
+
+  const sheet = getSheetOrThrow_(dx + "_Raw");
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return null;
+
+  const headers = values[0].map(function(h) { return String(h || "").trim(); });
+  const idxRecordId = headers.indexOf("ID Registrasi Kasus");
+  const idxEpid = headers.indexOf("Nomor EPID");
+  const target = String(recordKey || "").trim();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRecordId = idxRecordId !== -1 ? String(values[i][idxRecordId] || "").trim() : "";
+    const rowEpid = idxEpid !== -1 ? String(values[i][idxEpid] || "").trim() : "";
+    if (rowRecordId === target || rowEpid === target) {
+      const record = (typeof deserializeRecord_ === 'function')
+        ? deserializeRecord_(values[i], headers)
+        : (function() {
+            const obj = {};
+            headers.forEach(function(h, idx) { obj[h] = values[i][idx]; });
+            return obj;
+          })();
+      record.dx = dx;
+      return record;
+    }
+  }
+
+  return null;
+}
+
+function getRecordByEpid(dx, epid, token) {
+  return getRecordByKey(dx, epid, token);
+}
+
+function getFaskesFromSheet(token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
+
+  var raw = null;
+  try {
+    if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.getSheetData === 'function') {
+      raw = Cache_Manager.getSheetData('REF_FASKES');
+    }
+  } catch (e) {}
+
+  if (!raw) {
+    const sheet = getSheetOrNull_('REF_FASKES');
+    if (!sheet) return [];
+    raw = sheet.getDataRange().getValues();
+    try {
+      if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.setSheetData === 'function') {
+        Cache_Manager.setSheetData('REF_FASKES', raw);
+      }
+    } catch (e) {}
+  }
+
+  if (!raw || raw.length < 2) return [];
+
+  const headers = raw[0].map(function(h) { return String(h || '').trim(); });
+  const rows = raw.slice(1);
+  const findIdx = function(candidates) {
+    for (var i = 0; i < candidates.length; i++) {
+      var idx = headers.indexOf(candidates[i]);
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+
+  const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Tipe', 'Kategori']);
+  const idxNama = findIdx(['Nama', 'Nama Faskes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit']);
+  const idxKey = findIdx(['Key', 'FaskesKey', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
+  const idxAktif = findIdx(['Aktif', 'Status Aktif', 'IsActive', 'Active']);
+
+  return rows
+    .map(function(row) {
+      const nama = idxNama !== -1 ? String(row[idxNama] || '').trim() : '';
+      const jenis = idxJenis !== -1 ? String(row[idxJenis] || '').trim() : '';
+      const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
+      const key = idxKey !== -1 ? String(row[idxKey] || '').trim() : _normalizeRefKey_(nama);
+      if (!nama) return null;
+      if (aktif && ['0', 'FALSE', 'NO', 'N', 'TIDAK', 'NONAKTIF'].indexOf(aktif) !== -1) return null;
+
+      const item = {
+        nama: nama,
+        jenis: jenis,
+        key: key
+      };
+      headers.forEach(function(h, idx) {
+        if (!h) return;
+        item[h] = row[idx];
+      });
+      return item;
+    })
+    .filter(Boolean)
+    .sort(function(a, b) {
+      const jenisA = String(a.jenis || '').localeCompare(String(b.jenis || ''));
+      if (jenisA !== 0) return jenisA;
+      return String(a.nama || '').localeCompare(String(b.nama || ''));
+    });
+}
+
 // ─── Daftar semua DX yang didukung ───────────────────────────────────────────
 const ALL_DX = ["MR", "DIF", "PERT", "TN", "AFP"];
 
