@@ -244,6 +244,7 @@ function _buildWorkflowInboxData_(sess, dx) {
       const sampleRelevant = specimenRequested || normalizedStatusKasus === 'MENUNGGU HASIL LAB' || normalizedSampelDilakukan === 'YA';
       const sampleDone = normalizedSampelDilakukan === 'TIDAK' || (normalizedSampelDilakukan === 'YA' && !!normalizedInterpretasi && normalizedInterpretasi !== 'BELUM KELUAR');
       const isFinalStatus = ['DISCARDED', 'SEMBUH', 'MENINGGAL', 'LOST TO FOLLOW-UP', 'LOST TO FOLLOW UP'].indexOf(normalizedStatusKasus) !== -1;
+      const sampleStagePending = normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && !isFinalStatus && !sampleDone;
 
       const item = {
         dx: dxItem,
@@ -268,13 +269,15 @@ function _buildWorkflowInboxData_(sess, dx) {
       if (normalizedStatus === 'PERLU REVISI' && (role === 'admin' || scopeMatch)) {
         revisionQueue.push(item);
       }
-      if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && sampleRelevant && !sampleDone) {
+      if (sampleStagePending) {
         sampleQueue.push(Object.assign({}, item, {
-          __queueStatusLabel: normalizedSampelDilakukan === 'YA' ? 'Menunggu hasil sampel' : 'Perlu tindak lanjut sampel',
-          __queueStatusClass: 'is-warning'
+          __queueStatusLabel: normalizedSampelDilakukan === 'YA'
+            ? (normalizedInterpretasi === 'BELUM KELUAR' || !normalizedInterpretasi ? 'Menunggu hasil sampel' : 'Perlu review hasil sampel')
+            : (sampleRelevant ? 'Perlu tindak lanjut sampel' : 'Perlu keputusan tahap sampel'),
+          __queueStatusClass: sampleRelevant ? 'is-warning' : 'is-success'
         }));
       }
-      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && (!sampleRelevant || sampleDone || normalizedSampelDilakukan === 'TIDAK')) {
+      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending) {
         statusQueue.push(Object.assign({}, item, {
           __queueStatusLabel: statusKasus || 'Siap update status',
           __queueStatusClass: normalizedStatusKasus === 'KONFIRMASI' ? 'is-success' : 'is-warning'
