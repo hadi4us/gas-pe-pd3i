@@ -2525,7 +2525,7 @@
         console.error('renderOverviewWorkspace failed:', err);
         summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan kerja beranda.</div>';
       })
-      .getWorkflowInbox('', sessionToken);
+      .getOverviewSummary(sessionToken);
   }
 
   function getCurrentSessionActorName() {
