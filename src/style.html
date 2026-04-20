@@ -921,6 +921,12 @@ body.modal-open {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  align-self: start;
+  position: sticky;
+  top: 6.25rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 0.2rem;
 }
 
 .pd3i-form-card-highlight {
@@ -1009,8 +1015,8 @@ body.modal-open {
 }
 
 .pd3i-sticky-card {
-  position: sticky;
-  top: 1.2rem;
+  position: static;
+  top: auto;
 }
 
 .pd3i-edit-badge {
@@ -1915,6 +1921,11 @@ textarea {
 
   .pd3i-form-sidebar {
     order: -1;
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .pd3i-sticky-card {
