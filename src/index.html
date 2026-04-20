@@ -21,15 +21,26 @@
   <?!= include('pin'); ?>
 
   <div id="app" class="pd3i-app hidden">
-    <aside class="pd3i-sidebar">
-      <div class="pd3i-sidebar-brand">
-        <div class="pd3i-brand-icon">
-          <i class="fas fa-shield-virus"></i>
+    <div id="pd3i-sidebar-overlay" class="pd3i-sidebar-overlay hidden"></div>
+    <aside id="pd3i-sidebar" class="pd3i-sidebar">
+      <div class="pd3i-sidebar-brand-wrap">
+        <div class="pd3i-sidebar-brand">
+          <div class="pd3i-brand-icon">
+            <i class="fas fa-shield-virus"></i>
+          </div>
+          <div>
+            <div class="pd3i-brand-title">PE PD3I</div>
+            <div class="pd3i-brand-subtitle">Surveilans & Investigasi Kasus</div>
+          </div>
         </div>
-        <div>
-          <div class="pd3i-brand-title">PE PD3I</div>
-          <div class="pd3i-brand-subtitle">Surveilans & Investigasi Kasus</div>
-        </div>
+        <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      <div class="pd3i-sidebar-status-card">
+        <span class="pd3i-sidebar-status-pill"><i class="fas fa-sparkles"></i> Workspace operasional</span>
+        <div class="pd3i-sidebar-status-title">Shell kerja ala admin panel</div>
+        <div class="pd3i-sidebar-status-copy">Navigasi dibuat fokus, record-first, dan siap dipakai di desktop maupun HP.</div>
       </div>
 
       <div class="pd3i-sidebar-section">
@@ -67,30 +78,33 @@
       </div>
 
       <div class="pd3i-sidebar-section">
-        <div class="pd3i-sidebar-label">Diagnosis</div>
-        <div class="pd3i-dx-list">
-          <div class="pd3i-dx-chip"><span class="pd3i-dx-code">MR</span> Campak / Rubella</div>
-          <div class="pd3i-dx-chip"><span class="pd3i-dx-code">DIF</span> Difteri</div>
-          <div class="pd3i-dx-chip"><span class="pd3i-dx-code">PERT</span> Pertusis</div>
-          <div class="pd3i-dx-chip"><span class="pd3i-dx-code">TN</span> Tetanus Neonatorum</div>
-          <div class="pd3i-dx-chip"><span class="pd3i-dx-code">AFP</span> Lumpuh Layuh Akut</div>
+        <div class="pd3i-sidebar-label">Alur kerja</div>
+        <div class="pd3i-sidebar-flow">
+          <div class="pd3i-sidebar-flow-item"><span class="pd3i-sidebar-flow-step">1</span><div><strong>Input awal</strong><small>Mulai kasus baru dari diagnosis aktif</small></div></div>
+          <div class="pd3i-sidebar-flow-item"><span class="pd3i-sidebar-flow-step">2</span><div><strong>Review admin</strong><small>Verifikasi EPID dan cek kelengkapan</small></div></div>
+          <div class="pd3i-sidebar-flow-item"><span class="pd3i-sidebar-flow-step">3</span><div><strong>Sampel & status</strong><small>Lanjutkan hasil lab dan status kasus</small></div></div>
         </div>
       </div>
 
       <div class="pd3i-sidebar-section pd3i-sidebar-note">
         <div class="pd3i-note-title">Arah UI baru</div>
         <div class="pd3i-note-copy">
-          Shell aplikasi kini disusun model admin dashboard agar alur input, pencarian, validasi, dan monitoring terasa lebih rapi dan profesional.
+          Tampilan diarahkan ke pola Tabler: ringkas, operasional, dan enak dipakai lama untuk kerja surveilans harian.
         </div>
       </div>
     </aside>
 
     <div class="pd3i-page">
       <header class="pd3i-topbar">
-        <div>
-          <div class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
-          <h1 class="pd3i-page-title">Surveilans PD3I Terintegrasi</h1>
-          <p class="pd3i-page-subtitle">Input kasus, cari/edit data, validasi epidemiologis, dan monitoring operasional dalam satu workspace.</p>
+        <div class="pd3i-topbar-main">
+          <button id="btn-sidebar-toggle" type="button" class="pd3i-mobile-nav-toggle" aria-label="Buka navigasi">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div>
+            <div class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
+            <h1 class="pd3i-page-title">Surveilans PD3I Terintegrasi</h1>
+            <p class="pd3i-page-subtitle">Input kasus, cari/edit data, validasi epidemiologis, dan monitoring operasional dalam satu workspace.</p>
+          </div>
         </div>
 
         <div class="pd3i-topbar-actions">

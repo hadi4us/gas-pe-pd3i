@@ -3792,6 +3792,9 @@
       const btnRetryNotify = document.getElementById("btn-retry-notify");
       const btnRetryTelegram = document.getElementById("btn-retry-telegram");
       const btnSidebarDashboard = document.getElementById("btn-sidebar-dashboard");
+      const btnSidebarToggle = document.getElementById("btn-sidebar-toggle");
+      const btnSidebarClose = document.getElementById("btn-sidebar-close");
+      const sidebarOverlay = document.getElementById("pd3i-sidebar-overlay");
       const btnAdminMenu = document.getElementById("btn-admin-menu");
       const adminMenuWrap = document.getElementById("admin-menu-wrap");
       const adminMenuDropdown = document.getElementById("admin-menu-dropdown");
@@ -3803,6 +3806,16 @@
       if (!selector || !formElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !btnSubmit) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
         return;
+      }
+
+      function closeSidebarDrawer() {
+        document.body.classList.remove('pd3i-sidebar-open');
+        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+      }
+
+      function openSidebarDrawer() {
+        document.body.classList.add('pd3i-sidebar-open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
       }
 
       window.applyRoleUIState = function applyRoleUIState() {
@@ -3880,8 +3893,21 @@
           e.preventDefault();
           const workspace = String(link.getAttribute('data-sidebar-workspace') || '').trim();
           if (!workspace) return;
+          closeSidebarDrawer();
           openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
         });
+      });
+
+      if (btnSidebarToggle) {
+        btnSidebarToggle.addEventListener('click', function() {
+          if (document.body.classList.contains('pd3i-sidebar-open')) closeSidebarDrawer();
+          else openSidebarDrawer();
+        });
+      }
+      if (btnSidebarClose) btnSidebarClose.addEventListener('click', closeSidebarDrawer);
+      if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebarDrawer);
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 1100) closeSidebarDrawer();
       });
 
       window.addEventListener('popstate', function() {
@@ -4066,6 +4092,7 @@
           btnDashboard.classList.remove("hidden");
           btnDashboard.addEventListener("click", function () {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            closeSidebarDrawer();
             openSidebarWorkspace("dashboard", { autoLoad: true, useRoute: true });
           });
         }
@@ -4078,6 +4105,7 @@
             showTopAlert("Dashboard statistik saat ini hanya tersedia untuk role admin.", false);
             return;
           }
+          closeSidebarDrawer();
           openSidebarWorkspace("dashboard", { autoLoad: true, useRoute: true });
         });
       }
