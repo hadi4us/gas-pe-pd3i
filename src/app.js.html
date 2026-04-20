@@ -2454,11 +2454,11 @@
 
     quickWrap.innerHTML = quickActions.map(function(item) {
       return `<button type="button" class="pd3i-overview-action-btn" data-overview-workspace="${escapeHtml(item.workspace)}">
-        <div>
+        <div class="pd3i-overview-action-body">
           <div class="pd3i-overview-action-title">${escapeHtml(item.title)}</div>
           <span class="pd3i-overview-action-copy">${escapeHtml(item.copy)}</span>
         </div>
-        <i class="fas ${escapeHtml(item.icon)} text-slate-400"></i>
+        <span class="pd3i-overview-action-icon"><i class="fas ${escapeHtml(item.icon)}"></i></span>
       </button>`;
     }).join('');
 

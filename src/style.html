@@ -3531,3 +3531,119 @@ body.pd3i-body {
     border-radius: 12px;
   }
 }
+
+/* ==========================================================
+   OVERVIEW ONE-COLUMN POLISH — QUICK ACTIONS / RINGKASAN
+   ========================================================== */
+.pd3i-overview-panel-actions {
+  background: linear-gradient(180deg, rgba(248,251,255,0.98) 0%, rgba(255,255,255,0.98) 100%);
+}
+
+.pd3i-overview-panel-summary {
+  background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(247,250,255,0.98) 100%);
+}
+
+.pd3i-overview-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.pd3i-overview-action-btn {
+  position: relative;
+  min-height: 104px;
+  padding: 1rem 1.05rem;
+  border-radius: 20px;
+  align-items: stretch;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+.pd3i-overview-action-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.pd3i-overview-action-title {
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.pd3i-overview-action-copy {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  max-width: 32rem;
+}
+
+.pd3i-overview-action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid rgba(147, 197, 253, 0.95);
+  color: var(--pd3i-primary-strong);
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.88);
+}
+
+#overview-role-summary {
+  margin-top: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(219, 230, 242, 0.95);
+  background: linear-gradient(180deg, rgba(248,251,255,0.98) 0%, rgba(255,255,255,0.98) 100%);
+  font-size: 0.84rem;
+}
+
+.pd3i-overview-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.pd3i-overview-summary-card {
+  min-height: 116px;
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+}
+
+.pd3i-overview-summary-card .count {
+  font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+}
+
+.pd3i-overview-inbox {
+  gap: 0.85rem;
+}
+
+.pd3i-overview-inbox .pd3i-inbox-item {
+  padding: 1rem 1.05rem 1rem 1.15rem;
+  border-radius: 20px;
+  border-left: 4px solid rgba(37, 99, 235, 0.18);
+}
+
+.pd3i-overview-inbox .pd3i-inbox-item strong {
+  font-size: 0.94rem;
+}
+
+.pd3i-overview-inbox .pd3i-inbox-item small {
+  margin-top: 0.16rem;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .pd3i-overview-actions,
+  .pd3i-overview-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pd3i-overview-action-btn,
+  .pd3i-overview-summary-card,
+  #overview-role-summary,
+  .pd3i-overview-inbox .pd3i-inbox-item {
+    border-radius: 18px;
+  }
+}
