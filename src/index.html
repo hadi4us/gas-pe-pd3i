@@ -331,6 +331,32 @@
         <form id="dynamic-form" class="hidden">
           <div class="pd3i-form-layout">
             <div class="pd3i-form-main">
+              <div id="edit-badge" class="hidden pd3i-edit-badge">
+                <div class="pd3i-edit-badge-topline">
+                  <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
+                  <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
+                </div>
+                <div class="pd3i-edit-badge-title">Record existing sedang dibuka untuk verifikasi / pembaruan status</div>
+                <div class="pd3i-edit-badge-meta">
+                  <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
+                  <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
+                </div>
+              </div>
+
+              <div id="viewer-badge" class="hidden pd3i-viewer-badge">
+                <div class="pd3i-viewer-badge-topline">
+                  <span class="pd3i-viewer-badge-pill"><i class="fas fa-eye"></i> MODE LIHAT</span>
+                  <span class="pd3i-viewer-badge-pill subtle" id="viewer-badge-dx">DX -</span>
+                </div>
+                <div class="pd3i-viewer-badge-title">Role viewer hanya boleh melihat data. Field input dikunci dan perubahan tidak bisa disimpan.</div>
+                <div class="pd3i-viewer-badge-meta">
+                  <span><strong>EPID:</strong> <span id="viewer-badge-epid">-</span></span>
+                  <span><strong>Status:</strong> <span id="viewer-badge-status">-</span></span>
+                </div>
+              </div>
+
+              <div id="alert-box" class="hidden pd3i-alert-card"></div>
+
               <section class="pd3i-shell-card pd3i-stepper-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
@@ -440,32 +466,6 @@
             </div>
 
             <aside class="pd3i-form-sidebar">
-              <div id="edit-badge" class="hidden pd3i-edit-badge">
-                <div class="pd3i-edit-badge-topline">
-                  <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
-                  <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
-                </div>
-                <div class="pd3i-edit-badge-title">Record existing sedang dibuka untuk verifikasi / pembaruan status</div>
-                <div class="pd3i-edit-badge-meta">
-                  <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
-                  <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
-                </div>
-              </div>
-
-              <div id="viewer-badge" class="hidden pd3i-viewer-badge">
-                <div class="pd3i-viewer-badge-topline">
-                  <span class="pd3i-viewer-badge-pill"><i class="fas fa-eye"></i> MODE LIHAT</span>
-                  <span class="pd3i-viewer-badge-pill subtle" id="viewer-badge-dx">DX -</span>
-                </div>
-                <div class="pd3i-viewer-badge-title">Role viewer hanya boleh melihat data. Field input dikunci dan perubahan tidak bisa disimpan.</div>
-                <div class="pd3i-viewer-badge-meta">
-                  <span><strong>EPID:</strong> <span id="viewer-badge-epid">-</span></span>
-                  <span><strong>Status:</strong> <span id="viewer-badge-status">-</span></span>
-                </div>
-              </div>
-
-              <div id="alert-box" class="hidden pd3i-alert-card"></div>
-
               <div class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-summary-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
