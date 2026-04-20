@@ -101,15 +101,19 @@
     const alertBox = byId("alert-box");
     if (!alertBox) return;
 
-    alertBox.className = `p-4 mb-6 rounded-lg text-sm font-bold border ${
-      ok
-        ? "bg-green-50 text-green-800 border-green-200"
-        : "bg-red-50 text-red-800 border-red-200"
+    const safeMsg = String(msg || "").trim();
+    if (!safeMsg) {
+      hideTopAlert();
+      return;
+    }
+
+    alertBox.className = `pd3i-alert-card ${
+      ok ? "is-success" : "is-error"
     }`;
 
     alertBox.innerHTML = `<i class="fas ${
       ok ? "fa-check-circle" : "fa-exclamation-circle"
-    } mr-2"></i> ${escapeHtml(msg)}`;
+    } mr-2"></i> ${escapeHtml(safeMsg)}`;
 
     alertBox.classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -118,7 +122,7 @@
   function hideTopAlert() {
     const alertBox = byId("alert-box");
     if (!alertBox) return;
-    alertBox.classList.add("hidden");
+    alertBox.className = "hidden pd3i-alert-card";
     alertBox.innerHTML = "";
   }
 
