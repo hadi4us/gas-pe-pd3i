@@ -192,7 +192,7 @@ const Cache_Manager = (function () {
    */
   function invalidateAll() {
     const knownSheets = ["MR_Raw", "DIF_Raw", "PERT_Raw", "TN_Raw", "AFP_Raw",
-                         "REF_USER", "REF_FASKES", "REF_PENGAMPU", "AUDIT_LOG"];
+                         "REF_USER", "REF_FASKES", "REF_PENGAMPU", "REF_IMUN", "AUDIT_LOG"];
     knownSheets.forEach(function (sheetName) {
       invalidateSheetCache(sheetName);
     });

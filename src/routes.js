@@ -141,6 +141,54 @@ function getRecordByEpid(dx, epid, token) {
   return getRecordByKey(dx, epid, token);
 }
 
+function getRefImunisasi(token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
+
+  var raw = null;
+  try {
+    if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.getSheetData === 'function') {
+      raw = Cache_Manager.getSheetData('REF_IMUN');
+    }
+  } catch (e) {}
+
+  if (!raw) {
+    const sheet = getSheetOrNull_('REF_IMUN');
+    if (!sheet) return [];
+    raw = sheet.getDataRange().getValues();
+    try {
+      if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.setSheetData === 'function') {
+        Cache_Manager.setSheetData('REF_IMUN', raw);
+      }
+    } catch (e) {}
+  }
+
+  if (!raw || raw.length < 2) return [];
+
+  const headers = raw[0].map(function(h) { return String(h || '').trim(); });
+  const rows = raw.slice(1);
+  const idxAktif = headers.indexOf('Aktif');
+
+  return rows
+    .map(function(row) {
+      const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
+      if (aktif && ['0', 'FALSE', 'NO', 'N', 'TIDAK', 'NONAKTIF'].indexOf(aktif) !== -1) return null;
+      const item = {};
+      headers.forEach(function(h, idx) {
+        if (!h) return;
+        item[h] = row[idx];
+      });
+      return item;
+    })
+    .filter(function(item) {
+      return item && String(item.KodeImunisasi || '').trim() && String(item.LabelImunisasi || '').trim();
+    });
+}
+
+function fetchRefImunData(token) {
+  return getRefImunisasi(token);
+}
+
 function getFaskesFromSheet(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
