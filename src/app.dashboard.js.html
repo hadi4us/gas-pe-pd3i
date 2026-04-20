@@ -466,20 +466,20 @@
       const n = stats.statusNotifikasi;
       html += `<div class="pd3i-dashboard-metric-card tone-blue">
         <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email</div>
-        <div class="flex justify-around text-center">
-          <div><div class="text-xl font-black text-green-700">${n.sent}</div><div class="text-xs text-slate-500">Terkirim</div></div>
-          <div><div class="text-xl font-black text-red-600">${n.failed}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div><div class="text-xl font-black text-amber-600">${n.pending}</div><div class="text-xs text-slate-500">Pending</div></div>
+        <div class="pd3i-dashboard-submetric-grid">
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${n.sent}</div><div class="text-xs text-slate-500">Terkirim</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${n.failed}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${n.pending}</div><div class="text-xs text-slate-500">Pending</div></div>
         </div>
       </div>`;
 
       const s = stats.statusSinkronisasi || {};
       html += `<div class="pd3i-dashboard-metric-card tone-purple">
         <div class="text-xs font-extrabold uppercase text-purple-700 mb-2">Sinkronisasi Pengampu</div>
-        <div class="flex justify-around text-center">
-          <div><div class="text-xl font-black text-green-700">${s.synced || 0}</div><div class="text-xs text-slate-500">Synced</div></div>
-          <div><div class="text-xl font-black text-red-600">${s.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div><div class="text-xl font-black text-amber-600">${s.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        <div class="pd3i-dashboard-submetric-grid">
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${s.synced || 0}</div><div class="text-xs text-slate-500">Synced</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${s.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${s.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
         </div>
       </div>`;
     } else {
@@ -564,11 +564,11 @@
             <div class="text-xs font-extrabold uppercase text-sky-700 mb-1">Kasus bertitik koordinat</div>
             <div class="text-2xl font-black text-sky-900">${coordinateSummary.totalWithCoordinates || 0}</div>
           </div>
-          <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-amber">
             <div class="text-xs font-extrabold uppercase text-orange-700 mb-1">Cluster hotspot</div>
             <div class="text-2xl font-black text-orange-900">${coordinateSummary.clusteredPointCount || 0}</div>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-neutral">
             <div class="text-xs font-extrabold uppercase text-slate-600 mb-1">Tanpa koordinat</div>
             <div class="text-2xl font-black text-slate-900">${coordinateSummary.missingCoordinates || 0}</div>
           </div>
@@ -616,19 +616,19 @@
       html += `<div class="pd3i-dashboard-block mb-6">
         <div class="pd3i-dashboard-block-title">Sebaran Wilayah Operasional</div>
         <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
-          <div class="rounded-xl border border-cyan-200 bg-cyan-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-sky">
             <div class="text-xs font-extrabold uppercase text-cyan-700 mb-1">Kecamatan aktif</div>
             <div class="text-2xl font-black text-cyan-900">${wilayah.kecamatanCount || 0}</div>
           </div>
-          <div class="rounded-xl border border-teal-200 bg-teal-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-emerald">
             <div class="text-xs font-extrabold uppercase text-teal-700 mb-1">Kelurahan aktif</div>
             <div class="text-2xl font-black text-teal-900">${wilayah.kelurahanCount || 0}</div>
           </div>
-          <div class="rounded-xl border border-violet-200 bg-violet-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-indigo">
             <div class="text-xs font-extrabold uppercase text-violet-700 mb-1">RW aktif</div>
             <div class="text-2xl font-black text-violet-900">${wilayah.rwCount || 0}</div>
           </div>
-          <div class="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-4 shadow-sm">
+          <div class="pd3i-dashboard-metric-card tone-purple">
             <div class="text-xs font-extrabold uppercase text-fuchsia-700 mb-1">Cluster RT/RW terisi</div>
             <div class="text-2xl font-black text-fuchsia-900">${wilayah.rtRwCount || 0}</div>
           </div>
@@ -726,12 +726,12 @@
         const val = perBulan[k];
         const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
         const label = k.substring(0, 4) + "-" + k.substring(4, 6);
-        html += `<div class="flex items-center gap-3">
-          <div class="w-20 text-xs font-bold text-slate-600 text-right">${label}</div>
-          <div class="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden">
-            <div class="bg-emerald-500 h-5 rounded-full transition-all" style="width:${pct}%"></div>
+        html += `<div class="pd3i-dashboard-month-row">
+          <div class="pd3i-dashboard-month-label">${label}</div>
+          <div class="pd3i-dashboard-month-track">
+            <div class="pd3i-dashboard-month-fill" style="width:${pct}%"></div>
           </div>
-          <div class="w-8 text-xs font-extrabold text-slate-700">${val}</div>
+          <div class="pd3i-dashboard-month-value">${val}</div>
         </div>`;
       });
       html += `</div></div>`;
@@ -760,7 +760,7 @@
 
     // Req 6.6: viewer tidak melihat tombol aksi admin
     if (!isViewer && isAdmin) {
-      html += `<div class="mt-4 pt-4 border-t border-slate-100 text-right">
+      html += `<div class="pd3i-dashboard-exportbar mt-4 pt-4">
         <button type="button" onclick="handleExportCsv()" class="pd3i-primary-button pd3i-dashboard-export">
           <i class="fas fa-file-csv mr-1"></i> Export CSV ${dx} ${tahun}
         </button>

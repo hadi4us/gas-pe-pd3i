@@ -634,24 +634,33 @@
           <h2 class="pd3i-card-title flex items-center gap-2">
             <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik Kasus
           </h2>
-          <div class="pd3i-helper-text mt-2">Workspace statistik sekarang tampil sebagai halaman/section penuh, bukan pop-up.</div>
+          <div class="pd3i-helper-text mt-2 pd3i-dashboard-hero-copy">Pantau mutu data, distribusi wilayah, hotspot kasus, dan antrian verifikasi dalam satu workspace analitik.</div>
         </div>
         <button type="button" id="btn-dashboard-back-to-workspace" class="pd3i-ghost-button pd3i-inline-button">
           <i class="fas fa-arrow-up"></i> Kembali ke workspace
         </button>
       </div>
-      <div class="pd3i-dashboard-toolbar mb-5">
-        <select id="dashboard-dx" class="pd3i-shell-select pd3i-dashboard-filter">
-          <option value="MR">Campak/Rubella (MR)</option>
-          <option value="DIF">Difteri (DIF)</option>
-          <option value="PERT">Pertusis (PERT)</option>
-          <option value="TN">Tetanus Neonatorum (TN)</option>
-          <option value="AFP">AFP</option>
-        </select>
-        <select id="dashboard-tahun" class="pd3i-shell-select pd3i-dashboard-filter pd3i-dashboard-filter-year"></select>
-        <button type="button" id="btn-load-dashboard" class="pd3i-primary-button pd3i-dashboard-load">
-          <i class="fas fa-sync mr-1"></i> Muat Data
-        </button>
+      <div class="pd3i-dashboard-toolbar-panel mb-5">
+        <div class="pd3i-dashboard-toolbar-head">
+          <div>
+            <div class="pd3i-card-eyebrow">Filter analitik</div>
+            <div class="pd3i-dashboard-toolbar-title">Pilih diagnosis dan periode analisis</div>
+          </div>
+          <span class="pd3i-badge-soft">Analytics workspace</span>
+        </div>
+        <div class="pd3i-dashboard-toolbar">
+          <select id="dashboard-dx" class="pd3i-shell-select pd3i-dashboard-filter">
+            <option value="MR">Campak/Rubella (MR)</option>
+            <option value="DIF">Difteri (DIF)</option>
+            <option value="PERT">Pertusis (PERT)</option>
+            <option value="TN">Tetanus Neonatorum (TN)</option>
+            <option value="AFP">AFP</option>
+          </select>
+          <select id="dashboard-tahun" class="pd3i-shell-select pd3i-dashboard-filter pd3i-dashboard-filter-year"></select>
+          <button type="button" id="btn-load-dashboard" class="pd3i-primary-button pd3i-dashboard-load">
+            <i class="fas fa-sync mr-1"></i> Muat Data
+          </button>
+        </div>
       </div>
       <div id="dashboard-content" class="pd3i-dashboard-content"><div class="pd3i-dashboard-state">Pilih DX dan tahun, lalu klik "Muat Data".</div></div>
     </div>
