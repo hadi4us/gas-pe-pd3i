@@ -98,9 +98,18 @@
           </div>
           <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
             <button id="btn-admin-menu" type="button" class="pd3i-admin-button">
-              <i class="fas fa-user-shield"></i> Admin
+              <i class="fas fa-user-shield"></i> <span id="btn-admin-menu-label">Admin</span>
             </button>
             <div id="admin-menu-dropdown" class="hidden pd3i-admin-dropdown">
+              <button id="btn-open-pin" type="button" class="pd3i-admin-dropdown-item">
+                <i class="fas fa-key text-violet-600"></i> Ubah PIN
+              </button>
+              <button id="btn-dashboard" type="button" class="pd3i-admin-dropdown-item">
+                <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik
+              </button>
+              <button id="btn-export-csv" type="button" class="pd3i-admin-dropdown-item">
+                <i class="fas fa-file-csv text-green-600"></i> Export CSV
+              </button>
               <button id="btn-retry-sync" type="button" class="pd3i-admin-dropdown-item">
                 <i class="fas fa-rotate-right text-amber-600"></i> Retry Sync Pengampu
               </button>
@@ -110,20 +119,12 @@
               <button id="btn-retry-telegram" type="button" class="pd3i-admin-dropdown-item">
                 <i class="fab fa-telegram-plane text-sky-600"></i> Retry Notifikasi Telegram
               </button>
-              <button id="btn-dashboard" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-chart-bar text-emerald-600"></i> Dashboard Statistik
-              </button>
-              <button id="btn-export-csv" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-file-csv text-green-600"></i> Export CSV
+              <div class="pd3i-admin-dropdown-divider"></div>
+              <button id="btn-logout" type="button" class="pd3i-admin-dropdown-item is-danger">
+                <i class="fas fa-right-from-bracket text-rose-600"></i> Logout
               </button>
             </div>
           </div>
-          <button id="btn-open-pin" type="button" class="pd3i-ghost-button">
-            <i class="fas fa-key"></i> Ubah PIN
-          </button>
-          <button id="btn-logout" type="button" class="pd3i-primary-button">
-            <i class="fas fa-right-from-bracket"></i> Logout
-          </button>
         </div>
       </header>
 

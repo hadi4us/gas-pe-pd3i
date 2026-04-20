@@ -3863,6 +3863,7 @@
       const btnSidebarClose = document.getElementById("btn-sidebar-close");
       const sidebarOverlay = document.getElementById("pd3i-sidebar-overlay");
       const btnAdminMenu = document.getElementById("btn-admin-menu");
+      const btnAdminMenuLabel = document.getElementById("btn-admin-menu-label");
       const adminMenuWrap = document.getElementById("admin-menu-wrap");
       const adminMenuDropdown = document.getElementById("admin-menu-dropdown");
       const btnOpenPin = document.getElementById("btn-open-pin");
@@ -3908,15 +3909,13 @@
         }
 
         if (adminMenuWrap) {
-          if (!isAdmin) adminMenuWrap.classList.add("hidden");
-          else adminMenuWrap.classList.remove("hidden");
+          adminMenuWrap.classList.remove("hidden");
         }
         if (btnAdminMenu) {
-          if (!isAdmin) btnAdminMenu.classList.add("hidden");
-          else btnAdminMenu.classList.remove("hidden");
+          btnAdminMenu.classList.remove("hidden");
         }
-        if (adminMenuDropdown && !isAdmin) {
-          adminMenuDropdown.classList.add("hidden");
+        if (btnAdminMenuLabel) {
+          btnAdminMenuLabel.textContent = isAdmin ? "Admin" : "Akun";
         }
 
         if (btnRetrySync) {
@@ -4025,8 +4024,7 @@
       if (btnAdminMenu && adminMenuDropdown) {
         btnAdminMenu.addEventListener("click", function(e) {
           e.stopPropagation();
-          const currentRole = String((SESSION_USER && SESSION_USER.role) || "").trim().toLowerCase();
-          if (currentRole !== "admin") return;
+          if (!SESSION_USER) return;
           adminMenuDropdown.classList.toggle("hidden");
         });
         document.addEventListener("click", function(ev) {
