@@ -4354,17 +4354,20 @@
           const dx = selector.value;
 
           const filters = {
-            epid:         (document.getElementById("search-epid")?.value || "").trim(),
-            nama:         (document.getElementById("search-nama")?.value || "").trim(),
-            tanggalLahir: (document.getElementById("search-tgl-lahir")?.value || "").trim(),
-            orangTua:     (document.getElementById("search-orang-tua")?.value || "").trim(),
-            alamat:       (document.getElementById("search-alamat")?.value || "").trim(),
-            kelurahan:    (document.getElementById("search-kelurahan")?.value || "").trim(),
-            sortBy:       (document.getElementById("search-sort")?.value || "updated_desc")
+            epid:            (document.getElementById("search-epid")?.value || "").trim(),
+            nama:            (document.getElementById("search-nama")?.value || "").trim(),
+            tanggalLahir:    (document.getElementById("search-tgl-lahir")?.value || "").trim(),
+            orangTua:        (document.getElementById("search-orang-tua")?.value || "").trim(),
+            alamat:          (document.getElementById("search-alamat")?.value || "").trim(),
+            kelurahan:       (document.getElementById("search-kelurahan")?.value || "").trim(),
+            statusVerifikasi:(document.getElementById("search-status-verifikasi")?.value || "").trim(),
+            workspace:       String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
+            workflowIntent:  String(WORKFLOW_SEARCH_INTENT || '').trim(),
+            sortBy:          (document.getElementById("search-sort")?.value || "updated_desc")
           };
 
           const hasFilter = filters.epid || filters.nama || filters.tanggalLahir ||
-                            filters.orangTua || filters.alamat || filters.kelurahan;
+                            filters.orangTua || filters.alamat || filters.kelurahan || filters.statusVerifikasi;
 
           if (!hasFilter) {
             showTopAlert("Isi minimal satu kriteria pencarian.", false);

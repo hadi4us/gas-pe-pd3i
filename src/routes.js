@@ -274,6 +274,15 @@ function _searchIncludes_(haystack, needle) {
   return source.indexOf(target) !== -1;
 }
 
+function _normalizeVerificationStatus_(value) {
+  const raw = _searchNormalizeText_(value);
+  if (!raw) return 'PENDING';
+  if (raw === 'TERVERIFIKASI') return 'TERVERIFIKASI';
+  if (raw === 'PERLU REVISI') return 'PERLU REVISI';
+  if (raw === 'PENDING') return 'PENDING';
+  return raw;
+}
+
 function _mapSearchResultItem_(dx, record) {
   const getFirst = function(keys) {
     for (var i = 0; i < keys.length; i++) {
@@ -321,7 +330,21 @@ function searchRecords(dx, filters, token) {
   const alamatNeedle = String(filters.alamat || '').trim();
   const kelurahanNeedle = String(filters.kelurahan || '').trim();
   const statusVerifikasiNeedle = String(filters.statusVerifikasi || '').trim();
+  const workspace = String(filters.workspace || '').trim().toLowerCase();
+  const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
   const sortBy = String(filters.sortBy || 'updated_desc').trim();
+  const explicitStatus = _normalizeVerificationStatus_(statusVerifikasiNeedle);
+  let allowedVerificationStatuses = null;
+
+  if (explicitStatus && explicitStatus !== 'PENDING') {
+    allowedVerificationStatuses = [explicitStatus];
+  } else if (statusVerifikasiNeedle) {
+    allowedVerificationStatuses = [explicitStatus];
+  } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
+    allowedVerificationStatuses = ['PENDING', 'PERLU REVISI'];
+  } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
+    allowedVerificationStatuses = ['TERVERIFIKASI'];
+  }
   const page = Math.max(1, parseInt(filters.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
   const results = [];
@@ -361,7 +384,10 @@ function searchRecords(dx, filters, token) {
       if (!_searchIncludes_(item.orangTua, orangTuaNeedle)) return;
       if (!_searchIncludes_(item.alamat, alamatNeedle)) return;
       if (!_searchIncludes_(item.kelurahan, kelurahanNeedle)) return;
-      if (!_searchIncludes_(item.statusVerifikasi, statusVerifikasiNeedle)) return;
+
+      const normalizedVerificationStatus = _normalizeVerificationStatus_(item.statusVerifikasi || 'Pending');
+      if (allowedVerificationStatuses && allowedVerificationStatuses.indexOf(normalizedVerificationStatus) === -1) return;
+      if (!allowedVerificationStatuses && !_searchIncludes_(item.statusVerifikasi, statusVerifikasiNeedle)) return;
 
       results.push(item);
     });
