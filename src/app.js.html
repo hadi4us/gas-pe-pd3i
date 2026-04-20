@@ -2017,6 +2017,16 @@
     return appUrl ? appUrl + '?workspace=' + encodeURIComponent(normalized) : '';
   }
 
+  function getSafeSessionTokenLocal() {
+    try {
+      if (typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) return SESSION_TOKEN;
+    } catch (e) {}
+    try {
+      if (typeof window !== 'undefined' && window.__PD3I_SESSION_TOKEN) return window.__PD3I_SESSION_TOKEN;
+    } catch (e) {}
+    return '';
+  }
+
   function syncWorkspaceRoute(workspace, options) {
     const opts = options || {};
     const targetUrl = buildWorkspaceRouteUrl(workspace);
@@ -2464,41 +2474,58 @@
       });
     });
 
-    if (!safeGsRun() || !SESSION_TOKEN) {
+    const sessionToken = getSafeSessionTokenLocal();
+    if (!safeGsRun() || !sessionToken) {
       summaryWrap.innerHTML = '<div class="pd3i-helper-text">Ringkasan kerja belum tersedia karena sesi belum siap.</div>';
       return;
     }
 
+    const requestId = Date.now();
+    window.__OVERVIEW_REQUEST_ID = requestId;
+    setTimeout(function() {
+      if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
+      if (String(summaryWrap.textContent || '').indexOf('Memuat ringkasan kerja') !== -1) {
+        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-amber-700">Ringkasan kerja terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda Form.</div>';
+      }
+    }, 8000);
+
     google.script.run
       .withSuccessHandler(function(res) {
-        const summary = res && res.summary ? res.summary : { pendingVerification: 0, revisionQueue: 0 };
-        const pending = Number(summary.pendingVerification || 0);
-        const revisi = Number(summary.revisionQueue || 0);
-        window.__OVERVIEW_PENDING_COUNT = pending + revisi;
-        updateUiShellSummary();
-        summaryWrap.innerHTML = [
-          `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
-          `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`
-        ].join('');
+        if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
+        try {
+          const summary = res && res.summary ? res.summary : { pendingVerification: 0, revisionQueue: 0 };
+          const pending = Number(summary.pendingVerification || 0);
+          const revisi = Number(summary.revisionQueue || 0);
+          window.__OVERVIEW_PENDING_COUNT = pending + revisi;
+          updateUiShellSummary();
+          summaryWrap.innerHTML = [
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`
+          ].join('');
 
-        const pendingItems = (res && res.pendingVerification) || [];
-        const revisionItems = (res && res.revisionQueue) || [];
-        const items = pendingItems.concat(revisionItems).slice(0, 6);
-        if (!items.length) {
-          inboxWrap.innerHTML = '<div class="pd3i-helper-text">Belum ada antrian kerja penting saat ini.</div>';
-          return;
+          const pendingItems = (res && res.pendingVerification) || [];
+          const revisionItems = (res && res.revisionQueue) || [];
+          const items = pendingItems.concat(revisionItems).slice(0, 6);
+          if (!items.length) {
+            inboxWrap.innerHTML = '<div class="pd3i-helper-text">Belum ada antrian kerja penting saat ini.</div>';
+            return;
+          }
+          inboxWrap.innerHTML = items.map(function(item) {
+            const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\'");
+            const safeDx = String(item.dx || '').replace(/'/g, "\'");
+            return `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
+          }).join('');
+        } catch (err) {
+          console.error('renderOverviewWorkspace success handler failed:', err);
+          summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Ringkasan kerja gagal dirender.</div>';
         }
-        inboxWrap.innerHTML = items.map(function(item) {
-          const safeRecordKey = String(item.recordKey || '').replace(/'/g, "\'");
-          const safeDx = String(item.dx || '').replace(/'/g, "\'");
-          return `<button type="button" class="pd3i-inbox-item" onclick="_loadRecordFromSearch_('${safeRecordKey}', '${safeDx}')"><strong>${escapeHtml(item.nama || '-')}</strong><small>${escapeHtml([item.dx, item.kecamatan, item.kelurahan, item.recordId || item.epid].filter(Boolean).join(' • '))}</small></button>`;
-        }).join('');
       })
       .withFailureHandler(function(err) {
+        if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
         console.error('renderOverviewWorkspace failed:', err);
         summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan kerja beranda.</div>';
       })
-      .getWorkflowInbox('', SESSION_TOKEN);
+      .getWorkflowInbox('', sessionToken);
   }
 
   function getCurrentSessionActorName() {
