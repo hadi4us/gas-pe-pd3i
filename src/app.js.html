@@ -32,6 +32,21 @@
     return "";
   }
 
+  function _getNeutralFieldName_(fieldId) {
+    const str = String(fieldId || "");
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return `pd3i_f_${Math.abs(hash)}`;
+  }
+
+  function _getSemanticFieldKey_(el) {
+    if (!el) return "";
+    return String((el.dataset && el.dataset.fieldId) || el.id || el.name || "").trim();
+  }
+
   function generateHTML(field) {
     if (field.type === "header") {
       return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
@@ -128,15 +143,16 @@
     }
 
     let inputHtml = "";
-    const browserHintAttrs = 'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"';
+    const neutralName = _getNeutralFieldName_(field.id);
+    const browserHintAttrs = `autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-field-id="${field.id}"`;
 
     if (field.type === "select" || field.type === "search_select") {
-      inputHtml = `<select id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${browserHintAttrs}>
+      inputHtml = `<select id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${browserHintAttrs}>
         <option value="">-- Pilih --</option>
         ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
       </select>`;
     } else if (field.type === "textarea") {
-      inputHtml = `<textarea id="${field.id}" name="${field.id}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
+      inputHtml = `<textarea id="${field.id}" name="${neutralName}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
     } else {
       const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
       let maxAttr = field.max ? `max="${field.max}"` : "";
@@ -149,7 +165,7 @@
         maxAttr = `max="${today}"`;
       }
 
-      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} step="any">`;
+      inputHtml = `<input type="${field.type}" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} step="any">`;
     }
 
     const numericHint = _getNumericFieldHintById(field.id);
@@ -1219,7 +1235,9 @@
 
       const fields = {};
       form.querySelectorAll("input[name], select[name], textarea[name]").forEach(el => {
-        fields[el.name] = el.value;
+        const fieldKey = _getSemanticFieldKey_(el);
+        if (!fieldKey) return;
+        fields[fieldKey] = el.value;
       });
 
       const now = Date.now();
@@ -1286,7 +1304,7 @@
       setTimeout(async () => {
         const fields = draft.fields || {};
         Object.keys(fields).forEach(name => {
-          const el = document.getElementsByName(name)[0];
+          const el = document.querySelector(`[data-field-id="${name.replace(/"/g, '\\"')}"]`) || document.getElementById(name) || document.getElementsByName(name)[0];
           if (el) {
             el.value = fields[name];
             el.dispatchEvent(new Event("change", { bubbles: true }));
@@ -4706,9 +4724,12 @@
         btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
         btnSubmit.disabled = true;
 
-        const formData = new FormData(this);
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit) };
-        formData.forEach((v, k) => { dataObj[k] = v; });
+        this.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+          const fieldKey = _getSemanticFieldKey_(el);
+          if (!fieldKey) return;
+          dataObj[fieldKey] = el.value;
+        });
 
         if (!dataObj["ID Registrasi Kasus"] && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"]) {
           dataObj["ID Registrasi Kasus"] = window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"];
