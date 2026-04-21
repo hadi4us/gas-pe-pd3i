@@ -1116,7 +1116,7 @@
     const rules = Array.isArray(REF_IMUN) ? REF_IMUN.filter(r => r && r.KodeImunisasi && r.LabelImunisasi) : [];
     const ruleMap = getRuleMap();
 
-    console.log("[imunisasi] build rows", { ruleCount: rules.length, hasCoreContext, tbodyId: tbody.id, source: rules[0]?.__source || null });
+    // debug log intentionally muted in production
 
     rules.forEach(rule => {
       const kode = String(rule.KodeImunisasi || "").trim().toUpperCase();
@@ -1164,7 +1164,7 @@
     });
 
     if (rules.length === 0) {
-      console.warn("[imunisasi] REF_IMUN kosong saat build");
+      // REF_IMUN may still be loading; silent here to avoid noisy console spam.
     }
 
     updateImunisasiSummary();
@@ -1183,8 +1183,7 @@
     let delays = [0, 150, 400, 800, 1500];
     delays.forEach(ms => {
       setTimeout(() => {
-        const ok = attempt();
-        console.log("[imunisasi] force build attempt", { ms, ok, refLen: Array.isArray(REF_IMUN) ? REF_IMUN.length : null, rows: document.getElementById("tbody-Riwayat Imunisasi")?.children.length ?? null });
+        attempt();
       }, ms);
     });
   }
@@ -3900,18 +3899,33 @@
     });
   }
 
-  function hydrateDynamicTableByJson(tableId, jsonString) {
+  function hydrateDynamicTableByJson(tableId, rawValue) {
     const tbody = document.getElementById(`tbody-${tableId}`);
-    if (!tbody || !jsonString) return;
+    if (!tbody || rawValue == null || rawValue === "") return;
 
     tbody.innerHTML = "";
     try {
-      const rows = JSON.parse(jsonString);
-      (rows || []).forEach(item => {
+      let rows = [];
+      if (Array.isArray(rawValue)) {
+        rows = rawValue;
+      } else if (typeof rawValue === 'object') {
+        rows = Array.isArray(rawValue.rows) ? rawValue.rows : Object.values(rawValue || {});
+      } else {
+        const text = String(rawValue || '').trim();
+        if (!text || text === '[object Object]') return;
+        rows = JSON.parse(text);
+      }
+
+      if (!Array.isArray(rows)) {
+        rows = rows ? [rows] : [];
+      }
+
+      rows.forEach(item => {
+        if (!item || typeof item !== 'object') return;
         if (tableId === "Riwayat Imunisasi") {
           addDynamicRow(tableId, {
-            __kode: item.KodeImunisasi || item.Kode || "",
-            "Jenis Imunisasi": item["Jenis Imunisasi"] || "",
+            __kode: item.KodeImunisasi || item.Kode || item.__kode || "",
+            "Jenis Imunisasi": item["Jenis Imunisasi"] || item.LabelImunisasi || "",
             "Status": item["Status"] || "",
             "Tanggal": item["Tanggal"] || "",
             "Sumber Informasi": item["Sumber Informasi"] || "",
@@ -3922,7 +3936,7 @@
         }
       });
     } catch (e) {
-      console.warn(`Gagal parse ${tableId}:`, e);
+      console.warn(`Gagal parse ${tableId}:`, e, rawValue);
     }
   }
 
