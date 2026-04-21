@@ -1,4 +1,9 @@
-        <form id="dynamic-form" class="hidden" autocomplete="off" data-form-type="other">
+        <form id="dynamic-form" class="hidden" autocomplete="off" data-form-type="other" novalidate>
+          <div aria-hidden="true" class="hidden" style="display:none !important; visibility:hidden !important; position:absolute !important; left:-9999px !important; width:1px !important; height:1px !important; overflow:hidden !important;">
+            <input type="text" tabindex="-1" autocomplete="name" name="contact_name_dummy">
+            <input type="text" tabindex="-1" autocomplete="street-address" name="contact_address_dummy">
+            <input type="email" tabindex="-1" autocomplete="email" name="contact_email_dummy">
+          </div>
           <div class="pd3i-form-layout">
             <div class="pd3i-form-main">
               <div id="edit-badge" class="pd3i-edit-badge" hidden>
