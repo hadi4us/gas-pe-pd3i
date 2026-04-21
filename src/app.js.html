@@ -2503,11 +2503,12 @@
 
   function applyWorkflowSearchUiMode(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
+    const isQueueWorkspace = ['verifikasi', 'sampel', 'status'].includes(normalized);
     const hiddenMap = {
-      'search-filter-tgl-lahir-wrap': normalized === 'sampel',
-      'search-filter-orang-tua-wrap': normalized === 'sampel',
-      'search-filter-alamat-wrap': normalized === 'sampel',
-      'search-filter-status-wrap': normalized === 'sampel'
+      'search-filter-tgl-lahir-wrap': isQueueWorkspace,
+      'search-filter-orang-tua-wrap': isQueueWorkspace,
+      'search-filter-alamat-wrap': isQueueWorkspace,
+      'search-filter-status-wrap': isQueueWorkspace
     };
     Object.keys(hiddenMap).forEach(function(id) {
       const el = document.getElementById(id);
@@ -2522,9 +2523,8 @@
     const searchResults = document.getElementById('search-results');
     const searchHelper = document.getElementById('search-context-helper');
 
-    if (normalized === 'sampel') {
+    if (isQueueWorkspace) {
       if (toolbarEyebrow) toolbarEyebrow.textContent = 'Filter antrian';
-      if (toolbarTitle) toolbarTitle.textContent = 'Saring daftar kasus menunggu hasil lab';
       if (toolbarBadge) toolbarBadge.textContent = 'Queue filter';
       if (btnSearch) btnSearch.innerHTML = '<i class="fas fa-filter"></i> Terapkan Filter';
       if (btnReset) btnReset.classList.remove('hidden');
@@ -2532,7 +2532,16 @@
         searchResults.classList.add('hidden');
         searchResults.innerHTML = '';
       }
-      if (searchHelper) searchHelper.textContent = 'Filter ini dipakai untuk menyaring daftar kasus menunggu hasil lab di atas, bukan untuk pencarian global semua record.';
+      if (normalized === 'verifikasi') {
+        if (toolbarTitle) toolbarTitle.textContent = 'Saring daftar kasus verifikasi EPID';
+        if (searchHelper) searchHelper.textContent = 'Filter ini dipakai untuk menyaring daftar kasus review admin dan revisi di bawah, bukan untuk pencarian global semua record.';
+      } else if (normalized === 'sampel') {
+        if (toolbarTitle) toolbarTitle.textContent = 'Saring daftar kasus menunggu hasil lab';
+        if (searchHelper) searchHelper.textContent = 'Filter ini dipakai untuk menyaring daftar kasus menunggu hasil lab di bawah, bukan untuk pencarian global semua record.';
+      } else if (normalized === 'status') {
+        if (toolbarTitle) toolbarTitle.textContent = 'Saring daftar kasus siap update status';
+        if (searchHelper) searchHelper.textContent = 'Filter ini dipakai untuk menyaring daftar kasus siap update status di bawah, bukan untuk pencarian global semua record.';
+      }
       return;
     }
 
@@ -2619,7 +2628,7 @@
     };
 
     let filtered = rows;
-    if (normalized === 'sampel') {
+    if (['verifikasi', 'sampel', 'status'].includes(normalized)) {
       filtered = rows.filter(function(item) {
         const recordText = [item && item.epid, item && item.recordId, item && item.recordKey].filter(Boolean).join(' ').toLowerCase();
         return match(recordText, filters.epid)
@@ -2910,17 +2919,27 @@
       statusCountEl.classList.toggle('hidden', !(summary.statusQueue > 0));
     }
 
-    const visiblePending = workspace === 'verifikasi' ? pendingVerification : [];
-    const visibleRevision = (workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? revisionQueue : [];
+    const visiblePending = workspace === 'verifikasi' ? filterQueueItemsForWorkspace(pendingVerification, workspace) : [];
+    const visibleRevision = workspace === 'verifikasi'
+      ? filterQueueItemsForWorkspace(revisionQueue, workspace)
+      : ((workspace === 'input' || workspace === 'search') ? revisionQueue : []);
     const visibleSample = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleQueue, workspace) : [];
-    const visibleStatus = workspace === 'status' ? statusQueue : [];
+    const visibleStatus = workspace === 'status' ? filterQueueItemsForWorkspace(statusQueue, workspace) : [];
 
     if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleStatus.length) {
-      if (workspace === 'sampel' || workspace === 'status') {
-        let emptyTitle = workspace === 'sampel' ? 'Belum ada kasus menunggu hasil lab' : 'Belum ada kasus siap update status';
-        let emptyCopy = workspace === 'sampel'
-          ? 'Kasus akan muncul di sini setelah terverifikasi dan memang ditandai perlu pemeriksaan lab / sampel, lalu hilang lagi saat hasil sampel sudah final disimpan.'
-          : 'Kasus akan muncul di sini setelah terverifikasi dan siap ditindaklanjuti pada tahap update status.';
+      if (workspace === 'verifikasi' || workspace === 'sampel' || workspace === 'status') {
+        let emptyTitle = 'Belum ada kasus di antrian kerja';
+        let emptyCopy = 'Belum ada kasus yang cocok dengan filter saat ini.';
+        if (workspace === 'verifikasi') {
+          emptyTitle = 'Belum ada kasus untuk verifikasi EPID';
+          emptyCopy = 'Kasus akan muncul di sini saat ada record Pending atau Perlu Revisi yang perlu ditindaklanjuti admin.';
+        } else if (workspace === 'sampel') {
+          emptyTitle = 'Belum ada kasus menunggu hasil lab';
+          emptyCopy = 'Kasus akan muncul di sini setelah terverifikasi dan memang ditandai perlu pemeriksaan lab / sampel, lalu hilang lagi saat hasil sampel sudah final disimpan.';
+        } else if (workspace === 'status') {
+          emptyTitle = 'Belum ada kasus siap update status';
+          emptyCopy = 'Kasus akan muncul di sini setelah terverifikasi dan siap ditindaklanjuti pada tahap update status.';
+        }
         box.innerHTML = `<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Antrian kerja</div><h4 class="pd3i-card-title text-lg">${emptyTitle}</h4></div></div><div class="pd3i-empty-state">${emptyCopy}</div></div>`;
         box.classList.remove('hidden');
         return;
@@ -2933,7 +2952,9 @@
     let html = '<div class="pd3i-shell-card border border-amber-200 bg-amber-50/70">';
     html += '<div class="flex flex-wrap items-center justify-between gap-3">';
     html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
-    if (workspace === 'sampel') {
+    if (workspace === 'verifikasi') {
+      html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${summary.pendingVerification || 0}</strong> • Perlu revisi: <strong>${summary.revisionQueue || 0}</strong></div>`;
+    } else if (workspace === 'sampel') {
       html += `<div class="pd3i-helper-text">Kasus menunggu hasil lab: <strong>${summary.sampleQueue || 0}</strong></div>`;
     } else if (workspace === 'status') {
       html += `<div class="pd3i-helper-text">Kasus siap update status: <strong>${summary.statusQueue || 0}</strong></div>`;
@@ -4632,7 +4653,7 @@
             workflowIntent: String(WORKFLOW_SEARCH_INTENT || '').trim()
           });
 
-          if (workspace === 'sampel') {
+          if (['verifikasi', 'sampel', 'status'].includes(workspace)) {
             hideTopAlert();
             if (WORKFLOW_INBOX_CACHE) {
               renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
@@ -4686,7 +4707,7 @@
         btnSearchReset.addEventListener('click', function() {
           resetWorkflowSearchFilters();
           hideTopAlert();
-          if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'sampel') {
+          if (['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) {
             if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
             else refreshWorkflowInbox();
           }
@@ -4699,7 +4720,7 @@
         el.dataset.boundFilter = '1';
         const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
         el.addEventListener(eventName, function() {
-          if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) !== 'sampel') return;
+          if (!['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) return;
           if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
         });
       });
