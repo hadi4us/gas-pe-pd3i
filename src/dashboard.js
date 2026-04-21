@@ -165,10 +165,12 @@ function _buildDashboardRecordSummary_(row, idxMap) {
       }
     }
   }
+  var recordId = idxMap.idxRecordId !== -1 ? String(row[idxMap.idxRecordId] || '').trim() : '';
+  var epid = idxMap.idxEpid !== -1 ? String(row[idxMap.idxEpid] || '').trim() : '';
   return {
-    recordKey: idxMap.idxRecordId !== -1 ? String(row[idxMap.idxRecordId] || '').trim() : (idxMap.idxEpid !== -1 ? String(row[idxMap.idxEpid] || '').trim() : ''),
-    recordId: idxMap.idxRecordId !== -1 ? String(row[idxMap.idxRecordId] || '').trim() : '',
-    epid: idxMap.idxEpid !== -1 ? String(row[idxMap.idxEpid] || '').trim() : '',
+    recordKey: recordId || epid,
+    recordId: recordId,
+    epid: epid,
     nama: idxMap.idxNama !== -1 ? String(row[idxMap.idxNama] || '').trim() : '',
     alamat: idxMap.idxAlamat !== -1 ? String(row[idxMap.idxAlamat] || '').trim() : '',
     kecamatan: kecamatan,
@@ -223,7 +225,9 @@ function _buildWorkflowInboxData_(sess, dx) {
     }, []);
 
     rows.forEach(function(row) {
-      const recordKey = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : (idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '');
+      const recordId = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '';
+      const epid = idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '';
+      const recordKey = recordId || epid;
       if (!recordKey) return;
 
       const statusVerifikasi = idxVerifikasi !== -1 ? String(row[idxVerifikasi] || '').trim() : '';
@@ -253,8 +257,8 @@ function _buildWorkflowInboxData_(sess, dx) {
       const item = {
         dx: dxItem,
         recordKey: recordKey,
-        recordId: idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '',
-        epid: idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '',
+        recordId: recordId,
+        epid: epid,
         nama: idxNama !== -1 ? String(row[idxNama] || '').trim() : '',
         kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '',
         kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '',
