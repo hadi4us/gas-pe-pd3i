@@ -2211,7 +2211,7 @@
       const showForm = isInputWorkspace
         ? (hasDx || hasOpenRecord)
         : isDeferredWorkspace
-          ? true
+          ? hasOpenRecord
           : isSearchWorkspace
             ? hasOpenRecord
             : false;
@@ -2811,9 +2811,9 @@
 
     if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleStatus.length) {
       if (workspace === 'sampel' || workspace === 'status') {
-        let emptyTitle = workspace === 'sampel' ? 'Belum ada kasus siap hasil sampel' : 'Belum ada kasus siap update status';
+        let emptyTitle = workspace === 'sampel' ? 'Belum ada kasus menunggu hasil lab' : 'Belum ada kasus siap update status';
         let emptyCopy = workspace === 'sampel'
-          ? 'Kasus akan muncul di sini setelah terverifikasi dan memang relevan untuk tindak lanjut hasil sampel.'
+          ? 'Kasus akan muncul di sini setelah terverifikasi dan memang ditandai perlu pemeriksaan lab / sampel, lalu hilang lagi saat hasil sampel sudah final disimpan.'
           : 'Kasus akan muncul di sini setelah terverifikasi dan siap ditindaklanjuti pada tahap update status.';
         box.innerHTML = `<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Antrian kerja</div><h4 class="pd3i-card-title text-lg">${emptyTitle}</h4></div></div><div class="pd3i-empty-state">${emptyCopy}</div></div>`;
         box.classList.remove('hidden');
@@ -2828,7 +2828,7 @@
     html += '<div class="flex flex-wrap items-center justify-between gap-3">';
     html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
     if (workspace === 'sampel') {
-      html += `<div class="pd3i-helper-text">Kasus siap hasil sampel: <strong>${summary.sampleQueue || 0}</strong></div>`;
+      html += `<div class="pd3i-helper-text">Kasus menunggu hasil lab: <strong>${summary.sampleQueue || 0}</strong></div>`;
     } else if (workspace === 'status') {
       html += `<div class="pd3i-helper-text">Kasus siap update status: <strong>${summary.statusQueue || 0}</strong></div>`;
     } else {
@@ -2853,8 +2853,8 @@
     }
 
     if (visibleSample.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Kasus siap input hasil sampel</div><div class="mt-2">';
-      html += renderQueueTable(visibleSample, { emptyText: 'Belum ada kasus siap hasil sampel.', actionLabel: 'Input hasil' });
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Kasus menunggu hasil lab</div><div class="mt-2">';
+      html += renderQueueTable(visibleSample, { emptyText: 'Belum ada kasus menunggu hasil lab.', actionLabel: 'Input hasil' });
       html += '</div></div>';
     }
 
@@ -3777,6 +3777,35 @@
     updateImunisasiSummary();
   }
 
+  function clearActiveRecordContext() {
+    isEditMode = false;
+    if (typeof window !== 'undefined') {
+      window.__PD3I_ACTIVE_RECORD_META = null;
+    }
+    const editBadge = document.getElementById('edit-badge');
+    const viewerBadge = document.getElementById('viewer-badge');
+    const btnCancelEdit = document.getElementById('btn-cancel-edit');
+    const searchResults = document.getElementById('search-results');
+    const form = document.getElementById('dynamic-form');
+    const btnSubmit = document.getElementById('btn-submit');
+    if (editBadge) editBadge.hidden = true;
+    if (viewerBadge) viewerBadge.hidden = true;
+    if (btnCancelEdit) btnCancelEdit.classList.add('hidden');
+    if (form) form.reset();
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('bg-yellow-600', 'opacity-60', 'cursor-not-allowed');
+      btnSubmit.classList.add('bg-blue-600');
+    }
+    ['tbody-Kontak Erat', 'tbody-Riwayat Imunisasi', 'tbody-Riwayat Status Kasus'].forEach(function(id) {
+      const tbody = document.getElementById(id);
+      if (tbody) tbody.innerHTML = '';
+    });
+    if (searchResults) searchResults.classList.add('hidden');
+    hideTopAlert();
+    applySidebarWorkspaceLayout(ACTIVE_SIDEBAR_WORKSPACE || 'overview');
+  }
+
   function resetForNewEntry() {
     try {
       clearFormDraft();
@@ -3808,7 +3837,7 @@
         btnSubmit.disabled = false;
         btnSubmit.classList.remove("bg-yellow-600");
         btnSubmit.classList.add("bg-blue-600");
-        btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+        btnSubmit.innerHTML = getSubmitLabelForStage('section-pelapor');
       }
 
       if (choicesInstance) {
@@ -4379,7 +4408,7 @@
         btnSubmit.disabled = false;
         btnSubmit.classList.remove("bg-yellow-600");
         btnSubmit.classList.add("bg-blue-600");
-        btnSubmit.innerHTML = `<i class="fas fa-save"></i> Simpan Data ke Database`;
+        btnSubmit.innerHTML = getSubmitLabelForStage('section-pelapor');
 
         if (choicesInstance) {
           try { choicesInstance.destroy(); } catch (e) {}
@@ -4961,11 +4990,18 @@
             updateUiShellSummary();
             refreshWorkflowInbox();
 
-            showSuccessModal(
-              res.message || "Data berhasil disimpan.",
-              printUrl,
-              { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
-            );
+            if (activeStageNormalized === 'section-sampel') {
+              clearActiveRecordContext();
+              openSidebarWorkspace('sampel', { scroll: true });
+              refreshWorkflowInbox();
+              showTopAlert('Hasil sampel berhasil disimpan. Kasus yang sudah selesai keluar dari daftar menunggu hasil lab.', true);
+            } else {
+              showSuccessModal(
+                res.message || "Data berhasil disimpan.",
+                printUrl,
+                { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
+              );
+            }
           } else {
             showTopAlert("Error: " + (res?.message || "Gagal menyimpan data."), false);
             btnSubmit.disabled = false;
