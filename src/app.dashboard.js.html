@@ -423,6 +423,11 @@
     const section = document.getElementById('section-dashboard');
     if (section) section.classList.remove('hidden');
     content.dataset.loaded = '';
+    const requestId = String(Date.now());
+    content.dataset.loadingRequest = requestId;
+    const runtimeGuard = (typeof createWorkspaceRuntimeGuard === 'function')
+      ? createWorkspaceRuntimeGuard('dashboard')
+      : null;
     content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
 
     if (!safeGsRun() || !getSafeSessionToken()) {
@@ -431,8 +436,14 @@
     }
 
     google.script.run
-      .withSuccessHandler(function (stats) { renderDashboard(stats, dx, tahun); })
+      .withSuccessHandler(function (stats) {
+        if (content.dataset.loadingRequest !== requestId) return;
+        if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+        renderDashboard(stats, dx, tahun);
+      })
       .withFailureHandler(function (err) {
+        if (content.dataset.loadingRequest !== requestId) return;
+        if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
       .getDashboardStats(dx, tahun, getSafeSessionToken());

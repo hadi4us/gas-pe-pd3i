@@ -1988,6 +1988,7 @@
   }
 
   let ACTIVE_SIDEBAR_WORKSPACE = "overview";
+  let WORKSPACE_RUNTIME_SEQ = 0;
 
   function normalizeSidebarWorkspace(workspaceOrSection) {
     const raw = String(workspaceOrSection || '').trim().toLowerCase();
@@ -2011,6 +2012,49 @@
       'section-dashboard': 'dashboard'
     };
     return map[raw] || 'overview';
+  }
+
+  function createWorkspaceRuntimeGuard(workspace) {
+    return {
+      seq: WORKSPACE_RUNTIME_SEQ,
+      workspace: normalizeSidebarWorkspace(workspace)
+    };
+  }
+
+  function isWorkspaceRuntimeGuardActive(guard) {
+    if (!guard) return false;
+    return Number(guard.seq || 0) === Number(WORKSPACE_RUNTIME_SEQ || 0)
+      && normalizeSidebarWorkspace(guard.workspace) === normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
+  }
+
+  function beginWorkspaceRuntime(workspace) {
+    ACTIVE_SIDEBAR_WORKSPACE = normalizeSidebarWorkspace(workspace);
+    WORKSPACE_RUNTIME_SEQ += 1;
+    return createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
+  }
+
+  function cleanupWorkspaceTransientUi(nextWorkspace) {
+    const normalized = normalizeSidebarWorkspace(nextWorkspace);
+    const adminMenuDropdown = document.getElementById('admin-menu-dropdown');
+    if (adminMenuDropdown) adminMenuDropdown.classList.add('hidden');
+
+    if (normalized !== 'overview') {
+      window.__OVERVIEW_REQUEST_ID = 0;
+    }
+
+    if (normalized !== 'dashboard') {
+      const dashboardContent = document.getElementById('dashboard-content');
+      if (dashboardContent) {
+        delete dashboardContent.dataset.loadingRequest;
+      }
+    }
+
+    if (!['search', 'verifikasi', 'sampel', 'status'].includes(normalized)) {
+      const searchResultsBox = document.getElementById('search-results');
+      if (searchResultsBox && !isEditMode && !isViewerSession()) {
+        searchResultsBox.classList.add('hidden');
+      }
+    }
   }
 
   function getRouteBootConfig() {
@@ -2114,7 +2158,6 @@
 
   function applySidebarWorkspaceLayout(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
-    ACTIVE_SIDEBAR_WORKSPACE = normalized;
 
     const overviewSection = document.getElementById('section-overview');
     const inputLauncherSection = document.getElementById('section-input-launcher');
@@ -2151,6 +2194,8 @@
     const opts = options || {};
     const normalized = normalizeSidebarWorkspace(workspace);
     const targetStage = getWorkspaceStageForSidebar(normalized);
+    beginWorkspaceRuntime(normalized);
+    cleanupWorkspaceTransientUi(normalized);
 
     if (opts.useRoute) {
       syncWorkspaceRoute(normalized, { replace: !!opts.replaceRoute });
@@ -2565,10 +2610,11 @@
       return;
     }
 
+    const runtimeGuard = createWorkspaceRuntimeGuard('overview');
     const requestId = Date.now();
     window.__OVERVIEW_REQUEST_ID = requestId;
     setTimeout(function() {
-      if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
+      if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
       if (String(summaryWrap.textContent || '').indexOf('Memuat ringkasan kerja') !== -1) {
         summaryWrap.innerHTML = '<div class="pd3i-empty-state">Ringkasan kerja terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda Form.</div>';
       }
@@ -2576,7 +2622,7 @@
 
     google.script.run
       .withSuccessHandler(function(res) {
-        if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
+        if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         try {
           const summary = res && res.summary ? res.summary : { pendingVerification: 0, revisionQueue: 0 };
           const pending = Number(summary.pendingVerification || 0);
@@ -2604,7 +2650,7 @@
         }
       })
       .withFailureHandler(function(err) {
-        if (window.__OVERVIEW_REQUEST_ID !== requestId) return;
+        if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         console.error('renderOverviewWorkspace failed:', err);
         summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan kerja beranda.</div>';
       })
@@ -2626,8 +2672,9 @@
   function collectCurrentFormPayload() {
     const payload = {};
     document.querySelectorAll('#dynamic-form input[name], #dynamic-form select[name], #dynamic-form textarea[name]').forEach(function(el) {
-      if (!el || !el.name) return;
-      payload[el.name] = el.value;
+      const fieldKey = _getSemanticFieldKey_(el);
+      if (!fieldKey) return;
+      payload[fieldKey] = el.value;
     });
     return payload;
   }
@@ -2804,15 +2851,18 @@
       return;
     }
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
+    const runtimeGuard = createWorkspaceRuntimeGuard(workspace);
     if (['search', 'verifikasi', 'sampel', 'status'].includes(workspace)) {
       box.classList.remove('hidden');
       box.innerHTML = '<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kerja...</span></div></div>';
     }
     google.script.run
       .withSuccessHandler(function(res) {
+        if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         renderWorkflowInbox(res || null);
       })
       .withFailureHandler(function() {
+        if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         box.classList.add('hidden');
         box.innerHTML = '';
       })
@@ -4443,14 +4493,17 @@
             searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Mencari data existing...</span></div>`;
           }
 
+          const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
           google.script.run
             .withSuccessHandler(function(data) {
+              if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
               // data bisa array (lama) atau objek paginasi baru
               const results = Array.isArray(data) ? data : (data && data.results ? data.results : []);
               const total   = Array.isArray(data) ? data.length : (data && data.total != null ? data.total : results.length);
               _renderSearchResultsList(results, total, dx);
             })
             .withFailureHandler(function(err) {
+              if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
               console.error("searchRecords failed:", err);
               if (searchResultsBox) {
                 searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-error">Gagal mencari data. Silakan coba lagi.</div>`;
