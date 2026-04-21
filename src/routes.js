@@ -115,6 +115,12 @@ function _normalizeFaskesJenis_(value) {
   return raw;
 }
 
+function _resolveFaskesJenis_(jenisValue, namaValue) {
+  var normalizedJenis = _normalizeFaskesJenis_(jenisValue);
+  if (normalizedJenis) return normalizedJenis;
+  return _normalizeFaskesJenis_(namaValue);
+}
+
 function getRecordByKey(dx, recordKey, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
@@ -280,7 +286,7 @@ function getFaskesFromSheet(token) {
     items = rows
       .map(function(row) {
         const nama = idxNama !== -1 ? String(row[idxNama] || '').trim() : '';
-        const jenis = idxJenis !== -1 ? _normalizeFaskesJenis_(row[idxJenis]) : '';
+        const jenis = _resolveFaskesJenis_(idxJenis !== -1 ? row[idxJenis] : '', nama);
         const aktif = idxAktif !== -1 ? String(row[idxAktif] || '').trim().toUpperCase() : 'YA';
         const key = idxKey !== -1 ? String(row[idxKey] || '').trim() : _normalizeRefKey_(nama);
         if (!nama) return null;

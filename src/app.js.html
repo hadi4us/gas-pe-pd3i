@@ -582,7 +582,7 @@
       selectEl.disabled = true;
       selectEl.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
     } else if (!["MASYARAKAT", "LAINNYA"].includes(upper)) {
-      const filtered = (MASTER_FASKES || []).filter(f => normalizeFaskesJenisLabel(f.jenis) === upper);
+      const filtered = (MASTER_FASKES || []).filter(f => normalizeFaskesJenisLabel(f.jenis || f.nama) === upper);
 
       filtered.forEach(f => {
         const opt = document.createElement("option");
@@ -628,7 +628,7 @@
     selectEl.innerHTML = '<option value="">-- Pilih / ketik Rumah Sakit --</option>';
 
     const filtered = (MASTER_FASKES || []).filter(f =>
-      normalizeFaskesJenisLabel(f.jenis) === "RUMAH SAKIT"
+      normalizeFaskesJenisLabel(f.jenis || f.nama) === "RUMAH SAKIT"
     );
 
     filtered.forEach(f => {

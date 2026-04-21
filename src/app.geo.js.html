@@ -136,7 +136,7 @@
       selectEl.disabled = true;
       selectEl.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
     } else if (!["MASYARAKAT", "LAINNYA"].includes(upper)) {
-      const filtered = (MASTER_FASKES || []).filter(f => normalizeFaskesJenisLabel(f.jenis) === upper);
+      const filtered = (MASTER_FASKES || []).filter(f => normalizeFaskesJenisLabel(f.jenis || f.nama) === upper);
 
       filtered.forEach(f => {
         const opt = document.createElement("option");
@@ -159,28 +159,10 @@
       selectEl.appendChild(opt);
     }
 
-    choicesInstance = new Choices(selectEl, {
-      searchEnabled: true,
-      itemSelectText: "",
-      shouldSort: false,
-      placeholder: true,
-      placeholderValue: "-- Pilih Unit --",
-      searchPlaceholderValue: "Cari unit..."
-    });
-
     selectEl.removeAttribute("required");
-
     if (keepValue) {
-      setTimeout(() => {
-        try {
-          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
-          if (exists) {
-            choicesInstance.setChoiceByValue(keepValue);
-          }
-        } catch (e) {
-          console.warn("Gagal restore Nama unit pelapor:", e);
-        }
-      }, 80);
+      const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
+      if (exists) selectEl.value = keepValue;
     }
   }
 
@@ -199,7 +181,7 @@
     selectEl.innerHTML = '<option value="">-- Pilih Rumah Sakit --</option>';
 
     const filtered = (MASTER_FASKES || []).filter(f =>
-      normalizeFaskesJenisLabel(f.jenis) === "RUMAH SAKIT"
+      normalizeFaskesJenisLabel(f.jenis || f.nama) === "RUMAH SAKIT"
     );
 
     filtered.forEach(f => {
@@ -210,28 +192,10 @@
       selectEl.appendChild(opt);
     });
 
-    rsChoicesInstance = new Choices(selectEl, {
-      searchEnabled: true,
-      itemSelectText: "",
-      shouldSort: false,
-      placeholder: true,
-      placeholderValue: "-- Pilih Rumah Sakit --",
-      searchPlaceholderValue: "Cari rumah sakit..."
-    });
-
     selectEl.removeAttribute("required");
-
     if (keepValue) {
-      setTimeout(() => {
-        try {
-          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
-          if (exists) {
-            rsChoicesInstance.setChoiceByValue(keepValue);
-          }
-        } catch (e) {
-          console.warn("Gagal restore Nama Rumah Sakit:", e);
-        }
-      }, 120);
+      const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
+      if (exists) selectEl.value = keepValue;
     }
   }
 
