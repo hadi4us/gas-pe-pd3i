@@ -2742,9 +2742,11 @@
   function renderOverviewWorkspace() {
     const quickWrap = document.getElementById('overview-quick-actions');
     const roleWrap = document.getElementById('overview-role-summary');
+    const kpiWrap = document.getElementById('overview-kpi-grid');
+    const focusWrap = document.getElementById('overview-kpi-focus');
     const summaryWrap = document.getElementById('overview-work-summary');
     const inboxWrap = document.getElementById('overview-work-inbox');
-    if (!quickWrap || !roleWrap || !summaryWrap || !inboxWrap) return;
+    if (!quickWrap || !roleWrap || !kpiWrap || !focusWrap || !summaryWrap || !inboxWrap) return;
 
     const caps = getRoleCapabilities(SESSION_USER);
     const quickActions = [
@@ -2767,7 +2769,9 @@
     }).join('');
 
     roleWrap.textContent = caps.summary || 'Belum ada sesi aktif.';
-    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat ringkasan kerja...</div>';
+    kpiWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat KPI operasional...</div>';
+    focusWrap.innerHTML = '';
+    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat antrian kerja...</div>';
     inboxWrap.innerHTML = '';
 
     quickWrap.querySelectorAll('[data-overview-workspace]').forEach(function(btn) {
@@ -2780,7 +2784,8 @@
 
     const sessionToken = getSafeSessionTokenLocal();
     if (!safeGsRun() || !sessionToken) {
-      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Ringkasan kerja belum tersedia karena sesi belum siap.</div>';
+      kpiWrap.innerHTML = '<div class="pd3i-helper-text">KPI beranda belum tersedia karena sesi belum siap.</div>';
+      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Antrian kerja belum tersedia karena sesi belum siap.</div>';
       return;
     }
 
@@ -2789,8 +2794,8 @@
     window.__OVERVIEW_REQUEST_ID = requestId;
     setTimeout(function() {
       if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
-      if (String(summaryWrap.textContent || '').indexOf('Memuat ringkasan kerja') !== -1) {
-        summaryWrap.innerHTML = '<div class="pd3i-empty-state">Ringkasan kerja terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda Form.</div>';
+      if (String(kpiWrap.textContent || '').indexOf('Memuat KPI operasional') !== -1) {
+        kpiWrap.innerHTML = '<div class="pd3i-empty-state">KPI beranda terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda.</div>';
       }
     }, 8000);
 
@@ -2798,14 +2803,57 @@
       .withSuccessHandler(function(res) {
         if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         try {
-          const summary = res && res.summary ? res.summary : { pendingVerification: 0, revisionQueue: 0 };
+          const summary = res && res.summary ? res.summary : {};
           const pending = Number(summary.pendingVerification || 0);
           const revisi = Number(summary.revisionQueue || 0);
-          window.__OVERVIEW_PENDING_COUNT = pending + revisi;
+          const sample = Number(summary.sampleQueue || 0);
+          const status = Number(summary.statusQueue || 0);
+          const totalRecords = Number(summary.totalScopedRecords || 0);
+          const verified = Number(summary.verifiedRecords || 0);
+          const actionable = Number(summary.actionableCount || 0);
+          const activeKelurahan = Number(summary.activeKelurahanCount || 0);
+          const topDx = Array.isArray(summary.topDx) ? summary.topDx : [];
+          const primaryFocus = topDx.slice(0, 3).map(function(item) {
+            return `${escapeHtml(item.dx)} ${Number(item.count || 0)}`;
+          }).join(' • ') || 'Belum ada distribusi diagnosis dominan';
+
+          window.__OVERVIEW_PENDING_COUNT = actionable;
           updateUiShellSummary();
+
+          const scopePill = topDx.length
+            ? topDx.slice(0, 2).map(function(item) { return `${item.dx} ${item.count}`; }).join(' • ')
+            : 'Lintas diagnosis';
+          const summaryDxPill = document.getElementById('summary-dx-pill');
+          const summaryWarningPill = document.getElementById('summary-warning-pill');
+          const summaryModePill = document.getElementById('summary-mode-pill');
+          if (summaryModePill) summaryModePill.textContent = 'Beranda KPI';
+          if (summaryDxPill) summaryDxPill.textContent = scopePill;
+          if (summaryWarningPill) summaryWarningPill.textContent = String(actionable);
+
+          const queueFocusLabel = normalizeUiRole(SESSION_USER && SESSION_USER.role) === 'admin'
+            ? 'Pending verifikasi'
+            : 'Perlu revisi';
+          const queueFocusCount = normalizeUiRole(SESSION_USER && SESSION_USER.role) === 'admin' ? pending : revisi;
+
+          kpiWrap.innerHTML = [
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Total kasus dalam scope</div><span class="count">${totalRecords}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Kasus terverifikasi</div><span class="count">${verified}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">${escapeHtml(queueFocusLabel)}</div><span class="count">${queueFocusCount}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Kelurahan aktif</div><span class="count">${activeKelurahan}</span></div>`
+          ].join('');
+
+          focusWrap.innerHTML = [
+            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus diagnosis</div><div class="pd3i-overview-focus-title">Sebaran diagnosis aktif</div><div class="pd3i-overview-focus-copy">${primaryFocus}</div></div>`,
+            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus tindak lanjut</div><div class="pd3i-overview-focus-title">Antrian kerja aktif</div><div class="pd3i-overview-focus-copy">Saat ini ada <strong>${actionable}</strong> item kerja aktif yang perlu ditindaklanjuti di workspace operasional.</div></div>`
+          ].join('');
+
           summaryWrap.innerHTML = [
             `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`
           ].join('');
 
           const pendingItems = ((res && res.pendingVerification) || []).map(function(item) {
@@ -2814,19 +2862,27 @@
           const revisionItems = ((res && res.revisionQueue) || []).map(function(item) {
             return Object.assign({}, item, { __queueBucket: 'revision' });
           });
-          const items = pendingItems.concat(revisionItems).slice(0, 6);
+          const sampleItems = ((res && res.sampleQueue) || []).map(function(item) {
+            return Object.assign({}, item, { __queueBucket: 'sample' });
+          });
+          const statusItems = ((res && res.statusQueue) || []).map(function(item) {
+            return Object.assign({}, item, { __queueBucket: 'status' });
+          });
+          const items = pendingItems.concat(revisionItems, sampleItems, statusItems).slice(0, 8);
           inboxWrap.innerHTML = renderQueueTable(items, {
             emptyText: 'Belum ada antrian kerja penting saat ini.'
           });
         } catch (err) {
           console.error('renderOverviewWorkspace success handler failed:', err);
-          summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Ringkasan kerja gagal dirender.</div>';
+          kpiWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">KPI beranda gagal dirender.</div>';
+          summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Antrian kerja gagal dirender.</div>';
         }
       })
       .withFailureHandler(function(err) {
         if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         console.error('renderOverviewWorkspace failed:', err);
-        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan kerja beranda.</div>';
+        kpiWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat KPI beranda.</div>';
+        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat antrian kerja beranda.</div>';
       })
       .getOverviewSummary(sessionToken);
   }

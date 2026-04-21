@@ -3656,6 +3656,34 @@ body.pd3i-body {
   font-size: 0.84rem;
 }
 
+.pd3i-overview-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.pd3i-overview-focus-card {
+  padding: 0.95rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(219, 230, 242, 0.95);
+  background: linear-gradient(180deg, rgba(248,251,255,0.96) 0%, rgba(255,255,255,0.98) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
+}
+
+.pd3i-overview-focus-title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--pd3i-text);
+  margin-top: 0.2rem;
+}
+
+.pd3i-overview-focus-copy {
+  margin-top: 0.35rem;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--pd3i-text-soft);
+}
+
 .pd3i-overview-summary-grid {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.9rem;
@@ -3692,12 +3720,14 @@ body.pd3i-body {
 
 @media (max-width: 768px) {
   .pd3i-overview-actions,
-  .pd3i-overview-summary-grid {
+  .pd3i-overview-summary-grid,
+  .pd3i-overview-focus-grid {
     grid-template-columns: 1fr;
   }
 
   .pd3i-overview-action-btn,
   .pd3i-overview-summary-card,
+  .pd3i-overview-focus-card,
   #overview-role-summary,
   .pd3i-overview-inbox .pd3i-inbox-item {
     border-radius: 18px;

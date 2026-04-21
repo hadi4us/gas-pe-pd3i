@@ -1,27 +1,40 @@
         <section id="section-overview" class="pd3i-overview-grid">
           <div id="overview-hero-card" class="pd3i-hero-card">
             <div class="pd3i-hero-topline">
-              <div class="pd3i-hero-badge">Workspace Form PD3I</div>
+              <div class="pd3i-hero-badge">KPI operasional PD3I</div>
               <span class="pd3i-badge-soft">Beranda operasional</span>
             </div>
-            <h2 class="pd3i-hero-title">Satu shell kerja untuk input, review, update status, dan monitoring kasus PD3I</h2>
+            <h2 class="pd3i-hero-title">Ringkasan KPI dan antrian kerja untuk keputusan harian</h2>
             <p class="pd3i-hero-copy">
-              Gunakan sidebar sebagai pengarah workspace. Input kasus baru dimulai dari menu <strong>Input Kasus</strong>, sedangkan verifikasi, hasil sampel, dan update status berjalan dari record existing.
+              Beranda menampilkan KPI utama dalam scope akun yang sedang aktif. Gunakan quick action untuk masuk ke workspace kerja, lalu tindak lanjuti antrian prioritas di bawahnya.
             </p>
             <div class="pd3i-hero-metrics">
               <div class="pd3i-mini-stat">
                 <div class="pd3i-mini-stat-label">Mode</div>
-                <div class="pd3i-mini-stat-value" id="summary-mode-pill">Beranda operasional</div>
+                <div class="pd3i-mini-stat-value" id="summary-mode-pill">Beranda KPI</div>
               </div>
               <div class="pd3i-mini-stat">
-                <div class="pd3i-mini-stat-label">Diagnosis aktif</div>
-                <div class="pd3i-mini-stat-value" id="summary-dx-pill">Tidak dipilih di beranda</div>
+                <div class="pd3i-mini-stat-label">Scope</div>
+                <div class="pd3i-mini-stat-value" id="summary-dx-pill">Lintas diagnosis</div>
               </div>
               <div class="pd3i-mini-stat">
-                <div class="pd3i-mini-stat-label">Peringatan</div>
+                <div class="pd3i-mini-stat-label">Kerja aktif</div>
                 <div class="pd3i-mini-stat-value" id="summary-warning-pill">0</div>
               </div>
             </div>
+          </div>
+
+          <div class="pd3i-shell-card pd3i-overview-panel pd3i-overview-panel-kpi">
+            <div class="pd3i-card-header-row">
+              <div>
+                <div class="pd3i-card-eyebrow">KPI utama</div>
+                <h3 class="pd3i-card-title">Dashboard operasional harian</h3>
+              </div>
+              <span class="pd3i-badge-soft">Scoped</span>
+            </div>
+            <div id="overview-role-summary" class="pd3i-helper-text">Memuat ringkasan sesi...</div>
+            <div id="overview-kpi-grid" class="pd3i-overview-summary-grid mt-4"></div>
+            <div id="overview-kpi-focus" class="pd3i-overview-focus-grid mt-4"></div>
           </div>
 
           <div class="pd3i-shell-card pd3i-overview-panel pd3i-overview-panel-actions">
@@ -38,13 +51,12 @@
           <div class="pd3i-shell-card pd3i-overview-panel pd3i-overview-panel-summary">
             <div class="pd3i-card-header-row">
               <div>
-                <div class="pd3i-card-eyebrow">Ringkasan kerja</div>
-                <h3 class="pd3i-card-title">Antrian dan fokus saat ini</h3>
+                <div class="pd3i-card-eyebrow">Antrian kerja</div>
+                <h3 class="pd3i-card-title">Fokus dan prioritas saat ini</h3>
               </div>
-              <span class="pd3i-badge-soft">Lintas diagnosis</span>
+              <span class="pd3i-badge-soft">Actionable</span>
             </div>
-            <div id="overview-role-summary" class="pd3i-helper-text">Memuat ringkasan sesi...</div>
-            <div id="overview-work-summary" class="pd3i-overview-summary-grid mt-4"></div>
+            <div id="overview-work-summary" class="pd3i-overview-summary-grid"></div>
             <div id="overview-work-inbox" class="pd3i-overview-inbox mt-4"></div>
           </div>
         </section>

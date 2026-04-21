@@ -197,6 +197,10 @@ function _buildWorkflowInboxData_(sess, dx) {
   const revisionQueue = [];
   const sampleQueue = [];
   const statusQueue = [];
+  let totalScopedRecords = 0;
+  let verifiedRecords = 0;
+  const kelurahanSet = {};
+  const dxCounts = {};
 
   dxList.forEach(function(dxItem) {
     const sheetData = _readSheetWithCache_(dxItem + '_Raw');
@@ -271,6 +275,13 @@ function _buildWorkflowInboxData_(sess, dx) {
         updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
       };
 
+      if (role === 'admin' || scopeMatch) {
+        totalScopedRecords += 1;
+        if (normalizedStatus === 'TERVERIFIKASI') verifiedRecords += 1;
+        if (item.kelurahan) kelurahanSet[item.kelurahan] = true;
+        dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
+      }
+
       if (role === 'admin' && normalizedStatus === 'PENDING') {
         pendingVerification.push(item);
       }
@@ -307,12 +318,24 @@ function _buildWorkflowInboxData_(sess, dx) {
   const revisionSorted = sortQueue(revisionQueue);
   const sampleSorted = sortQueue(sampleQueue);
   const statusSorted = sortQueue(statusQueue);
+  const actionableCount = pendingSorted.length + revisionSorted.length + sampleSorted.length + statusSorted.length;
+  const topDx = Object.keys(dxCounts).sort(function(a, b) {
+    if ((dxCounts[b] || 0) !== (dxCounts[a] || 0)) return (dxCounts[b] || 0) - (dxCounts[a] || 0);
+    return String(a || '').localeCompare(String(b || ''));
+  }).map(function(dxKey) {
+    return { dx: dxKey, count: dxCounts[dxKey] || 0 };
+  });
   return {
     summary: {
       pendingVerification: pendingSorted.length,
       revisionQueue: revisionSorted.length,
       sampleQueue: sampleSorted.length,
-      statusQueue: statusSorted.length
+      statusQueue: statusSorted.length,
+      totalScopedRecords: totalScopedRecords,
+      verifiedRecords: verifiedRecords,
+      actionableCount: actionableCount,
+      activeKelurahanCount: Object.keys(kelurahanSet).length,
+      topDx: topDx
     },
     pendingVerification: pendingSorted,
     revisionQueue: revisionSorted,
@@ -380,7 +403,7 @@ function getWorkflowInbox(dx, token) {
 function getOverviewSummary(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
-    return { summary: { pendingVerification: 0, revisionQueue: 0 }, pendingVerification: [], revisionQueue: [] };
+    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [] }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
   }
 
   try {
@@ -407,7 +430,9 @@ function getOverviewSummary(token) {
     const overviewResult = {
       summary: result.summary,
       pendingVerification: (result.pendingVerification || []).slice(0, 6),
-      revisionQueue: (result.revisionQueue || []).slice(0, 6)
+      revisionQueue: (result.revisionQueue || []).slice(0, 6),
+      sampleQueue: (result.sampleQueue || []).slice(0, 6),
+      statusQueue: (result.statusQueue || []).slice(0, 6)
     };
 
     if (cache) {
@@ -420,9 +445,11 @@ function getOverviewSummary(token) {
   } catch (e) {
     console.error('[getOverviewSummary] Error:', e);
     return {
-      summary: { pendingVerification: 0, revisionQueue: 0 },
+      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [] },
       pendingVerification: [],
       revisionQueue: [],
+      sampleQueue: [],
+      statusQueue: [],
       error: String(e)
     };
   }
