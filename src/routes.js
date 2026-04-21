@@ -5,7 +5,7 @@ function doGet(e) {
     return handlePrintRequest_(e);
   }
 
-  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status"];
+  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "guide"];
   const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
     ? "dashboard"
     : "app";

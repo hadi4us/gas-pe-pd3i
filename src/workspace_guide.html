@@ -1,0 +1,174 @@
+        <section id="section-guide" class="hidden pd3i-guide-shell">
+          <div class="pd3i-hero-card pd3i-guide-hero">
+            <div class="pd3i-hero-topline">
+              <div class="pd3i-hero-badge">Panduan Aplikasi</div>
+              <span class="pd3i-badge-soft">Petunjuk penggunaan detail</span>
+            </div>
+            <h2 class="pd3i-hero-title">Cara menggunakan aplikasi PD3I per menu dan per role</h2>
+            <p class="pd3i-hero-copy">
+              Halaman ini menjelaskan alur kerja tiap menu, siapa yang boleh mengaksesnya, dan urutan kerja yang disarankan supaya petugas tidak salah tahap.
+            </p>
+          </div>
+
+          <div class="pd3i-guide-grid">
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Prinsip umum</div>
+                  <h3 class="pd3i-card-title">Urutan kerja aplikasi</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li><strong>Input Kasus</strong> dipakai untuk membuat data awal kasus baru.</li>
+                <li><strong>Verifikasi EPID</strong> dipakai admin untuk review, koreksi, dan penetapan EPID.</li>
+                <li><strong>Hasil Sampel</strong> dipakai saat kasus memang menunggu hasil laboratorium.</li>
+                <li><strong>Status Pasien</strong> dipakai untuk memperbarui status akhir/perkembangan kasus.</li>
+                <li><strong>Cari / Edit</strong> dipakai untuk membuka record existing lintas diagnosis sesuai hak akses.</li>
+                <li><strong>Dashboard Statistik</strong> dipakai untuk melihat KPI, tren, dan distribusi kasus.</li>
+              </ol>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Role & akses</div>
+                  <h3 class="pd3i-card-title">Siapa boleh mengerjakan apa</h3>
+                </div>
+              </div>
+              <ul class="pd3i-guide-list">
+                <li><strong>Admin:</strong> bisa input, cari/edit, verifikasi EPID, hasil sampel, update status, dan dashboard penuh.</li>
+                <li><strong>Petugas puskesmas:</strong> bisa input kasus, cari/edit sesuai scope wilayah, hasil sampel sesuai pengampu, update status, dan lihat dashboard statistik.</li>
+                <li><strong>Viewer:</strong> hanya lihat data dan statistik yang diizinkan, tanpa simpan perubahan.</li>
+                <li><strong>Verifikasi EPID</strong> hanya muncul untuk akun <strong>admin</strong>.</li>
+                <li>Pembacaan data untuk akun puskesmas dibatasi oleh mapping <strong>REF_PENGAMPU</strong>.</li>
+              </ul>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 1</div>
+                  <h3 class="pd3i-card-title">Beranda KPI</h3>
+                </div>
+              </div>
+              <ul class="pd3i-guide-list">
+                <li>Berisi KPI operasional yang scoped sesuai akun aktif.</li>
+                <li>Tampilkan total kasus dalam scope, breakdown diagnosis, workload aktif, dan antrian kerja prioritas.</li>
+                <li>Gunakan quick action untuk masuk cepat ke workspace kerja.</li>
+                <li>Beranda <strong>bukan</strong> daftar semua kasus wilayah, tetapi ringkasan kerja operasional.</li>
+              </ul>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 2</div>
+                  <h3 class="pd3i-card-title">Cari / Edit</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li>Buka menu <strong>Cari / Edit</strong>.</li>
+                <li>Isi salah satu filter seperti Nomor EPID, ID Registrasi Kasus, Nama Pasien, atau Tanggal Lahir.</li>
+                <li>Klik <strong>Cari Data Existing</strong>.</li>
+                <li>Pilih hasil yang ingin dibuka.</li>
+                <li>Workspace akan mengarahkan user ke mode kerja yang sesuai.</li>
+              </ol>
+              <p class="pd3i-guide-note">Pencarian bersifat lintas diagnosis, tetapi tetap dibatasi scope wilayah untuk akun puskesmas.</p>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 3</div>
+                  <h3 class="pd3i-card-title">Input Kasus</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li>Pilih diagnosis di launcher input.</li>
+                <li>Isi data pelapor, pasien, lalu data spesifik diagnosis.</li>
+                <li>Pastikan field wajib dan validasi tanggal terisi benar.</li>
+                <li>Klik <strong>Simpan Input Awal</strong>.</li>
+                <li>Setelah tersimpan, record akan siap masuk ke tahap kerja berikutnya sesuai role.</li>
+              </ol>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 4</div>
+                  <h3 class="pd3i-card-title">Verifikasi EPID</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li>Menu ini hanya tersedia untuk <strong>admin</strong>.</li>
+                <li>Buka antrian verifikasi atau cari record yang statusnya pending/revisi.</li>
+                <li>Review data input awal secara menyeluruh.</li>
+                <li>Tentukan status verifikasi: <strong>Terverifikasi</strong> atau <strong>Perlu Revisi</strong>.</li>
+                <li>Jika terverifikasi, tetapkan atau koreksi <strong>Nomor EPID</strong> lalu simpan.</li>
+              </ol>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 5</div>
+                  <h3 class="pd3i-card-title">Hasil Sampel</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li>Buka menu <strong>Hasil Sampel</strong>.</li>
+                <li>Gunakan filter antrian di atas untuk menyaring kasus menunggu hasil lab.</li>
+                <li>Pilih salah satu kasus dari daftar antrian.</li>
+                <li>Isi form hasil pemeriksaan laboratorium.</li>
+                <li>Simpan. Jika hasil sudah final, kasus keluar dari antrian hasil sampel.</li>
+              </ol>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 6</div>
+                  <h3 class="pd3i-card-title">Status Pasien</h3>
+                </div>
+              </div>
+              <ol class="pd3i-guide-list is-numbered">
+                <li>Buka menu <strong>Status Pasien</strong>.</li>
+                <li>Filter antrian kasus yang siap update status.</li>
+                <li>Buka kasus yang relevan.</li>
+                <li>Isi status pasien/kasus sesuai perkembangan terakhir.</li>
+                <li>Simpan agar riwayat status kasus terbarui.</li>
+              </ol>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Menu 7</div>
+                  <h3 class="pd3i-card-title">Dashboard Statistik</h3>
+                </div>
+              </div>
+              <ul class="pd3i-guide-list">
+                <li>Tersedia untuk admin, petugas, dan viewer sesuai blok yang diizinkan.</li>
+                <li>Gunakan untuk melihat KPI, tren kasus, distribusi wilayah, dan hotspot.</li>
+                <li>Blok yang khusus admin seperti antrian verifikasi admin tidak ditampilkan pada role non-admin.</li>
+                <li>Dashboard tetap mengikuti scope wilayah untuk akun puskesmas.</li>
+              </ul>
+            </div>
+
+            <div class="pd3i-shell-card pd3i-guide-card">
+              <div class="pd3i-card-header-row">
+                <div>
+                  <div class="pd3i-card-eyebrow">Tips kerja</div>
+                  <h3 class="pd3i-card-title">Praktik yang disarankan</h3>
+                </div>
+              </div>
+              <ul class="pd3i-guide-list">
+                <li>Gunakan <strong>Cari / Edit</strong> jika ingin membuka record existing lintas diagnosis.</li>
+                <li>Gunakan menu kerja spesifik (<strong>Hasil Sampel</strong>, <strong>Status</strong>) untuk menyelesaikan antrian lebih cepat.</li>
+                <li>Jangan gunakan <strong>Verifikasi EPID</strong> untuk petugas non-admin.</li>
+                <li>Jika data tidak muncul, cek dulu apakah kasus berada di wilayah kerja sesuai <strong>REF_PENGAMPU</strong>.</li>
+                <li>Untuk data lama/legacy, gunakan pencarian dengan Nomor EPID, ID Registrasi Kasus, atau Nama Pasien.</li>
+              </ul>
+            </div>
+          </div>
+        </section>

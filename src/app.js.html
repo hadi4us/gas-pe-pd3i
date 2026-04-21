@@ -2017,7 +2017,9 @@
       status: 'status',
       'section-status': 'status',
       dashboard: 'dashboard',
-      'section-dashboard': 'dashboard'
+      'section-dashboard': 'dashboard',
+      guide: 'guide',
+      'section-guide': 'guide'
     };
     return map[raw] || 'overview';
   }
@@ -2081,7 +2083,7 @@
 
   function getEffectiveDxScopeForWorkspace(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
-    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard'].includes(normalized)) return '';
+    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard', 'guide'].includes(normalized)) return '';
     return String(document.getElementById('form-selector')?.value || '').trim();
   }
 
@@ -2209,10 +2211,12 @@
     const searchSection = document.getElementById('section-search-shell');
     const form = document.getElementById('dynamic-form');
     const dashboardSection = document.getElementById('section-dashboard');
+    const guideSection = document.getElementById('section-guide');
     const isDeferredWorkspace = ['verifikasi', 'sampel', 'status'].includes(normalized);
     const isInputWorkspace = normalized === 'input';
     const isSearchWorkspace = normalized === 'search';
     const isDashboardWorkspace = normalized === 'dashboard';
+    const isGuideWorkspace = normalized === 'guide';
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
@@ -2220,6 +2224,7 @@
     if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace || hasOpenRecord);
     if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
     if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
+    if (guideSection) guideSection.classList.toggle('hidden', !isGuideWorkspace);
     applySearchDefaultsForWorkspace(normalized);
 
     if (form) {
@@ -2252,6 +2257,15 @@
       if (typeof openDashboardSection === 'function') {
         openDashboardSection({ autoLoad: opts.autoLoad, scroll: opts.scroll !== false });
       }
+      return normalized;
+    }
+
+    if (normalized === 'guide') {
+      setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: false, skipStageSync: true });
+      updateFormStepperState('section-pelapor');
+      applySidebarWorkspaceLayout('guide');
+      applySearchShellCopyForWorkspace('guide');
+      if (opts.scroll !== false) document.getElementById('section-guide')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
     }
 
@@ -2755,7 +2769,8 @@
       { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Review record existing untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
       { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil sampel', copy: 'Lanjutkan record existing saat hasil pemeriksaan sudah tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
       { workspace: 'status', icon: 'fa-list-check', title: 'Update status', copy: 'Perbarui status pasien / kasus dari record existing.', show: caps.viewStages.indexOf('section-status') !== -1 },
-      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView }
+      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView },
+      { workspace: 'guide', icon: 'fa-book-open', title: 'Panduan aplikasi', copy: 'Baca petunjuk penggunaan detail per menu dan per role.', show: caps.canView }
     ].filter(function(item) { return item.show; });
 
     quickWrap.innerHTML = quickActions.map(function(item) {
