@@ -139,6 +139,23 @@ function getRecordByKey(dx, recordKey, token) {
   const idxRecordId = headers.indexOf("ID Registrasi Kasus");
   const idxEpid = headers.indexOf("Nomor EPID");
   const target = String(recordKey || "").trim();
+  const rowKeyMatch = target.match(/^ROW:(\d+)$/i);
+
+  if (rowKeyMatch) {
+    const rowNumber = parseInt(rowKeyMatch[1], 10);
+    if (!isNaN(rowNumber) && rowNumber >= 2 && rowNumber <= values.length) {
+      const record = (typeof deserializeRecord_ === 'function')
+        ? deserializeRecord_(values[rowNumber - 1], headers)
+        : (function() {
+            const obj = {};
+            headers.forEach(function(h, idx) { obj[h] = values[rowNumber - 1][idx]; });
+            return obj;
+          })();
+      record.dx = dx;
+      record.__RAW_ROW_NUMBER__ = rowNumber;
+      return record;
+    }
+  }
 
   for (let i = 1; i < values.length; i++) {
     const rowRecordId = idxRecordId !== -1 ? String(values[i][idxRecordId] || "").trim() : "";
@@ -152,6 +169,7 @@ function getRecordByKey(dx, recordKey, token) {
             return obj;
           })();
       record.dx = dx;
+      record.__RAW_ROW_NUMBER__ = i + 1;
       return record;
     }
   }
@@ -385,7 +403,7 @@ function searchRecords(dx, filters, token) {
       rows = values.slice(1);
     }
 
-    rows.forEach(function(row) {
+    rows.forEach(function(row, rowIdx) {
       const record = (typeof deserializeRecord_ === 'function')
         ? deserializeRecord_(row, headers)
         : (function() {
@@ -393,8 +411,12 @@ function searchRecords(dx, filters, token) {
             headers.forEach(function(h, idx) { obj[h] = row[idx]; });
             return obj;
           })();
+      record.__RAW_ROW_NUMBER__ = rowIdx + 2;
 
       const item = _mapSearchResultItem_(dxItem, record);
+      if (!item.recordKey) {
+        item.recordKey = 'ROW:' + String(record.__RAW_ROW_NUMBER__ || '');
+      }
       if (!item.recordKey) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
       if (!_searchIncludes_(item.namaSearch || item.nama, namaNeedle)) return;
