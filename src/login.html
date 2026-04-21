@@ -1,78 +1,78 @@
-<div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center modal-backdrop px-3 py-4">
-  <div class="w-full max-w-xs bg-white rounded-2xl p-4 modal-card mx-auto text-center">
-    <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
-      <i class="fas fa-shield-halved text-blue-600 text-xl"></i>
+<div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center modal-backdrop px-2 py-3">
+  <div class="w-full bg-white rounded-2xl p-3.5 modal-card mx-auto text-center" style="max-width: 17rem;">
+    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-2.5">
+      <i class="fas fa-shield-halved text-blue-600 text-lg"></i>
     </div>
-    <div class="text-base font-bold text-slate-900">Memeriksa sesi akses…</div>
-    <div class="text-[13px] text-slate-500 mt-1.5 font-medium">Menyiapkan autentikasi aplikasi.</div>
+    <div class="text-[15px] font-bold text-slate-900">Memeriksa sesi akses…</div>
+    <div class="text-[12px] text-slate-500 mt-1 font-medium">Menyiapkan autentikasi aplikasi.</div>
   </div>
 </div>
 
-<div id="login-modal" class="fixed inset-0 z-[100] hidden items-start sm:items-center justify-center modal-backdrop overflow-y-auto px-2 py-3 sm:px-3 sm:py-4">
-  <div id="login-card" class="w-full max-w-xs bg-white rounded-2xl p-4 sm:p-5 modal-card mx-auto my-auto">
+<div id="login-modal" class="fixed inset-0 z-[100] hidden items-start sm:items-center justify-center modal-backdrop overflow-y-auto px-2 py-2.5 sm:px-3 sm:py-3">
+  <div id="login-card" class="w-full bg-white rounded-2xl p-3.5 sm:p-4 modal-card mx-auto my-auto" style="max-width: 17.5rem;">
     <div class="flex flex-col items-center text-center">
-      <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-2.5">
-        <i class="fas fa-user-shield text-blue-600 text-xl"></i>
+      <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-2">
+        <i class="fas fa-user-shield text-blue-600 text-lg"></i>
       </div>
-      <h1 class="text-lg sm:text-xl font-bold text-slate-900">Akses Surveilans PD3I</h1>
-      <p class="text-[13px] text-slate-500 mt-1 font-medium">Login petugas (PIN) + Captcha</p>
+      <h1 class="text-base sm:text-lg font-bold text-slate-900">Akses Surveilans PD3I</h1>
+      <p class="text-[12px] text-slate-500 mt-0.5 font-medium">Login petugas (PIN) + Captcha</p>
     </div>
 
-    <div id="login-alert" class="hidden mt-3 p-2.5 rounded-lg text-[13px] font-semibold border"></div>
+    <div id="login-alert" class="hidden mt-2.5 p-2 rounded-lg text-[12px] font-semibold border"></div>
 
-    <form id="login-form" class="mt-4 space-y-3">
+    <form id="login-form" class="mt-3 space-y-2.5">
       <div>
-        <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-[0.16em] mb-1.5">Username</label>
+        <label class="block text-[9px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Username</label>
         <div class="relative">
-          <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
           <input id="login-username" type="text" autocomplete="username"
-            class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[13px] font-medium"
+            class="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] font-medium"
             placeholder="username" />
         </div>
       </div>
 
       <div>
-        <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-[0.16em] mb-1.5">Password / PIN</label>
+        <label class="block text-[9px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Password / PIN</label>
         <div class="relative">
-          <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
           <input id="login-pin" type="password" autocomplete="current-password"
-            class="w-full pl-8 pr-9 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[13px] font-medium"
+            class="w-full pl-8 pr-8 py-1.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] font-medium"
             placeholder="PIN" />
           <button type="button" id="toggle-login-pin"
-            class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 text-xs">
+            class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg hover:bg-slate-100 text-slate-500 text-[10px]">
             <i class="fas fa-eye"></i>
           </button>
         </div>
       </div>
 
-      <div class="border border-slate-200 rounded-xl p-2.5 bg-slate-50 space-y-1.5">
+      <div class="border border-slate-200 rounded-lg p-2 bg-slate-50 space-y-1">
         <div class="flex items-center justify-between gap-2">
-          <div class="text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em]">Captcha</div>
+          <div class="text-[9px] font-bold text-slate-600 uppercase tracking-[0.12em]">Captcha</div>
           <button type="button" id="btn-refresh-captcha"
-            class="w-7 h-7 shrink-0 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-[10px]">
+            class="w-5 h-5 shrink-0 rounded-md border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-[8px] leading-none">
             <i class="fas fa-rotate-right"></i>
           </button>
         </div>
 
-        <div id="captcha-question" class="text-base sm:text-lg font-bold tracking-wide text-slate-900 leading-none min-h-[18px]">...</div>
+        <div id="captcha-question" class="text-[15px] sm:text-base font-bold tracking-wide text-slate-900 leading-none min-h-[16px]">...</div>
 
         <div>
           <input id="login-captcha-answer" inputmode="numeric" pattern="[0-9]*"
-            class="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] font-medium"
+            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[11px] font-medium"
             placeholder="Jawaban captcha" />
         </div>
 
-        <div id="captcha-error" class="hidden p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[10px] font-semibold">
+        <div id="captcha-error" class="hidden p-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[9px] font-semibold">
           Captcha salah
         </div>
       </div>
 
       <button id="btn-login" type="submit"
-        class="w-full mt-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-2.5 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
-        <span>Masuk</span> <i class="fas fa-arrow-right text-xs"></i>
+        class="w-full mt-0.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[13px] py-2 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-1.5">
+        <span>Masuk</span> <i class="fas fa-arrow-right text-[10px]"></i>
       </button>
 
-      <div class="text-center text-[10px] text-slate-400 font-bold tracking-[0.14em] mt-1.5">
+      <div class="text-center text-[9px] text-slate-400 font-bold tracking-[0.12em] mt-1">
         DINAS KESEHATAN KOTA DEPOK
       </div>
     </form>
