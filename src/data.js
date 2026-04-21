@@ -399,10 +399,27 @@ function recommendEpid_(dx, data) {
     if (values && values.length > 1) {
       var headers = values[0].map(function(h) { return String(h || '').trim(); });
       var idxEpid = headers.indexOf('Nomor EPID');
-      var idxEpidRekom = headers.indexOf('Nomor EPID Rekomendasi');
+      if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
       var rows = values.slice(1);
-      var maxSeq = 0;
 
+      if (idxEpid !== -1) {
+        for (var r = rows.length - 1; r >= 0; r--) {
+          var lastEpid = String(rows[r][idxEpid] || '').trim().toUpperCase();
+          if (!lastEpid) continue;
+
+          var match = lastEpid.match(/^(C-\d{6})(\d{3,})$/);
+          if (match) {
+            var seq = parseInt(match[2], 10);
+            if (!isNaN(seq)) {
+              return match[1] + String(seq + 1).padStart(match[2].length, '0');
+            }
+          }
+          break;
+        }
+      }
+
+      var idxEpidRekom = headers.indexOf('Nomor EPID Rekomendasi');
+      var maxSeq = 0;
       rows.forEach(function(row) {
         [idxEpid, idxEpidRekom].forEach(function(idx) {
           if (idx === -1) return;
@@ -414,7 +431,6 @@ function recommendEpid_(dx, data) {
           if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
         });
       });
-
       nextSeq = maxSeq + 1;
     }
   }
