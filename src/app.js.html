@@ -3535,6 +3535,7 @@
   function getRoleCapabilities(user) {
     const role = normalizeUiRole(user && user.role);
     const allStages = getAllWorkflowStageIds();
+    const nonAdminStages = allStages.filter(function(id) { return id !== 'section-verifikasi'; });
     const writeStages = getScopedWorkflowWriteStagesForRole(role);
     const canView = !!role && !["", "unknown"].includes(role) ? true : false;
     const canWrite = writeStages.length > 0;
@@ -3551,16 +3552,16 @@
       return { roleLabel: "Admin", canView: true, canWrite: true, canAdmin: true, viewStages: allStages, writeStages: writeStages, summary: "Admin • akses penuh (lihat, ubah, aksi admin, semua tahap kerja)" };
     }
     if (["viewer", "readonly", "read_only", "read-only"].includes(role)) {
-      return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: allStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
+      return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: nonAdminStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
     if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
-      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi puskesmas pengampu domisili, verifikasi admin-only" };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: nonAdminStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi puskesmas pengampu domisili, verifikasi admin-only" };
     }
     if (writeStages.length === 1) {
-      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: nonAdminStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
     }
     if (role) {
-      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: canWrite, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: canWrite ? `${getRoleDisplayLabel(role)} • akses operasional standar` : `${getRoleDisplayLabel(role)} • hanya lihat data` };
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: canWrite, canAdmin: false, viewStages: nonAdminStages, writeStages: writeStages, summary: canWrite ? `${getRoleDisplayLabel(role)} • akses operasional standar` : `${getRoleDisplayLabel(role)} • hanya lihat data` };
     }
     return { roleLabel: "Tidak diketahui", canView: false, canWrite: false, canAdmin: false, viewStages: [], writeStages: [], summary: "Belum ada sesi" };
   }
@@ -4295,6 +4296,13 @@
           else btnSidebarDashboard.classList.remove("hidden");
         }
 
+        document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
+          const workspace = normalizeSidebarWorkspace(link.getAttribute('data-sidebar-workspace'));
+          if (workspace === 'verifikasi') {
+            link.classList.toggle('hidden', !isAdmin);
+          }
+        });
+
         const currentActiveStage = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || getLandingWorkflowIntentForUser();
         setWorkflowSearchIntent(currentActiveStage, { focusSearch: false, focusForm: false, skipStageSync: true });
         updateFormStepperState(currentActiveStage);
@@ -4303,6 +4311,9 @@
       };
 
       const { isViewer, isAdmin } = window.applyRoleUIState();
+      if (!isAdmin && normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'verifikasi') {
+        openSidebarWorkspace('overview', { scroll: false, useRoute: true, replaceRoute: true });
+      }
       if (editBadge && isViewer) editBadge.hidden = true;
       if (viewerBadge) viewerBadge.hidden = !isViewer;
       setReadonlyFormMode(isViewer);
