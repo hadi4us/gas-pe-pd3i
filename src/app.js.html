@@ -3934,6 +3934,21 @@
     updateImunisasiSummary();
   }
 
+  function resetDynamicFormElement(form) {
+    if (!form) return;
+    form.querySelectorAll('input, select, textarea').forEach(function(el) {
+      if (!el || el.readOnly || el.disabled) return;
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+      } else if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = false;
+      } else {
+        el.value = '';
+      }
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
   function clearActiveRecordContext() {
     isEditMode = false;
     if (typeof window !== 'undefined') {
@@ -3948,7 +3963,7 @@
     if (editBadge) editBadge.hidden = true;
     if (viewerBadge) viewerBadge.hidden = true;
     if (btnCancelEdit) btnCancelEdit.classList.add('hidden');
-    if (form) form.reset();
+    if (form) resetDynamicFormElement(form);
     if (btnSubmit) {
       btnSubmit.disabled = false;
       btnSubmit.classList.remove('bg-yellow-600', 'opacity-60', 'cursor-not-allowed');
@@ -3988,7 +4003,7 @@
         searchResults.innerHTML = "";
       }
 
-      if (form) form.reset();
+      if (form) resetDynamicFormElement(form);
 
       if (btnSubmit) {
         btnSubmit.disabled = false;
@@ -4959,8 +4974,7 @@
 
       restoreFormDraft();
 
-      formElement.addEventListener("submit", async function(e) {
-        e.preventDefault();
+      const handleMainFormSubmit = async function() {
 
         if (isViewer) {
           showTopAlert("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.", false);
@@ -5024,7 +5038,7 @@
         btnSubmit.disabled = true;
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit) };
-        this.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+        formElement.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
           const fieldKey = _getSemanticFieldKey_(el);
           if (!fieldKey) return;
           dataObj[fieldKey] = el.value;
@@ -5199,7 +5213,14 @@
           btnSubmit.disabled = false;
           resetSubmitButtonForCurrentStage();
         }
-      });
+      };
+
+      if (btnSubmit && !btnSubmit.dataset.boundSubmit) {
+        btnSubmit.dataset.boundSubmit = '1';
+        btnSubmit.addEventListener('click', function() {
+          handleMainFormSubmit();
+        });
+      }
     }
 
     if (document.readyState === "loading") {
