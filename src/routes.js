@@ -153,6 +153,7 @@ function getRecordByKey(dx, recordKey, token) {
           })();
       record.dx = dx;
       record.RAW_ROW_NUMBER = rowNumber;
+      if (!_canSessionReadRecordByScope_(sess, dx, record)) throw new Error('Akses record di luar wilayah kerja tidak diizinkan.');
       return record;
     }
   }
@@ -170,6 +171,7 @@ function getRecordByKey(dx, recordKey, token) {
           })();
       record.dx = dx;
       record.RAW_ROW_NUMBER = i + 1;
+      if (!_canSessionReadRecordByScope_(sess, dx, record)) throw new Error('Akses record di luar wilayah kerja tidak diizinkan.');
       return record;
     }
   }
@@ -415,6 +417,8 @@ function searchRecords(dx, filters, token) {
             return obj;
           })();
       record.RAW_ROW_NUMBER = rowIdx + 2;
+
+      if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
 
       const item = _mapSearchResultItem_(dxItem, record);
       if (!item.recordKey) {
@@ -1050,6 +1054,30 @@ function _getRecordDomisiliForAccess_(dx, data) {
   } catch (e) {
     return direct;
   }
+}
+
+function _canSessionReadRecordByScope_(sess, dx, data) {
+  const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
+  if (role === 'admin') return true;
+
+  const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+  if (userScopeLevel === 'dinkes') return true;
+
+  const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
+  const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
+  if (!userKodePuskesmas && !userUnitKerja) return false;
+
+  const domisili = _getRecordDomisiliForAccess_(dx, data || {});
+  if (!domisili.kecamatan || !domisili.kelurahan) return false;
+
+  const pengampu = getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota);
+  if (!pengampu || !pengampu.found) return false;
+
+  const mappedKodePuskesmas = _normalizeAccessScopeKey_(pengampu.kodePuskesmas || '');
+  const mappedNamaPuskesmas = _normalizeAccessScopeKey_(pengampu.namaPuskesmas || '');
+  const kodeMatch = userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas;
+  const unitMatch = userUnitKerja && mappedNamaPuskesmas && userUnitKerja === mappedNamaPuskesmas;
+  return !!(kodeMatch || unitMatch);
 }
 
 function _canRoleWriteSampleStage_(role) {
