@@ -128,19 +128,20 @@
     }
 
     let inputHtml = "";
+    const browserHintAttrs = 'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"';
 
     if (field.type === "select" || field.type === "search_select") {
-      inputHtml = `<select id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr}>
+      inputHtml = `<select id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${browserHintAttrs}>
         <option value="">-- Pilih --</option>
         ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
       </select>`;
     } else if (field.type === "textarea") {
-      inputHtml = `<textarea id="${field.id}" name="${field.id}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""}></textarea>`;
+      inputHtml = `<textarea id="${field.id}" name="${field.id}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
     } else {
       const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
       let maxAttr = field.max ? `max="${field.max}"` : "";
       const numericAttrs = (typeof isNumericOnlyFieldId === "function" && isNumericOnlyFieldId(field.id))
-        ? 'inputmode="numeric" autocomplete="off"'
+        ? 'inputmode="numeric"'
         : '';
 
       if (field.id === "Tanggal Lahir") {
@@ -148,7 +149,7 @@
         maxAttr = `max="${today}"`;
       }
 
-      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} step="any">`;
+      inputHtml = `<input type="${field.type}" id="${field.id}" name="${field.id}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} step="any">`;
     }
 
     const numericHint = _getNumericFieldHintById(field.id);
@@ -241,12 +242,12 @@
 
       if (["text", "date", "number", "tel", "email"].includes(col.type)) {
         rowHtml += `<td class="px-2 py-2">
-          <input type="${col.type}" data-name="${col.name}" class="${cls}" value="${value.replace(/"/g, '&quot;')}" ${col.readonly ? 'readonly tabindex="-1"' : ""}>
+          <input type="${col.type}" data-name="${col.name}" class="${cls}" value="${value.replace(/"/g, '&quot;')}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${col.readonly ? 'readonly tabindex="-1"' : ""}>
         </td>`;
       } else {
         const opts = (col.options || []).map(o => `<option value="${o}" ${o === value ? "selected" : ""}>${o}</option>`).join("");
         rowHtml += `<td class="px-2 py-2">
-          <select data-name="${col.name}" class="${cls}">
+          <select data-name="${col.name}" class="${cls}" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true">
             <option value="">-</option>${opts}
           </select>
         </td>`;
