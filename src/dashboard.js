@@ -187,6 +187,31 @@ function _buildDashboardRecordSummary_(row, idxMap) {
   };
 }
 
+function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPengampu, rawKodePuskesmas, kabKota, kecamatan, kelurahan) {
+  if (role === 'admin') return true;
+
+  const directKode = _normalizeWilayahKey_(rawKodePuskesmas || '');
+  const directUnit = _normalizeWilayahKey_(rawPuskesmasPengampu || '');
+  if ((userKode && directKode && userKode === directKode) || (userUnit && directUnit && userUnit === directUnit)) {
+    return true;
+  }
+
+  const normKecamatan = _normalizeWilayahKey_(kecamatan || '');
+  const normKelurahan = _normalizeWilayahKey_(kelurahan || '');
+  const normKabKota = _normalizeWilayahKey_(kabKota || '');
+  if (!normKecamatan || !normKelurahan) return false;
+
+  try {
+    const pengampu = getPengampuByWilayah_(normKecamatan, normKelurahan, normKabKota);
+    if (!pengampu || !pengampu.found) return false;
+    const mappedKode = _normalizeWilayahKey_(pengampu.kodePuskesmas || '');
+    const mappedUnit = _normalizeWilayahKey_(pengampu.namaPuskesmas || '');
+    return !!((userKode && mappedKode && userKode === mappedKode) || (userUnit && mappedUnit && userUnit === mappedUnit));
+  } catch (e) {
+    return false;
+  }
+}
+
 function _buildWorkflowInboxData_(sess, dx) {
   const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
   const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
@@ -211,6 +236,7 @@ function _buildWorkflowInboxData_(sess, dx) {
     const idxRecordId = headers.indexOf('ID Registrasi Kasus');
     const idxEpid = headers.indexOf('Nomor EPID');
     const idxNama = headers.indexOf('Nama');
+    const idxKabKota = _findFirstHeaderIndex_(headers, ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota']);
     const idxKecamatan = headers.indexOf('Kecamatan');
     const idxKelurahan = headers.indexOf('Kelurahan');
     const idxVerifikasi = headers.indexOf('Status Verifikasi EPID');
@@ -236,9 +262,12 @@ function _buildWorkflowInboxData_(sess, dx) {
 
       const statusVerifikasi = idxVerifikasi !== -1 ? String(row[idxVerifikasi] || '').trim() : '';
       const normalizedStatus = String(statusVerifikasi || 'Pending').trim().toUpperCase();
-      const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? _normalizeWilayahKey_(row[idxPuskesmasPengampu]) : '';
-      const kodePuskesmas = idxKodePuskesmas !== -1 ? _normalizeWilayahKey_(row[idxKodePuskesmas]) : '';
-      const scopeMatch = (userKode && kodePuskesmas && userKode === kodePuskesmas) || (userUnit && puskesmasPengampu && userUnit === puskesmasPengampu);
+      const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || '').trim() : '';
+      const kodePuskesmas = idxKodePuskesmas !== -1 ? String(row[idxKodePuskesmas] || '').trim() : '';
+      const kabKota = idxKabKota !== -1 ? String(row[idxKabKota] || '').trim() : '';
+      const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '';
+      const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '';
+      const scopeMatch = _isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmas, kabKota, kecamatan, kelurahan);
 
       const statusKasus = idxStatusKasus !== -1 ? String(row[idxStatusKasus] || '').trim() : '';
       const sampelDilakukan = idxSampelDilakukan !== -1 ? String(row[idxSampelDilakukan] || '').trim() : '';
@@ -264,8 +293,8 @@ function _buildWorkflowInboxData_(sess, dx) {
         recordId: recordId,
         epid: epid,
         nama: idxNama !== -1 ? String(row[idxNama] || '').trim() : '',
-        kecamatan: idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '',
-        kelurahan: idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '',
+        kecamatan: kecamatan,
+        kelurahan: kelurahan,
         statusVerifikasi: statusVerifikasi || 'Pending',
         statusKasus: statusKasus,
         sampelDilakukan: sampelDilakukan,
@@ -573,6 +602,7 @@ function getDashboardStats(dx, tahun, token) {
       "Tanggal mulai sakit/gejala awal",
       "Tanggal mulai sakit/gejala awal sebelum lumpuh"
     ]);
+    const idxKabKota = _findFirstHeaderIndex_(headers, ["Kab/Kota Pasien", "Kab/Kota", "Kabupaten/Kota"]);
     const idxKecamatan = headers.indexOf("Kecamatan");
     const idxRT = headers.indexOf("RT");
     const idxRW = headers.indexOf("RW");
@@ -586,12 +616,13 @@ function getDashboardStats(dx, tahun, token) {
     const idxInterpretasiSampel = headers.indexOf("Interpretasi Hasil Sampel");
     const idxRecordId = headers.indexOf("ID Registrasi Kasus");
     const idxEpid = headers.indexOf("Nomor EPID");
-    const idxNama = headers.indexOf("Nama");
+    const idxNama = _findFirstHeaderIndex_(headers, ["Nama Pasien", "Nama"]);
     const idxKelurahan = headers.indexOf("Kelurahan");
     const idxLatitude = headers.indexOf("Latitude");
     const idxLongitude = headers.indexOf("Longitude");
     const idxKoordinat = headers.indexOf("Koordinat (lat,lon)");
     const idxPuskesmasPengampu = headers.indexOf("Puskesmas Pengampu");
+    const idxKodePuskesmasPengampu = headers.indexOf("KodePuskesmas Pengampu");
     const idxCatatanVerif = headers.indexOf("Catatan Verifikasi EPID");
     const idxUpdated = headers.indexOf("Updated At");
     const idxTimestamp = headers.indexOf("Timestamp");
@@ -619,7 +650,10 @@ function getDashboardStats(dx, tahun, token) {
     let completenessWorkflowFilled = 0;
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
-    const isAdmin = String((sess.user && sess.user.role) || "").trim().toLowerCase() === "admin";
+    const role = String((sess.user && sess.user.role) || "").trim().toLowerCase();
+    const isAdmin = role === "admin";
+    const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
+    const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
     const verificationQueue = { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] };
     const coordinateBuckets = {};
     let coordinateMissing = 0;
@@ -638,6 +672,14 @@ function getDashboardStats(dx, tahun, token) {
         if (rowTahun !== tahunNum) continue;
       }
 
+      const kabKota = idxKabKota !== -1 ? String(row[idxKabKota] || "").trim() : "";
+      const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || "").trim() : "";
+      const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || "").trim() : "";
+      const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || "").trim() : "";
+      const kodePuskesmasPengampu = idxKodePuskesmasPengampu !== -1 ? String(row[idxKodePuskesmasPengampu] || "").trim() : "";
+      const scopeMatch = _isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmasPengampu, kabKota, kecamatan, kelurahan);
+      if (!scopeMatch) continue;
+
       totalKasus++;
 
       // Req 6.3: distribusi per bulan (key format YYYYMM)
@@ -651,8 +693,6 @@ function getDashboardStats(dx, tahun, token) {
         }
       }
 
-      const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || "").trim() : "";
-      const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || "").trim() : "";
       const rw = idxRW !== -1 ? String(row[idxRW] || "").trim() : "";
       const rt = idxRT !== -1 ? String(row[idxRT] || "").trim() : "";
 
