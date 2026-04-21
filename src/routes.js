@@ -244,10 +244,10 @@ function getFaskesFromSheet(token) {
     return -1;
   };
 
-  const idxJenis = findIdx(['Jenis', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
-  const idxNama = findIdx(['Nama', 'Nama Faskes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit']);
-  const idxKey = findIdx(['Key', 'FaskesKey', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
-  const idxAktif = findIdx(['Aktif', 'Status Aktif', 'IsActive', 'Active']);
+  const idxJenis = findIdx(['Jenis', 'JenisFaskes', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
+  const idxNama = findIdx(['NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
+  const idxKey = findIdx(['FaskesKey', 'Key', 'Kode', 'Kode Faskes', 'KodeFaskes', 'Kode Fasyankes', 'ID']);
+  const idxAktif = findIdx(['StatusAktif', 'Status Aktif', 'Aktif', 'IsActive', 'Active', 'Status']);
 
   return rows
     .map(function(row) {
