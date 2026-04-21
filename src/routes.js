@@ -104,8 +104,8 @@ function _normalizeFaskesJenis_(value) {
   var raw = String(value || '').trim().toUpperCase();
   if (!raw) return '';
   raw = raw.replace(/[\/_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (raw === 'PKM' || raw.indexOf('PUSKESMAS') !== -1) return 'PUSKESMAS';
-  if (raw === 'RS' || raw.indexOf('RUMAH SAKIT') !== -1 || raw.indexOf('HOSPITAL') !== -1) return 'RUMAH SAKIT';
+  if (raw === 'PKM' || raw.indexOf('PUSKESMAS') !== -1 || raw.indexOf('PUSKES') !== -1) return 'PUSKESMAS';
+  if (raw === 'RS' || raw.indexOf('RUMAH SAKIT') !== -1 || raw.indexOf('HOSPITAL') !== -1 || raw.indexOf('RUMKIT') !== -1 || raw.startsWith('RS')) return 'RUMAH SAKIT';
   if (raw.indexOf('KLINIK') !== -1) return 'KLINIK';
   if (raw.indexOf('TPMB') !== -1 || raw.indexOf('BPM') !== -1 || raw.indexOf('BIDAN PRAKTIK') !== -1) return 'TPMB';
   if (raw.indexOf('PRAKTIK') !== -1 || raw.indexOf('DOKTER') !== -1) return 'PRAKTIK MANDIRI';
