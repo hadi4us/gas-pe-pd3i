@@ -312,12 +312,18 @@ function _mapSearchResultItem_(dx, record) {
 
   const recordId = getFirst(['ID Registrasi Kasus']);
   const epid = getFirst(['Nomor EPID']);
+  const namaPasien = getFirst(['Nama', 'Nama Pasien']);
+  const namaUnitPelapor = getFirst(['Nama unit pelapor', 'Nama Unit Pelapor', 'Nama Unit', 'NamaFaskes']);
+  const namaPetugas = getFirst(['Nama Petugas', 'Petugas', 'Nama Pelapor', 'Petugas Verifikator']);
   return {
     dx: String(dx || '').trim().toUpperCase(),
     recordKey: recordId || epid,
     recordId: recordId,
     epid: epid,
-    nama: getFirst(['Nama']),
+    nama: namaPasien,
+    namaSearch: [namaPasien, namaUnitPelapor, namaPetugas].filter(Boolean).join(' '),
+    namaUnitPelapor: namaUnitPelapor,
+    namaPetugas: namaPetugas,
     tanggalLahir: getFirst(['Tanggal Lahir']),
     orangTua: getFirst(['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu']),
     alamat: getFirst(['Alamat', 'Alamat Domisili', 'Alamat Lengkap']),
@@ -395,7 +401,7 @@ function searchRecords(dx, filters, token) {
       const item = _mapSearchResultItem_(dxItem, record);
       if (!item.recordKey) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
-      if (!_searchIncludes_(item.nama, namaNeedle)) return;
+      if (!_searchIncludes_(item.namaSearch || item.nama, namaNeedle)) return;
       if (tanggalNeedle && _searchNormalizeDate_(item.tanggalLahir) !== tanggalNeedle) return;
       if (!_searchIncludes_(item.orangTua, orangTuaNeedle)) return;
       if (!_searchIncludes_(item.alamat, alamatNeedle)) return;
