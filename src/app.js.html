@@ -4688,7 +4688,7 @@
           const hasFilter = filters.epid || filters.nama || filters.tanggalLahir ||
                             filters.orangTua || filters.alamat || filters.kelurahan || filters.statusVerifikasi;
 
-          if (!hasFilter) {
+          if (workspace !== 'search' && !hasFilter) {
             showTopAlert("Isi minimal satu kriteria pencarian.", false);
             return;
           }
@@ -4700,7 +4700,7 @@
           const searchResultsBox = document.getElementById("search-results");
           if (searchResultsBox) {
             searchResultsBox.classList.remove("hidden");
-            searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Mencari data existing...</span></div>`;
+            searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>${workspace === 'search' && !hasFilter ? 'Memuat semua data existing...' : 'Mencari data existing...'}</span></div>`;
           }
 
           const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);

@@ -358,7 +358,10 @@ function searchRecords(dx, filters, token) {
 
   dx = String(dx || '').trim().toUpperCase();
   filters = filters || {};
-  const dxList = ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice();
+  const workspace = String(filters.workspace || '').trim().toLowerCase();
+  const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
+  const isLooseSearchWorkspace = workspace === 'search';
+  const dxList = isLooseSearchWorkspace ? ALL_DX.slice() : (ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice());
   const epidNeedle = String(filters.epid || '').trim();
   const namaNeedle = String(filters.nama || '').trim();
   const tanggalNeedle = _searchNormalizeDate_(filters.tanggalLahir || '');
@@ -366,20 +369,20 @@ function searchRecords(dx, filters, token) {
   const alamatNeedle = String(filters.alamat || '').trim();
   const kelurahanNeedle = String(filters.kelurahan || '').trim();
   const statusVerifikasiNeedle = String(filters.statusVerifikasi || '').trim();
-  const workspace = String(filters.workspace || '').trim().toLowerCase();
-  const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
   const sortBy = String(filters.sortBy || 'updated_desc').trim();
   const explicitStatus = _normalizeVerificationStatus_(statusVerifikasiNeedle);
   let allowedVerificationStatuses = null;
 
-  if (explicitStatus && explicitStatus !== 'PENDING') {
-    allowedVerificationStatuses = [explicitStatus];
-  } else if (statusVerifikasiNeedle) {
-    allowedVerificationStatuses = [explicitStatus];
-  } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
-    allowedVerificationStatuses = ['PENDING', 'PERLU REVISI'];
-  } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
-    allowedVerificationStatuses = ['TERVERIFIKASI'];
+  if (!isLooseSearchWorkspace) {
+    if (explicitStatus && explicitStatus !== 'PENDING') {
+      allowedVerificationStatuses = [explicitStatus];
+    } else if (statusVerifikasiNeedle) {
+      allowedVerificationStatuses = [explicitStatus];
+    } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
+      allowedVerificationStatuses = ['PENDING', 'PERLU REVISI'];
+    } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
+      allowedVerificationStatuses = ['TERVERIFIKASI'];
+    }
   }
   const page = Math.max(1, parseInt(filters.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
