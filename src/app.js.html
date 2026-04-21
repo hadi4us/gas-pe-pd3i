@@ -1989,6 +1989,7 @@
 
   let ACTIVE_SIDEBAR_WORKSPACE = "overview";
   let WORKSPACE_RUNTIME_SEQ = 0;
+  let WORKFLOW_INBOX_CACHE = null;
 
   function normalizeSidebarWorkspace(workspaceOrSection) {
     const raw = String(workspaceOrSection || '').trim().toLowerCase();
@@ -2476,6 +2477,75 @@
     return getWorkflowIntentConfig(intent).successMessage || "Record existing berhasil dibuka.";
   }
 
+  function collectWorkflowSearchFilters() {
+    return {
+      epid: (document.getElementById('search-epid')?.value || '').trim(),
+      nama: (document.getElementById('search-nama')?.value || '').trim(),
+      tanggalLahir: (document.getElementById('search-tgl-lahir')?.value || '').trim(),
+      orangTua: (document.getElementById('search-orang-tua')?.value || '').trim(),
+      alamat: (document.getElementById('search-alamat')?.value || '').trim(),
+      kelurahan: (document.getElementById('search-kelurahan')?.value || '').trim(),
+      statusVerifikasi: (document.getElementById('search-status-verifikasi')?.value || '').trim(),
+      sortBy: (document.getElementById('search-sort')?.value || 'updated_desc').trim()
+    };
+  }
+
+  function resetWorkflowSearchFilters() {
+    ['search-epid', 'search-nama', 'search-tgl-lahir', 'search-orang-tua', 'search-alamat', 'search-kelurahan', 'search-status-verifikasi'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else el.value = '';
+    });
+    const sortEl = document.getElementById('search-sort');
+    if (sortEl) sortEl.value = 'updated_desc';
+  }
+
+  function applyWorkflowSearchUiMode(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const hiddenMap = {
+      'search-filter-tgl-lahir-wrap': normalized === 'sampel',
+      'search-filter-orang-tua-wrap': normalized === 'sampel',
+      'search-filter-alamat-wrap': normalized === 'sampel',
+      'search-filter-status-wrap': normalized === 'sampel'
+    };
+    Object.keys(hiddenMap).forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden', !!hiddenMap[id]);
+    });
+
+    const toolbarEyebrow = document.querySelector('#search-container .pd3i-card-eyebrow');
+    const toolbarTitle = document.querySelector('#search-container .pd3i-search-toolbar-title');
+    const toolbarBadge = document.querySelector('#search-container .pd3i-badge-soft');
+    const btnSearch = document.getElementById('btn-search-epid');
+    const btnReset = document.getElementById('btn-search-reset');
+    const searchResults = document.getElementById('search-results');
+    const searchHelper = document.getElementById('search-context-helper');
+
+    if (normalized === 'sampel') {
+      if (toolbarEyebrow) toolbarEyebrow.textContent = 'Filter antrian';
+      if (toolbarTitle) toolbarTitle.textContent = 'Saring daftar kasus menunggu hasil lab';
+      if (toolbarBadge) toolbarBadge.textContent = 'Queue filter';
+      if (btnSearch) btnSearch.innerHTML = '<i class="fas fa-filter"></i> Terapkan Filter';
+      if (btnReset) btnReset.classList.remove('hidden');
+      if (searchResults) {
+        searchResults.classList.add('hidden');
+        searchResults.innerHTML = '';
+      }
+      if (searchHelper) searchHelper.textContent = 'Filter ini dipakai untuk menyaring daftar kasus menunggu hasil lab di atas, bukan untuk pencarian global semua record.';
+      return;
+    }
+
+    if (toolbarEyebrow) toolbarEyebrow.textContent = 'Filter record';
+    if (toolbarTitle) toolbarTitle.textContent = 'Cari record existing dengan cepat';
+    if (toolbarBadge) toolbarBadge.textContent = 'Record-first workflow';
+    if (btnSearch) btnSearch.innerHTML = '<i class="fas fa-search"></i> Cari Data Existing';
+    if (btnReset) btnReset.classList.add('hidden');
+    if (searchHelper && !searchHelper.textContent) {
+      searchHelper.textContent = 'Cari berdasarkan EPID, nama pasien, tanggal lahir, alamat, atau orang tua/wali untuk membuka record existing sesuai tahap kerja yang dipilih.';
+    }
+  }
+
   function applySearchShellCopyForWorkspace(workspace) {
     const eyebrowEl = document.getElementById("workflow-search-eyebrow");
     const titleEl = document.getElementById("workflow-search-title");
@@ -2534,6 +2604,42 @@
     if (badgeEl) badgeEl.textContent = cfg.badge;
     if (helperEl) helperEl.textContent = cfg.helper;
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
+    applyWorkflowSearchUiMode(normalized);
+  }
+
+  function filterQueueItemsForWorkspace(items, workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const rows = Array.isArray(items) ? items.slice() : [];
+    const filters = collectWorkflowSearchFilters();
+    const match = function(haystack, needle) {
+      const h = String(haystack || '').trim().toLowerCase();
+      const n = String(needle || '').trim().toLowerCase();
+      if (!n) return true;
+      return h.indexOf(n) !== -1;
+    };
+
+    let filtered = rows;
+    if (normalized === 'sampel') {
+      filtered = rows.filter(function(item) {
+        const recordText = [item && item.epid, item && item.recordId, item && item.recordKey].filter(Boolean).join(' ').toLowerCase();
+        return match(recordText, filters.epid)
+          && match(item && item.nama, filters.nama)
+          && match(item && item.kelurahan, filters.kelurahan);
+      });
+    }
+
+    const sortBy = String(filters.sortBy || 'updated_desc').trim();
+    filtered.sort(function(a, b) {
+      if (sortBy === 'name_asc') return String(a && a.nama || '').localeCompare(String(b && b.nama || ''));
+      if (sortBy === 'name_desc') return String(b && b.nama || '').localeCompare(String(a && a.nama || ''));
+      if (sortBy === 'epid_asc') return String(a && (a.epid || a.recordId || '')).localeCompare(String(b && (b.epid || b.recordId || '')));
+      if (sortBy === 'epid_desc') return String(b && (b.epid || b.recordId || '')).localeCompare(String(a && (a.epid || a.recordId || '')));
+      const aa = String(a && (a.updatedAt || a.inputAt || '') || '');
+      const bb = String(b && (b.updatedAt || b.inputAt || '') || '');
+      if (aa === bb) return String(a && a.nama || '').localeCompare(String(b && b.nama || ''));
+      return aa < bb ? 1 : -1;
+    });
+    return filtered;
   }
 
   function getQueueBucketMeta(item) {
@@ -2806,7 +2912,7 @@
 
     const visiblePending = workspace === 'verifikasi' ? pendingVerification : [];
     const visibleRevision = (workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? revisionQueue : [];
-    const visibleSample = workspace === 'sampel' ? sampleQueue : [];
+    const visibleSample = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleQueue, workspace) : [];
     const visibleStatus = workspace === 'status' ? statusQueue : [];
 
     if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleStatus.length) {
@@ -2891,6 +2997,7 @@
     google.script.run
       .withSuccessHandler(function(res) {
         if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+        WORKFLOW_INBOX_CACHE = res || null;
         renderWorkflowInbox(res || null);
       })
       .withFailureHandler(function() {
@@ -4518,20 +4625,22 @@
 
       if (btnSearchEpid) {
         btnSearchEpid.addEventListener("click", function() {
+          const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
           const dx = selector.value;
+          const filters = Object.assign({}, collectWorkflowSearchFilters(), {
+            workspace: String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
+            workflowIntent: String(WORKFLOW_SEARCH_INTENT || '').trim()
+          });
 
-          const filters = {
-            epid:            (document.getElementById("search-epid")?.value || "").trim(),
-            nama:            (document.getElementById("search-nama")?.value || "").trim(),
-            tanggalLahir:    (document.getElementById("search-tgl-lahir")?.value || "").trim(),
-            orangTua:        (document.getElementById("search-orang-tua")?.value || "").trim(),
-            alamat:          (document.getElementById("search-alamat")?.value || "").trim(),
-            kelurahan:       (document.getElementById("search-kelurahan")?.value || "").trim(),
-            statusVerifikasi:(document.getElementById("search-status-verifikasi")?.value || "").trim(),
-            workspace:       String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
-            workflowIntent:  String(WORKFLOW_SEARCH_INTENT || '').trim(),
-            sortBy:          (document.getElementById("search-sort")?.value || "updated_desc")
-          };
+          if (workspace === 'sampel') {
+            hideTopAlert();
+            if (WORKFLOW_INBOX_CACHE) {
+              renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+            } else {
+              refreshWorkflowInbox();
+            }
+            return;
+          }
 
           const hasFilter = filters.epid || filters.nama || filters.tanggalLahir ||
                             filters.orangTua || filters.alamat || filters.kelurahan || filters.statusVerifikasi;
@@ -4570,6 +4679,30 @@
             .searchRecords(dx, filters, SESSION_TOKEN);
         });
       }
+
+      const btnSearchReset = document.getElementById('btn-search-reset');
+      if (btnSearchReset && !btnSearchReset.dataset.bound) {
+        btnSearchReset.dataset.bound = '1';
+        btnSearchReset.addEventListener('click', function() {
+          resetWorkflowSearchFilters();
+          hideTopAlert();
+          if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'sampel') {
+            if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+            else refreshWorkflowInbox();
+          }
+        });
+      }
+
+      ['search-epid', 'search-nama', 'search-kelurahan', 'search-sort'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (!el || el.dataset.boundFilter === '1') return;
+        el.dataset.boundFilter = '1';
+        const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
+        el.addEventListener(eventName, function() {
+          if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) !== 'sampel') return;
+          if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+        });
+      });
 
       /**
        * Render daftar hasil pencarian multi-kriteria.

@@ -55,22 +55,25 @@
                 <span class="pd3i-badge-soft">Record-first workflow</span>
               </div>
               <div class="pd3i-search-filter-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID / ID Registrasi Kasus">
-                <input type="text" id="search-nama" class="pd3i-shell-input" placeholder="Nama pasien">
-                <input type="date" id="search-tgl-lahir" class="pd3i-shell-input">
-                <input type="text" id="search-orang-tua" class="pd3i-shell-input" placeholder="Nama orang tua / wali">
-                <input type="text" id="search-alamat" class="pd3i-shell-input" placeholder="Alamat / jalan / RT-RW">
-                <input type="text" id="search-kelurahan" class="pd3i-shell-input" placeholder="Kelurahan / desa">
-                <select id="search-status-verifikasi" class="pd3i-shell-input">
+                <div id="search-filter-epid-wrap"><input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Nomor EPID / ID Registrasi Kasus"></div>
+                <div id="search-filter-nama-wrap"><input type="text" id="search-nama" class="pd3i-shell-input" placeholder="Nama pasien"></div>
+                <div id="search-filter-tgl-lahir-wrap"><input type="date" id="search-tgl-lahir" class="pd3i-shell-input"></div>
+                <div id="search-filter-orang-tua-wrap"><input type="text" id="search-orang-tua" class="pd3i-shell-input" placeholder="Nama orang tua / wali"></div>
+                <div id="search-filter-alamat-wrap"><input type="text" id="search-alamat" class="pd3i-shell-input" placeholder="Alamat / jalan / RT-RW"></div>
+                <div id="search-filter-kelurahan-wrap"><input type="text" id="search-kelurahan" class="pd3i-shell-input" placeholder="Kelurahan / desa"></div>
+                <div id="search-filter-status-wrap"><select id="search-status-verifikasi" class="pd3i-shell-input">
                   <option value="">Semua status verifikasi</option>
                   <option value="Pending">Pending</option>
                   <option value="Terverifikasi">Terverifikasi</option>
                   <option value="Perlu Revisi">Perlu Revisi</option>
-                </select>
+                </select></div>
               </div>
               <div class="pd3i-search-actions">
                 <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
                   <i class="fas fa-search"></i> Cari Data Existing
+                </button>
+                <button type="button" id="btn-search-reset" class="pd3i-ghost-button pd3i-inline-button hidden">
+                  <i class="fas fa-filter-circle-xmark"></i> Reset Filter
                 </button>
                 <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact pd3i-search-sort-select">
                   <option value="updated_desc">Urutkan: Terbaru dulu</option>
