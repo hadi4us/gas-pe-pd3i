@@ -4183,3 +4183,144 @@ body.pd3i-body {
 #action-panel.is-stage-minimal .pd3i-cancel-button {
   min-height: 46px;
 }
+
+/* ============================================================
+   SPACING / PADDING REBALANCE
+   ============================================================ */
+
+.pd3i-shell-card,
+.pd3i-search-card,
+.pd3i-search-toolbar,
+.pd3i-form-card-section,
+.pd3i-summary-panel-card,
+.pd3i-wizard-panel-card,
+.pd3i-workflow-panel-card,
+.pd3i-action-panel-card,
+.pd3i-dashboard-toolbar-panel,
+.pd3i-dashboard-panel,
+.pd3i-dashboard-alert {
+  padding: 0.95rem;
+}
+
+.pd3i-card-header-row {
+  margin-bottom: 0.8rem;
+}
+
+.pd3i-card-header-row.compact,
+.pd3i-sidebar-workcard .pd3i-card-header-row.compact,
+.pd3i-form-card-section .pd3i-card-header-row {
+  margin-bottom: 0.7rem;
+}
+
+.pd3i-form-layout,
+.pd3i-form-main,
+.pd3i-form-sidebar,
+.pd3i-dashboard-overview-grid,
+.pd3i-dashboard-two-column,
+.pd3i-dashboard-block {
+  gap: 0.85rem;
+}
+
+.pd3i-form-sidebar {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pd3i-field-grid,
+.pd3i-form-card-section .pd3i-field-grid,
+.pd3i-search-filter-grid {
+  gap: 0.85rem !important;
+}
+
+.pd3i-diagnosis-section {
+  gap: 0.85rem;
+  padding: 0.9rem;
+}
+
+.pd3i-section-banner {
+  margin: 0.15rem 0 0.1rem;
+  padding: 0.85rem 0.95rem;
+}
+
+.pd3i-field-card,
+.pd3i-summary-item,
+.pd3i-workflow-status-item,
+.pd3i-wizard-progress-wrap,
+.pd3i-search-result-card,
+.pd3i-queue-table-row {
+  padding: 0.85rem 0.9rem;
+}
+
+.pd3i-search-toolbar-head {
+  margin-bottom: 0.7rem;
+}
+
+.pd3i-search-actions {
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.pd3i-search-context-helper {
+  margin-top: 0.65rem;
+}
+
+.pd3i-search-results-wrap {
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.pd3i-summary-grid,
+.pd3i-workflow-status-list,
+.pd3i-submit-stack,
+.pd3i-inbox-list {
+  gap: 0.65rem;
+}
+
+.pd3i-action-panel-note {
+  padding: 0.75rem 0.8rem;
+}
+
+.pd3i-workflow-intent-grid {
+  gap: 0.7rem;
+}
+
+.pd3i-workflow-intent-card {
+  padding: 0.85rem 0.9rem;
+}
+
+@media (max-width: 960px) {
+  .pd3i-shell-card,
+  .pd3i-search-card,
+  .pd3i-search-toolbar,
+  .pd3i-form-card-section,
+  .pd3i-summary-panel-card,
+  .pd3i-wizard-panel-card,
+  .pd3i-workflow-panel-card,
+  .pd3i-action-panel-card {
+    padding: 0.85rem;
+  }
+
+  .pd3i-form-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .pd3i-shell-card,
+  .pd3i-search-card,
+  .pd3i-search-toolbar,
+  .pd3i-form-card-section,
+  .pd3i-summary-panel-card,
+  .pd3i-wizard-panel-card,
+  .pd3i-workflow-panel-card,
+  .pd3i-action-panel-card {
+    padding: 0.8rem;
+  }
+
+  .pd3i-field-card,
+  .pd3i-summary-item,
+  .pd3i-workflow-status-item,
+  .pd3i-search-result-card,
+  .pd3i-queue-table-row {
+    padding: 0.75rem 0.8rem;
+  }
+}
