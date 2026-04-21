@@ -605,28 +605,11 @@
       selectEl.appendChild(opt);
     }
 
-    choicesInstance = new Choices(selectEl, {
-      searchEnabled: true,
-      itemSelectText: "",
-      shouldSort: false,
-      placeholder: true,
-      placeholderValue: "-- Pilih Unit --",
-      searchPlaceholderValue: "Cari unit..."
-    });
-
     selectEl.removeAttribute("required");
 
     if (keepValue) {
-      setTimeout(() => {
-        try {
-          const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
-          if (exists) {
-            choicesInstance.setChoiceByValue(keepValue);
-          }
-        } catch (e) {
-          console.warn("Gagal restore Nama unit pelapor:", e);
-        }
-      }, 80);
+      const exists = Array.from(selectEl.options).some(opt => opt.value === keepValue);
+      if (exists) selectEl.value = keepValue;
     }
   }
 
