@@ -2038,6 +2038,10 @@
     const adminMenuDropdown = document.getElementById('admin-menu-dropdown');
     if (adminMenuDropdown) adminMenuDropdown.classList.add('hidden');
 
+    if (['verifikasi', 'sampel', 'status'].includes(normalized) && typeof hideTopAlert === 'function') {
+      hideTopAlert();
+    }
+
     if (normalized !== 'overview') {
       window.__OVERVIEW_REQUEST_ID = 0;
     }
@@ -2156,6 +2160,33 @@
     });
   }
 
+  function applyWorkspaceFormChrome(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const isDeferredWorkspace = ['verifikasi', 'sampel', 'status'].includes(normalized);
+    const hasOpenRecord = isEditMode || isViewerSession();
+    const editBadge = document.getElementById('edit-badge');
+    const viewerBadge = document.getElementById('viewer-badge');
+    const stepperCard = document.getElementById('form-stepper-card');
+    const summaryPanel = document.getElementById('case-summary-panel');
+    const wizardPanel = document.getElementById('wizard-panel');
+    const workflowPanel = document.getElementById('workflow-panel');
+    const actionPanel = document.getElementById('action-panel');
+    const actionHeader = document.getElementById('action-panel-header');
+    const actionNote = document.getElementById('action-panel-note');
+    const actionHelper = document.getElementById('action-panel-helper');
+
+    if (editBadge) editBadge.hidden = !hasOpenRecord || isViewerSession() || isDeferredWorkspace;
+    if (viewerBadge) viewerBadge.hidden = !isViewerSession() || isDeferredWorkspace;
+    if (stepperCard) stepperCard.classList.toggle('hidden', isDeferredWorkspace);
+    if (summaryPanel) summaryPanel.classList.toggle('hidden', isDeferredWorkspace);
+    if (wizardPanel) wizardPanel.classList.toggle('hidden', isDeferredWorkspace);
+    if (workflowPanel) workflowPanel.classList.toggle('hidden', isDeferredWorkspace);
+    if (actionPanel) actionPanel.classList.toggle('is-stage-minimal', isDeferredWorkspace);
+    if (actionHeader) actionHeader.classList.toggle('hidden', isDeferredWorkspace);
+    if (actionNote) actionNote.classList.toggle('hidden', isDeferredWorkspace);
+    if (actionHelper) actionHelper.classList.toggle('hidden', isDeferredWorkspace);
+  }
+
   function applySidebarWorkspaceLayout(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
 
@@ -2187,6 +2218,7 @@
       form.classList.toggle('hidden', !showForm);
     }
 
+    applyWorkspaceFormChrome(normalized);
     updateSidebarActiveState(normalized);
   }
 
@@ -3803,6 +3835,7 @@
       }
 
       updateUiShellSummary();
+      applyWorkspaceFormChrome(ACTIVE_SIDEBAR_WORKSPACE || 'input');
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
       console.warn("resetForNewEntry gagal, fallback ke reload aman:", e);
@@ -4437,12 +4470,8 @@
       workflowIntentButtons.forEach(function(btn) {
         btn.addEventListener("click", function() {
           const target = String(btn.getAttribute("data-workflow-intent") || "").trim();
-          const normalized = setWorkflowSearchIntent(target, { focusSearch: target !== "section-pelapor", focusForm: target === "section-pelapor" });
-          if (normalized === "section-pelapor") {
-            showTopAlert("Mode kerja diarahkan ke input kasus baru. Gunakan form utama untuk entri awal.", true);
-            return;
-          }
-          showTopAlert(getWorkflowSearchOpenSuccessMessage(normalized), true);
+          setWorkflowSearchIntent(target, { focusSearch: target !== "section-pelapor", focusForm: target === "section-pelapor" });
+          hideTopAlert();
         });
       });
 
@@ -4688,11 +4717,16 @@
             setWorkflowSearchIntent(preferredStage, { focusSearch: false, focusForm: false, skipStageSync: true });
             togglePreRecordWorkflowFocus(false, preferredStage);
             updateFormStepperState(preferredStage);
-            openSidebarWorkspace(normalizeSidebarWorkspace(preferredStage), { scroll: false });
+            const openedWorkspace = normalizeSidebarWorkspace(preferredStage);
+            openSidebarWorkspace(openedWorkspace, { scroll: false });
             updateUiShellSummary();
             refreshWorkflowInbox();
 
-            showTopAlert(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, true);
+            if (['verifikasi', 'sampel', 'status'].includes(openedWorkspace)) {
+              hideTopAlert();
+            } else {
+              showTopAlert(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, true);
+            }
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {
