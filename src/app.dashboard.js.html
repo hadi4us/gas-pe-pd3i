@@ -472,8 +472,8 @@
         <div class="text-4xl font-black text-emerald-900">${stats.totalKasus || 0}</div>
       </div>`;
 
-    // Status notifikasi & sinkronisasi MR (Req 6.7)
-    if (dx === "MR" && stats.statusNotifikasi) {
+    // Status notifikasi & sinkronisasi MR (Req 6.7) — admin only
+    if (isAdmin && dx === "MR" && stats.statusNotifikasi) {
       const n = stats.statusNotifikasi;
       html += `<div class="pd3i-dashboard-metric-card tone-blue">
         <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email</div>

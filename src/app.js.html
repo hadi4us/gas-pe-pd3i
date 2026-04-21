@@ -2755,7 +2755,7 @@
       { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Review record existing untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
       { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil sampel', copy: 'Lanjutkan record existing saat hasil pemeriksaan sudah tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
       { workspace: 'status', icon: 'fa-list-check', title: 'Update status', copy: 'Perbarui status pasien / kasus dari record existing.', show: caps.viewStages.indexOf('section-status') !== -1 },
-      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canAdmin }
+      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView }
     ].filter(function(item) { return item.show; });
 
     quickWrap.innerHTML = quickActions.map(function(item) {
@@ -4348,8 +4348,8 @@
           else btnRetryTelegram.classList.remove("hidden");
         }
         if (btnSidebarDashboard) {
-          if (!isAdmin) btnSidebarDashboard.classList.add("hidden");
-          else btnSidebarDashboard.classList.remove("hidden");
+          if (isViewer || SESSION_USER) btnSidebarDashboard.classList.remove("hidden");
+          else btnSidebarDashboard.classList.add("hidden");
         }
 
         document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
