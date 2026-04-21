@@ -3684,6 +3684,37 @@ body.pd3i-body {
   color: var(--pd3i-text-soft);
 }
 
+.pd3i-overview-dx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.pd3i-overview-dx-pill {
+  padding: 0.7rem 0.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(219, 230, 242, 0.95);
+  background: rgba(255,255,255,0.88);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.86);
+}
+
+.pd3i-overview-dx-pill .label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--pd3i-text-soft);
+  letter-spacing: 0.04em;
+}
+
+.pd3i-overview-dx-pill .value {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--pd3i-text);
+}
+
 .pd3i-overview-summary-grid {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.9rem;

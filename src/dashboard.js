@@ -348,6 +348,10 @@ function _buildWorkflowInboxData_(sess, dx) {
   const sampleSorted = sortQueue(sampleQueue);
   const statusSorted = sortQueue(statusQueue);
   const actionableCount = pendingSorted.length + revisionSorted.length + sampleSorted.length + statusSorted.length;
+  const dxBreakdown = {};
+  (SUPPORTED_DX_ || []).forEach(function(dxKey) {
+    dxBreakdown[dxKey] = dxCounts[dxKey] || 0;
+  });
   const topDx = Object.keys(dxCounts).sort(function(a, b) {
     if ((dxCounts[b] || 0) !== (dxCounts[a] || 0)) return (dxCounts[b] || 0) - (dxCounts[a] || 0);
     return String(a || '').localeCompare(String(b || ''));
@@ -364,7 +368,8 @@ function _buildWorkflowInboxData_(sess, dx) {
       verifiedRecords: verifiedRecords,
       actionableCount: actionableCount,
       activeKelurahanCount: Object.keys(kelurahanSet).length,
-      topDx: topDx
+      topDx: topDx,
+      dxBreakdown: dxBreakdown
     },
     pendingVerification: pendingSorted,
     revisionQueue: revisionSorted,
@@ -432,7 +437,7 @@ function getWorkflowInbox(dx, token) {
 function getOverviewSummary(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
-    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [] }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
+    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
   }
 
   try {
@@ -474,7 +479,7 @@ function getOverviewSummary(token) {
   } catch (e) {
     console.error('[getOverviewSummary] Error:', e);
     return {
-      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [] },
+      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } },
       pendingVerification: [],
       revisionQueue: [],
       sampleQueue: [],

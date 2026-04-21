@@ -2813,15 +2813,17 @@
           const actionable = Number(summary.actionableCount || 0);
           const activeKelurahan = Number(summary.activeKelurahanCount || 0);
           const topDx = Array.isArray(summary.topDx) ? summary.topDx : [];
+          const dxBreakdown = summary && summary.dxBreakdown ? summary.dxBreakdown : { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 };
           const primaryFocus = topDx.slice(0, 3).map(function(item) {
             return `${escapeHtml(item.dx)} ${Number(item.count || 0)}`;
           }).join(' • ') || 'Belum ada distribusi diagnosis dominan';
+          const activeDxCount = Object.keys(dxBreakdown).filter(function(key) { return Number(dxBreakdown[key] || 0) > 0; }).length;
 
           window.__OVERVIEW_PENDING_COUNT = actionable;
           updateUiShellSummary();
 
-          const scopePill = topDx.length
-            ? topDx.slice(0, 2).map(function(item) { return `${item.dx} ${item.count}`; }).join(' • ')
+          const scopePill = activeDxCount > 0
+            ? `${activeDxCount} diagnosis aktif`
             : 'Lintas diagnosis';
           const summaryDxPill = document.getElementById('summary-dx-pill');
           const summaryWarningPill = document.getElementById('summary-warning-pill');
@@ -2845,7 +2847,7 @@
           ].join('');
 
           focusWrap.innerHTML = [
-            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus diagnosis</div><div class="pd3i-overview-focus-title">Sebaran diagnosis aktif</div><div class="pd3i-overview-focus-copy">${primaryFocus}</div></div>`,
+            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Diagnosis dalam scope</div><div class="pd3i-overview-focus-title">Nilai masing-masing diagnosis</div><div class="pd3i-overview-dx-grid">${['MR','DIF','PERT','TN','AFP'].map(function(dxKey) { return `<div class="pd3i-overview-dx-pill"><span class="label">${dxKey}</span><span class="value">${Number(dxBreakdown[dxKey] || 0)}</span></div>`; }).join('')}</div><div class="pd3i-overview-focus-copy">Total kasus dalam scope saat ini: <strong>${totalRecords}</strong>. Ringkasan dominan: ${primaryFocus}</div></div>`,
             `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus tindak lanjut</div><div class="pd3i-overview-focus-title">Antrian kerja aktif</div><div class="pd3i-overview-focus-copy">Saat ini ada <strong>${actionable}</strong> item kerja aktif yang perlu ditindaklanjuti di workspace operasional.</div></div>`
           ].join('');
 
