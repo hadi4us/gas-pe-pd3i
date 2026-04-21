@@ -152,7 +152,7 @@ function getRecordByKey(dx, recordKey, token) {
             return obj;
           })();
       record.dx = dx;
-      record.__RAW_ROW_NUMBER__ = rowNumber;
+      record.RAW_ROW_NUMBER = rowNumber;
       return record;
     }
   }
@@ -169,7 +169,7 @@ function getRecordByKey(dx, recordKey, token) {
             return obj;
           })();
       record.dx = dx;
-      record.__RAW_ROW_NUMBER__ = i + 1;
+      record.RAW_ROW_NUMBER = i + 1;
       return record;
     }
   }
@@ -414,11 +414,11 @@ function searchRecords(dx, filters, token) {
             headers.forEach(function(h, idx) { obj[h] = row[idx]; });
             return obj;
           })();
-      record.__RAW_ROW_NUMBER__ = rowIdx + 2;
+      record.RAW_ROW_NUMBER = rowIdx + 2;
 
       const item = _mapSearchResultItem_(dxItem, record);
       if (!item.recordKey) {
-        item.recordKey = 'ROW:' + String(record.__RAW_ROW_NUMBER__ || '');
+        item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
       }
       if (!item.recordKey) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;

@@ -5026,8 +5026,8 @@
         if (!dataObj["ID Registrasi Kasus"] && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"]) {
           dataObj["ID Registrasi Kasus"] = window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"];
         }
-        if (!dataObj.__RAW_ROW_NUMBER__ && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META.__RAW_ROW_NUMBER__) {
-          dataObj.__RAW_ROW_NUMBER__ = window.__PD3I_ACTIVE_RECORD_META.__RAW_ROW_NUMBER__;
+        if (!dataObj.RAW_ROW_NUMBER && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META.RAW_ROW_NUMBER) {
+          dataObj.RAW_ROW_NUMBER = window.__PD3I_ACTIVE_RECORD_META.RAW_ROW_NUMBER;
         }
 
         const activeStageNormalized = normalizeWorkflowStepId(activeStageOnSubmit);
