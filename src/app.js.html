@@ -2072,6 +2072,12 @@
     };
   }
 
+  function getEffectiveDxScopeForWorkspace(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard'].includes(normalized)) return '';
+    return String(document.getElementById('form-selector')?.value || '').trim();
+  }
+
   function buildWorkspaceRouteUrl(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
     const boot = getRouteBootConfig();
@@ -2207,6 +2213,7 @@
     if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace || hasOpenRecord);
     if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
     if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
+    applySearchDefaultsForWorkspace(normalized);
 
     if (form) {
       const showForm = isInputWorkspace
@@ -2413,6 +2420,19 @@
     }
     if (normalized === 'section-pelapor' && (statusFilter.value === 'Pending' || statusFilter.value === 'Terverifikasi')) {
       statusFilter.value = '';
+    }
+  }
+
+  function applySearchDefaultsForWorkspace(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const statusFilter = document.getElementById('search-status-verifikasi');
+    if (!statusFilter) return;
+    if (normalized === 'search') {
+      statusFilter.value = '';
+    } else if (normalized === 'verifikasi' && !statusFilter.value) {
+      statusFilter.value = 'Pending';
+    } else if ((normalized === 'sampel' || normalized === 'status') && !statusFilter.value) {
+      statusFilter.value = 'Terverifikasi';
     }
   }
 
@@ -2997,7 +3017,7 @@
   }
 
   function refreshWorkflowInbox() {
-    const dx = String(document.getElementById('form-selector')?.value || '').trim();
+    const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
     if (!box) return;
     if (!safeGsRun() || !SESSION_TOKEN) {
@@ -4649,7 +4669,7 @@
       if (btnSearchEpid) {
         btnSearchEpid.addEventListener("click", function() {
           const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
-          const dx = selector.value;
+          const dx = getEffectiveDxScopeForWorkspace(workspace);
           const filters = Object.assign({}, collectWorkflowSearchFilters(), {
             workspace: String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
             workflowIntent: String(WORKFLOW_SEARCH_INTENT || '').trim()
