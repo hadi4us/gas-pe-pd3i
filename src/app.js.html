@@ -3051,10 +3051,7 @@
     return "Form dipisah per tahap kerja agar input awal, verifikasi, dan hasil pemeriksaan tidak terasa terjadi di saat yang sama.";
   }
 
-  function updateSubmitButtonForWorkflowStep(stepId) {
-    const btnSubmit = document.getElementById("btn-submit");
-    if (!btnSubmit || isViewerSession()) return;
-
+  function getSubmitLabelForStage(stepId) {
     const normalized = normalizeWorkflowStepId(stepId);
     const labels = {
       "section-pelapor": isEditMode
@@ -3064,10 +3061,15 @@
       "section-sampel": `<i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan`,
       "section-status": `<i class="fas fa-list-check"></i> Simpan Update Status`
     };
-
-    btnSubmit.innerHTML = labels[normalized] || (isEditMode
+    return labels[normalized] || (isEditMode
       ? `<i class="fas fa-pen-to-square"></i> Perbarui Data`
       : `<i class="fas fa-save"></i> Simpan Data ke Database`);
+  }
+
+  function updateSubmitButtonForWorkflowStep(stepId) {
+    const btnSubmit = document.getElementById("btn-submit");
+    if (!btnSubmit || isViewerSession()) return;
+    btnSubmit.innerHTML = getSubmitLabelForStage(stepId);
   }
 
   function resetSubmitButtonForCurrentStage() {
