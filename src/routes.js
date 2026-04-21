@@ -312,18 +312,14 @@ function _mapSearchResultItem_(dx, record) {
 
   const recordId = getFirst(['ID Registrasi Kasus']);
   const epid = getFirst(['Nomor EPID']);
-  const namaPasien = getFirst(['Nama', 'Nama Pasien']);
-  const namaUnitPelapor = getFirst(['Nama unit pelapor', 'Nama Unit Pelapor', 'Nama Unit', 'NamaFaskes']);
-  const namaPetugas = getFirst(['Nama Petugas', 'Petugas', 'Nama Pelapor', 'Petugas Verifikator']);
+  const namaPasien = getFirst(['Nama Pasien', 'Nama']);
   return {
     dx: String(dx || '').trim().toUpperCase(),
     recordKey: recordId || epid,
     recordId: recordId,
     epid: epid,
     nama: namaPasien,
-    namaSearch: [namaPasien, namaUnitPelapor, namaPetugas].filter(Boolean).join(' '),
-    namaUnitPelapor: namaUnitPelapor,
-    namaPetugas: namaPetugas,
+    namaSearch: namaPasien,
     tanggalLahir: getFirst(['Tanggal Lahir']),
     orangTua: getFirst(['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu']),
     alamat: getFirst(['Alamat', 'Alamat Domisili', 'Alamat Lengkap']),
