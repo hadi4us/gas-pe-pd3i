@@ -108,10 +108,11 @@ function _normalizeFaskesJenis_(value) {
   if (raw === 'RS' || raw.indexOf('RUMAH SAKIT') !== -1 || raw.indexOf('HOSPITAL') !== -1 || raw.indexOf('RUMKIT') !== -1 || raw.startsWith('RS')) return 'RUMAH SAKIT';
   if (raw.indexOf('KLINIK') !== -1) return 'KLINIK';
   if (raw.indexOf('TPMB') !== -1 || raw.indexOf('BPM') !== -1 || raw.indexOf('BIDAN PRAKTIK') !== -1) return 'TPMB';
+  if (raw.indexOf('TPMD') !== -1) return 'TPMD';
   if (raw.indexOf('PRAKTIK') !== -1 || raw.indexOf('DOKTER') !== -1) return 'PRAKTIK MANDIRI';
   if (raw.indexOf('LAB') !== -1) return 'LABORATORIUM';
   if (raw.indexOf('MASYARAKAT') !== -1) return 'MASYARAKAT';
-  if (raw.indexOf('LAIN') !== -1) return 'LAINNYA';
+  if (raw === 'DLL' || raw.indexOf('DLL') !== -1 || raw.indexOf('LAIN') !== -1) return 'LAINNYA';
   return raw;
 }
 

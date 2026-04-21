@@ -109,10 +109,11 @@
     if (raw === "RS" || raw.includes("RUMAH SAKIT") || raw.includes("HOSPITAL") || raw.includes("RUMKIT") || raw.startsWith("RS")) return "RUMAH SAKIT";
     if (raw.includes("KLINIK")) return "KLINIK";
     if (raw.includes("TPMB") || raw.includes("BPM") || raw.includes("BIDAN PRAKTIK")) return "TPMB";
+    if (raw.includes("TPMD")) return "TPMD";
     if (raw.includes("PRAKTIK") || raw.includes("DOKTER")) return "PRAKTIK MANDIRI";
     if (raw.includes("LAB")) return "LABORATORIUM";
     if (raw.includes("MASYARAKAT")) return "MASYARAKAT";
-    if (raw.includes("LAIN")) return "LAINNYA";
+    if (raw === "DLL" || raw.includes("DLL") || raw.includes("LAIN")) return "LAINNYA";
     return raw;
   }
 
