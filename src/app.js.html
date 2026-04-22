@@ -1297,6 +1297,37 @@
     (rows || []).forEach(item => addDynamicRow(tableId, item));
   }
 
+  function _getDraftPromptSignature_(draft) {
+    if (!draft || !draft.dx) return '';
+    return [String(draft.dx || '').trim().toUpperCase(), String(draft.savedAt || ''), String(draft.expiresAt || '')].join('|');
+  }
+
+  function maybePromptRestoreInputDraft(options) {
+    try {
+      const opts = options || {};
+      const currentWorkspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'overview');
+      if (!opts.force && currentWorkspace !== 'input') return false;
+      if (isEditMode || isViewerSession()) return false;
+
+      const draft = getFormDraft();
+      if (!draft || !draft.dx) return false;
+
+      const signature = _getDraftPromptSignature_(draft);
+      if (!opts.force && window.__PD3I_LAST_DRAFT_PROMPT_SIGNATURE === signature) return false;
+      window.__PD3I_LAST_DRAFT_PROMPT_SIGNATURE = signature;
+
+      const savedTime = draft.savedAt ? new Date(draft.savedAt).toLocaleString('id-ID') : 'sebelumnya';
+      const confirmed = window.confirm(
+        `Ada draft input ${draft.dx} yang tersimpan (${savedTime}).\n\nKlik OK untuk lanjutkan draft, atau Batal untuk tetap buka Input Kasus dalam keadaan kosong.`
+      );
+      if (!confirmed) return false;
+      return restoreFormDraft();
+    } catch (e) {
+      console.warn('Gagal menawarkan restore draft:', e);
+      return false;
+    }
+  }
+
   function restoreFormDraft() {
     try {
       const draft = getFormDraft();
@@ -2294,6 +2325,11 @@
     applySidebarWorkspaceLayout(normalized);
     applySearchShellCopyForWorkspace(normalized);
     refreshWorkflowInbox();
+    if (normalized === 'input') {
+      setTimeout(function() {
+        maybePromptRestoreInputDraft();
+      }, 120);
+    }
     const inboxEl = document.getElementById('workflow-inbox');
     const hasVisibleInbox = inboxEl && !inboxEl.classList.contains('hidden') && String(inboxEl.innerHTML || '').trim();
     const targetEl = normalized === 'input'
@@ -5165,8 +5201,6 @@
           location.reload();
         });
       }
-
-      restoreFormDraft();
 
       const handleMainFormSubmit = async function() {
 
