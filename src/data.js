@@ -517,6 +517,11 @@ function recommendEpid_(dx, data) {
   return 'C' + _incrementNumericString_(maxDigits);
 }
 
+
+function generateEpid_(dx, data) {
+  return recommendEpid_(dx, data);
+}
+
 function previewRecommendedEpid(dx, payload, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) return { ok: false, recommendation: '', message: 'Sesi tidak valid.' };
@@ -527,4 +532,209 @@ function previewRecommendedEpid(dx, payload, token) {
   } catch (e) {
     return { ok: false, recommendation: '', message: String(e && e.message || e) };
   }
+}
+
+
+function saveDxRecord_(dx, data) {
+  dx = String(dx || "").trim().toUpperCase();
+  if (!dx) throw new Error("dx wajib diisi.");
+
+  const sheet = getSheetOrThrow_(dx + "_Raw");
+  let headers = getTrimmedHeaders_(sheet);
+  if (!headers.length) throw new Error("Header sheet tidak ditemukan.");
+  const mrOnlyHeaders = ["Nomor Rekam Medik", "Tanggal meninggal", "Penyebab kematian"];
+
+  const incomingFieldHeaders = Object.keys(data || {})
+    .filter(function (key) {
+      return key && String(key).trim() && String(key).indexOf("__") !== 0;
+    });
+
+  headers = _ensureSheetHeaders_(sheet, (dx === "MR"
+    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_).concat(INTERNAL_TRACKING_HEADERS_)
+    : COMMON_PIPELINE_HEADERS_.concat(INTERNAL_TRACKING_HEADERS_)).concat(incomingFieldHeaders));
+  data = _applyHeaderAliases_(dx, data || {}, headers);
+
+  const kecamatanVal = data["Kecamatan"] || data["Kecamatan domisili"] || "";
+  const kelurahanVal = data["Kelurahan"] || data["Kelurahan domisili"] || "";
+  const kabKotaVal = data["Kab/Kota"] || data["Kab/Kota Pasien"] || data["Kab/Kota domisili"] || "Kota Depok";
+
+  const pengampu = getPengampuByWilayah_(kecamatanVal, kelurahanVal, kabKotaVal);
+  data["Status Routing Pengampu"] = pengampu.status || "UNMAPPED";
+  if (pengampu.found) {
+    data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
+    data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
+    data["KodePuskesmas Pengampu"] = pengampu.kodePuskesmas || "";
+    data["Puskesmas Pengampu"] = pengampu.namaPuskesmas || pengampu.pengampu || "";
+    data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
+    data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
+    data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
+    data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
+    data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
+    data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
+  }
+
+  const idxRecordId = headers.indexOf("ID Registrasi Kasus");
+  const idxEpid = headers.indexOf("Nomor EPID");
+  const idxTimestamp = headers.indexOf("Timestamp");
+  const idxStatusVerifikasi = headers.indexOf("Status Verifikasi EPID");
+  if (idxEpid === -1) {
+    throw new Error("Kolom 'Nomor EPID' belum ada di sheet " + dx + "_Raw");
+  }
+  if (idxRecordId === -1) {
+    throw new Error("Kolom 'ID Registrasi Kasus' belum ada di sheet " + dx + "_Raw");
+  }
+
+  let recordId = String(data["ID Registrasi Kasus"] || "").trim();
+  if (!recordId) {
+    recordId = generateCaseRegistrationId_(dx);
+    data["ID Registrasi Kasus"] = recordId;
+  }
+
+  const verificationStatus = String(data["Status Verifikasi EPID"] || "").trim() || "Pending";
+  data["Status Verifikasi EPID"] = verificationStatus;
+  if (!data["Nomor EPID Rekomendasi"]) {
+    try {
+      data["Nomor EPID Rekomendasi"] = recommendEpid_(dx, data);
+    } catch (e) {
+      data["Nomor EPID Rekomendasi"] = "";
+    }
+  }
+
+  let epidValue = String(data["Nomor EPID"] || data["Nomor EPID Final"] || "").trim();
+
+  let rowIndex = -1;
+  const lastRowForLookup = sheet.getLastRow();
+  if (lastRowForLookup >= 2) {
+    const lookupRange = sheet.getRange(2, 1, lastRowForLookup - 1, Math.max(idxRecordId, idxEpid) + 1).getValues();
+    for (var li = 0; li < lookupRange.length; li++) {
+      const rowRecordId = String(lookupRange[li][idxRecordId] || '').trim();
+      const rowEpid = String(lookupRange[li][idxEpid] || '').trim();
+      if ((recordId && rowRecordId === recordId) || (epidValue && rowEpid === epidValue)) {
+        rowIndex = li + 2;
+        break;
+      }
+    }
+  }
+
+  let existingRowObject = null;
+  if (rowIndex !== -1) {
+    try {
+      const existingValues = sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0];
+      existingRowObject = {};
+      headers.forEach(function(h, j) { existingRowObject[h] = existingValues[j]; });
+    } catch (e) {
+      existingRowObject = null;
+    }
+  }
+
+  if (existingRowObject) {
+    if (!String(data['Status Verifikasi EPID'] || '').trim()) {
+      data['Status Verifikasi EPID'] = String(existingRowObject['Status Verifikasi EPID'] || '').trim() || verificationStatus;
+    }
+    if (!String(data['Nomor EPID Rekomendasi'] || '').trim()) {
+      data['Nomor EPID Rekomendasi'] = String(existingRowObject['Nomor EPID Rekomendasi'] || '').trim();
+    }
+    if (!String(data['Nomor EPID Final'] || '').trim()) {
+      data['Nomor EPID Final'] = String(existingRowObject['Nomor EPID Final'] || '').trim();
+    }
+    if (!epidValue) {
+      epidValue = String(existingRowObject['Nomor EPID'] || '').trim();
+    }
+  }
+
+  const normalizedStatus = String(data['Status Verifikasi EPID'] || verificationStatus).trim() || 'Pending';
+  data['Status Verifikasi EPID'] = normalizedStatus;
+  if (normalizedStatus === 'Terverifikasi') {
+    epidValue = String(data['Nomor EPID Final'] || data['Nomor EPID'] || epidValue || '').trim();
+    if (!epidValue) {
+      epidValue = String(data['Nomor EPID Rekomendasi'] || '').trim() || recommendEpid_(dx, data);
+    }
+    data['Nomor EPID Final'] = epidValue;
+    data['Nomor EPID'] = epidValue;
+  } else if (rowIndex === -1 || String(data['__workflowStage'] || '').trim() === 'section-verifikasi') {
+    data['Nomor EPID Final'] = '';
+    data['Nomor EPID'] = '';
+    epidValue = '';
+  }
+
+  if (headers.includes("Link PDF") && !data["Link PDF"]) {
+    const token = String(data.__token || "").trim();
+    if (token && epidValue) {
+      data["Link PDF"] = safeGetPdfPrintUrl_(dx, epidValue, token) || "";
+    }
+  }
+
+  // Req 16.1, 16.3: serialize record sebelum tulis
+  const serialized = serializeRecord_(data, headers);
+
+  const now = new Date();
+  let oldTimestamp = "";
+  if (rowIndex !== -1 && idxTimestamp !== -1) {
+    oldTimestamp = sheet.getRange(rowIndex, idxTimestamp + 1).getValue();
+  }
+
+  // Simpan existingRow untuk diff (Req 10.2)
+  const existingRow = rowIndex !== -1
+    ? sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0]
+    : new Array(headers.length).fill("");
+
+  const rowData = headers.map((header, idx) => {
+    if (!header) return "";
+    if (header === "Timestamp") return rowIndex !== -1 ? (oldTimestamp || serialized["Timestamp"] || now) : (serialized["Timestamp"] || now);
+    if (header === "dx") return dx;
+    if (header === "ID Registrasi Kasus") return recordId;
+    if (header === "Nomor EPID") return epidValue;
+    if (serialized[header] !== undefined) return serialized[header];
+    return existingRow[idx] !== undefined ? existingRow[idx] : "";
+  });
+
+  const savedRowIndex = rowIndex !== -1 ? rowIndex : (sheet.getLastRow() + 1);
+  if (rowIndex !== -1) {
+    sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+  } else {
+    sheet.appendRow(rowData);
+  }
+
+  // Req 2.3: perbarui indeks setelah tulis
+  if (epidValue) {
+    _updateEpidIndex_(sheet, epidValue, savedRowIndex);
+  }
+
+  // Req 1.3: invalidasi cache setelah tulis berhasil
+  try {
+    Cache_Manager.invalidateSheetCache(dx + "_Raw");
+  } catch (e) {
+    console.warn("saveDxRecord_: gagal invalidasi cache:", e);
+  }
+
+  // Req 10.1, 10.2: audit log
+  try {
+    const aksi = rowIndex !== -1 ? "UPDATE" : "INSERT";
+    const user = (data && data.__user) ? data.__user : { username: "system", role: "system" };
+    const auditMeta = (data && data.__auditMeta) ? data.__auditMeta : null;
+    let diff = null;
+    if (aksi === "UPDATE") {
+      diff = {};
+      headers.forEach(function (h, idx) {
+        if (!h || h === "Timestamp" || h === "dx") return;
+        const oldVal = String(existingRow[idx] !== undefined ? existingRow[idx] : "");
+        const newVal = String(rowData[idx] !== undefined ? rowData[idx] : "");
+        if (oldVal !== newVal) {
+          diff[h] = { old: oldVal, new: newVal };
+        }
+      });
+      if (Object.keys(diff).length === 0) diff = null;
+    }
+    Audit_Logger.logChange(user, dx, epidValue, aksi, diff, auditMeta);
+  } catch (e) {
+    console.error("saveDxRecord_: gagal mencatat audit log:", e);
+  }
+
+  return {
+    epid: epidValue,
+    recordId: recordId,
+    verificationStatus: verificationStatus,
+    isUpdate: rowIndex !== -1,
+    rowIndex: savedRowIndex
+  };
 }
