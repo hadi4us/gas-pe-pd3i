@@ -616,9 +616,15 @@ function getDashboardStats(dx, tahun, token) {
     const idxKelompokUmur = headers.indexOf("Kelompok Umur Epidemiologis");
     const idxJK = headers.indexOf("JK");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Pengampu");
+    const idxReasonNotif = headers.indexOf("Reason Notifikasi Pengampu");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
+    const idxReasonSync = headers.indexOf("Reason Sinkronisasi Pengampu");
+    const idxStatusTelegram = headers.indexOf("Status Notifikasi Telegram");
+    const idxReasonTelegram = headers.indexOf("Reason Notifikasi Telegram");
     const idxRevisionNotif = headers.indexOf("Status Notifikasi Revisi Pengampu");
+    const idxReasonRevisionNotif = headers.indexOf("Reason Notifikasi Revisi Pengampu");
     const idxRevisionTelegram = headers.indexOf("Status Notifikasi Revisi Telegram");
+    const idxReasonRevisionTelegram = headers.indexOf("Reason Notifikasi Revisi Telegram");
     const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
     const idxVerifikasi = headers.indexOf("Status Verifikasi EPID");
     const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
@@ -824,6 +830,16 @@ function getDashboardStats(dx, tahun, token) {
             kelurahan: kelurahan,
             statusVerifikasi: verificationStatus,
             catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || "").trim() : "",
+            statusNotifikasiKasusBaru: idxStatusNotif !== -1 ? String(row[idxStatusNotif] || "").trim() : "",
+            reasonNotifikasiKasusBaru: idxReasonNotif !== -1 ? String(row[idxReasonNotif] || "").trim() : "",
+            statusSyncPengampu: idxStatusSync !== -1 ? String(row[idxStatusSync] || "").trim() : "",
+            reasonSyncPengampu: idxReasonSync !== -1 ? String(row[idxReasonSync] || "").trim() : "",
+            statusTelegramKasusBaru: idxStatusTelegram !== -1 ? String(row[idxStatusTelegram] || "").trim() : "",
+            reasonTelegramKasusBaru: idxReasonTelegram !== -1 ? String(row[idxReasonTelegram] || "").trim() : "",
+            statusNotifikasiRevisi: idxRevisionNotif !== -1 ? String(row[idxRevisionNotif] || "").trim() : "",
+            reasonNotifikasiRevisi: idxReasonRevisionNotif !== -1 ? String(row[idxReasonRevisionNotif] || "").trim() : "",
+            statusTelegramRevisi: idxRevisionTelegram !== -1 ? String(row[idxRevisionTelegram] || "").trim() : "",
+            reasonTelegramRevisi: idxReasonRevisionTelegram !== -1 ? String(row[idxReasonRevisionTelegram] || "").trim() : "",
             inputAt: inputAt,
             updatedAt: updatedAt
           };

@@ -210,6 +210,22 @@ function test_retryAllFailedRevisionTelegramNotification_returnsCorrectStructure
   );
 }
 
+function test_retryRevisionPengampuNotification_rejectsInvalidToken_() {
+  const result = retryRevisionPengampuNotification("REG-123", "MR", "token-tidak-valid");
+  assertRoutes_(
+    result && result.status === "error",
+    "retryRevisionPengampuNotification harus error untuk token tidak valid"
+  );
+}
+
+function test_retryRevisionTelegramNotification_rejectsInvalidToken_() {
+  const result = retryRevisionTelegramNotification("REG-123", "MR", "token-tidak-valid");
+  assertRoutes_(
+    result && result.status === "error",
+    "retryRevisionTelegramNotification harus error untuk token tidak valid"
+  );
+}
+
 /**
  * Test 8: setupConfig menolak token tidak valid.
  * Req 5.7
@@ -279,6 +295,8 @@ function runRoutesTests() {
     ["retryAllPendingPengampuNotification mengembalikan struktur benar (Req 3.6, 15.5)", test_retryAllPendingPengampuNotification_returnsCorrectStructure_],
     ["retryAllPendingRevisionPengampuNotification mengembalikan struktur benar", test_retryAllPendingRevisionPengampuNotification_returnsCorrectStructure_],
     ["retryAllFailedRevisionTelegramNotification mengembalikan struktur benar", test_retryAllFailedRevisionTelegramNotification_returnsCorrectStructure_],
+    ["retryRevisionPengampuNotification menolak token tidak valid", test_retryRevisionPengampuNotification_rejectsInvalidToken_],
+    ["retryRevisionTelegramNotification menolak token tidak valid", test_retryRevisionTelegramNotification_rejectsInvalidToken_],
     ["setupConfig menolak token tidak valid (Req 5.7)", test_setupConfig_rejectsInvalidToken_],
     ["retryAllPendingPengampuSync dengan dxList eksplisit (Req 15.4, 15.6)", test_retryAllPendingPengampuSync_withExplicitDxList_],
     ["Batch_Processor.runBatch batchType valid + token invalid = error (Req 3.2)", test_batchProcessor_validBatchType_invalidToken_returnsError_]

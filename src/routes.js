@@ -536,6 +536,7 @@ const Batch_Processor = (function () {
         const res = _syncPengampuSpreadsheet_(dx, record, { epid: epid, recordId: recordId }, printUrl);
         const patch = Object.assign({}, identityPatch, {
           "Status Sinkronisasi Pengampu": res.synced ? "SYNCED" : (res.reason || "FAILED"),
+          "Reason Sinkronisasi Pengampu": res.synced ? "" : (res.reason || ""),
           "Synced At Pengampu": new Date(),
           "Sync Target Pengampu": res.target || ""
         });
@@ -548,6 +549,7 @@ const Batch_Processor = (function () {
         const currentRetry = Number(record["Telegram Retry Count"] || 0) || 0;
         const patch = Object.assign({}, identityPatch, {
           "Status Notifikasi Telegram": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Reason Notifikasi Telegram": res.sent ? "" : (res.reason || ""),
           "Telegram Notified At": new Date(),
           "Telegram Target": res.target || "",
           "Telegram Retry Count": currentRetry + 1
@@ -559,6 +561,7 @@ const Batch_Processor = (function () {
         const res = _sendPengampuNotification_(dx, record, { epid: epid, recordId: recordId }, printUrl);
         const patch = Object.assign({}, identityPatch, {
           "Status Notifikasi Pengampu": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Reason Notifikasi Pengampu": res.sent ? "" : (res.reason || ""),
           "Notified At Pengampu": new Date(),
           "Notified To Pengampu": res.to || ""
         });
@@ -774,6 +777,7 @@ function retryPengampuSync(epid, dx, token) {
     const patch = {
       "Nomor EPID": epid,
       "Status Sinkronisasi Pengampu": syncPengampu.synced ? "SYNCED" : (syncPengampu.reason || "FAILED"),
+      "Reason Sinkronisasi Pengampu": syncPengampu.synced ? "" : (syncPengampu.reason || ""),
       "Synced At Pengampu": new Date(),
       "Sync Target Pengampu": syncPengampu.target || ""
     };
@@ -800,6 +804,7 @@ function retryTelegramPd3iNotification(epid, dx, token) {
     const patch = {
       "Nomor EPID": epid,
       "Status Notifikasi Telegram": telegramNotify.sent ? "SENT" : (telegramNotify.reason || "FAILED"),
+      "Reason Notifikasi Telegram": telegramNotify.sent ? "" : (telegramNotify.reason || ""),
       "Telegram Notified At": new Date(),
       "Telegram Target": telegramNotify.target || "",
       "Telegram Retry Count": currentRetry + 1
@@ -826,6 +831,7 @@ function retryPengampuNotification(epid, dx, token) {
     const patch = {
       "Nomor EPID": epid,
       "Status Notifikasi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+      "Reason Notifikasi Pengampu": notify.sent ? "" : (notify.reason || ""),
       "Notified At Pengampu": new Date(),
       "Notified To Pengampu": notify.to || ""
     };
@@ -833,6 +839,60 @@ function retryPengampuNotification(epid, dx, token) {
     return { status: notify.sent ? "success" : "error", epid: epid, pengampuNotification: notify };
   } catch (err) {
     return { status: "error", message: String(err), epid: epid };
+  }
+}
+
+function retryRevisionPengampuNotification(recordKey, dx, token) {
+  try {
+    _requireAdminFromToken_(token);
+    dx = String(dx || "MR").trim().toUpperCase();
+    recordKey = String(recordKey || '').trim();
+    const record = getRecordByKey(dx, recordKey, token);
+    if (!record) return { status: 'error', message: 'Record tidak ditemukan.', recordKey: recordKey };
+    const saved = {
+      recordId: String(record["ID Registrasi Kasus"] || recordKey || '').trim(),
+      epid: String(record["Nomor EPID"] || '').trim()
+    };
+    const notify = _sendRevisionPengampuNotification_(dx, record, saved);
+    const patch = {
+      "ID Registrasi Kasus": saved.recordId,
+      "Nomor EPID": saved.epid,
+      "Status Notifikasi Revisi Pengampu": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+      "Reason Notifikasi Revisi Pengampu": notify.sent ? "" : (notify.reason || ""),
+      "Revision Notified At Pengampu": new Date(),
+      "Revision Notified To Pengampu": notify.to || ""
+    };
+    saveDxRecord_(dx, patch);
+    return { status: notify.sent ? 'success' : 'error', recordKey: recordKey, revisionNotification: notify };
+  } catch (err) {
+    return { status: 'error', message: String(err), recordKey: recordKey };
+  }
+}
+
+function retryRevisionTelegramNotification(recordKey, dx, token) {
+  try {
+    _requireAdminFromToken_(token);
+    dx = String(dx || "MR").trim().toUpperCase();
+    recordKey = String(recordKey || '').trim();
+    const record = getRecordByKey(dx, recordKey, token);
+    if (!record) return { status: 'error', message: 'Record tidak ditemukan.', recordKey: recordKey };
+    const saved = {
+      recordId: String(record["ID Registrasi Kasus"] || recordKey || '').trim(),
+      epid: String(record["Nomor EPID"] || '').trim()
+    };
+    const notify = _sendRevisionTelegramNotification_(dx, record, saved);
+    const patch = {
+      "ID Registrasi Kasus": saved.recordId,
+      "Nomor EPID": saved.epid,
+      "Status Notifikasi Revisi Telegram": notify.sent ? "SENT" : (notify.reason || "FAILED"),
+      "Reason Notifikasi Revisi Telegram": notify.sent ? "" : (notify.reason || ""),
+      "Revision Telegram Notified At": new Date(),
+      "Revision Telegram Target": notify.target || ""
+    };
+    saveDxRecord_(dx, patch);
+    return { status: notify.sent ? 'success' : 'error', recordKey: recordKey, revisionTelegramNotification: notify };
+  } catch (err) {
+    return { status: 'error', message: String(err), recordKey: recordKey };
   }
 }
 
