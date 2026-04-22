@@ -1038,6 +1038,47 @@ function _sendTelegramText_(chatId, lines) {
   return { sent: false, reason: "HTTP_" + code + ": " + body, target: targetChatId };
 }
 
+function _getNotificationRecordLabel_(data, saved) {
+  return String((saved && saved.recordId) || (data && (data["ID Registrasi Kasus"] || data["Nomor EPID"])) || '-').trim() || '-';
+}
+
+function _getNotificationLocationLabel_(data) {
+  const kel = String((data && data["Kelurahan"]) || '-').trim() || '-';
+  const kec = String((data && data["Kecamatan"]) || '-').trim() || '-';
+  return kel + ' / ' + kec;
+}
+
+function _buildCaseNotificationLines_(dx, data, saved, notifyCtx, options) {
+  const opts = options || {};
+  const lines = [];
+  const recordLabel = _getNotificationRecordLabel_(data, saved);
+  const epidLabel = String((saved && saved.epid) || (data && data["Nomor EPID"]) || '-').trim() || '-';
+  const verificationLabel = String((data && data["Status Verifikasi EPID"]) || '-').trim() || '-';
+  const pelaporLabel = String((data && data["Nama unit pelapor"]) || '-').trim() || '-';
+  const pengampuLabel = String((notifyCtx && notifyCtx.puskesmasPengampu) || (data && data["Puskesmas Pengampu"]) || '-').trim() || '-';
+  const tanggalLacak = String((data && data["Tanggal Pelacakan"]) || '-').trim() || '-';
+  const alamat = String((data && data["Alamat"]) || '-').trim() || '-';
+  const nama = String((data && data["Nama"]) || '-').trim() || '-';
+  const jk = String((data && data["JK"]) || '-').trim() || '-';
+  const tanggalLahir = String((data && data["Tanggal Lahir"]) || '-').trim() || '-';
+
+  lines.push(`DX: ${dx}`);
+  lines.push(`ID Registrasi: ${recordLabel}`);
+  lines.push(`Nomor EPID: ${epidLabel}`);
+  lines.push(`Nama Pasien: ${nama}`);
+  lines.push(`Jenis Kelamin: ${jk}`);
+  lines.push(`Tanggal Lahir: ${tanggalLahir}`);
+  lines.push(`Domisili: ${_getNotificationLocationLabel_(data)}`);
+  lines.push(`Alamat: ${alamat}`);
+  lines.push(`Pelapor: ${pelaporLabel}`);
+  lines.push(`Puskesmas Pengampu: ${pengampuLabel}`);
+  lines.push(`Status Routing: ${String((notifyCtx && notifyCtx.statusRouting) || (data && data["Status Routing Pengampu"]) || '-').trim() || '-'}`);
+  lines.push(`Status Verifikasi: ${verificationLabel}`);
+  lines.push(`Tanggal Pelacakan: ${tanggalLacak}`);
+  if (opts.includePrintUrl && opts.printUrl) lines.push(`Link PDF: ${opts.printUrl}`);
+  return lines;
+}
+
 // ─── Sinkronisasi ke spreadsheet pengampu ────────────────────────────────────
 function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
   try {
@@ -1091,19 +1132,15 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
     if (!notifyCtx.telegramChatId) return { sent: false, reason: "NOT_CONFIGURED" };
 
     const lines = [
-      "📢 *Kasus " + dx + " terverifikasi*",
-      "",
-      `*EPID:* ${saved.epid || "-"}`,
-      `*Nama:* ${data["Nama"] || "-"}`,
-      `*JK:* ${data["JK"] || "-"}`,
-      `*Kelurahan:* ${data["Kelurahan"] || "-"}`,
-      `*Kecamatan:* ${data["Kecamatan"] || "-"}`,
-      `*Puskesmas Pengampu:* ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "-"}`,
-      `*Routing:* ${notifyCtx.statusRouting || data["Status Routing Pengampu"] || "-"}`,
-      `*Notifikasi Email:* ${data["Status Notifikasi Pengampu"] || "-"}`,
-      `*Sync Pengampu:* ${data["Status Sinkronisasi Pengampu"] || "-"}`
+      `📢 *Kasus ${dx} terverifikasi*`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      `Status Email Pengampu: ${String(data["Status Notifikasi Pengampu"] || '-').trim() || '-'}`,
+      `Status Sync Pengampu: ${String(data["Status Sinkronisasi Pengampu"] || '-').trim() || '-'}`,
+      '',
+      'Tindak lanjut: buka workspace verifikasi/sampel/status sesuai kebutuhan kasus.'
     ];
-    if (printUrl) lines.push(`*PDF:* ${printUrl}`);
 
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
     if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
@@ -1122,23 +1159,14 @@ function _sendPengampuNotification_(dx, data, saved, printUrl) {
     if (notifyCtx.statusRouting !== "MATCHED") return { sent: false, reason: notifyCtx.statusRouting || "UNMAPPED" };
     if (!notifyCtx.emailRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
 
-    const subject = `[${dx}][${saved.epid}] Kasus baru wilayah ampuan ${data["Kelurahan"] || ""}`;
+    const subject = `[${dx}][${saved.epid || '-'}] Kasus terverifikasi wilayah ${String(data["Kelurahan"] || '').trim() || '-'}`;
     const body = [
-      "Notifikasi kasus " + dx + " wilayah ampuan",
-      "",
-      `EPID: ${saved.epid}`,
-      `Nama: ${data["Nama"] || "-"}`,
-      `JK: ${data["JK"] || "-"}`,
-      `Tanggal Lahir: ${data["Tanggal Lahir"] || "-"}`,
-      `Alamat: ${data["Alamat"] || "-"}`,
-      `Kelurahan: ${data["Kelurahan"] || "-"}`,
-      `Kecamatan: ${data["Kecamatan"] || "-"}`,
-      `Faskes pelapor: ${data["Nama unit pelapor"] || "-"}`,
-      `Tanggal mulai ruam: ${data["Tanggal mulai ruam"] || "-"}`,
-      `Tanggal pelacakan: ${data["Tanggal Pelacakan"] || "-"}`,
-      `Puskesmas pengampu: ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "-"}`,
-      printUrl ? `Link PDF: ${printUrl}` : ""
-    ].filter(Boolean).join("\n");
+      `Notifikasi kasus ${dx} terverifikasi untuk wilayah ampuan`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      'Mohon tindak lanjuti sesuai alur kerja (verifikasi lanjutan, hasil sampel, atau update status kasus).'
+    ].join('\n');
 
     MailApp.sendEmail({
       to: notifyCtx.emailRecipients.join(","),
@@ -1160,23 +1188,18 @@ function _sendRevisionPengampuNotification_(dx, data, saved) {
     if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
     if (!notifyCtx.emailRecipients.length) return { sent: false, reason: 'NO_RECIPIENT' };
 
-    const recordId = String((saved && saved.recordId) || data["ID Registrasi Kasus"] || data["Nomor EPID"] || '-').trim();
+    const recordId = _getNotificationRecordLabel_(data, saved);
     const catatan = String(data["Catatan Verifikasi EPID"] || '').trim() || '-';
     const subject = `[${dx}][REVISI][${recordId}] Perlu perbaikan data kasus`;
     const body = [
       `Permintaan revisi data kasus ${dx}`,
       '',
-      `ID Registrasi: ${recordId}`,
-      `Nama: ${data["Nama"] || '-'}`,
-      `Kelurahan: ${data["Kelurahan"] || '-'}`,
-      `Kecamatan: ${data["Kecamatan"] || '-'}`,
-      `Puskesmas pengampu: ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || '-'}`,
-      `Status verifikasi: ${data["Status Verifikasi EPID"] || 'Perlu Revisi'}`,
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
       'Catatan verifikasi admin:',
       catatan,
       '',
-      'Silakan buka record existing di workspace Cari/Edit atau Beranda untuk melakukan perbaikan.'
+      'Mohon buka record existing di workspace Cari/Edit atau Beranda, lakukan koreksi, lalu simpan ulang untuk direview kembali.'
     ].join('\n');
 
     MailApp.sendEmail({
@@ -1198,16 +1221,13 @@ function _sendRevisionTelegramNotification_(dx, data, saved) {
     if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
     if (!notifyCtx.telegramChatId) return { sent: false, reason: 'NOT_CONFIGURED' };
 
-    const recordId = String((saved && saved.recordId) || data["ID Registrasi Kasus"] || data["Nomor EPID"] || '-').trim();
     const lines = [
       `🛠️ *Revisi data kasus ${dx}*`,
       '',
-      `*ID Registrasi:* ${recordId}`,
-      `*Nama:* ${data["Nama"] || '-'}`,
-      `*Kelurahan:* ${data["Kelurahan"] || '-'}`,
-      `*Kecamatan:* ${data["Kecamatan"] || '-'}`,
-      `*Puskesmas Pengampu:* ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || '-'}`,
-      `*Catatan Admin:* ${data["Catatan Verifikasi EPID"] || '-'}`
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
+      '',
+      `Catatan Admin: ${String(data["Catatan Verifikasi EPID"] || '-').trim() || '-'}`,
+      'Tindak lanjut: buka record existing, perbaiki data, lalu simpan ulang untuk direview kembali.'
     ];
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
     if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
