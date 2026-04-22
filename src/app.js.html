@@ -47,6 +47,36 @@
     return String((el.dataset && el.dataset.fieldId) || el.id || el.name || "").trim();
   }
 
+  const ADDRESS_LIKE_FIELD_IDS = new Set([
+    'Alamat', 'RT', 'RW', 'Provinsi Pasien', 'Kab/Kota Pasien', 'Kecamatan', 'Kelurahan',
+    'Nama sekolah/tempat bekerja', 'Nama unit pelapor', 'Nama Rumah Sakit',
+    'Latitude', 'Longitude', 'Koordinat (lat,lon)'
+  ]);
+
+  function isAddressLikeFieldId(fieldId) {
+    return ADDRESS_LIKE_FIELD_IDS.has(String(fieldId || '').trim());
+  }
+
+  function hardenAddressAutofillSuppression(root) {
+    const container = root && root.querySelectorAll ? root : document;
+    container.querySelectorAll('#dynamic-form input, #dynamic-form textarea, #dynamic-form select').forEach(function(el) {
+      const fieldId = String((el.dataset && el.dataset.fieldId) || el.id || '').trim();
+      if (!isAddressLikeFieldId(fieldId)) return;
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('aria-autocomplete', 'none');
+      el.setAttribute('autocorrect', 'off');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('spellcheck', 'false');
+      el.setAttribute('data-form-type', 'other');
+      el.setAttribute('data-lpignore', 'true');
+      el.setAttribute('data-1p-ignore', 'true');
+      el.setAttribute('readonly', 'readonly');
+      setTimeout(function() {
+        if (!el.disabled) el.removeAttribute('readonly');
+      }, 80);
+    });
+  }
+
   function generateHTML(field) {
     if (field.type === "header") {
       return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
@@ -144,7 +174,7 @@
 
     let inputHtml = "";
     const neutralName = _getNeutralFieldName_(field.id);
-    const browserAutocomplete = (field.type === 'date' || field.type === 'number') ? 'off' : 'new-password';
+    const browserAutocomplete = (field.type === 'date' || field.type === 'number' || isAddressLikeFieldId(field.id)) ? 'off' : 'new-password';
     const browserHintAttrs = `autocomplete="${browserAutocomplete}" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-field-id="${field.id}"`;
 
     if (field.type === "select" || field.type === "search_select") {
@@ -4046,6 +4076,7 @@
   // EDIT MODE HELPERS
   // ============================================================
   function hydrateRecordToForm(record) {
+    hardenAddressAutofillSuppression(document);
     Object.keys(record || {}).forEach(key => {
       if (["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi"].includes(key)) return;
       const el = document.getElementById(key);
@@ -4054,6 +4085,9 @@
         el.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
+    setTimeout(function() {
+      hardenAddressAutofillSuppression(document);
+    }, 160);
   }
 
   function hydrateDynamicTableByJson(tableId, rawValue) {
