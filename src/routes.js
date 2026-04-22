@@ -1159,15 +1159,17 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
     const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
     if (!notifyCtx.telegramChatId) return { sent: false, reason: "NOT_CONFIGURED" };
 
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `📢 *Kasus ${dx} terverifikasi*`,
+      `📢 *Kasus ${dxLabel} (${dxCode}) terverifikasi*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
       `Status Email Pengampu: ${String(data["Status Notifikasi Pengampu"] || '-').trim() || '-'}`,
       `Status Sync Pengampu: ${String(data["Status Sinkronisasi Pengampu"] || '-').trim() || '-'}`,
       '',
-      'Tindak lanjut: buka workspace verifikasi/sampel/status sesuai kebutuhan kasus.'
+      'Tindak lanjut: buka workspace verifikasi/sampel/status sesuai kebutuhan kasus, lalu lanjutkan update bila ada hasil baru.'
     ];
 
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
@@ -1249,13 +1251,15 @@ function _sendRevisionTelegramNotification_(dx, data, saved) {
     if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
     if (!notifyCtx.telegramChatId) return { sent: false, reason: 'NOT_CONFIGURED' };
 
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🛠️ *Revisi data kasus ${dx}*`,
+      `🛠️ *Revisi data kasus ${dxLabel} (${dxCode})*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
       `Catatan Admin: ${String(data["Catatan Verifikasi EPID"] || '-').trim() || '-'}`,
-      'Tindak lanjut: buka record existing, perbaiki data, lalu simpan ulang untuk direview kembali.'
+      'Tindak lanjut: buka record existing, lakukan koreksi, lalu simpan ulang untuk direview kembali.'
     ];
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
     if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
