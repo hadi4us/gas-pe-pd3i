@@ -499,10 +499,24 @@ const Batch_Processor = (function () {
    * Kolom status dan nilai "sudah selesai" per batchType.
    */
   const BATCH_CONFIG = {
-    sync:     { statusCol: "Status Sinkronisasi Pengampu", doneValue: "SYNCED" },
-    telegram: { statusCol: "Status Notifikasi Telegram",   doneValue: "SENT"   },
-    notify:   { statusCol: "Status Notifikasi Pengampu",   doneValue: "SENT"   }
+    sync:              { statusCol: "Status Sinkronisasi Pengampu",        doneValue: "SYNCED", keyCols: ["Nomor EPID"] },
+    telegram:          { statusCol: "Status Notifikasi Telegram",          doneValue: "SENT",   keyCols: ["Nomor EPID"] },
+    notify:            { statusCol: "Status Notifikasi Pengampu",          doneValue: "SENT",   keyCols: ["Nomor EPID"] },
+    revision_notify:   { statusCol: "Status Notifikasi Revisi Pengampu",   doneValue: "SENT",   keyCols: ["ID Registrasi Kasus", "Nomor EPID"] },
+    revision_telegram: { statusCol: "Status Notifikasi Revisi Telegram",   doneValue: "SENT",   keyCols: ["ID Registrasi Kasus", "Nomor EPID"] }
   };
+
+  function _buildRecordPatchIdentity_(record, recordKey) {
+    const patch = {};
+    const recordId = String((record && record["ID Registrasi Kasus"]) || '').trim();
+    const epid = String((record && record["Nomor EPID"]) || '').trim();
+    if (recordId) patch["ID Registrasi Kasus"] = recordId;
+    if (epid) patch["Nomor EPID"] = epid;
+    if (!recordId && !epid && recordKey) {
+      patch["ID Registrasi Kasus"] = String(recordKey || '').trim();
+    }
+    return patch;
+  }
 
   /**
    * Proses satu item sesuai batchType (tanpa acquire lock sendiri).
@@ -512,48 +526,70 @@ const Batch_Processor = (function () {
    * @param {Object} record - baris data sebagai objek header→nilai
    * @returns {{ ok: boolean }}
    */
-  function _processItem_(batchType, dx, epid, record) {
+  function _processItem_(batchType, dx, recordKey, record) {
     try {
+      const identityPatch = _buildRecordPatchIdentity_(record, recordKey);
+      const epid = String((record && record["Nomor EPID"]) || '').trim();
+      const recordId = String((record && record["ID Registrasi Kasus"]) || '').trim();
       const printUrl = String(record["Link PDF"] || "").trim();
       if (batchType === "sync") {
-        const res = _syncPengampuSpreadsheet_(dx, record, { epid: epid }, printUrl);
-        const patch = {
-          "Nomor EPID": epid,
+        const res = _syncPengampuSpreadsheet_(dx, record, { epid: epid, recordId: recordId }, printUrl);
+        const patch = Object.assign({}, identityPatch, {
           "Status Sinkronisasi Pengampu": res.synced ? "SYNCED" : (res.reason || "FAILED"),
           "Synced At Pengampu": new Date(),
           "Sync Target Pengampu": res.target || ""
-        };
+        });
         saveDxRecord_(dx, patch);
         return { ok: !!res.synced };
       }
       if (batchType === "telegram") {
-        const pUrl = printUrl || safeGetPdfPrintUrl_(dx, epid, "");
-        const res = _sendTelegramPd3iNotification_(dx, record, { epid: epid }, pUrl);
+        const pUrl = printUrl || (epid ? safeGetPdfPrintUrl_(dx, epid, "") : '');
+        const res = _sendTelegramPd3iNotification_(dx, record, { epid: epid, recordId: recordId }, pUrl);
         const currentRetry = Number(record["Telegram Retry Count"] || 0) || 0;
-        const patch = {
-          "Nomor EPID": epid,
+        const patch = Object.assign({}, identityPatch, {
           "Status Notifikasi Telegram": res.sent ? "SENT" : (res.reason || "FAILED"),
           "Telegram Notified At": new Date(),
           "Telegram Target": res.target || "",
           "Telegram Retry Count": currentRetry + 1
-        };
+        });
         saveDxRecord_(dx, patch);
         return { ok: !!res.sent };
       }
       if (batchType === "notify") {
-        const res = _sendPengampuNotification_(dx, record, { epid: epid }, printUrl);
-        const patch = {
-          "Nomor EPID": epid,
+        const res = _sendPengampuNotification_(dx, record, { epid: epid, recordId: recordId }, printUrl);
+        const patch = Object.assign({}, identityPatch, {
           "Status Notifikasi Pengampu": res.sent ? "SENT" : (res.reason || "FAILED"),
           "Notified At Pengampu": new Date(),
           "Notified To Pengampu": res.to || ""
-        };
+        });
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.sent };
+      }
+      if (batchType === "revision_notify") {
+        const res = _sendRevisionPengampuNotification_(dx, record, { epid: epid, recordId: recordId || recordKey });
+        const patch = Object.assign({}, identityPatch, {
+          "Status Notifikasi Revisi Pengampu": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Reason Notifikasi Revisi Pengampu": res.sent ? "" : (res.reason || ""),
+          "Revision Notified At Pengampu": new Date(),
+          "Revision Notified To Pengampu": res.to || ""
+        });
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.sent };
+      }
+      if (batchType === "revision_telegram") {
+        const res = _sendRevisionTelegramNotification_(dx, record, { epid: epid, recordId: recordId || recordKey });
+        const patch = Object.assign({}, identityPatch, {
+          "Status Notifikasi Revisi Telegram": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Reason Notifikasi Revisi Telegram": res.sent ? "" : (res.reason || ""),
+          "Revision Telegram Notified At": new Date(),
+          "Revision Telegram Target": res.target || ""
+        });
         saveDxRecord_(dx, patch);
         return { ok: !!res.sent };
       }
       return { ok: false };
     } catch (e) {
-      console.error("Batch_Processor._processItem_ error [" + batchType + "/" + dx + "/" + epid + "]:", e);
+      console.error("Batch_Processor._processItem_ error [" + batchType + "/" + dx + "/" + recordKey + "]:", e);
       return { ok: false };
     }
   }
@@ -612,11 +648,11 @@ const Batch_Processor = (function () {
         }
 
         const headers = values[0].map(function (h) { return String(h || "").trim(); });
-        const idxEpid   = headers.indexOf("Nomor EPID");
         const idxStatus = headers.indexOf(cfg.statusCol);
+        const keyIndexes = (cfg.keyCols || ["Nomor EPID"]).map(function(col) { return headers.indexOf(col); });
 
-        // Kolom status tidak ada → skip DX ini
-        if (idxEpid === -1 || idxStatus === -1) continue;
+        // Kolom status / key tidak ada → skip DX ini
+        if (idxStatus === -1 || keyIndexes.every(function(idx) { return idx === -1; })) continue;
 
         const total   = values.length - 1;
         let retried   = 0;
@@ -632,16 +668,20 @@ const Batch_Processor = (function () {
             break;
           }
 
-          const epid = String(values[i][idxEpid] || "").trim();
           const statusVal = String(values[i][idxStatus] || "").trim().toUpperCase();
-          if (!epid || statusVal === cfg.doneValue) continue;
+          const recordKey = keyIndexes.reduce(function(found, idx) {
+            if (found) return found;
+            if (idx === -1) return found;
+            return String(values[i][idx] || "").trim();
+          }, "");
+          if (!recordKey || statusVal === cfg.doneValue) continue;
 
           // Bangun objek record dari baris
           const record = {};
           headers.forEach(function (h, j) { record[h] = values[i][j]; });
 
           retried += 1;
-          const res = _processItem_(batchType, dx, epid, record);
+          const res = _processItem_(batchType, dx, recordKey, record);
           if (res.ok) success += 1; else failed += 1;
         }
 
@@ -831,6 +871,14 @@ function retryAllFailedTelegramPd3iNotification(token, dxList) {
  */
 function retryAllPendingPengampuNotification(token, dxList) {
   return Batch_Processor.runBatch(dxList || ALL_DX, "notify", token);
+}
+
+function retryAllPendingRevisionPengampuNotification(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "revision_notify", token);
+}
+
+function retryAllFailedRevisionTelegramNotification(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "revision_telegram", token);
 }
 
 // ─── setupConfig ─────────────────────────────────────────────────────────────

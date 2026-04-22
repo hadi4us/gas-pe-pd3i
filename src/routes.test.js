@@ -186,6 +186,30 @@ function test_retryAllPendingPengampuNotification_returnsCorrectStructure_() {
   );
 }
 
+function test_retryAllPendingRevisionPengampuNotification_returnsCorrectStructure_() {
+  const result = retryAllPendingRevisionPengampuNotification("token-tidak-valid");
+  assertRoutes_(
+    result && typeof result === "object",
+    "retryAllPendingRevisionPengampuNotification harus mengembalikan objek"
+  );
+  assertRoutes_(
+    result.status !== undefined,
+    "hasil harus memiliki field status"
+  );
+}
+
+function test_retryAllFailedRevisionTelegramNotification_returnsCorrectStructure_() {
+  const result = retryAllFailedRevisionTelegramNotification("token-tidak-valid");
+  assertRoutes_(
+    result && typeof result === "object",
+    "retryAllFailedRevisionTelegramNotification harus mengembalikan objek"
+  );
+  assertRoutes_(
+    result.status !== undefined,
+    "hasil harus memiliki field status"
+  );
+}
+
 /**
  * Test 8: setupConfig menolak token tidak valid.
  * Req 5.7
@@ -217,7 +241,7 @@ function test_retryAllPendingPengampuSync_withExplicitDxList_() {
  * Req 3.2
  */
 function test_batchProcessor_validBatchType_invalidToken_returnsError_() {
-  const validTypes = ["sync", "telegram", "notify"];
+  const validTypes = ["sync", "telegram", "notify", "revision_notify", "revision_telegram"];
   for (let i = 0; i < validTypes.length; i++) {
     const result = Batch_Processor.runBatch(["MR"], validTypes[i], "token-tidak-valid");
     assertRoutes_(
@@ -253,6 +277,8 @@ function runRoutesTests() {
     ["retryAllPendingPengampuSync mengembalikan struktur benar (Req 3.6, 15.4)", test_retryAllPendingPengampuSync_returnsCorrectStructure_],
     ["retryAllFailedTelegramPd3iNotification mengembalikan struktur benar (Req 3.6, 15.3)", test_retryAllFailedTelegramPd3iNotification_returnsCorrectStructure_],
     ["retryAllPendingPengampuNotification mengembalikan struktur benar (Req 3.6, 15.5)", test_retryAllPendingPengampuNotification_returnsCorrectStructure_],
+    ["retryAllPendingRevisionPengampuNotification mengembalikan struktur benar", test_retryAllPendingRevisionPengampuNotification_returnsCorrectStructure_],
+    ["retryAllFailedRevisionTelegramNotification mengembalikan struktur benar", test_retryAllFailedRevisionTelegramNotification_returnsCorrectStructure_],
     ["setupConfig menolak token tidak valid (Req 5.7)", test_setupConfig_rejectsInvalidToken_],
     ["retryAllPendingPengampuSync dengan dxList eksplisit (Req 15.4, 15.6)", test_retryAllPendingPengampuSync_withExplicitDxList_],
     ["Batch_Processor.runBatch batchType valid + token invalid = error (Req 3.2)", test_batchProcessor_validBatchType_invalidToken_returnsError_]

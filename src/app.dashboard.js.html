@@ -472,11 +472,11 @@
         <div class="text-4xl font-black text-emerald-900">${stats.totalKasus || 0}</div>
       </div>`;
 
-    // Status notifikasi email & sinkronisasi MR (Req 6.7) — admin only
-    if (isAdmin && dx === "MR" && stats.statusNotifikasi) {
+    // Status notifikasi & sinkronisasi operasional — admin only
+    if (isAdmin && stats.statusNotifikasi) {
       const n = stats.statusNotifikasi;
       html += `<div class="pd3i-dashboard-metric-card tone-blue">
-        <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email</div>
+        <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email Kasus Baru</div>
         <div class="pd3i-dashboard-submetric-grid">
           <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${n.sent}</div><div class="text-xs text-slate-500">Terkirim</div></div>
           <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${n.failed}</div><div class="text-xs text-slate-500">Gagal</div></div>
@@ -491,6 +491,26 @@
           <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${s.synced || 0}</div><div class="text-xs text-slate-500">Synced</div></div>
           <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${s.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
           <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${s.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        </div>
+      </div>`;
+
+      const rn = stats.statusNotifikasiRevisi || {};
+      html += `<div class="pd3i-dashboard-metric-card tone-orange">
+        <div class="text-xs font-extrabold uppercase text-orange-700 mb-2">Notifikasi Revisi Email</div>
+        <div class="pd3i-dashboard-submetric-grid">
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${rn.sent || 0}</div><div class="text-xs text-slate-500">Terkirim</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${rn.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${rn.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        </div>
+      </div>`;
+
+      const rt = stats.statusTelegramRevisi || {};
+      html += `<div class="pd3i-dashboard-metric-card tone-cyan">
+        <div class="text-xs font-extrabold uppercase text-cyan-700 mb-2">Notifikasi Revisi Telegram</div>
+        <div class="pd3i-dashboard-submetric-grid">
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${rt.sent || 0}</div><div class="text-xs text-slate-500">Terkirim</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${rt.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
+          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${rt.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
         </div>
       </div>`;
     }

@@ -589,8 +589,10 @@ function getDashboardStats(dx, tahun, token) {
         perKelompokUmur: {},
         perJenisKelamin: {},
         verificationQueue: { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] },
-        statusNotifikasi: dx === "MR" ? { sent: 0, failed: 0, pending: 0 } : null,
-        statusSinkronisasi: dx === "MR" ? { synced: 0, failed: 0, pending: 0 } : null
+        statusNotifikasi: { sent: 0, failed: 0, pending: 0 },
+        statusSinkronisasi: { synced: 0, failed: 0, pending: 0 },
+        statusNotifikasiRevisi: { sent: 0, failed: 0, pending: 0 },
+        statusTelegramRevisi: { sent: 0, failed: 0, pending: 0 }
       };
     }
 
@@ -615,6 +617,8 @@ function getDashboardStats(dx, tahun, token) {
     const idxJK = headers.indexOf("JK");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Pengampu");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
+    const idxRevisionNotif = headers.indexOf("Status Notifikasi Revisi Pengampu");
+    const idxRevisionTelegram = headers.indexOf("Status Notifikasi Revisi Telegram");
     const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
     const idxVerifikasi = headers.indexOf("Status Verifikasi EPID");
     const idxSampelDilakukan = headers.indexOf("Pemeriksaan Sampel Dilakukan");
@@ -655,6 +659,8 @@ function getDashboardStats(dx, tahun, token) {
     let completenessWorkflowFilled = 0;
     const statusNotifikasi = idxStatusNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
+    const statusNotifikasiRevisi = idxRevisionNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
+    const statusTelegramRevisi = idxRevisionTelegram !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const role = String((sess.user && sess.user.role) || "").trim().toLowerCase();
     const isAdmin = role === "admin";
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
@@ -856,6 +862,28 @@ function getDashboardStats(dx, tahun, token) {
           statusSinkronisasi.pending++;
         }
       }
+
+      if (idxRevisionNotif !== -1 && statusNotifikasiRevisi) {
+        const statusR = String(row[idxRevisionNotif] || "").trim().toUpperCase();
+        if (statusR === "SENT") {
+          statusNotifikasiRevisi.sent++;
+        } else if (statusR === "FAILED") {
+          statusNotifikasiRevisi.failed++;
+        } else {
+          statusNotifikasiRevisi.pending++;
+        }
+      }
+
+      if (idxRevisionTelegram !== -1 && statusTelegramRevisi) {
+        const statusRT = String(row[idxRevisionTelegram] || "").trim().toUpperCase();
+        if (statusRT === "SENT") {
+          statusTelegramRevisi.sent++;
+        } else if (statusRT === "FAILED") {
+          statusTelegramRevisi.failed++;
+        } else {
+          statusTelegramRevisi.pending++;
+        }
+      }
     }
 
     ["pending", "perluRevisi", "terverifikasi"].forEach(function(key) {
@@ -938,7 +966,9 @@ function getDashboardStats(dx, tahun, token) {
         workflowCompletenessRate: totalKasus ? Math.round((completenessWorkflowFilled / (totalKasus * 3)) * 100) : null
       },
       statusNotifikasi: statusNotifikasi,
-      statusSinkronisasi: statusSinkronisasi
+      statusSinkronisasi: statusSinkronisasi,
+      statusNotifikasiRevisi: statusNotifikasiRevisi,
+      statusTelegramRevisi: statusTelegramRevisi
     };
 
   } catch (e) {

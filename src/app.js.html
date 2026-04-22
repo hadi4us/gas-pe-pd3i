@@ -4293,6 +4293,8 @@
       const btnRetrySync = document.getElementById("btn-retry-sync");
       const btnRetryNotify = document.getElementById("btn-retry-notify");
       const btnRetryTelegram = document.getElementById("btn-retry-telegram");
+      const btnRetryRevisionNotify = document.getElementById("btn-retry-revision-notify");
+      const btnRetryRevisionTelegram = document.getElementById("btn-retry-revision-telegram");
       const btnSidebarDashboard = document.getElementById("btn-sidebar-dashboard");
       const btnSidebarToggle = document.getElementById("btn-sidebar-toggle");
       const btnSidebarClose = document.getElementById("btn-sidebar-close");
@@ -4353,7 +4355,20 @@
           btnAdminMenuLabel.textContent = isAdmin ? "Admin" : "Akun";
         }
 
-        if (btnRetrySync) {
+        function summarizeBatchResult(res) {
+        const summary = { total: 0, retried: 0, success: 0, failed: 0, status: String((res && res.status) || '').trim(), durationMs: Number((res && res.durationMs) || 0) || 0 };
+        const byDx = (res && res.byDx && typeof res.byDx === 'object') ? res.byDx : {};
+        Object.keys(byDx).forEach(function(dxKey) {
+          const item = byDx[dxKey] || {};
+          summary.total += Number(item.total || 0) || 0;
+          summary.retried += Number(item.retried || 0) || 0;
+          summary.success += Number(item.success || 0) || 0;
+          summary.failed += Number(item.failed || 0) || 0;
+        });
+        return summary;
+      }
+
+      if (btnRetrySync) {
           if (!isAdmin) btnRetrySync.classList.add("hidden");
           else btnRetrySync.classList.remove("hidden");
         }
@@ -4501,8 +4516,9 @@
                 btnRetrySync.disabled = false;
                 btnRetrySync.innerHTML = '<i class="fas fa-rotate-right mr-2"></i>Retry Sync Pengampu';
 
-                if (res && res.status === "success") {
-                  showTopAlert(`Retry sync selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.synced || 0}, Gagal: ${res.failed || 0}`, true);
+                const summary = summarizeBatchResult(res);
+                if (res && (res.status === "success" || res.status === "PARTIAL")) {
+                  showTopAlert(`Retry sync selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
                 } else {
                   showTopAlert((res && res.message) || "Retry sync gagal.", false);
                 }
@@ -4528,7 +4544,7 @@
               showTopAlert("Retry notifikasi hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry notifikasi pengampu untuk semua kasus MR yang status notifikasinya belum SENT?")) return;
+            if (!confirm("Jalankan retry notifikasi kasus baru untuk semua kasus yang status email pengampunya belum SENT?")) return;
 
             btnRetryNotify.disabled = true;
             btnRetryNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -4536,18 +4552,19 @@
             google.script.run
               .withSuccessHandler(function(res) {
                 btnRetryNotify.disabled = false;
-                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Pengampu';
+                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Kasus Baru';
 
-                if (res && res.status === "success") {
-                  showTopAlert(`Retry notifikasi selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.sent || 0}, Gagal: ${res.failed || 0}`, true);
+                const summary = summarizeBatchResult(res);
+                if (res && (res.status === "success" || res.status === "PARTIAL")) {
+                  showTopAlert(`Retry notifikasi kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
                 } else {
                   showTopAlert((res && res.message) || "Retry notifikasi gagal.", false);
                 }
               })
               .withFailureHandler(function(err) {
                 btnRetryNotify.disabled = false;
-                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Pengampu';
-                showTopAlert("Retry notifikasi gagal: " + (err && err.message ? err.message : err), false);
+                btnRetryNotify.innerHTML = '<i class="fas fa-bell mr-2 text-blue-600"></i>Retry Notifikasi Kasus Baru';
+                showTopAlert("Retry notifikasi kasus baru gagal: " + (err && err.message ? err.message : err), false);
               })
               .retryAllPendingPengampuNotification(SESSION_TOKEN);
           });
@@ -4565,7 +4582,7 @@
               showTopAlert("Retry Telegram hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry notifikasi Telegram untuk semua kasus MR yang status Telegram-nya belum SENT?")) return;
+            if (!confirm("Jalankan retry Telegram kasus baru untuk semua kasus yang status Telegram-nya belum SENT?")) return;
 
             btnRetryTelegram.disabled = true;
             btnRetryTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -4573,20 +4590,97 @@
             google.script.run
               .withSuccessHandler(function(res) {
                 btnRetryTelegram.disabled = false;
-                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Notifikasi Telegram';
+                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Telegram Kasus Baru';
 
-                if (res && res.status === "success") {
-                  showTopAlert(`Retry Telegram selesai. Total: ${res.total || 0}, Dicoba: ${res.retried || 0}, Berhasil: ${res.sent || 0}, Gagal: ${res.failed || 0}`, true);
+                const summary = summarizeBatchResult(res);
+                if (res && (res.status === "success" || res.status === "PARTIAL")) {
+                  showTopAlert(`Retry Telegram kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
                 } else {
                   showTopAlert((res && res.message) || "Retry Telegram gagal.", false);
                 }
               })
               .withFailureHandler(function(err) {
                 btnRetryTelegram.disabled = false;
-                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Notifikasi Telegram';
-                showTopAlert("Retry Telegram gagal: " + (err && err.message ? err.message : err), false);
+                btnRetryTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-sky-600"></i>Retry Telegram Kasus Baru';
+                showTopAlert("Retry Telegram kasus baru gagal: " + (err && err.message ? err.message : err), false);
               })
               .retryAllFailedTelegramPd3iNotification(SESSION_TOKEN);
+          });
+        }
+      }
+
+      if (btnRetryRevisionNotify) {
+        if (!isAdmin) {
+          btnRetryRevisionNotify.classList.add("hidden");
+        } else {
+          btnRetryRevisionNotify.classList.remove("hidden");
+          btnRetryRevisionNotify.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Retry notifikasi revisi hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!confirm("Jalankan retry notifikasi revisi untuk semua kasus yang status email revisinya belum SENT?")) return;
+
+            btnRetryRevisionNotify.disabled = true;
+            btnRetryRevisionNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btnRetryRevisionNotify.disabled = false;
+                btnRetryRevisionNotify.innerHTML = '<i class="fas fa-envelope-open-text mr-2 text-orange-600"></i>Retry Notifikasi Revisi';
+
+                const summary = summarizeBatchResult(res);
+                if (res && (res.status === "success" || res.status === "PARTIAL")) {
+                  showTopAlert(`Retry notifikasi revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                } else {
+                  showTopAlert((res && res.message) || "Retry notifikasi revisi gagal.", false);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btnRetryRevisionNotify.disabled = false;
+                btnRetryRevisionNotify.innerHTML = '<i class="fas fa-envelope-open-text mr-2 text-orange-600"></i>Retry Notifikasi Revisi';
+                showTopAlert("Retry notifikasi revisi gagal: " + (err && err.message ? err.message : err), false);
+              })
+              .retryAllPendingRevisionPengampuNotification(SESSION_TOKEN);
+          });
+        }
+      }
+
+      if (btnRetryRevisionTelegram) {
+        if (!isAdmin) {
+          btnRetryRevisionTelegram.classList.add("hidden");
+        } else {
+          btnRetryRevisionTelegram.classList.remove("hidden");
+          btnRetryRevisionTelegram.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Retry Telegram revisi hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!confirm("Jalankan retry Telegram revisi untuk semua kasus yang status Telegram revisinya belum SENT?")) return;
+
+            btnRetryRevisionTelegram.disabled = true;
+            btnRetryRevisionTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+
+            google.script.run
+              .withSuccessHandler(function(res) {
+                btnRetryRevisionTelegram.disabled = false;
+                btnRetryRevisionTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-cyan-600"></i>Retry Telegram Revisi';
+
+                const summary = summarizeBatchResult(res);
+                if (res && (res.status === "success" || res.status === "PARTIAL")) {
+                  showTopAlert(`Retry Telegram revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                } else {
+                  showTopAlert((res && res.message) || "Retry Telegram revisi gagal.", false);
+                }
+              })
+              .withFailureHandler(function(err) {
+                btnRetryRevisionTelegram.disabled = false;
+                btnRetryRevisionTelegram.innerHTML = '<i class="fab fa-telegram-plane mr-2 text-cyan-600"></i>Retry Telegram Revisi';
+                showTopAlert("Retry Telegram revisi gagal: " + (err && err.message ? err.message : err), false);
+              })
+              .retryAllFailedRevisionTelegramNotification(SESSION_TOKEN);
           });
         }
       }
