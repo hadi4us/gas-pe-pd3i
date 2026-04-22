@@ -2718,6 +2718,11 @@ body.pd3i-body {
   background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,250,255,0.98) 100%);
 }
 
+.pd3i-action-panel-fullwidth {
+  width: 100%;
+  margin-top: 0.95rem;
+}
+
 .pd3i-action-panel-note {
   display: flex;
   align-items: flex-start;
@@ -2737,9 +2742,15 @@ body.pd3i-body {
 }
 
 .pd3i-submit-stack {
-  display: grid;
+  display: flex;
+  align-items: stretch;
   gap: 0.7rem;
   margin-top: 0.85rem;
+}
+
+.pd3i-submit-stack > button {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .pd3i-submit-button,
@@ -4426,6 +4437,10 @@ body.pd3i-body {
   .pd3i-search-result-card,
   .pd3i-queue-table-row {
     padding: 0.75rem 0.8rem;
+  }
+
+  .pd3i-submit-stack {
+    flex-direction: column;
   }
 
   .pd3i-queue-action-btn {
