@@ -571,6 +571,7 @@ function saveDxRecord_(dx, data) {
     data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
     data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
     data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
+    data["Telegram Chat Id Pengampu"] = pengampu.telegramChatId || data["Telegram Chat Id Pengampu"] || "";
   }
 
   const idxRecordId = headers.indexOf("ID Registrasi Kasus");
@@ -733,7 +734,7 @@ function saveDxRecord_(dx, data) {
   return {
     epid: epidValue,
     recordId: recordId,
-    verificationStatus: verificationStatus,
+    verificationStatus: normalizedStatus,
     isUpdate: rowIndex !== -1,
     rowIndex: savedRowIndex
   };
