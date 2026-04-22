@@ -2858,6 +2858,89 @@
       .getOverviewSummary(sessionToken);
   }
 
+  function getCurrentSessionActorName() {
+    return String((SESSION_USER && (SESSION_USER.nama || SESSION_USER.username || SESSION_USER.name)) || '').trim();
+  }
+
+  function getTodayInputValue() {
+    const dt = new Date();
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function collectCurrentFormPayload() {
+    const payload = {};
+    document.querySelectorAll('#dynamic-form input[name], #dynamic-form select[name], #dynamic-form textarea[name]').forEach(function(el) {
+      const fieldKey = _getSemanticFieldKey_(el);
+      if (!fieldKey) return;
+      payload[fieldKey] = el.value;
+    });
+    return payload;
+  }
+
+  function updateVerificationSectionState() {
+    const statusEl = document.getElementById('Status Verifikasi EPID');
+    const actorEl = document.getElementById('Petugas Verifikator');
+    const dateEl = document.getElementById('Tanggal Verifikasi EPID');
+    const reviewEl = document.getElementById('Review Admin Terakhir');
+    const finalEpidEl = document.getElementById('Nomor EPID Final');
+    const currentMainEpidEl = document.getElementById('Nomor EPID');
+    const status = String(statusEl?.value || '').trim();
+    const actorName = getCurrentSessionActorName();
+
+    if (!statusEl) return;
+    if (!statusEl.value) statusEl.value = 'Pending';
+
+    if (status === 'Terverifikasi') {
+      if (actorEl && !actorEl.value) actorEl.value = actorName;
+      if (dateEl && !dateEl.value) dateEl.value = getTodayInputValue();
+      if (reviewEl) reviewEl.value = actorName ? `Review admin oleh ${actorName}` : 'Review admin';
+      if (finalEpidEl && !finalEpidEl.value && currentMainEpidEl && currentMainEpidEl.value) {
+        finalEpidEl.value = currentMainEpidEl.value;
+      }
+    }
+
+    if (status === 'Perlu Revisi') {
+      if (actorEl && !actorEl.value) actorEl.value = actorName;
+      if (dateEl && !dateEl.value) dateEl.value = getTodayInputValue();
+      if (reviewEl) reviewEl.value = actorName ? `Perlu revisi oleh ${actorName}` : 'Perlu revisi';
+      if (finalEpidEl) finalEpidEl.value = '';
+      if (currentMainEpidEl) currentMainEpidEl.value = '';
+    }
+  }
+
+  function refreshRecommendedEpidPreview(options) {
+    const opts = options || {};
+    const recommendationEl = document.getElementById('Nomor EPID Rekomendasi');
+    const statusEl = document.getElementById('Status Verifikasi EPID');
+    if (!recommendationEl || !statusEl) return;
+    if (String(statusEl.value || '').trim() !== 'Terverifikasi') return;
+    if (!safeGsRun()) return;
+
+    const payload = collectCurrentFormPayload();
+    payload['ID Registrasi Kasus'] = payload['ID Registrasi Kasus'] || (window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META['ID Registrasi Kasus']) || '';
+    const dx = String(document.getElementById('form-selector')?.value || '').trim();
+    if (!dx) return;
+
+    if (!opts.silentLoading) {
+      recommendationEl.value = recommendationEl.value || 'Menghitung rekomendasi...';
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (!res || !res.ok) return;
+        recommendationEl.value = String(res.recommendation || '').trim();
+        const finalEpidEl = document.getElementById('Nomor EPID Final');
+        if (finalEpidEl && !finalEpidEl.value) {
+          finalEpidEl.value = recommendationEl.value;
+        }
+      })
+      .withFailureHandler(function() {})
+      .previewRecommendedEpid(dx, payload, SESSION_TOKEN);
+  }
+
   function renderQueueTable(items, options) {
     const opts = options || {};
     const rows = Array.isArray(items) ? items : [];
