@@ -437,9 +437,55 @@ function _extractComparableEpidNumber_(rawValue) {
   return match ? String(match[1] || '') : '';
 }
 
+function _deriveMrEpidYear2_(data) {
+  var rawDate = String((data && (data['Tanggal Verifikasi EPID'] || data['Tanggal Pelacakan'] || data['Timestamp'])) || '').trim();
+  var match = rawDate.match(/^(\d{4})/);
+  var year = match ? match[1] : String(new Date().getFullYear());
+  return year.slice(-2);
+}
+
+function _recommendMrEpid_(sheet, data) {
+  var targetYear2 = _deriveMrEpidYear2_(data);
+  var maxSeq = '';
+
+  if (sheet) {
+    var values = sheet.getDataRange().getValues();
+    if (values && values.length > 1) {
+      var headers = values[0].map(function(h) { return String(h || '').trim(); });
+      var idxEpid = headers.indexOf('Nomor EPID');
+      if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
+
+      if (idxEpid !== -1) {
+        for (var r = 1; r < values.length; r++) {
+          var epidValue = String(values[r][idxEpid] || '').trim().toUpperCase();
+          if (!epidValue) continue;
+          var match = epidValue.match(/^C-?1022(\d{2})(\d+)$/);
+          if (!match) continue;
+          if (String(match[1] || '') !== targetYear2) continue;
+          var seq = String(match[2] || '').replace(/\D/g, '');
+          if (!seq) continue;
+          if (!maxSeq || _compareNumericStrings_(seq, maxSeq) > 0) {
+            maxSeq = seq;
+          }
+        }
+      }
+    }
+  }
+
+  if (!maxSeq) return 'C-1022' + targetYear2 + '001';
+  var nextSeq = _incrementNumericString_(maxSeq);
+  if (nextSeq.length < 3) nextSeq = nextSeq.padStart(3, '0');
+  return 'C-1022' + targetYear2 + nextSeq;
+}
+
 function recommendEpid_(dx, data) {
   dx = String(dx || '').trim().toUpperCase();
   var sheet = getSheetOrNull_(dx + '_Raw');
+
+  if (dx === 'MR') {
+    return _recommendMrEpid_(sheet, data);
+  }
+
   var baseCode = _deriveEpidBaseCode_(data);
   var fallbackDigits = String(baseCode || '000000').replace(/\D/g, '').padStart(6, '0').substring(0, 6) + '001';
   var maxDigits = '';
