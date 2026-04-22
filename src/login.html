@@ -20,24 +20,24 @@
 
     <div id="login-alert" class="hidden mt-3 p-2.5 rounded-lg text-[12px] sm:text-[13px] font-semibold border"></div>
 
-    <form id="login-form" class="mt-4 space-y-3">
+    <form id="login-form" class="mt-4 space-y-3" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" novalidate>
       <div>
         <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Username</label>
         <div class="relative">
           <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-username" type="text" autocomplete="username"
+          <input id="login-username" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"
             class="w-full pl-8 sm:pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
             placeholder="username" />
         </div>
       </div>
 
       <div>
-        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Password / PIN</label>
+        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">PIN Akses</label>
         <div class="relative">
           <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-pin" type="password" autocomplete="current-password"
+          <input id="login-pin" type="password" inputmode="numeric" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"
             class="w-full pl-8 sm:pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
-            placeholder="PIN" />
+            placeholder="PIN akses" />
           <button type="button" id="toggle-login-pin"
             class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 text-[10px] sm:text-[11px]">
             <i class="fas fa-eye"></i>
