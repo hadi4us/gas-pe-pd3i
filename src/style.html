@@ -4428,21 +4428,21 @@ body.pd3i-body {
     padding: 0.75rem 0.8rem;
   }
 
-  .pd3i-queue-table {
-    table-layout: auto;
+  .pd3i-queue-list-item {
+    grid-template-columns: 1fr;
+    padding: 0.85rem 0.9rem;
   }
 
-  .pd3i-queue-table th {
-    white-space: normal;
-    font-size: 0.72rem;
+  .pd3i-queue-list-title-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .pd3i-queue-table .pd3i-col-nama,
-  .pd3i-queue-table .pd3i-col-wilayah,
-  .pd3i-queue-table .pd3i-col-record,
-  .pd3i-queue-table .pd3i-col-status,
-  .pd3i-queue-table .pd3i-col-update,
-  .pd3i-queue-table .pd3i-col-aksi {
-    width: auto;
+  .pd3i-queue-list-action {
+    justify-content: stretch;
+  }
+
+  .pd3i-queue-action-btn {
+    width: 100%;
   }
 }

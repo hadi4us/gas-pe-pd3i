@@ -2892,7 +2892,6 @@
       const dx = escapeHtml(item && item.dx ? item.dx : '-');
       const kecamatan = escapeHtml(item && item.kecamatan ? item.kecamatan : '-');
       const kelurahan = escapeHtml(item && item.kelurahan ? item.kelurahan : '-');
-      const wilayah = `${dx} · ${kecamatan} · ${kelurahan}`;
       const recordId = escapeHtml(item && (item.recordId || item.epid || item.recordKey) ? (item.recordId || item.epid || item.recordKey) : '-');
       const statusLabel = escapeHtml(item && item.__queueStatusLabel ? item.__queueStatusLabel : (item && item.statusVerifikasi ? item.statusVerifikasi : '-'));
       const statusClass = escapeHtml(item && item.__queueStatusClass ? item.__queueStatusClass : 'is-warning');
@@ -2901,14 +2900,26 @@
       const dxArg = JSON.stringify(item && item.dx ? item.dx : '');
       const keyArg = JSON.stringify(item && item.recordKey ? item.recordKey : '');
       const page = Math.floor(index / pageSize) + 1;
-      return `<tr class="pd3i-queue-table-row" data-page="${page}" ${page !== 1 ? 'hidden' : ''}>
-        <td>${title}</td>
-        <td>${wilayah}</td>
-        <td>${recordId}</td>
-        <td><span class="pd3i-status-badge ${statusClass}">${statusLabel}</span></td>
-        <td>${updatedAt}</td>
-        <td><button type="button" class="pd3i-queue-action-btn" onclick='openRecordFromQueue(${dxArg}, ${keyArg})'>${actionLabel}</button></td>
-      </tr>`;
+      return `<div class="pd3i-queue-list-item" data-page="${page}" ${page !== 1 ? 'hidden' : ''}>
+        <div class="pd3i-queue-list-main">
+          <div class="pd3i-queue-list-title-row">
+            <div class="pd3i-queue-list-title">${title}</div>
+            <span class="pd3i-status-badge ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="pd3i-queue-list-meta">
+            <span><strong>DX:</strong> ${dx}</span>
+            <span><strong>Kecamatan:</strong> ${kecamatan}</span>
+            <span><strong>Kelurahan:</strong> ${kelurahan}</span>
+          </div>
+          <div class="pd3i-queue-list-submeta">
+            <span><strong>ID:</strong> ${recordId}</span>
+            <span><strong>Update:</strong> ${updatedAt}</span>
+          </div>
+        </div>
+        <div class="pd3i-queue-list-action">
+          <button type="button" class="pd3i-queue-action-btn" onclick='openRecordFromQueue(${dxArg}, ${keyArg})'>${actionLabel}</button>
+        </div>
+      </div>`;
     };
 
     const paginationHtml = totalPages > 1 ? `
@@ -2919,30 +2930,10 @@
       </div>` : '';
 
     return `
-      <div class="pd3i-queue-table-wrap" data-page="1" data-total-pages="${totalPages}">
-        <table class="pd3i-queue-table">
-          <colgroup>
-            <col class="pd3i-col-nama">
-            <col class="pd3i-col-wilayah">
-            <col class="pd3i-col-record">
-            <col class="pd3i-col-status">
-            <col class="pd3i-col-update">
-            <col class="pd3i-col-aksi">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Kasus</th>
-              <th>Wilayah</th>
-              <th>ID</th>
-              <th>Status</th>
-              <th>Update</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(renderRow).join('')}
-          </tbody>
-        </table>
+      <div class="pd3i-queue-list-wrap" data-page="1" data-total-pages="${totalPages}">
+        <div class="pd3i-queue-list">
+          ${rows.map(renderRow).join('')}
+        </div>
         ${paginationHtml}
       </div>`;
   }
