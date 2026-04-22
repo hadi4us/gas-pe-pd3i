@@ -572,6 +572,18 @@ function saveDxRecord_(dx, data) {
     data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
     data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
     data["Telegram Chat Id Pengampu"] = pengampu.telegramChatId || data["Telegram Chat Id Pengampu"] || "";
+  } else {
+    data["Kecamatan Pengampu"] = "";
+    data["Kelurahan Pengampu"] = "";
+    data["KodePuskesmas Pengampu"] = "";
+    data["Puskesmas Pengampu"] = "";
+    data["Kepala Puskesmas Pengampu"] = "";
+    data["Email Kapus Pengampu"] = "";
+    data["Petugas Surveilans Pengampu"] = "";
+    data["Email Petugas Pengampu"] = "";
+    data["SpreadsheetId Pengampu"] = "";
+    data["SpreadsheetUrl Pengampu"] = "";
+    data["Telegram Chat Id Pengampu"] = "";
   }
 
   const idxRecordId = headers.indexOf("ID Registrasi Kasus");
