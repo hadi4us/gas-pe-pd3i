@@ -1738,9 +1738,10 @@ function saveFormPayload_(data) {
     }
   }
 
-  const successMessage = saved.verificationStatus === 'Perlu Revisi'
+  const finalVerificationStatus = String((saved && saved.verificationStatus) || '').trim() || 'Pending';
+  const successMessage = finalVerificationStatus === 'Perlu Revisi'
     ? 'Kasus ditandai Perlu Revisi dan masuk daftar tindak lanjut puskesmas.'
-    : (saved.verificationStatus === 'Terverifikasi'
+    : (finalVerificationStatus === 'Terverifikasi'
       ? 'Verifikasi selesai dan nomor EPID final berhasil ditetapkan.'
       : (saved.isUpdate ? 'Data kasus berhasil diperbarui.' : 'Input awal kasus berhasil disimpan dengan status Pending.'));
 
@@ -1749,7 +1750,7 @@ function saveFormPayload_(data) {
     message: successMessage,
     epid: saved.epid,
     recordId: saved.recordId,
-    verificationStatus: saved.verificationStatus,
+    verificationStatus: finalVerificationStatus,
     dx: dx,
     printUrl: printUrl,
     pipelineIdempotent: !!pipelineResult.idempotent,
