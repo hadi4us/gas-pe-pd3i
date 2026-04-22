@@ -3888,6 +3888,37 @@
   function applyAllShowIf() {
     reevaluateShowIfFields();
   }
+
+  const WILAYAH_OPTION_OVERRIDES = {
+    villagesByDistrict: {
+      'BOJONGSARI': ['CURUG'],
+      'CIMANGGIS': ['CURUG']
+    }
+  };
+
+  function applyWilayahOptionOverrides(type, triggerEl, items) {
+    const list = Array.isArray(items) ? items.slice() : [];
+    if (type !== 'villages' || !triggerEl) return list;
+
+    const districtName = String(triggerEl.value || '').trim().toUpperCase();
+    const extras = (((WILAYAH_OPTION_OVERRIDES || {}).villagesByDistrict || {})[districtName] || []).slice();
+    if (!extras.length) return list;
+
+    const existing = new Set(list.map(function(item) {
+      return String((item && item.name) || '').trim().toUpperCase();
+    }).filter(Boolean));
+
+    extras.forEach(function(name) {
+      const clean = String(name || '').trim();
+      if (!clean) return;
+      if (existing.has(clean.toUpperCase())) return;
+      list.push({ id: '', name: clean, __manual: true });
+      existing.add(clean.toUpperCase());
+    });
+
+    return list;
+  }
+
   document.addEventListener("change", function(e) {
     const wilayahMap = {
       "Provinsi": "Kab/Kota",
@@ -3914,7 +3945,8 @@
       fetch(`${API_WILAYAH_BASE}/${type}/${id}.json`)
         .then(res => res.json())
         .then(data => {
-          data.forEach(item => {
+          const finalData = applyWilayahOptionOverrides(type, e.target, data);
+          finalData.forEach(item => {
             const option = document.createElement('option');
             option.value = String(item && item.name || '');
             option.setAttribute('data-id', String(item && item.id || ''));
@@ -3922,7 +3954,19 @@
             nextEl.appendChild(option);
           });
         })
-        .catch(err => console.error("load wilayah failed:", err));
+        .catch(err => {
+          if (type === 'villages') {
+            const finalData = applyWilayahOptionOverrides(type, e.target, []);
+            finalData.forEach(item => {
+              const option = document.createElement('option');
+              option.value = String(item && item.name || '');
+              option.setAttribute('data-id', String(item && item.id || ''));
+              option.textContent = String(item && item.name || '');
+              nextEl.appendChild(option);
+            });
+          }
+          console.error("load wilayah failed:", err);
+        });
     }
 
     if (e.target.id === "Sumber Laporan") {
