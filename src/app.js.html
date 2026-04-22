@@ -2952,7 +2952,10 @@
     const recommendationEl = document.getElementById('Nomor EPID Rekomendasi');
     const statusEl = document.getElementById('Status Verifikasi EPID');
     if (!recommendationEl || !statusEl) return;
-    if (String(statusEl.value || '').trim() !== 'Terverifikasi') return;
+    if (String(statusEl.value || '').trim() !== 'Terverifikasi') {
+      recommendationEl.value = '';
+      return;
+    }
     if (!safeGsRun()) return;
 
     const payload = collectCurrentFormPayload();
@@ -4002,7 +4005,7 @@
   // ============================================================
   function hydrateRecordToForm(record) {
     Object.keys(record || {}).forEach(key => {
-      if (key === "Nama unit pelapor" || key === "Nama Rumah Sakit") return;
+      if (["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi"].includes(key)) return;
       const el = document.getElementById(key);
       if (el) {
         el.value = record[key];
