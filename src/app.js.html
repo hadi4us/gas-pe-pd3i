@@ -2921,13 +2921,21 @@
     return `
       <div class="pd3i-queue-table-wrap" data-page="1" data-total-pages="${totalPages}">
         <table class="pd3i-queue-table">
+          <colgroup>
+            <col class="pd3i-col-nama">
+            <col class="pd3i-col-wilayah">
+            <col class="pd3i-col-record">
+            <col class="pd3i-col-status">
+            <col class="pd3i-col-update">
+            <col class="pd3i-col-aksi">
+          </colgroup>
           <thead>
             <tr>
               <th>Nama Kasus</th>
               <th>Wilayah / DX</th>
               <th>ID Record</th>
               <th>Status</th>
-              <th>Update</th>
+              <th>Update Terakhir</th>
               <th>Aksi</th>
             </tr>
           </thead>
