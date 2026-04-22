@@ -2858,84 +2858,51 @@
       .getOverviewSummary(sessionToken);
   }
 
-  window.__pd3iQueueSetPage = function(trigger, delta) {
-    const wrap = trigger && trigger.closest ? trigger.closest('.pd3i-queue-table-wrap') : null;
-    if (!wrap) return;
-    const totalPages = Math.max(1, Number(wrap.dataset.totalPages || 1));
-    const currentPage = Math.max(1, Number(wrap.dataset.page || 1));
-    const nextPage = Math.min(totalPages, Math.max(1, currentPage + Number(delta || 0)));
-    wrap.dataset.page = String(nextPage);
-    wrap.querySelectorAll('tbody tr[data-page]').forEach(function(row) {
-      row.hidden = Number(row.dataset.page || 1) !== nextPage;
-    });
-    const indicator = wrap.querySelector('.pd3i-queue-page-indicator');
-    if (indicator) indicator.textContent = `Halaman ${nextPage} / ${totalPages}`;
-    const prevBtn = wrap.querySelector('[data-page-action="prev"]');
-    const nextBtn = wrap.querySelector('[data-page-action="next"]');
-    if (prevBtn) prevBtn.disabled = nextPage <= 1;
-    if (nextBtn) nextBtn.disabled = nextPage >= totalPages;
-  };
-
   function renderQueueTable(items, options) {
     const opts = options || {};
-    const rows = Array.isArray(items) ? items.slice() : [];
-    const emptyText = opts.emptyText || 'Belum ada item antrian.';
-    const pageSize = Math.max(1, Number(opts.pageSize || 6));
-    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-
+    const rows = Array.isArray(items) ? items : [];
+    const actionLabel = String(opts.actionLabel || 'Buka').trim() || 'Buka';
     if (!rows.length) {
-      return `<div class="pd3i-empty-state">${escapeHtml(emptyText)}</div>`;
+      return `<div class="pd3i-empty-state">${escapeHtml(opts.emptyText || 'Belum ada antrian kerja penting saat ini.')}</div>`;
     }
 
-    const renderRow = function(item, index) {
-      const title = escapeHtml(item && item.nama ? item.nama : '-');
-      const dx = escapeHtml(item && item.dx ? item.dx : '-');
-      const kecamatan = escapeHtml(item && item.kecamatan ? item.kecamatan : '-');
-      const kelurahan = escapeHtml(item && item.kelurahan ? item.kelurahan : '-');
-      const recordId = escapeHtml(item && (item.recordId || item.epid || item.recordKey) ? (item.recordId || item.epid || item.recordKey) : '-');
-      const statusLabel = escapeHtml(item && item.__queueStatusLabel ? item.__queueStatusLabel : (item && item.statusVerifikasi ? item.statusVerifikasi : '-'));
-      const statusClass = escapeHtml(item && item.__queueStatusClass ? item.__queueStatusClass : 'is-warning');
-      const updatedAt = escapeHtml(item && (item.updatedAt || item.inputAt) ? (item.updatedAt || item.inputAt) : '-');
-      const actionLabel = escapeHtml(opts.actionLabel || 'Buka');
-      const dxArg = JSON.stringify(item && item.dx ? item.dx : '');
-      const keyArg = JSON.stringify(item && item.recordKey ? item.recordKey : '');
-      const page = Math.floor(index / pageSize) + 1;
-      return `<div class="pd3i-queue-list-item" data-page="${page}" ${page !== 1 ? 'hidden' : ''}>
-        <div class="pd3i-queue-list-main">
-          <div class="pd3i-queue-list-title-row">
-            <div class="pd3i-queue-list-title">${title}</div>
-            <span class="pd3i-status-badge ${statusClass}">${statusLabel}</span>
-          </div>
-          <div class="pd3i-queue-list-meta">
-            <span><strong>DX:</strong> ${dx}</span>
-            <span><strong>Kecamatan:</strong> ${kecamatan}</span>
-            <span><strong>Kelurahan:</strong> ${kelurahan}</span>
-          </div>
-          <div class="pd3i-queue-list-submeta">
-            <span><strong>ID:</strong> ${recordId}</span>
-            <span><strong>Update:</strong> ${updatedAt}</span>
-          </div>
+    let html = '<div class="pd3i-queue-table">';
+    html += '<div class="pd3i-queue-table-head">';
+    html += '<div>Nama kasus</div>';
+    html += '<div>Wilayah / DX</div>';
+    html += '<div>ID record</div>';
+    html += '<div>Status</div>';
+    html += '<div>Update</div>';
+    html += '<div>Aksi</div>';
+    html += '</div>';
+    html += '<div class="pd3i-queue-table-body">';
+
+    rows.forEach(function(item) {
+      const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
+      const dxArg = JSON.stringify(String(item && item.dx || ''));
+      const bucket = getQueueBucketMeta(item);
+      const wilayahText = [item && item.dx, item && item.kecamatan, item && item.kelurahan].filter(Boolean).join(' • ') || '-';
+      const recordText = String(item && (item.recordId || item.epid) || '-');
+      const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
+      const noteText = String(item && item.catatanVerifikasi || '').trim();
+
+      html += `<div class="pd3i-queue-table-row ${bucket.className}">
+        <div class="pd3i-queue-col pd3i-queue-col-main">
+          <div class="pd3i-queue-row-title">${escapeHtml(item && item.nama || '-')}</div>
+          ${noteText ? `<div class="pd3i-queue-row-subtitle">${escapeHtml(noteText)}</div>` : ''}
         </div>
-        <div class="pd3i-queue-list-action">
-          <button type="button" class="pd3i-queue-action-btn" onclick='openRecordFromQueue(${dxArg}, ${keyArg})'>${actionLabel}</button>
+        <div class="pd3i-queue-col" data-label="Wilayah / DX">${escapeHtml(wilayahText)}</div>
+        <div class="pd3i-queue-col" data-label="ID record">${escapeHtml(recordText)}</div>
+        <div class="pd3i-queue-col" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></div>
+        <div class="pd3i-queue-col" data-label="Update">${escapeHtml(updateText)}</div>
+        <div class="pd3i-queue-col pd3i-queue-col-action" data-label="Aksi">
+          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>${escapeHtml(actionLabel)}</button>
         </div>
       </div>`;
-    };
+    });
 
-    const paginationHtml = totalPages > 1 ? `
-      <div class="pd3i-queue-pagination">
-        <button type="button" class="pd3i-queue-page-btn" data-page-action="prev" disabled onclick="window.__pd3iQueueSetPage && window.__pd3iQueueSetPage(this, -1)">Sebelumnya</button>
-        <span class="pd3i-queue-page-indicator">Halaman 1 / ${totalPages}</span>
-        <button type="button" class="pd3i-queue-page-btn" data-page-action="next" onclick="window.__pd3iQueueSetPage && window.__pd3iQueueSetPage(this, 1)">Berikutnya</button>
-      </div>` : '';
-
-    return `
-      <div class="pd3i-queue-list-wrap" data-page="1" data-total-pages="${totalPages}">
-        <div class="pd3i-queue-list">
-          ${rows.map(renderRow).join('')}
-        </div>
-        ${paginationHtml}
-      </div>`;
+    html += '</div></div>';
+    return html;
   }
 
   function renderWorkflowInbox(data) {
