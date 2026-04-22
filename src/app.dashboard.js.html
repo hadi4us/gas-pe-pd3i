@@ -88,14 +88,33 @@
     }
 
     function renderStatusReasonBlock(label, status, reason) {
-      const statusText = String(status || '').trim() || '-';
+      const rawStatus = String(status || '').trim();
+      const normalizedStatus = rawStatus.toUpperCase();
+      const statusText = rawStatus || 'PENDING';
       const reasonText = String(reason || '').trim();
-      const reasonHtml = reasonText && !['SENT', 'SYNCED'].includes(statusText.toUpperCase())
+      let toneClass = 'is-pending';
+      let badgeLabel = statusText;
+
+      if (['SENT', 'SYNCED'].includes(normalizedStatus)) {
+        toneClass = 'is-success';
+        badgeLabel = normalizedStatus === 'SYNCED' ? 'SYNCED' : 'TERKIRIM';
+      } else if (normalizedStatus.indexOf('FAILED') !== -1 || normalizedStatus.indexOf('ERROR') !== -1 || normalizedStatus.indexOf('HTTP_') === 0 || normalizedStatus === 'UNMAPPED' || normalizedStatus === 'NO_RECIPIENT' || normalizedStatus === 'NOT_CONFIGURED' || normalizedStatus === 'OUTSIDE_DEPOK') {
+        toneClass = 'is-failed';
+      } else if (normalizedStatus.indexOf('SKIPPED') === 0) {
+        toneClass = 'is-skipped';
+      } else if (normalizedStatus.indexOf('QUEUE') === 0 || normalizedStatus === '-' || !normalizedStatus) {
+        toneClass = 'is-pending';
+      }
+
+      const reasonHtml = reasonText && !['SENT', 'SYNCED'].includes(normalizedStatus)
         ? `<div class="pd3i-admin-queue-reason">${escapeHtml(reasonText)}</div>`
         : '';
-      return `<div class="pd3i-admin-queue-status-item">
+      return `<div class="pd3i-admin-queue-status-item ${toneClass}">
         <div class="pd3i-admin-queue-status-label">${escapeHtml(label)}</div>
-        <div class="pd3i-admin-queue-status-value">${escapeHtml(statusText)}</div>
+        <div class="pd3i-admin-queue-status-value-row">
+          <div class="pd3i-admin-queue-status-value">${escapeHtml(statusText)}</div>
+          <span class="pd3i-admin-queue-status-badge ${toneClass}">${escapeHtml(badgeLabel)}</span>
+        </div>
         ${reasonHtml}
       </div>`;
     }
@@ -147,7 +166,7 @@
               </div>
             </div>
             <div class="pd3i-admin-queue-meta">
-              <span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi || '-')}</span>
+              <span class="pd3i-admin-queue-pill ${String(item.statusVerifikasi || '').trim().toUpperCase() === 'TERVERIFIKASI' ? 'is-success' : (String(item.statusVerifikasi || '').trim().toUpperCase() === 'PERLU REVISI' ? 'is-danger' : 'is-warning')} ">${escapeHtml(item.statusVerifikasi || '-')}</span>
               <span class="pd3i-admin-queue-pill">${escapeHtml(item.kecamatan || '-')} / ${escapeHtml(item.kelurahan || '-')}</span>
               ${item.epid ? `<span class="pd3i-admin-queue-pill">EPID ${escapeHtml(item.epid)}</span>` : '<span class="pd3i-admin-queue-pill">Belum ada EPID final</span>'}
               ${inputDateText ? `<span class="pd3i-admin-queue-pill">Input ${escapeHtml(inputDateText.slice(0, 10))}</span>` : ''}

@@ -1965,6 +1965,26 @@ textarea {
   background: #f8fbff;
 }
 
+.pd3i-admin-queue-status-item.is-success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.pd3i-admin-queue-status-item.is-failed {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.pd3i-admin-queue-status-item.is-pending {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.pd3i-admin-queue-status-item.is-skipped {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
 .pd3i-admin-queue-status-label {
   font-size: 0.68rem;
   font-weight: 800;
@@ -1973,15 +1993,55 @@ textarea {
   color: #64748b;
 }
 
+.pd3i-admin-queue-status-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  margin-top: 0.28rem;
+}
+
 .pd3i-admin-queue-status-value {
-  margin-top: 0.2rem;
   font-size: 0.82rem;
   font-weight: 800;
   color: #0f172a;
+  word-break: break-word;
+}
+
+.pd3i-admin-queue-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.pd3i-admin-queue-status-badge.is-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.pd3i-admin-queue-status-badge.is-failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.pd3i-admin-queue-status-badge.is-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.pd3i-admin-queue-status-badge.is-skipped {
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .pd3i-admin-queue-reason {
-  margin-top: 0.28rem;
+  margin-top: 0.35rem;
   font-size: 0.74rem;
   line-height: 1.4;
   color: #b45309;
@@ -1998,6 +2058,21 @@ textarea {
   color: #1e40af;
   font-size: 0.72rem;
   font-weight: 800;
+}
+
+.pd3i-admin-queue-pill.is-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.pd3i-admin-queue-pill.is-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.pd3i-admin-queue-pill.is-warning {
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .pd3i-admin-queue-row small {
