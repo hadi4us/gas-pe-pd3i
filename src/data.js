@@ -554,38 +554,6 @@ function saveDxRecord_(dx, data) {
     : COMMON_PIPELINE_HEADERS_.concat(INTERNAL_TRACKING_HEADERS_)).concat(incomingFieldHeaders));
   data = _applyHeaderAliases_(dx, data || {}, headers);
 
-  const kecamatanVal = data["Kecamatan"] || data["Kecamatan domisili"] || "";
-  const kelurahanVal = data["Kelurahan"] || data["Kelurahan domisili"] || "";
-  const kabKotaVal = data["Kab/Kota"] || data["Kab/Kota Pasien"] || data["Kab/Kota domisili"] || "Kota Depok";
-
-  const pengampu = getPengampuByWilayah_(kecamatanVal, kelurahanVal, kabKotaVal);
-  data["Status Routing Pengampu"] = pengampu.status || "UNMAPPED";
-  if (pengampu.found) {
-    data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
-    data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
-    data["KodePuskesmas Pengampu"] = pengampu.kodePuskesmas || "";
-    data["Puskesmas Pengampu"] = pengampu.namaPuskesmas || pengampu.pengampu || "";
-    data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
-    data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
-    data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
-    data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
-    data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
-    data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
-    data["Telegram Chat Id Pengampu"] = pengampu.telegramChatId || data["Telegram Chat Id Pengampu"] || "";
-  } else {
-    data["Kecamatan Pengampu"] = "";
-    data["Kelurahan Pengampu"] = "";
-    data["KodePuskesmas Pengampu"] = "";
-    data["Puskesmas Pengampu"] = "";
-    data["Kepala Puskesmas Pengampu"] = "";
-    data["Email Kapus Pengampu"] = "";
-    data["Petugas Surveilans Pengampu"] = "";
-    data["Email Petugas Pengampu"] = "";
-    data["SpreadsheetId Pengampu"] = "";
-    data["SpreadsheetUrl Pengampu"] = "";
-    data["Telegram Chat Id Pengampu"] = "";
-  }
-
   const idxRecordId = headers.indexOf("ID Registrasi Kasus");
   const idxEpid = headers.indexOf("Nomor EPID");
   const idxTimestamp = headers.indexOf("Timestamp");
@@ -638,6 +606,61 @@ function saveDxRecord_(dx, data) {
     } catch (e) {
       existingRowObject = null;
     }
+  }
+
+  const incomingKecamatanVal = String(data["Kecamatan"] || data["Kecamatan domisili"] || "").trim();
+  const incomingKelurahanVal = String(data["Kelurahan"] || data["Kelurahan domisili"] || "").trim();
+  const incomingKabKotaVal = String(data["Kab/Kota"] || data["Kab/Kota Pasien"] || data["Kab/Kota domisili"] || "").trim();
+  const existingKecamatanVal = String((existingRowObject && (existingRowObject["Kecamatan"] || existingRowObject["Kecamatan domisili"])) || "").trim();
+  const existingKelurahanVal = String((existingRowObject && (existingRowObject["Kelurahan"] || existingRowObject["Kelurahan domisili"])) || "").trim();
+  const existingKabKotaVal = String((existingRowObject && (existingRowObject["Kab/Kota"] || existingRowObject["Kab/Kota Pasien"] || existingRowObject["Kab/Kota domisili"])) || "").trim();
+  const effectiveKecamatanVal = incomingKecamatanVal || existingKecamatanVal;
+  const effectiveKelurahanVal = incomingKelurahanVal || existingKelurahanVal;
+  const effectiveKabKotaVal = incomingKabKotaVal || existingKabKotaVal || "Kota Depok";
+
+  if (effectiveKecamatanVal && effectiveKelurahanVal) {
+    const pengampu = getPengampuByWilayah_(effectiveKecamatanVal, effectiveKelurahanVal, effectiveKabKotaVal);
+    data["Status Routing Pengampu"] = pengampu.status || "UNMAPPED";
+    if (pengampu.found) {
+      data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
+      data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
+      data["KodePuskesmas Pengampu"] = pengampu.kodePuskesmas || "";
+      data["Puskesmas Pengampu"] = pengampu.namaPuskesmas || pengampu.pengampu || "";
+      data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
+      data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
+      data["Petugas Surveilans Pengampu"] = pengampu.petugasSurveilans || "";
+      data["Email Petugas Pengampu"] = pengampu.emailPetugas || "";
+      data["SpreadsheetId Pengampu"] = pengampu.spreadsheetId || "";
+      data["SpreadsheetUrl Pengampu"] = pengampu.spreadsheetUrl || "";
+      data["Telegram Chat Id Pengampu"] = pengampu.telegramChatId || data["Telegram Chat Id Pengampu"] || "";
+    } else {
+      data["Kecamatan Pengampu"] = "";
+      data["Kelurahan Pengampu"] = "";
+      data["KodePuskesmas Pengampu"] = "";
+      data["Puskesmas Pengampu"] = "";
+      data["Kepala Puskesmas Pengampu"] = "";
+      data["Email Kapus Pengampu"] = "";
+      data["Petugas Surveilans Pengampu"] = "";
+      data["Email Petugas Pengampu"] = "";
+      data["SpreadsheetId Pengampu"] = "";
+      data["SpreadsheetUrl Pengampu"] = "";
+      data["Telegram Chat Id Pengampu"] = "";
+    }
+  } else if (existingRowObject) {
+    data["Status Routing Pengampu"] = String(data["Status Routing Pengampu"] || existingRowObject["Status Routing Pengampu"] || "").trim();
+    data["Kecamatan Pengampu"] = String(data["Kecamatan Pengampu"] || existingRowObject["Kecamatan Pengampu"] || "").trim();
+    data["Kelurahan Pengampu"] = String(data["Kelurahan Pengampu"] || existingRowObject["Kelurahan Pengampu"] || "").trim();
+    data["KodePuskesmas Pengampu"] = String(data["KodePuskesmas Pengampu"] || existingRowObject["KodePuskesmas Pengampu"] || "").trim();
+    data["Puskesmas Pengampu"] = String(data["Puskesmas Pengampu"] || existingRowObject["Puskesmas Pengampu"] || "").trim();
+    data["Kepala Puskesmas Pengampu"] = String(data["Kepala Puskesmas Pengampu"] || existingRowObject["Kepala Puskesmas Pengampu"] || "").trim();
+    data["Email Kapus Pengampu"] = String(data["Email Kapus Pengampu"] || existingRowObject["Email Kapus Pengampu"] || "").trim();
+    data["Petugas Surveilans Pengampu"] = String(data["Petugas Surveilans Pengampu"] || existingRowObject["Petugas Surveilans Pengampu"] || "").trim();
+    data["Email Petugas Pengampu"] = String(data["Email Petugas Pengampu"] || existingRowObject["Email Petugas Pengampu"] || "").trim();
+    data["SpreadsheetId Pengampu"] = String(data["SpreadsheetId Pengampu"] || existingRowObject["SpreadsheetId Pengampu"] || "").trim();
+    data["SpreadsheetUrl Pengampu"] = String(data["SpreadsheetUrl Pengampu"] || existingRowObject["SpreadsheetUrl Pengampu"] || "").trim();
+    data["Telegram Chat Id Pengampu"] = String(data["Telegram Chat Id Pengampu"] || existingRowObject["Telegram Chat Id Pengampu"] || "").trim();
+  } else {
+    data["Status Routing Pengampu"] = String(data["Status Routing Pengampu"] || "UNMAPPED").trim() || "UNMAPPED";
   }
 
   if (existingRowObject) {
