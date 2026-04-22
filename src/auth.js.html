@@ -41,8 +41,22 @@
       const pinNew = document.getElementById("pin-new");
       const pinNew2 = document.getElementById("pin-new2");
       const pinCaptchaAnswerInput = document.getElementById("pin-captcha-answer");
+      const btnSavePin = document.getElementById("btn-save-pin");
 
       const toggleLoginPin = document.getElementById("toggle-login-pin");
+
+      function setCredentialInputsEnabled(mode) {
+        const enableLogin = mode === 'login';
+        const enablePin = mode === 'pin';
+        [loginUsername, loginPin, loginCaptchaAnswerInput, btnLogin].forEach(function(el) {
+          if (!el) return;
+          el.disabled = !enableLogin;
+        });
+        [pinOld, pinNew, pinNew2, pinCaptchaAnswerInput, btnSavePin, btnRefreshPinCaptcha].forEach(function(el) {
+          if (!el) return;
+          el.disabled = !enablePin;
+        });
+      }
 
       function refreshLoginCaptcha() {
         if (typeof forceRenderLoginCaptcha === "function") {
@@ -81,6 +95,7 @@
 
       function setLoggedInUI(user) {
         SESSION_USER = user || null;
+        setCredentialInputsEnabled('none');
         try { window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
 
         if (app) app.classList.remove("hidden");
@@ -113,6 +128,7 @@
 
       function setLoggedOutUI() {
         SESSION_TOKEN = "";
+        setCredentialInputsEnabled('login');
         SESSION_USER = null;
         try { window.__PD3I_SESSION_TOKEN = ""; window.__PD3I_SESSION_USER = null; } catch (e) {}
         setAuthSessionMeta(null);
@@ -312,6 +328,7 @@
 
           if (pinForm) pinForm.reset();
           hideAlert(pinAlert);
+          setCredentialInputsEnabled('pin');
           openModal(pinModal);
 
           setTimeout(refreshPinCaptcha, 100);
@@ -321,12 +338,12 @@
       if (btnClosePinModal) {
         btnClosePinModal.addEventListener("click", function () {
           closeModal(pinModal);
+          setCredentialInputsEnabled('none');
         });
       }
 
-      if (pinForm) {
-        pinForm.addEventListener("submit", function (e) {
-          e.preventDefault();
+      if (btnSavePin) {
+        btnSavePin.addEventListener("click", function () {
           hideAlert(pinAlert);
 
           const oldPin = ((pinOld && pinOld.value) || "").trim();
@@ -398,6 +415,7 @@
 
               setTimeout(function () {
                 closeModal(pinModal);
+                setCredentialInputsEnabled('none');
               }, 900);
             })
             .withFailureHandler(function (err) {
@@ -455,6 +473,7 @@
 
       closeModal(pinModal);
       closeModal(loginModal);
+      setCredentialInputsEnabled('none');
       showAuthBootOverlay();
 
       restoreSessionIfAny();
