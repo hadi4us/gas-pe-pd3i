@@ -177,9 +177,7 @@
 
     const numericHint = _getNumericFieldHintById(field.id);
 
-    const dependentMeta = field.showIf
-      ? `<div class="pd3i-field-context"><i class="fas fa-turn-up text-[10px]"></i> Field lanjutan  aktif jika <strong>${field.showIf.field}</strong> sesuai</div>`
-      : "";
+    const dependentMeta = "";
 
     return `<div class="${wrapperClass}" ${showIfAttr}>
       ${dependentMeta}
