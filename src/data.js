@@ -400,12 +400,49 @@ function _deriveEpidBaseCode_(data) {
   return '000000';
 }
 
+function _compareNumericStrings_(a, b) {
+  var left = String(a || '').replace(/^0+/, '') || '0';
+  var right = String(b || '').replace(/^0+/, '') || '0';
+  if (left.length !== right.length) return left.length > right.length ? 1 : -1;
+  if (left === right) return 0;
+  return left > right ? 1 : -1;
+}
+
+function _incrementNumericString_(digits) {
+  var src = String(digits || '').replace(/\D/g, '');
+  if (!src) return '1';
+  var chars = src.split('');
+  var carry = 1;
+  for (var i = chars.length - 1; i >= 0; i--) {
+    var num = parseInt(chars[i], 10);
+    if (isNaN(num)) num = 0;
+    num += carry;
+    if (num >= 10) {
+      chars[i] = '0';
+      carry = 1;
+    } else {
+      chars[i] = String(num);
+      carry = 0;
+      break;
+    }
+  }
+  if (carry) chars.unshift('1');
+  return chars.join('');
+}
+
+function _extractComparableEpidNumber_(rawValue) {
+  var value = String(rawValue || '').trim().toUpperCase();
+  if (!value) return '';
+  var match = value.match(/^C-?(\d+)$/);
+  return match ? String(match[1] || '') : '';
+}
+
 function recommendEpid_(dx, data) {
   dx = String(dx || '').trim().toUpperCase();
   var sheet = getSheetOrNull_(dx + '_Raw');
   var baseCode = _deriveEpidBaseCode_(data);
-  var prefix = 'C-' + baseCode;
-  var nextSeq = 1;
+  var fallbackDigits = String(baseCode || '000000').replace(/\D/g, '').padStart(6, '0').substring(0, 6) + '001';
+  var maxDigits = '';
 
   if (sheet) {
     var values = sheet.getDataRange().getValues();
@@ -413,42 +450,25 @@ function recommendEpid_(dx, data) {
       var headers = values[0].map(function(h) { return String(h || '').trim(); });
       var idxEpid = headers.indexOf('Nomor EPID');
       if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
-      var rows = values.slice(1);
 
       if (idxEpid !== -1) {
-        for (var r = rows.length - 1; r >= 0; r--) {
-          var lastEpid = String(rows[r][idxEpid] || '').trim().toUpperCase();
-          if (!lastEpid) continue;
-
-          var match = lastEpid.match(/^(C-\d{6})(\d{3,})$/);
-          if (match) {
-            var seq = parseInt(match[2], 10);
-            if (!isNaN(seq)) {
-              return match[1] + String(seq + 1).padStart(match[2].length, '0');
-            }
+        for (var r = 1; r < values.length; r++) {
+          var epidDigits = _extractComparableEpidNumber_(values[r][idxEpid]);
+          if (!epidDigits) continue;
+          if (!maxDigits || _compareNumericStrings_(epidDigits, maxDigits) > 0) {
+            maxDigits = epidDigits;
           }
-          break;
         }
       }
-
-      var idxEpidRekom = headers.indexOf('Nomor EPID Rekomendasi');
-      var maxSeq = 0;
-      rows.forEach(function(row) {
-        [idxEpid, idxEpidRekom].forEach(function(idx) {
-          if (idx === -1) return;
-          var epid = String(row[idx] || '').trim().toUpperCase();
-          if (!epid || epid.indexOf(prefix) !== 0) return;
-          var tail = epid.substring(prefix.length).replace(/\D/g, '');
-          if (!tail) return;
-          var seq = parseInt(tail.slice(-3), 10);
-          if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
-        });
-      });
-      nextSeq = maxSeq + 1;
     }
   }
 
-  return prefix + String(nextSeq).padStart(3, '0');
+  if (!maxDigits) {
+    maxDigits = fallbackDigits;
+    return 'C' + maxDigits;
+  }
+
+  return 'C' + _incrementNumericString_(maxDigits);
 }
 
 function previewRecommendedEpid(dx, payload, token) {
