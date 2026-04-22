@@ -613,7 +613,7 @@ function getDashboardStats(dx, tahun, token) {
     const idxRW = headers.indexOf("RW");
     const idxKelompokUmur = headers.indexOf("Kelompok Umur Epidemiologis");
     const idxJK = headers.indexOf("JK");
-    const idxStatusNotif = headers.indexOf("Status Notifikasi Telegram");
+    const idxStatusNotif = headers.indexOf("Status Notifikasi Pengampu");
     const idxStatusSync = headers.indexOf("Status Sinkronisasi Pengampu");
     const idxStatusKasus = headers.indexOf("Status Pasien/Kasus");
     const idxVerifikasi = headers.indexOf("Status Verifikasi EPID");

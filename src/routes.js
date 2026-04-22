@@ -859,18 +859,87 @@ function _upsertByEpidToSheet_(sheet, record) {
   return { updated: false, rowIndex: sheet.getLastRow(), headersCount: headers.length };
 }
 
+function _collectNotificationRecipients_(values) {
+  const recipients = [];
+  (values || []).forEach(function(v) {
+    String(v || '').split(/[;,]/).map(function(x) { return String(x || '').trim(); }).filter(Boolean).forEach(function(item) {
+      recipients.push(item);
+    });
+  });
+  return Array.from(new Set(recipients));
+}
+
+function _resolvePengampuNotificationContext_(dx, data) {
+  dx = String(dx || '').trim().toUpperCase();
+  data = data || {};
+
+  const domisili = _getRecordDomisiliForAccess_(dx, data);
+  const pengampu = (domisili.kecamatan && domisili.kelurahan)
+    ? getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota)
+    : { found: false, status: 'UNMAPPED' };
+
+  const statusRoutingRaw = String(data["Status Routing Pengampu"] || (pengampu && pengampu.status) || '').trim().toUpperCase();
+  const statusRouting = statusRoutingRaw || ((pengampu && pengampu.found) ? 'MATCHED' : 'UNMAPPED');
+  const emailRecipients = _collectNotificationRecipients_([
+    data["Email Petugas Pengampu"],
+    data["Email Kapus Pengampu"],
+    pengampu && pengampu.emailPetugas,
+    pengampu && pengampu.emailKapus
+  ]);
+  const recordChatId = String(data["Telegram Chat Id Pengampu"] || data["TelegramChatId Pengampu"] || data["TelegramChatId"] || '').trim();
+  const mappedChatId = String((pengampu && pengampu.telegramChatId) || '').trim();
+  const globalChatId = String(Config_Manager.getConfig("TELEGRAM_CHAT_ID") || '').trim();
+  const telegramChatId = recordChatId || mappedChatId || globalChatId;
+  const telegramTargetSource = recordChatId ? 'record' : (mappedChatId ? 'pengampu' : (globalChatId ? 'global' : ''));
+  const spreadsheetId = String(data["SpreadsheetId Pengampu"] || (pengampu && pengampu.spreadsheetId) || '').trim();
+  const spreadsheetUrl = String(data["SpreadsheetUrl Pengampu"] || (pengampu && pengampu.spreadsheetUrl) || '').trim();
+  const puskesmasPengampu = String(data["Puskesmas Pengampu"] || (pengampu && pengampu.namaPuskesmas) || '').trim();
+  const kodePuskesmasPengampu = String(data["KodePuskesmas Pengampu"] || (pengampu && pengampu.kodePuskesmas) || '').trim();
+
+  return {
+    domisili: domisili,
+    pengampu: pengampu,
+    statusRouting: statusRouting,
+    emailRecipients: emailRecipients,
+    telegramChatId: telegramChatId,
+    telegramTargetSource: telegramTargetSource,
+    spreadsheetId: spreadsheetId,
+    spreadsheetUrl: spreadsheetUrl,
+    puskesmasPengampu: puskesmasPengampu,
+    kodePuskesmasPengampu: kodePuskesmasPengampu
+  };
+}
+
+function _sendTelegramText_(chatId, lines) {
+  const botToken = Config_Manager.getConfig("TELEGRAM_BOT_TOKEN");
+  const targetChatId = String(chatId || '').trim();
+  if (!botToken || !targetChatId) return { sent: false, reason: "NOT_CONFIGURED", target: targetChatId };
+
+  const resp = UrlFetchApp.fetch("https://api.telegram.org/bot" + botToken + "/sendMessage", {
+    method: "post",
+    muteHttpExceptions: true,
+    payload: {
+      chat_id: targetChatId,
+      text: (lines || []).join("\n"),
+      parse_mode: "Markdown"
+    }
+  });
+  const code = resp.getResponseCode();
+  const body = String(resp.getContentText() || "");
+  if (code >= 200 && code < 300) return { sent: true, target: targetChatId, responseCode: code };
+  return { sent: false, reason: "HTTP_" + code + ": " + body, target: targetChatId };
+}
+
 // ─── Sinkronisasi ke spreadsheet pengampu ────────────────────────────────────
 function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
 
-    const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
-    if (statusRouting !== "MATCHED") return { synced: false, reason: statusRouting || "UNMAPPED" };
+    if (notifyCtx.statusRouting !== "MATCHED") return { synced: false, reason: notifyCtx.statusRouting || "UNMAPPED" };
+    if (!notifyCtx.spreadsheetId) return { synced: false, reason: "NO_SPREADSHEET_ID" };
 
-    const spreadsheetId = String(data["SpreadsheetId Pengampu"] || "").trim();
-    if (!spreadsheetId) return { synced: false, reason: "NO_SPREADSHEET_ID" };
-
-    const targetSs = SpreadsheetApp.openById(spreadsheetId);
+    const targetSs = SpreadsheetApp.openById(notifyCtx.spreadsheetId);
     const targetSheetName = dx + "_Raw";
     let targetSheet = targetSs.getSheetByName(targetSheetName);
     if (!targetSheet) targetSheet = targetSs.insertSheet(targetSheetName);
@@ -884,7 +953,13 @@ function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
     const record = Object.assign({}, data, {
       "Nomor EPID": saved.epid,
       "dx": dx,
-      "Link PDF": printUrl || data["Link PDF"] || ""
+      "Link PDF": printUrl || data["Link PDF"] || "",
+      "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "",
+      "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || data["KodePuskesmas Pengampu"] || "",
+      "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || data["SpreadsheetId Pengampu"] || "",
+      "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || data["SpreadsheetUrl Pengampu"] || "",
+      "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String(data["Telegram Chat Id Pengampu"] || '') : (notifyCtx.telegramChatId || String(data["Telegram Chat Id Pengampu"] || '')),
+      "Status Routing Pengampu": notifyCtx.statusRouting || data["Status Routing Pengampu"] || ""
     });
 
     const currentTargetHeaders = getTrimmedHeaders_(targetSheet);
@@ -894,53 +969,37 @@ function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
     }
 
     const res = _upsertByEpidToSheet_(targetSheet, record);
-    return { synced: true, target: spreadsheetId, rowIndex: res.rowIndex, updated: !!res.updated, headersCount: res.headersCount };
+    return { synced: true, target: notifyCtx.spreadsheetId, rowIndex: res.rowIndex, updated: !!res.updated, headersCount: res.headersCount };
   } catch (err) {
     return { synced: false, reason: String(err) };
   }
 }
 
-// ─── Notifikasi Telegram (menggunakan Config_Manager, bukan konstanta hardcoded) ──
-/**
- * Kirim notifikasi Telegram untuk kasus PD3I.
- * Token dan Chat ID dibaca dari Config_Manager (Req 5.1, 5.2).
- */
+// ─── Notifikasi Telegram per pengampu (fallback global bila perlu) ───────────
 function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
-
-    const botToken = Config_Manager.getConfig("TELEGRAM_BOT_TOKEN");
-    const chatId   = Config_Manager.getConfig("TELEGRAM_CHAT_ID");
-    if (!botToken || !chatId) return { sent: false, reason: "NOT_CONFIGURED" };
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    if (!notifyCtx.telegramChatId) return { sent: false, reason: "NOT_CONFIGURED" };
 
     const lines = [
-      "📢 *Kasus " + dx + " baru tersimpan*",
+      "📢 *Kasus " + dx + " terverifikasi*",
       "",
       `*EPID:* ${saved.epid || "-"}`,
       `*Nama:* ${data["Nama"] || "-"}`,
       `*JK:* ${data["JK"] || "-"}`,
       `*Kelurahan:* ${data["Kelurahan"] || "-"}`,
       `*Kecamatan:* ${data["Kecamatan"] || "-"}`,
-      `*Puskesmas Pengampu:* ${data["Puskesmas Pengampu"] || "-"}`,
-      `*Routing:* ${data["Status Routing Pengampu"] || "-"}`,
-      `*Email Pengampu:* ${data["Status Notifikasi Pengampu"] || "-"}`,
+      `*Puskesmas Pengampu:* ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "-"}`,
+      `*Routing:* ${notifyCtx.statusRouting || data["Status Routing Pengampu"] || "-"}`,
+      `*Notifikasi Email:* ${data["Status Notifikasi Pengampu"] || "-"}`,
       `*Sync Pengampu:* ${data["Status Sinkronisasi Pengampu"] || "-"}`
     ];
     if (printUrl) lines.push(`*PDF:* ${printUrl}`);
 
-    const resp = UrlFetchApp.fetch("https://api.telegram.org/bot" + botToken + "/sendMessage", {
-      method: "post",
-      muteHttpExceptions: true,
-      payload: {
-        chat_id: chatId,
-        text: lines.join("\n"),
-        parse_mode: "Markdown"
-      }
-    });
-    const code = resp.getResponseCode();
-    const body = String(resp.getContentText() || "");
-    if (code >= 200 && code < 300) return { sent: true, target: chatId, responseCode: code };
-    return { sent: false, reason: "HTTP_" + code + ": " + body, target: chatId };
+    const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
+    if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
+    return res;
   } catch (err) {
     return { sent: false, reason: String(err) };
   }
@@ -950,16 +1009,10 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
 function _sendPengampuNotification_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
 
-    const statusRouting = String(data["Status Routing Pengampu"] || "").trim().toUpperCase();
-    if (statusRouting !== "MATCHED") return { sent: false, reason: statusRouting || "UNMAPPED" };
-
-    const recipients = [];
-    [data["Email Petugas Pengampu"], data["Email Kapus Pengampu"]].forEach(v => {
-      String(v || "").split(";").map(x => x.trim()).filter(Boolean).forEach(x => recipients.push(x));
-    });
-    const uniqueRecipients = Array.from(new Set(recipients));
-    if (!uniqueRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
+    if (notifyCtx.statusRouting !== "MATCHED") return { sent: false, reason: notifyCtx.statusRouting || "UNMAPPED" };
+    if (!notifyCtx.emailRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
 
     const subject = `[${dx}][${saved.epid}] Kasus baru wilayah ampuan ${data["Kelurahan"] || ""}`;
     const body = [
@@ -975,18 +1028,82 @@ function _sendPengampuNotification_(dx, data, saved, printUrl) {
       `Faskes pelapor: ${data["Nama unit pelapor"] || "-"}`,
       `Tanggal mulai ruam: ${data["Tanggal mulai ruam"] || "-"}`,
       `Tanggal pelacakan: ${data["Tanggal Pelacakan"] || "-"}`,
-      `Puskesmas pengampu: ${data["Puskesmas Pengampu"] || "-"}`,
+      `Puskesmas pengampu: ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "-"}`,
       printUrl ? `Link PDF: ${printUrl}` : ""
     ].filter(Boolean).join("\n");
 
     MailApp.sendEmail({
-      to: uniqueRecipients.join(","),
+      to: notifyCtx.emailRecipients.join(","),
       subject: subject,
       body: body,
       name: "Jarvis Surveilans PD3I"
     });
 
-    return { sent: true, to: uniqueRecipients.join(",") };
+    return { sent: true, to: notifyCtx.emailRecipients.join(",") };
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+function _sendRevisionPengampuNotification_(dx, data, saved) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
+    if (!notifyCtx.emailRecipients.length) return { sent: false, reason: 'NO_RECIPIENT' };
+
+    const recordId = String((saved && saved.recordId) || data["ID Registrasi Kasus"] || data["Nomor EPID"] || '-').trim();
+    const catatan = String(data["Catatan Verifikasi EPID"] || '').trim() || '-';
+    const subject = `[${dx}][REVISI][${recordId}] Perlu perbaikan data kasus`;
+    const body = [
+      `Permintaan revisi data kasus ${dx}`,
+      '',
+      `ID Registrasi: ${recordId}`,
+      `Nama: ${data["Nama"] || '-'}`,
+      `Kelurahan: ${data["Kelurahan"] || '-'}`,
+      `Kecamatan: ${data["Kecamatan"] || '-'}`,
+      `Puskesmas pengampu: ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || '-'}`,
+      `Status verifikasi: ${data["Status Verifikasi EPID"] || 'Perlu Revisi'}`,
+      '',
+      'Catatan verifikasi admin:',
+      catatan,
+      '',
+      'Silakan buka record existing di workspace Cari/Edit atau Beranda untuk melakukan perbaikan.'
+    ].join('\n');
+
+    MailApp.sendEmail({
+      to: notifyCtx.emailRecipients.join(','),
+      subject: subject,
+      body: body,
+      name: 'Jarvis Surveilans PD3I'
+    });
+    return { sent: true, to: notifyCtx.emailRecipients.join(',') };
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+function _sendRevisionTelegramNotification_(dx, data, saved) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
+    if (!notifyCtx.telegramChatId) return { sent: false, reason: 'NOT_CONFIGURED' };
+
+    const recordId = String((saved && saved.recordId) || data["ID Registrasi Kasus"] || data["Nomor EPID"] || '-').trim();
+    const lines = [
+      `🛠️ *Revisi data kasus ${dx}*`,
+      '',
+      `*ID Registrasi:* ${recordId}`,
+      `*Nama:* ${data["Nama"] || '-'}`,
+      `*Kelurahan:* ${data["Kelurahan"] || '-'}`,
+      `*Kecamatan:* ${data["Kecamatan"] || '-'}`,
+      `*Puskesmas Pengampu:* ${notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || '-'}`,
+      `*Catatan Admin:* ${data["Catatan Verifikasi EPID"] || '-'}`
+    ];
+    const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
+    if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
+    return res;
   } catch (err) {
     return { sent: false, reason: String(err) };
   }
@@ -1217,19 +1334,8 @@ function _isAsyncPipelineEnabled_() {
   return mode === "async";
 }
 
-function _buildPipelineFingerprint_(dx, savedRecord, saved) {
-  const payload = {
-    dx: String(dx || "").trim().toUpperCase(),
-    epid: String((saved && saved.epid) || "").trim(),
-    routing: String((savedRecord && savedRecord["Status Routing Pengampu"]) || "").trim(),
-    targetSpreadsheet: String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || "").trim(),
-    emailTargets: [
-      String((savedRecord && savedRecord["Email Petugas Pengampu"]) || "").trim(),
-      String((savedRecord && savedRecord["Email Kapus Pengampu"]) || "").trim()
-    ].join("|"),
-    printUrl: String(savedRecord && savedRecord["Link PDF"] || "").trim()
-  };
-  const raw = JSON.stringify(payload);
+function _computeJsonFingerprint_(payload) {
+  const raw = JSON.stringify(payload || {});
   const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
   return digest.map(function(b) {
     const v = (b + 256) % 256;
@@ -1237,8 +1343,38 @@ function _buildPipelineFingerprint_(dx, savedRecord, saved) {
   }).join("");
 }
 
+function _buildPipelineFingerprint_(dx, savedRecord, saved) {
+  const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
+  const payload = {
+    dx: String(dx || "").trim().toUpperCase(),
+    epid: String((saved && saved.epid) || "").trim(),
+    routing: notifyCtx.statusRouting || String((savedRecord && savedRecord["Status Routing Pengampu"]) || "").trim(),
+    targetSpreadsheet: notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || "").trim(),
+    emailTargets: (notifyCtx.emailRecipients || []).join("|"),
+    telegramTarget: notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || "").trim(),
+    printUrl: String(savedRecord && savedRecord["Link PDF"] || "").trim()
+  };
+  return _computeJsonFingerprint_(payload);
+}
+
+function _buildRevisionNotificationFingerprint_(dx, savedRecord, saved) {
+  const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
+  const payload = {
+    dx: String(dx || '').trim().toUpperCase(),
+    recordId: String((saved && saved.recordId) || (savedRecord && savedRecord["ID Registrasi Kasus"]) || '').trim(),
+    epid: String((saved && saved.epid) || (savedRecord && savedRecord["Nomor EPID"]) || '').trim(),
+    verificationStatus: String((savedRecord && savedRecord["Status Verifikasi EPID"]) || '').trim(),
+    catatan: String((savedRecord && savedRecord["Catatan Verifikasi EPID"]) || '').trim(),
+    routing: notifyCtx.statusRouting || '',
+    emailTargets: (notifyCtx.emailRecipients || []).join('|'),
+    telegramTarget: notifyCtx.telegramChatId || ''
+  };
+  return _computeJsonFingerprint_(payload);
+}
+
 function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
   const policy = _getDxPipelinePolicy_(dx);
+  const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
   const previousFingerprint = String((savedRecord && savedRecord["Pipeline Fingerprint"]) || "").trim();
   const currentFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
   const isSameFingerprint = previousFingerprint && previousFingerprint === currentFingerprint;
@@ -1264,7 +1400,14 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
     : { sent: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
 
   const notifyPatch = {
+    "ID Registrasi Kasus": saved.recordId,
     "Nomor EPID": saved.epid,
+    "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
+    "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+    "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || '').trim(),
+    "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || String((savedRecord && savedRecord["SpreadsheetUrl Pengampu"]) || '').trim(),
+    "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
+    "Status Routing Pengampu": notifyCtx.statusRouting || String((savedRecord && savedRecord["Status Routing Pengampu"]) || '').trim(),
     "Status Notifikasi Pengampu": notify.sent ? "SENT" : (shouldNotifyEmail ? (notify.reason || "FAILED") : prevNotifyStatus || "SKIPPED"),
     "Reason Notifikasi Pengampu": notify.sent ? "" : (notify.reason || ""),
     "Notified At Pengampu": new Date(),
@@ -1292,6 +1435,53 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
     pengampuNotification: notify,
     pengampuSync: syncPengampu,
     telegramNotification: telegramNotify,
+    idempotent: isSameFingerprint
+  };
+}
+
+function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
+  const previousFingerprint = String((savedRecord && savedRecord["Revision Notification Fingerprint"]) || '').trim();
+  const currentFingerprint = _buildRevisionNotificationFingerprint_(dx, savedRecord, saved);
+  const isSameFingerprint = previousFingerprint && previousFingerprint === currentFingerprint;
+  const prevEmailStatus = String((savedRecord && savedRecord["Status Notifikasi Revisi Pengampu"]) || '').trim().toUpperCase();
+  const prevTelegramStatus = String((savedRecord && savedRecord["Status Notifikasi Revisi Telegram"]) || '').trim().toUpperCase();
+  const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
+
+  const shouldNotifyEmail = !(isSameFingerprint && prevEmailStatus === 'SENT');
+  const shouldNotifyTelegram = !(isSameFingerprint && prevTelegramStatus === 'SENT');
+
+  const revisionEmail = shouldNotifyEmail
+    ? _sendRevisionPengampuNotification_(dx, savedRecord, saved)
+    : { sent: false, reason: 'SKIPPED_IDEMPOTENT' };
+  const revisionTelegram = shouldNotifyTelegram
+    ? _sendRevisionTelegramNotification_(dx, savedRecord, saved)
+    : { sent: false, reason: 'SKIPPED_IDEMPOTENT' };
+
+  const patch = {
+    "ID Registrasi Kasus": saved.recordId,
+    "Nomor EPID": saved.epid || String((savedRecord && savedRecord["Nomor EPID"]) || '').trim(),
+    "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
+    "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+    "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
+    "Status Routing Pengampu": notifyCtx.statusRouting || String((savedRecord && savedRecord["Status Routing Pengampu"]) || '').trim(),
+    "Status Notifikasi Revisi Pengampu": revisionEmail.sent ? 'SENT' : (shouldNotifyEmail ? (revisionEmail.reason || 'FAILED') : prevEmailStatus || 'SKIPPED'),
+    "Reason Notifikasi Revisi Pengampu": revisionEmail.sent ? '' : (revisionEmail.reason || ''),
+    "Revision Notified At Pengampu": new Date(),
+    "Revision Notified To Pengampu": revisionEmail.to || '',
+    "Status Notifikasi Revisi Telegram": revisionTelegram.sent ? 'SENT' : (shouldNotifyTelegram ? (revisionTelegram.reason || 'FAILED') : prevTelegramStatus || 'SKIPPED'),
+    "Reason Notifikasi Revisi Telegram": revisionTelegram.sent ? '' : (revisionTelegram.reason || ''),
+    "Revision Telegram Notified At": new Date(),
+    "Revision Telegram Target": revisionTelegram.target || '',
+    "Revision Notification Fingerprint": currentFingerprint,
+    "Revision Notification Last Run At": new Date()
+  };
+  try {
+    saveDxRecord_(dx, patch);
+  } catch (e) {}
+
+  return {
+    revisionNotification: revisionEmail,
+    revisionTelegramNotification: revisionTelegram,
     idempotent: isSameFingerprint
   };
 }
@@ -1332,6 +1522,17 @@ function saveFormPayload_(data) {
     savedRecord = data;
   }
 
+  let revisionPipelineResult = {
+    revisionNotification: { sent: false, reason: 'SKIPPED_NOT_REVISION' },
+    revisionTelegramNotification: { sent: false, reason: 'SKIPPED_NOT_REVISION' },
+    idempotent: false
+  };
+
+  const verificationStatus = String((saved && saved.verificationStatus) || (savedRecord && savedRecord["Status Verifikasi EPID"]) || '').trim().toUpperCase();
+  if (verificationStatus === 'PERLU REVISI') {
+    revisionPipelineResult = _runRevisionNotificationPipeline_(dx, savedRecord, saved);
+  }
+
   let pipelineResult = {
     pengampuNotification: { sent: false, reason: 'SKIPPED_NO_FINAL_EPID' },
     pengampuSync: { synced: false, reason: 'SKIPPED_NO_FINAL_EPID' },
@@ -1344,9 +1545,16 @@ function saveFormPayload_(data) {
     const pipelineFingerprint = _buildPipelineFingerprint_(dx, savedRecord, saved);
     if (_isAsyncPipelineEnabled_() && typeof enqueuePipelineTask_ === "function") {
       const queueRes = enqueuePipelineTask_(dx, saved.epid, pipelineFingerprint, { printUrl: printUrl });
+      const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
       const queuedPatch = {
         "ID Registrasi Kasus": saved.recordId,
         "Nomor EPID": saved.epid,
+        "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
+        "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+        "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || '').trim(),
+        "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || String((savedRecord && savedRecord["SpreadsheetUrl Pengampu"]) || '').trim(),
+        "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
+        "Status Routing Pengampu": notifyCtx.statusRouting || String((savedRecord && savedRecord["Status Routing Pengampu"]) || '').trim(),
         "Status Notifikasi Pengampu": "QUEUED",
         "Status Sinkronisasi Pengampu": "QUEUED",
         "Status Notifikasi Telegram": "QUEUED",
@@ -1386,8 +1594,11 @@ function saveFormPayload_(data) {
     printUrl: printUrl,
     pipelineIdempotent: !!pipelineResult.idempotent,
     pipelineQueued: !!pipelineResult.queued,
+    revisionPipelineIdempotent: !!revisionPipelineResult.idempotent,
     pengampuNotification: pipelineResult.pengampuNotification,
     pengampuSync: pipelineResult.pengampuSync,
-    telegramNotification: pipelineResult.telegramNotification
+    telegramNotification: pipelineResult.telegramNotification,
+    revisionNotification: revisionPipelineResult.revisionNotification,
+    revisionTelegramNotification: revisionPipelineResult.revisionTelegramNotification
   };
 }

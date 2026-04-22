@@ -267,6 +267,7 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
   const idxEmailPetugas = headers.indexOf("EmailPetugas");
   const idxSpreadsheetId = headers.indexOf("SpreadsheetId") !== -1 ? headers.indexOf("SpreadsheetId") : headers.indexOf("SpreadsheetIdTujuan");
   const idxSpreadsheetUrl = headers.indexOf("SpreadsheetUrl") !== -1 ? headers.indexOf("SpreadsheetUrl") : headers.indexOf("SpreadsheetUrlTujuan");
+  const idxTelegramChatId = headers.indexOf("TelegramChatId");
 
   const kecNorm = _normalizeWilayahKey_(kecamatan);
   const kelNorm = _normalizeWilayahKey_(kelurahan);
@@ -291,7 +292,8 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
         petugasSurveilans: idxPetugas !== -1 ? String(r[idxPetugas] || "").trim() : "",
         emailPetugas: idxEmailPetugas !== -1 ? String(r[idxEmailPetugas] || "").trim() : "",
         spreadsheetId: idxSpreadsheetId !== -1 ? String(r[idxSpreadsheetId] || "").trim() : "",
-        spreadsheetUrl: idxSpreadsheetUrl !== -1 ? String(r[idxSpreadsheetUrl] || "").trim() : ""
+        spreadsheetUrl: idxSpreadsheetUrl !== -1 ? String(r[idxSpreadsheetUrl] || "").trim() : "",
+        telegramChatId: idxTelegramChatId !== -1 ? String(r[idxTelegramChatId] || "").trim() : ""
       };
     }
   }
@@ -322,6 +324,7 @@ const COMMON_PIPELINE_HEADERS_ = [
   "Email Petugas Pengampu",
   "SpreadsheetId Pengampu",
   "SpreadsheetUrl Pengampu",
+  "Telegram Chat Id Pengampu",
   "Status Routing Pengampu",
   "Status Notifikasi Pengampu",
   "Reason Notifikasi Pengampu",
@@ -337,7 +340,17 @@ const COMMON_PIPELINE_HEADERS_ = [
   "Telegram Target",
   "Telegram Retry Count",
   "Pipeline Fingerprint",
-  "Pipeline Last Run At"
+  "Pipeline Last Run At",
+  "Status Notifikasi Revisi Pengampu",
+  "Reason Notifikasi Revisi Pengampu",
+  "Revision Notified At Pengampu",
+  "Revision Notified To Pengampu",
+  "Status Notifikasi Revisi Telegram",
+  "Reason Notifikasi Revisi Telegram",
+  "Revision Telegram Notified At",
+  "Revision Telegram Target",
+  "Revision Notification Fingerprint",
+  "Revision Notification Last Run At"
 ];
 
 const INTERNAL_TRACKING_HEADERS_ = [
