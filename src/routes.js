@@ -1677,7 +1677,13 @@ function saveFormPayload_(data) {
   }
   let savedRecord = data;
   try {
-    savedRecord = hasFinalEpid ? _getRowObjectByEpid_(dx, saved.epid) : data;
+    if (hasFinalEpid) {
+      savedRecord = _getRowObjectByEpid_(dx, saved.epid);
+    } else if (saved.recordId) {
+      savedRecord = getRecordByKey(dx, saved.recordId, token) || data;
+    } else {
+      savedRecord = data;
+    }
   } catch (e) {
     savedRecord = data;
   }
