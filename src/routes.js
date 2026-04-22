@@ -1038,6 +1038,19 @@ function _sendTelegramText_(chatId, lines) {
   return { sent: false, reason: "HTTP_" + code + ": " + body, target: targetChatId };
 }
 
+const DX_NOTIFICATION_LABELS_ = {
+  MR: 'Campak / Rubella',
+  DIF: 'Difteri',
+  PERT: 'Pertusis',
+  TN: 'Tetanus Neonatorum',
+  AFP: 'AFP'
+};
+
+function _getDxNotificationLabel_(dx) {
+  const code = String(dx || '').trim().toUpperCase();
+  return DX_NOTIFICATION_LABELS_[code] || code || '-';
+}
+
 function _getNotificationRecordLabel_(data, saved) {
   return String((saved && saved.recordId) || (data && (data["ID Registrasi Kasus"] || data["Nomor EPID"])) || '-').trim() || '-';
 }
@@ -1048,9 +1061,24 @@ function _getNotificationLocationLabel_(data) {
   return kel + ' / ' + kec;
 }
 
+function _buildNotificationSubject_(type, dx, data, saved, notifyCtx) {
+  const dxLabel = _getDxNotificationLabel_(dx);
+  const shortDx = String(dx || '').trim().toUpperCase() || '-';
+  const epidLabel = String((saved && saved.epid) || (data && data["Nomor EPID"]) || '-').trim() || '-';
+  const recordLabel = _getNotificationRecordLabel_(data, saved);
+  const kelurahanLabel = String((data && data["Kelurahan"]) || '-').trim() || '-';
+  const puskesmasLabel = String((notifyCtx && notifyCtx.puskesmasPengampu) || (data && data["Puskesmas Pengampu"]) || '-').trim() || '-';
+  if (type === 'revision') {
+    return `[${dxLabel}][${shortDx}][REVISI][${recordLabel}] ${kelurahanLabel} - ${puskesmasLabel}`;
+  }
+  return `[${dxLabel}][${shortDx}][${epidLabel}] Terverifikasi - ${kelurahanLabel} - ${puskesmasLabel}`;
+}
+
 function _buildCaseNotificationLines_(dx, data, saved, notifyCtx, options) {
   const opts = options || {};
   const lines = [];
+  const dxLabel = _getDxNotificationLabel_(dx);
+  const dxCode = String(dx || '').trim().toUpperCase() || '-';
   const recordLabel = _getNotificationRecordLabel_(data, saved);
   const epidLabel = String((saved && saved.epid) || (data && data["Nomor EPID"]) || '-').trim() || '-';
   const verificationLabel = String((data && data["Status Verifikasi EPID"]) || '-').trim() || '-';
@@ -1062,7 +1090,7 @@ function _buildCaseNotificationLines_(dx, data, saved, notifyCtx, options) {
   const jk = String((data && data["JK"]) || '-').trim() || '-';
   const tanggalLahir = String((data && data["Tanggal Lahir"]) || '-').trim() || '-';
 
-  lines.push(`DX: ${dx}`);
+  lines.push(`Diagnosis: ${dxLabel} (${dxCode})`);
   lines.push(`ID Registrasi: ${recordLabel}`);
   lines.push(`Nomor EPID: ${epidLabel}`);
   lines.push(`Nama Pasien: ${nama}`);
@@ -1159,9 +1187,9 @@ function _sendPengampuNotification_(dx, data, saved, printUrl) {
     if (notifyCtx.statusRouting !== "MATCHED") return { sent: false, reason: notifyCtx.statusRouting || "UNMAPPED" };
     if (!notifyCtx.emailRecipients.length) return { sent: false, reason: "NO_RECIPIENT" };
 
-    const subject = `[${dx}][${saved.epid || '-'}] Kasus terverifikasi wilayah ${String(data["Kelurahan"] || '').trim() || '-'}`;
+    const subject = _buildNotificationSubject_('verified', dx, data, saved, notifyCtx);
     const body = [
-      `Notifikasi kasus ${dx} terverifikasi untuk wilayah ampuan`,
+      `Notifikasi kasus ${_getDxNotificationLabel_(dx)} (${String(dx || '').trim().toUpperCase()}) terverifikasi untuk wilayah ampuan`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
@@ -1190,9 +1218,9 @@ function _sendRevisionPengampuNotification_(dx, data, saved) {
 
     const recordId = _getNotificationRecordLabel_(data, saved);
     const catatan = String(data["Catatan Verifikasi EPID"] || '').trim() || '-';
-    const subject = `[${dx}][REVISI][${recordId}] Perlu perbaikan data kasus`;
+    const subject = _buildNotificationSubject_('revision', dx, data, saved, notifyCtx);
     const body = [
-      `Permintaan revisi data kasus ${dx}`,
+      `Permintaan revisi data kasus ${_getDxNotificationLabel_(dx)} (${String(dx || '').trim().toUpperCase()})`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
