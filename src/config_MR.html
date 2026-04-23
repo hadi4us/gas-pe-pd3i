@@ -59,14 +59,14 @@
         key: "komplikasi",
         title: "Komplikasi",
         fields: [
-          { id: "Diare", label: "Diare", type: "select", options: OPT_YA_TIDAK },
-          { id: "Bronchopneumonia", label: "Bronchopneumonia", type: "select", options: OPT_YA_TIDAK },
-          { id: "Kebutaan", label: "Kebutaan", type: "select", options: OPT_YA_TIDAK },
-          { id: "Otitis media", label: "Otitis media", type: "select", options: OPT_YA_TIDAK },
-          { id: "Pneumonia", label: "Pneumonia", type: "select", options: OPT_YA_TIDAK },
-          { id: "Encephalitis", label: "Encephalitis", type: "select", options: OPT_YA_TIDAK },
-          { id: "Malnutrisi", label: "Malnutrisi", type: "select", options: OPT_YA_TIDAK },
-          { id: "Ulkus mukosa mulut", label: "Ulkus mukosa mulut", type: "select", options: OPT_YA_TIDAK },
+          { id: "Diare", label: "Diare", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Bronchopneumonia", label: "Bronchopneumonia", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Kebutaan", label: "Kebutaan", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Otitis media", label: "Otitis media", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Pneumonia", label: "Pneumonia", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Encephalitis", label: "Encephalitis", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Malnutrisi", label: "Malnutrisi", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Ulkus mukosa mulut", label: "Ulkus mukosa mulut", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Lainnya komplikasi", label: "Lainnya (komplikasi)", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Sebutkan komplikasi lain", label: "Sebutkan komplikasi lain", type: "text", fullWidth: true, required: true, showIf: { field: "Lainnya komplikasi", values: ["Ya"] } }
         ]
