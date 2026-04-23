@@ -3988,18 +3988,21 @@
     const targetValue = String(chosenValue || '').trim();
     if (!targetValue) return;
     selectEl.dataset.lastUserValue = targetValue;
-    setTimeout(function() {
-      if (!selectEl || !selectEl.isConnected) return;
-      const wrapper = selectEl.closest('.field-wrapper');
-      if (wrapper && wrapper.classList.contains('hidden')) return;
-      if (selectEl.disabled) return;
-      const currentValue = String(selectEl.value || '').trim();
-      if (currentValue) return;
-      const stickyValue = String(selectEl.dataset.lastUserValue || '').trim();
-      if (!stickyValue) return;
-      ensureSelectOptionValue(selectEl, stickyValue);
-      selectEl.value = stickyValue;
-    }, 140);
+    [80, 180, 320, 520, 820].forEach(function(delayMs) {
+      setTimeout(function() {
+        if (!selectEl || !selectEl.isConnected) return;
+        const wrapper = selectEl.closest('.field-wrapper');
+        if (wrapper && wrapper.classList.contains('hidden')) return;
+        if (selectEl.disabled) return;
+        const stickyValue = String(selectEl.dataset.lastUserValue || '').trim();
+        if (!stickyValue) return;
+        const currentValue = String(selectEl.value || '').trim();
+        if (currentValue === stickyValue) return;
+        if (currentValue && currentValue !== '-- Pilih --') return;
+        ensureSelectOptionValue(selectEl, stickyValue);
+        selectEl.value = stickyValue;
+      }, delayMs);
+    });
   }
 
   function loadDependentWilayahOptions(parentEl) {
