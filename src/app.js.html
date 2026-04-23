@@ -580,28 +580,39 @@
   // ============================================================
   // WILAYAH
   // ============================================================
+  function populateWilayahSelectOptions(selectEl, placeholder, items, preservedValue) {
+    if (!selectEl) return;
+    const keepValue = String(preservedValue != null ? preservedValue : selectEl.value || '').trim();
+    selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+    (Array.isArray(items) ? items : []).forEach(function(item) {
+      const option = document.createElement('option');
+      option.value = String(item && item.name || '');
+      option.setAttribute('data-id', String(item && item.id || ''));
+      option.textContent = String(item && item.name || '');
+      selectEl.appendChild(option);
+    });
+    if (keepValue) {
+      ensureSelectOptionValue(selectEl, keepValue);
+      selectEl.value = keepValue;
+      stabilizeUserSelectedValue(selectEl, keepValue);
+    }
+  }
+
   function initWilayahDropdowns() {
-    fetch(`${API_WILAYAH_BASE}/provinces.json`)
-      .then(res => res.json())
-      .then(data => {
+    return fetch(`${API_WILAYAH_BASE}/provinces.json`)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
         const provPelapor = document.getElementById("Provinsi");
         const provPasien = document.getElementById("Provinsi Pasien");
 
-        if (provPelapor) {
-          provPelapor.innerHTML = '<option value="">Pilih Provinsi</option>';
-          data.forEach(p => {
-            provPelapor.innerHTML += `<option value="${p.name}" data-id="${p.id}">${p.name}</option>`;
-          });
-        }
-
-        if (provPasien) {
-          provPasien.innerHTML = '<option value="">Pilih Provinsi</option>';
-          data.forEach(p => {
-            provPasien.innerHTML += `<option value="${p.name}" data-id="${p.id}">${p.name}</option>`;
-          });
-        }
+        populateWilayahSelectOptions(provPelapor, 'Pilih Provinsi', data, provPelapor && provPelapor.value);
+        populateWilayahSelectOptions(provPasien, 'Pilih Provinsi', data, provPasien && provPasien.value);
+        return Array.isArray(data) ? data : [];
       })
-      .catch(err => console.error("load provinces failed:", err));
+      .catch(function(err) {
+        console.error("load provinces failed:", err);
+        return [];
+      });
   }
 
   // ============================================================
@@ -4326,6 +4337,24 @@
     });
   }
 
+  async function hydrateWilayahChain(fieldIds, record) {
+    const chain = Array.isArray(fieldIds) ? fieldIds.slice() : [];
+    for (let i = 0; i < chain.length; i++) {
+      const fieldId = chain[i];
+      const value = String((record && record[fieldId]) || '').trim();
+      const el = document.getElementById(fieldId);
+      if (!el) continue;
+      if (value) {
+        ensureSelectOptionValue(el, value);
+        el.value = value;
+        stabilizeUserSelectedValue(el, value);
+      }
+      if (value && i < chain.length - 1) {
+        await loadDependentWilayahOptions(el);
+      }
+    }
+  }
+
   function applyWilayahOptionOverrides(type, triggerEl, items) {
     const list = Array.isArray(items) ? items.slice() : [];
     if (type !== 'villages' || !triggerEl) return list;
@@ -4436,7 +4465,7 @@
   // ============================================================
   async function hydrateRecordToForm(record) {
     hardenAddressAutofillSuppression(document);
-    const deferredKeys = new Set(["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi", "Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"]);
+    const deferredKeys = new Set(["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi", "Provinsi", "Kab/Kota", "Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"]);
     Object.keys(record || {}).forEach(key => {
       if (deferredKeys.has(key)) return;
       const el = document.getElementById(key);
@@ -4449,18 +4478,9 @@
       }
     });
 
-    const wilayahChain = ["Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"];
-    for (let i = 0; i < wilayahChain.length; i++) {
-      const fieldId = wilayahChain[i];
-      const value = String((record && record[fieldId]) || '').trim();
-      const el = document.getElementById(fieldId);
-      if (!el || !value) continue;
-      ensureSelectOptionValue(el, value);
-      el.value = (el.type === 'date') ? normalizeDateInputValue(value) : value;
-      if (i < wilayahChain.length - 1) {
-        await loadDependentWilayahOptions(el);
-      }
-    }
+    await initWilayahDropdowns();
+    await hydrateWilayahChain(["Provinsi", "Kab/Kota"], record);
+    await hydrateWilayahChain(["Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"], record);
 
     const sumberLaporan = String((record && record["Sumber Laporan"]) || '').trim();
     if (sumberLaporan) {
@@ -5008,7 +5028,7 @@
 
         setTimeout(async function() {
           addDefaultRowsForDynamicTables();
-          initWilayahDropdowns();
+          await initWilayahDropdowns();
           initGeoButton();
           applyAllShowIf();
 
