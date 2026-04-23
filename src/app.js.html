@@ -5459,6 +5459,81 @@
         });
       }
 
+      (function patchSuccessModalForVerificationWorkflow() {
+        if (window.__PD3I_VERIFICATION_SUCCESS_PATCHED__) return;
+        if (typeof showSuccessModal !== 'function') return;
+        window.__PD3I_VERIFICATION_SUCCESS_PATCHED__ = true;
+
+        const originalShowSuccessModal = showSuccessModal;
+
+        function isVerificationWorkspaceActive() {
+          return normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'overview') === 'verifikasi';
+        }
+
+        function findSuccessModalElements() {
+          const modal = document.getElementById('success-modal') || document.getElementById('successModal') || document.querySelector('[data-success-modal]');
+          if (!modal) return { modal: null, buttons: [] };
+          return { modal: modal, buttons: Array.from(modal.querySelectorAll('button')) };
+        }
+
+        function relabelVerificationSuccessButtons() {
+          const refs = findSuccessModalElements();
+          if (!refs.modal) return;
+          const buttons = refs.buttons || [];
+          const queueBtn = buttons.find(btn => /Input Data Baru/i.test(String(btn.textContent || '').trim()));
+          const stayBtn = buttons.find(btn => /Tetap di Halaman/i.test(String(btn.textContent || '').trim()));
+          if (queueBtn) {
+            queueBtn.textContent = 'Kembali ke Daftar Verifikasi';
+            queueBtn.onclick = function() {
+              if (typeof closeSuccessModal === 'function') closeSuccessModal();
+            };
+          }
+          if (stayBtn) {
+            stayBtn.textContent = 'Tetap di Daftar Verifikasi';
+            stayBtn.onclick = function() {
+              if (typeof closeSuccessModal === 'function') closeSuccessModal();
+            };
+          }
+        }
+
+        function returnToVerificationQueueAfterSave(result) {
+          if (!isVerificationWorkspaceActive()) return;
+          try {
+            if (typeof clearActiveRecordContext === 'function') clearActiveRecordContext();
+          } catch (e) {}
+          try {
+            if (typeof openSidebarWorkspace === 'function') {
+              openSidebarWorkspace('verifikasi', { scroll: false });
+            }
+          } catch (e) {}
+          try {
+            if (typeof refreshWorkflowInbox === 'function') refreshWorkflowInbox();
+          } catch (e) {}
+          try {
+            if (typeof updateUiShellSummary === 'function') updateUiShellSummary();
+          } catch (e) {}
+          try {
+            if (typeof setWorkflowSearchIntent === 'function') {
+              setWorkflowSearchIntent('section-verifikasi', { focusSearch: true, focusForm: false, skipStageSync: true });
+            }
+          } catch (e) {}
+          setTimeout(relabelVerificationSuccessButtons, 60);
+        }
+
+        showSuccessModal = function() {
+          const result = arguments[0] || {};
+          const shouldReturnToQueue = isVerificationWorkspaceActive();
+          if (shouldReturnToQueue) {
+            returnToVerificationQueueAfterSave(result);
+          }
+          const out = originalShowSuccessModal.apply(this, arguments);
+          if (shouldReturnToQueue) {
+            setTimeout(relabelVerificationSuccessButtons, 60);
+          }
+          return out;
+        };
+      })();
+
       const handleMainFormSubmit = async function() {
 
         if (isViewer) {
