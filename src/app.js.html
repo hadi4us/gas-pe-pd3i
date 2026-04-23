@@ -3983,6 +3983,25 @@
     selectEl.appendChild(option);
   }
 
+  function stabilizeUserSelectedValue(selectEl, chosenValue) {
+    if (!selectEl) return;
+    const targetValue = String(chosenValue || '').trim();
+    if (!targetValue) return;
+    selectEl.dataset.lastUserValue = targetValue;
+    setTimeout(function() {
+      if (!selectEl || !selectEl.isConnected) return;
+      const wrapper = selectEl.closest('.field-wrapper');
+      if (wrapper && wrapper.classList.contains('hidden')) return;
+      if (selectEl.disabled) return;
+      const currentValue = String(selectEl.value || '').trim();
+      if (currentValue) return;
+      const stickyValue = String(selectEl.dataset.lastUserValue || '').trim();
+      if (!stickyValue) return;
+      ensureSelectOptionValue(selectEl, stickyValue);
+      selectEl.value = stickyValue;
+    }, 140);
+  }
+
   function loadDependentWilayahOptions(parentEl) {
     return new Promise(function(resolve) {
       if (!parentEl) {
@@ -4063,6 +4082,10 @@
   }
 
   document.addEventListener("change", function(e) {
+    if (e.target && e.target.closest && e.target.closest('#dynamic-form') && e.target.tagName === 'SELECT') {
+      stabilizeUserSelectedValue(e.target, e.target.value);
+    }
+
     if (getWilayahNextFieldId(e.target.id)) {
       loadDependentWilayahOptions(e.target);
     }
