@@ -49,7 +49,7 @@
   ];
 
   const COMMON_HASIL_SAMPEL_FIELDS = [
-    { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "select", options: ["", "Ya", "Tidak"] },
+    { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "choice_buttons", options: ["Ya", "Tidak"] },
     { id: "Jenis Sampel Diuji", label: "Jenis Sampel Diuji", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
     { id: "Nomor Sampel / Lab", label: "Nomor Sampel / Lab", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
     { id: "Tanggal Hasil Sampel", label: "Tanggal Hasil Sampel", type: "date", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },

@@ -7,7 +7,7 @@
         key: "kejadian",
         title: "Informasi Kejadian / KLB",
         fields: [
-          { id: "Kasus KLB", label: "Kasus KLB", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Kasus KLB", label: "Kasus KLB", type: "choice_buttons", options: ["Ya", "Tidak"] },
           { id: "KLB ke", label: "KLB ke", type: "number", showIf: { field: "Kasus KLB", values: ["Ya"] } },
           { id: "Nomor KLB", label: "Nomor KLB", type: "text", showIf: { field: "Kasus KLB", values: ["Ya"] } }
         ]
@@ -16,9 +16,9 @@
         key: "klinis_gejala_utama",
         title: "Informasi Klinis & Gejala Utama",
         fields: [
-          { id: "Demam?", label: "Demam", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Demam?", label: "Demam", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Tanggal mulai demam", label: "Tanggal mulai demam", type: "date", required: true, showIf: { field: "Demam?", values: ["Ya"] } },
-          { id: "Ruam Makulopapular?", label: "Ruam makulopapular", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Ruam Makulopapular?", label: "Ruam makulopapular", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Tanggal mulai ruam", label: "Tanggal mulai ruam", type: "date", required: true, showIf: { field: "Ruam Makulopapular?", values: ["Ya"] } },
           { id: "Batuk", label: "Batuk", type: "select", options: OPT_YA_TIDAK },
           { id: "Pilek", label: "Pilek", type: "select", options: OPT_YA_TIDAK },
@@ -30,9 +30,9 @@
         key: "klinis_rubella_khusus",
         title: "Gejala Klinis Khas Rubella",
         fields: [
-          { id: "Arthralgia", label: "Arthralgia (nyeri sendi)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Arthralgia", label: "Arthralgia (nyeri sendi)", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Bagian Sendi", label: "Bagian sendi", type: "text", fullWidth: true, required: true, showIf: { field: "Arthralgia", values: ["Ya"] } },
-          { id: "Adenopathy", label: "Adenopathy (pembesaran kelenjar getah bening)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Adenopathy", label: "Adenopathy (pembesaran kelenjar getah bening)", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Lokasi Adenopathy", label: "Lokasi adenopathy", type: "text", fullWidth: true, required: true, showIf: { field: "Adenopathy", values: ["Ya"] } }
         ]
       },
@@ -41,7 +41,7 @@
         key: "klinis_kondisi_khusus",
         title: "Kondisi Khusus",
         fields: [
-          { id: "Kehamilan", label: "Kehamilan (isi untuk pasien perempuan)", type: "select", options: ["", "Ya", "Tidak"] },
+          { id: "Kehamilan", label: "Kehamilan (isi untuk pasien perempuan)", type: "choice_buttons", options: ["Ya", "Tidak"] },
           { id: "Umur kehamilan", label: "Umur kehamilan (bulan)", type: "number", showIf: { field: "Kehamilan", values: ["Ya"] } }
         ]
       },
@@ -50,7 +50,7 @@
         key: "klinis_gejala_lain",
         title: "Gejala Lain",
         fields: [
-          { id: "Gejala lain", label: "Lainnya (gejala lain)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Gejala lain", label: "Lainnya (gejala lain)", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Sebutkan gejala lain", label: "Sebutkan gejala lain", type: "text", fullWidth: true, required: true, showIf: { field: "Gejala lain", values: ["Ya"] } }
         ]
       },
@@ -67,7 +67,7 @@
           { id: "Encephalitis", label: "Encephalitis", type: "select", options: OPT_YA_TIDAK },
           { id: "Malnutrisi", label: "Malnutrisi", type: "select", options: OPT_YA_TIDAK },
           { id: "Ulkus mukosa mulut", label: "Ulkus mukosa mulut", type: "select", options: OPT_YA_TIDAK },
-          { id: "Lainnya komplikasi", label: "Lainnya (komplikasi)", type: "select", options: OPT_YA_TIDAK },
+          { id: "Lainnya komplikasi", label: "Lainnya (komplikasi)", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Sebutkan komplikasi lain", label: "Sebutkan komplikasi lain", type: "text", fullWidth: true, required: true, showIf: { field: "Lainnya komplikasi", values: ["Ya"] } }
         ]
       },
@@ -76,7 +76,7 @@
         key: "perawatan",
         title: "Riwayat Perawatan",
         fields: [
-          { id: "Apakah dirawat inap?", label: "Apakah dirawat inap?", type: "select", options: ["Ya", "Tidak"], required: true },
+          { id: "Apakah dirawat inap?", label: "Apakah dirawat inap?", type: "choice_buttons", options: ["Ya", "Tidak"], required: true },
           { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
@@ -92,15 +92,15 @@
         title: "Informasi Epidemiologis",
         fields: [
           { id: "Pemberian Vitamin A", label: "Pemberian Vitamin A", type: "select", options: OPT_YA_TIDAK, required: true },
-          { id: "Ada kasus serupa di lingkungan", label: "Ada anggota keluarga/masyarakat sekitar yang sakit sama?", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Ada kasus serupa di lingkungan", label: "Ada anggota keluarga/masyarakat sekitar yang sakit sama?", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Jumlah kasus sekitar", label: "Jumlah kasus sekitar", type: "number", required: true, showIf: { field: "Ada kasus serupa di lingkungan", values: ["Ya"] } },
-          { id: "Riwayat perjalanan 7-21 hari", label: "Apakah bepergian 1 bulan terakhir?", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Riwayat perjalanan 7-21 hari", label: "Apakah bepergian 1 bulan terakhir?", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Lokasi perjalanan", label: "Lokasi perjalanan", type: "text", fullWidth: true, required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pergi", label: "Tanggal pergi", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pulang perjalanan", label: "Tanggal kembali", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Riwayat kontak kasus serupa", label: "Riwayat kontak dengan kasus serupa?", type: "choice_buttons", options: OPT_YA_TIDAK },
-          { id: "Riwayat kunjungan fasilitas kesehatan", label: "Riwayat kunjungan fasilitas kesehatan sebelum diagnosis?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Cluster/kejadian luar biasa", label: "Diduga bagian dari klaster/KLB?", type: "select", options: OPT_YA_TIDAK }
+          { id: "Riwayat kunjungan fasilitas kesehatan", label: "Riwayat kunjungan fasilitas kesehatan sebelum diagnosis?", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Cluster/kejadian luar biasa", label: "Diduga bagian dari klaster/KLB?", type: "choice_buttons", options: OPT_YA_TIDAK }
         ]
       },
 
@@ -108,11 +108,11 @@
         key: "spesimen",
         title: "Informasi Spesimen",
         fields: [
-          { id: "Apakah spesimen darah diambil", label: "Apakah spesimen darah diambil", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Apakah spesimen darah diambil", label: "Apakah spesimen darah diambil", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Jenis Sampel Darah", label: "Jenis Sampel Darah", type: "select", required: true, options: ["Serum", "Darah lengkap", "Lainnya"], showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen darah", label: "Tanggal ambil spesimen darah", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal pengiriman spesimen darah ke lab", label: "Tanggal pengiriman spesimen darah ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
-          { id: "Apakah spesimen lain diambil", label: "Apakah spesimen lain diambil", type: "select", options: OPT_YA_TIDAK },
+          { id: "Apakah spesimen lain diambil", label: "Apakah spesimen lain diambil", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Jenis Sampel Lain", label: "Jenis Sampel Lain", type: "select", required: true, options: ["Swab tenggorok", "Urine", "Lainnya"], showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen lain", label: "Tanggal ambil spesimen lain", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
           { id: "Tanggal pengiriman spesimen lain ke lab", label: "Tanggal pengiriman spesimen lain ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } }
