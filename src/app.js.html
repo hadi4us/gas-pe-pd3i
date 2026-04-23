@@ -1301,9 +1301,13 @@
   const FORM_DRAFT_KEY = "PD3I_FORM_DRAFT";
   const FORM_DRAFT_TTL_MS = 30 * 60 * 1000;
 
+  function _getInputDraftFormElement_() {
+    return document.getElementById("dynamic-form-input") || document.getElementById("dynamic-form");
+  }
+
   function _formHasData_() {
     try {
-      var form = document.getElementById("dynamic-form");
+      var form = _getInputDraftFormElement_();
       if (!form || form.classList.contains("hidden")) return false;
       var inputs = form.querySelectorAll("input[name], select[name], textarea[name]");
       for (var i = 0; i < inputs.length; i++) {
@@ -1325,7 +1329,7 @@
   function saveFormDraft() {
     try {
       const selector = document.getElementById("form-selector");
-      const form = document.getElementById("dynamic-form");
+      const form = _getInputDraftFormElement_();
       if (!selector || !form || form.classList.contains("hidden")) return;
 
       const dx = String(selector.value || "").trim();
@@ -2330,8 +2334,10 @@
 
     const overviewSection = document.getElementById('section-overview');
     const inputLauncherSection = document.getElementById('section-input-launcher');
+    const inputFormSection = document.getElementById('section-input-form-shell');
     const searchSection = document.getElementById('section-search-shell');
-    const form = document.getElementById('dynamic-form');
+    const editorForm = document.getElementById('dynamic-form');
+    const inputForm = document.getElementById('dynamic-form-input');
     const dashboardSection = document.getElementById('section-dashboard');
     const guideSection = document.getElementById('section-guide');
     const isDeferredWorkspace = ['verifikasi', 'sampel', 'status'].includes(normalized);
@@ -2343,21 +2349,19 @@
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
     if (overviewSection) overviewSection.classList.toggle('hidden', normalized !== 'overview');
-    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace || hasOpenRecord);
+    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace);
+    if (inputFormSection) inputFormSection.classList.toggle('hidden', !(isInputWorkspace && hasDx && !hasOpenRecord));
     if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
     if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
     if (guideSection) guideSection.classList.toggle('hidden', !isGuideWorkspace);
     applySearchDefaultsForWorkspace(normalized);
 
-    if (form) {
-      const showForm = isInputWorkspace
-        ? (hasDx || hasOpenRecord)
-        : isDeferredWorkspace
-          ? hasOpenRecord
-          : isSearchWorkspace
-            ? hasOpenRecord
-            : false;
-      form.classList.toggle('hidden', !showForm);
+    if (editorForm) {
+      const showEditorForm = (isDeferredWorkspace || isSearchWorkspace) && hasOpenRecord;
+      editorForm.classList.toggle('hidden', !showEditorForm);
+    }
+    if (inputForm) {
+      inputForm.classList.toggle('hidden', !(isInputWorkspace && hasDx && !hasOpenRecord));
     }
 
     applyWorkspaceFormChrome(normalized);
@@ -2411,6 +2415,16 @@
       return normalized;
     }
 
+    if (normalized === 'input' && (isEditMode || isViewerSession())) {
+      clearActiveRecordContext();
+    }
+    if (normalized === 'input') {
+      const selectedDx = String(document.getElementById('form-selector')?.value || '').trim().toUpperCase();
+      if (selectedDx && typeof window !== 'undefined' && typeof window.renderDxWorkspaceForm === 'function') {
+        window.renderDxWorkspaceForm(selectedDx, 'input');
+      }
+    }
+
     setWorkflowSearchIntent(targetStage, { focusSearch: false, focusForm: false, skipStageSync: true });
     updateFormStepperState(targetStage);
     applySidebarWorkspaceLayout(normalized);
@@ -2424,7 +2438,7 @@
     const inboxEl = document.getElementById('workflow-inbox');
     const hasVisibleInbox = inboxEl && !inboxEl.classList.contains('hidden') && String(inboxEl.innerHTML || '').trim();
     const targetEl = normalized === 'input'
-      ? (document.getElementById('section-input-launcher') || document.getElementById('section-pelapor'))
+      ? (document.getElementById('section-input-form-shell') || document.getElementById('section-input-launcher'))
       : (hasVisibleInbox ? inboxEl : (document.getElementById('section-search-shell') || document.getElementById(targetStage)));
     if (opts.scroll !== false && targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return normalized;
@@ -4350,7 +4364,14 @@
     if (editBadge) editBadge.hidden = true;
     if (viewerBadge) viewerBadge.hidden = true;
     if (btnCancelEdit) btnCancelEdit.classList.add('hidden');
-    if (form) resetDynamicFormElement(form);
+    ['pelapor-fields-container', 'pasien-fields-container', 'verifikasi-fields-container', 'sampel-fields-container', 'status-fields-container', 'specific-fields-container'].forEach(function(id) {
+      const container = document.getElementById(id);
+      if (container) container.innerHTML = '';
+    });
+    if (form) {
+      resetDynamicFormElement(form);
+      form.classList.add('hidden');
+    }
     if (btnSubmit) {
       btnSubmit.disabled = false;
       btnSubmit.classList.remove('bg-yellow-600', 'opacity-60', 'cursor-not-allowed');
@@ -4378,6 +4399,7 @@
       const btnCancelEdit = document.getElementById("btn-cancel-edit");
       const btnSubmit = document.getElementById("btn-submit");
       const form = document.getElementById("dynamic-form");
+      const inputForm = document.getElementById("dynamic-form-input");
       const selector = document.getElementById("form-selector");
       const searchEpid = document.getElementById("search-epid");
       const searchResults = document.getElementById("search-results");
@@ -4390,7 +4412,17 @@
         searchResults.innerHTML = "";
       }
 
-      if (form) resetDynamicFormElement(form);
+      ['pelapor-fields-container', 'pasien-fields-container', 'verifikasi-fields-container', 'sampel-fields-container', 'status-fields-container', 'specific-fields-container'].forEach(function(id) {
+        const container = document.getElementById(id);
+        if (container) container.innerHTML = '';
+      });
+      if (form) {
+        resetDynamicFormElement(form);
+        form.classList.add('hidden');
+      }
+      if (inputForm) {
+        resetDynamicFormElement(inputForm);
+      }
 
       if (btnSubmit) {
         btnSubmit.disabled = false;
@@ -4573,6 +4605,7 @@
 
       const selector = document.getElementById("form-selector");
       const formElement = document.getElementById("dynamic-form");
+      const inputFormElement = document.getElementById("dynamic-form-input");
       const pelaporContainer = document.getElementById("pelapor-fields-container");
       const pasienContainer = document.getElementById("pasien-fields-container");
       const verifikasiContainer = document.getElementById("verifikasi-fields-container");
@@ -4580,7 +4613,13 @@
       const statusContainer = document.getElementById("status-fields-container");
       const specificContainer = document.getElementById("specific-fields-container");
       const specificTitle = document.getElementById("specific-title");
+      const pelaporContainerInput = document.getElementById("pelapor-fields-container-input");
+      const pasienContainerInput = document.getElementById("pasien-fields-container-input");
+      const specificContainerInput = document.getElementById("specific-fields-container-input");
+      const specificTitleInput = document.getElementById("specific-title-input");
       const btnSubmit = document.getElementById("btn-submit");
+      const btnSubmitInput = document.getElementById("btn-submit-input");
+      const btnResetInput = document.getElementById("btn-reset-input");
       const searchContainer = document.getElementById("search-container");
       const searchPlaceholder = document.getElementById("search-placeholder");
       const editBadge = document.getElementById("edit-badge");
@@ -4605,9 +4644,149 @@
       const btnNextStep = document.getElementById("btn-next-step");
       const workflowIntentButtons = Array.from(document.querySelectorAll('.pd3i-workflow-intent-card[data-workflow-intent]'));
 
-      if (!selector || !formElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !btnSubmit) {
+      if (!selector || !formElement || !inputFormElement || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !pelaporContainerInput || !pasienContainerInput || !specificContainerInput || !btnSubmit || !btnSubmitInput) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
         return;
+      }
+
+      const editorFormRefs = {
+        mode: 'editor',
+        formElement,
+        pelaporContainer,
+        pasienContainer,
+        verifikasiContainer,
+        sampelContainer,
+        statusContainer,
+        specificContainer,
+        specificTitle,
+        btnSubmit
+      };
+      const inputFormRefs = {
+        mode: 'input',
+        formElement: inputFormElement,
+        pelaporContainer: pelaporContainerInput,
+        pasienContainer: pasienContainerInput,
+        specificContainer: specificContainerInput,
+        specificTitle: specificTitleInput,
+        btnSubmit: btnSubmitInput
+      };
+
+      function destroyDynamicEnhancers() {
+        if (choicesInstance) {
+          try { choicesInstance.destroy(); } catch (e) {}
+          choicesInstance = null;
+        }
+        if (rsChoicesInstance) {
+          try { rsChoicesInstance.destroy(); } catch (e) {}
+          rsChoicesInstance = null;
+        }
+      }
+
+      function clearRenderedFormRefs(refs) {
+        if (!refs) return;
+        [refs.pelaporContainer, refs.pasienContainer, refs.verifikasiContainer, refs.sampelContainer, refs.statusContainer, refs.specificContainer].forEach(function(container) {
+          if (container) container.innerHTML = '';
+        });
+        if (refs.formElement) refs.formElement.classList.add('hidden');
+      }
+
+      function renderDxWorkspaceForm(dx, mode) {
+        const normalizedMode = String(mode || 'editor').trim().toLowerCase() === 'input' ? 'input' : 'editor';
+        const cfg = getDxConfigSafe(dx);
+        const refs = normalizedMode === 'input' ? inputFormRefs : editorFormRefs;
+        const otherRefs = normalizedMode === 'input' ? editorFormRefs : inputFormRefs;
+
+        destroyDynamicEnhancers();
+        clearRenderedFormRefs(otherRefs);
+        clearRenderedFormRefs(refs);
+        hideTopAlert();
+
+        if (typeof window !== 'undefined' && normalizedMode === 'input') {
+          window.__PD3I_ACTIVE_RECORD_META = null;
+        }
+
+        if (!dx || !cfg) {
+          syncDiagnosisSelectorUi();
+          updateUiShellSummary();
+          applySidebarWorkspaceLayout(ACTIVE_SIDEBAR_WORKSPACE || 'input');
+          return;
+        }
+
+        refs.formElement.classList.remove('hidden');
+
+        (COMMON.pelapor || []).forEach(function(f) {
+          refs.pelaporContainer.innerHTML += generateHTML(f);
+        });
+        (COMMON.pasien || []).forEach(function(f) {
+          refs.pasienContainer.innerHTML += generateHTML(f);
+        });
+        if (refs.verifikasiContainer) {
+          (COMMON.verifikasi || []).forEach(function(f) {
+            refs.verifikasiContainer.innerHTML += generateHTML(f);
+          });
+        }
+        if (refs.sampelContainer) {
+          (COMMON.sampel || []).forEach(function(f) {
+            refs.sampelContainer.innerHTML += generateHTML(f);
+          });
+        }
+        if (refs.statusContainer) {
+          (COMMON.status || []).forEach(function(f) {
+            refs.statusContainer.innerHTML += generateHTML(f);
+          });
+        }
+
+        if (refs.specificTitle) {
+          refs.specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;
+        }
+        renderDiagnosisSections(cfg, refs.specificContainer);
+        syncCaseStatusOptionsByDx(dx);
+        setReadonlyFormMode(isViewerSession());
+        if (viewerBadge) viewerBadge.hidden = !isViewerSession();
+        if (editBadge && isViewerSession()) editBadge.hidden = true;
+        syncDiagnosisSelectorUi();
+        applySidebarWorkspaceLayout(ACTIVE_SIDEBAR_WORKSPACE || (normalizedMode === 'input' ? 'input' : 'search'));
+
+        setTimeout(async function() {
+          addDefaultRowsForDynamicTables();
+          initWilayahDropdowns();
+          initGeoButton();
+          applyAllShowIf();
+
+          const unit = document.getElementById("Nama unit pelapor");
+          if (unit) {
+            unit.disabled = true;
+            unit.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
+          }
+
+          await loadRefImunisasi();
+          ensureRiwayatImunisasiRowsReady();
+          setTimeout(function() {
+            try { ensureRiwayatImunisasiRowsReady(); } catch (e) {}
+          }, 200);
+          setTimeout(function() {
+            try { ensureRiwayatImunisasiRowsReady(); } catch (e) {}
+          }, 600);
+          buildRiwayatImunisasiRows();
+          forceBuildImunisasiWhenReady();
+
+          loadFaskesRealtime("", false);
+          if (MASTER_FASKES && MASTER_FASKES.length > 0) {
+            initChoicesRumahSakit();
+          }
+
+          updateUiShellSummary();
+        }, 50);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.renderDxWorkspaceForm = renderDxWorkspaceForm;
+      }
+
+      function resetInputSubmitButton() {
+        if (!btnSubmitInput) return;
+        btnSubmitInput.disabled = !!isViewerSession();
+        btnSubmitInput.innerHTML = `<i class="fas fa-save"></i> Simpan Input Awal`;
       }
 
       function closeSidebarDrawer() {
@@ -4630,10 +4809,20 @@
           btnSubmit.disabled = true;
           btnSubmit.classList.add("opacity-60", "cursor-not-allowed");
           btnSubmit.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
+          if (btnSubmitInput) {
+            btnSubmitInput.disabled = true;
+            btnSubmitInput.classList.add("opacity-60", "cursor-not-allowed");
+            btnSubmitInput.innerHTML = `<i class="fas fa-eye"></i> Mode Viewer (Read Only)`;
+          }
           if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
           selector.classList.add("opacity-90");
         } else {
           btnSubmit.classList.remove("opacity-60", "cursor-not-allowed");
+          if (btnSubmitInput) {
+            btnSubmitInput.disabled = false;
+            btnSubmitInput.classList.remove("opacity-60", "cursor-not-allowed");
+            resetInputSubmitButton();
+          }
           selector.classList.remove("opacity-90");
         }
 
@@ -5026,11 +5215,13 @@
       const COMMON = getCommonConfigSafe();
 
       document.addEventListener("input", function(e) {
-        if (e.target && e.target.closest && e.target.closest("#dynamic-form")) {
+        if (e.target && e.target.closest && (e.target.closest("#dynamic-form") || e.target.closest("#dynamic-form-input"))) {
           if (typeof enforceNumericOnlyInput === "function") {
             enforceNumericOnlyInput(e.target);
           }
-          saveFormDraft();
+          if (e.target.closest("#dynamic-form-input")) {
+            saveFormDraft();
+          }
           const activeStepTarget = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
           updateWorkflowProgressUI(activeStepTarget);
           updateUiShellSummary();
@@ -5043,7 +5234,7 @@
           if (hidden) hidden.value = e.target.checked ? "Ya" : "Tidak";
         }
 
-        if (e.target && ((e.target.closest && e.target.closest("#dynamic-form")) || e.target.id === "form-selector" || e.target.id === "search-epid")) {
+        if (e.target && ((e.target.closest && e.target.closest("#dynamic-form-input")) || e.target.id === "form-selector" || e.target.id === "search-epid")) {
           saveFormDraft();
         }
       });
@@ -5054,40 +5245,24 @@
 
       selector.addEventListener("change", function() {
         clearFormDraft();
-        const dx = this.value;
-        const cfg = getDxConfigSafe(dx);
-
-        pelaporContainer.innerHTML = "";
-        pasienContainer.innerHTML = "";
-        verifikasiContainer.innerHTML = "";
-        sampelContainer.innerHTML = "";
-        statusContainer.innerHTML = "";
-        specificContainer.innerHTML = "";
-        hideTopAlert();
+        const dx = String(this.value || '').trim().toUpperCase();
 
         isEditMode = false;
         if (editBadge) editBadge.hidden = true;
         if (btnCancelEdit) btnCancelEdit.classList.add("hidden");
-        btnSubmit.disabled = false;
-        btnSubmit.classList.remove("bg-yellow-600");
-        btnSubmit.classList.add("bg-blue-600");
-        btnSubmit.innerHTML = getSubmitLabelForStage('section-pelapor');
-
-        if (choicesInstance) {
-          try { choicesInstance.destroy(); } catch (e) {}
-          choicesInstance = null;
-        }
-        if (rsChoicesInstance) {
-          try { rsChoicesInstance.destroy(); } catch (e) {}
-          rsChoicesInstance = null;
-        }
-
         if (typeof window !== 'undefined') {
           window.__PD3I_ACTIVE_RECORD_META = null;
         }
-        if (!dx || !cfg) {
-          formElement.classList.add("hidden");
-          syncDiagnosisSelectorUi();
+
+        btnSubmit.disabled = false;
+        btnSubmit.classList.remove("bg-yellow-600", "opacity-60", "cursor-not-allowed");
+        btnSubmit.classList.add("bg-blue-600");
+        btnSubmit.innerHTML = getSubmitLabelForStage('section-pelapor');
+        resetInputSubmitButton();
+
+        renderDxWorkspaceForm(dx, 'input');
+
+        if (!dx) {
           if (normalizeWorkflowStepId(WORKFLOW_SEARCH_INTENT || 'section-pelapor') === 'section-pelapor') {
             setWorkflowSearchIntent("section-pelapor", { focusSearch: false });
             togglePreRecordWorkflowFocus(false, 'section-pelapor');
@@ -5098,65 +5273,11 @@
           return;
         }
 
-        formElement.classList.remove("hidden");
-        syncDiagnosisSelectorUi();
-        const defaultIntent = getLandingWorkflowIntentForUser();
-        setWorkflowSearchIntent(defaultIntent, { focusSearch: defaultIntent !== "section-pelapor", focusForm: defaultIntent === "section-pelapor" });
-        if (defaultIntent === 'section-pelapor') togglePreRecordWorkflowFocus(false, defaultIntent);
-        updateFormStepperState(defaultIntent === "section-pelapor" ? "section-pelapor" : "section-pelapor");
-        updateSidebarActiveState("section-pelapor");
-
-        (COMMON.pelapor || []).forEach(f => {
-          pelaporContainer.innerHTML += generateHTML(f);
-        });
-
-        (COMMON.pasien || []).forEach(f => {
-          pasienContainer.innerHTML += generateHTML(f);
-        });
-
-        (COMMON.verifikasi || []).forEach(f => {
-          verifikasiContainer.innerHTML += generateHTML(f);
-        });
-
-        (COMMON.sampel || []).forEach(f => {
-          sampelContainer.innerHTML += generateHTML(f);
-        });
-
-        (COMMON.status || []).forEach(f => {
-          statusContainer.innerHTML += generateHTML(f);
-        });
-
-        specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;
-        renderDiagnosisSections(cfg, specificContainer);
-        syncCaseStatusOptionsByDx(dx);
-        setReadonlyFormMode(isViewerSession());
-        if (viewerBadge) viewerBadge.hidden = !isViewerSession();
-        if (editBadge && isViewerSession()) editBadge.hidden = true;
-
-        setTimeout(async () => {
-          addDefaultRowsForDynamicTables();
-          initWilayahDropdowns();
-          initGeoButton();
-          // Evaluasi showIf setelah form dirender
-          applyAllShowIf();
-
-          const unit = document.getElementById("Nama unit pelapor");
-          if (unit) {
-            unit.disabled = true;
-            unit.innerHTML = '<option value="">Pilih sumber laporan dahulu...</option>';
-          }
-
-          await loadRefImunisasi();
-          buildRiwayatImunisasiRows();
-          forceBuildImunisasiWhenReady();
-
-          loadFaskesRealtime("", false);
-          if (MASTER_FASKES && MASTER_FASKES.length > 0) {
-            initChoicesRumahSakit();
-          }
-
-          updateUiShellSummary();
-        }, 50);
+        setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: true });
+        togglePreRecordWorkflowFocus(false, 'section-pelapor');
+        updateFormStepperState('section-pelapor');
+        updateSidebarActiveState('input');
+        applySidebarWorkspaceLayout('input');
       });
 
       workflowIntentButtons.forEach(function(btn) {
@@ -5378,9 +5499,9 @@
             }
 
             const resolvedDx = String(dx || record.dx || '').trim().toUpperCase();
-            if (resolvedDx && String(selector.value || '').trim().toUpperCase() !== resolvedDx) {
+            if (resolvedDx) {
               selector.value = resolvedDx;
-              selector.dispatchEvent(new Event('change', { bubbles: true }));
+              renderDxWorkspaceForm(resolvedDx, 'editor');
               await new Promise(function(resolve) { setTimeout(resolve, 220); });
             }
 
@@ -5459,6 +5580,17 @@
         });
       }
 
+      if (btnResetInput && !btnResetInput.dataset.boundReset) {
+        btnResetInput.dataset.boundReset = '1';
+        btnResetInput.addEventListener('click', function() {
+          clearFormDraft();
+          const dx = String(selector?.value || '').trim().toUpperCase();
+          renderDxWorkspaceForm(dx, 'input');
+          resetInputSubmitButton();
+          showTopAlert('Form input baru sudah direset.', true);
+        });
+      }
+
       (function patchSuccessModalForVerificationWorkflow() {
         if (window.__PD3I_VERIFICATION_SUCCESS_PATCHED__) return;
         if (typeof showSuccessModal !== 'function') return;
@@ -5534,25 +5666,42 @@
         };
       })();
 
-      const handleMainFormSubmit = async function() {
+      function resetSubmitButtonByMode(mode) {
+        if (String(mode || 'editor').trim().toLowerCase() === 'input') {
+          resetInputSubmitButton();
+          return;
+        }
+        resetSubmitButtonForCurrentStage();
+      }
+
+      const handleMainFormSubmit = async function(mode) {
+        const submitMode = String(mode || 'editor').trim().toLowerCase() === 'input' ? 'input' : 'editor';
+        const activeFormElement = submitMode === 'input' ? inputFormElement : formElement;
+        const activeSubmitButton = submitMode === 'input' ? btnSubmitInput : btnSubmit;
 
         if (isViewer) {
           showTopAlert("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.", false);
           return;
         }
-
-        const activeStageOnSubmit = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
-        if (normalizeWorkflowStepId(activeStageOnSubmit) !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
-          showTopAlert("Tahap lanjutan hanya bisa disimpan setelah input awal tersimpan / record existing dibuka.", false);
-          resetSubmitButtonForCurrentStage();
+        if (!activeFormElement || !activeSubmitButton) {
+          showTopAlert('Form aktif tidak tersedia.', false);
           return;
         }
 
-        const requiredCheck = validateRequiredVisibleFields(formElement);
+        const activeStageOnSubmit = submitMode === 'input'
+          ? 'section-pelapor'
+          : (document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
+        if (submitMode !== 'input' && normalizeWorkflowStepId(activeStageOnSubmit) !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
+          showTopAlert("Tahap lanjutan hanya bisa disimpan setelah input awal tersimpan / record existing dibuka.", false);
+          resetSubmitButtonByMode(submitMode);
+          return;
+        }
+
+        const requiredCheck = validateRequiredVisibleFields(activeFormElement);
         if (!requiredCheck.ok) {
           showTopAlert(requiredCheck.message || "Masih ada field wajib yang belum lengkap.", false);
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
           return;
         }
 
@@ -5565,24 +5714,23 @@
             "Field berikut hanya boleh angka: " + numericCheck.invalids.join(", "),
             false
           );
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
           return;
         }
 
         const birthValidation = validateAndApplyBirthUI({ silent: false, hard: true });
-
         if (!birthValidation || !birthValidation.ok) {
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
           return;
         }
 
         const dxRuleCheck = validateDxBusinessRules();
         if (!dxRuleCheck.ok) {
           showTopAlert(dxRuleCheck.errors.join(" "), false);
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
           return;
         }
 
@@ -5594,11 +5742,11 @@
         updateImunisasiSummary();
         syncStatusHistoryTimeline();
 
-        btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
-        btnSubmit.disabled = true;
+        activeSubmitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
+        activeSubmitButton.disabled = true;
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit) };
-        formElement.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+        activeFormElement.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
           const fieldKey = _getSemanticFieldKey_(el);
           if (!fieldKey) return;
           dataObj[fieldKey] = el.value;
@@ -5619,8 +5767,8 @@
           const currentStatus = String(dataObj["Status Verifikasi EPID"] || '').trim();
           if (!currentStatus || currentStatus === 'Pending') {
             showTopAlert('Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.', false);
-            btnSubmit.disabled = false;
-            resetSubmitButtonForCurrentStage();
+            activeSubmitButton.disabled = false;
+            resetSubmitButtonByMode(submitMode);
             return;
           }
           if (!dataObj["Petugas Verifikator"]) dataObj["Petugas Verifikator"] = getCurrentSessionActorName();
@@ -5630,8 +5778,8 @@
             dataObj["Nomor EPID Final"] = String(dataObj["Nomor EPID Final"] || dataObj["Nomor EPID Rekomendasi"] || '').trim();
             if (!dataObj["Nomor EPID Final"]) {
               showTopAlert('Nomor EPID final belum tersedia. Tunggu rekomendasi sistem atau isi manual.', false);
-              btnSubmit.disabled = false;
-              resetSubmitButtonForCurrentStage();
+              activeSubmitButton.disabled = false;
+              resetSubmitButtonByMode(submitMode);
               return;
             }
             dataObj["Nomor EPID"] = dataObj["Nomor EPID Final"];
@@ -5642,8 +5790,8 @@
           if (currentStatus === 'Perlu Revisi') {
             if (!String(dataObj["Catatan Verifikasi EPID"] || '').trim()) {
               showTopAlert('Catatan verifikasi wajib diisi jika status Perlu Revisi.', false);
-              btnSubmit.disabled = false;
-              resetSubmitButtonForCurrentStage();
+              activeSubmitButton.disabled = false;
+              resetSubmitButtonByMode(submitMode);
               return;
             }
             dataObj["Nomor EPID Final"] = '';
@@ -5655,8 +5803,8 @@
 
         if (!dataObj["Nama unit pelapor"]) {
           showTopAlert("Nama Unit Pelapor wajib dipilih.", false);
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
           return;
         }
 
@@ -5675,7 +5823,7 @@
           }
         }
 
-        document.querySelectorAll("table[data-dynamic-table]").forEach(table => {
+        activeFormElement.querySelectorAll("table[data-dynamic-table]").forEach(table => {
           const tableId = table.getAttribute("data-dynamic-table");
           const tableData = [];
 
@@ -5741,7 +5889,7 @@
             console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
 
             clearFormDraft();
-            if (epidSaved) {
+            if (epidSaved && submitMode !== 'input') {
               isEditMode = true;
               updateFormStepperState(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
             }
@@ -5762,21 +5910,27 @@
             }
           } else {
             showTopAlert("Error: " + (res?.message || "Gagal menyimpan data."), false);
-            btnSubmit.disabled = false;
-            resetSubmitButtonForCurrentStage();
+            activeSubmitButton.disabled = false;
+            resetSubmitButtonByMode(submitMode);
           }
         } catch (err) {
           console.error("submit failed:", err);
           showTopAlert("Gagal submit. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.", false);
-          btnSubmit.disabled = false;
-          resetSubmitButtonForCurrentStage();
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
         }
       };
 
       if (btnSubmit && !btnSubmit.dataset.boundSubmit) {
         btnSubmit.dataset.boundSubmit = '1';
         btnSubmit.addEventListener('click', function() {
-          handleMainFormSubmit();
+          handleMainFormSubmit('editor');
+        });
+      }
+      if (btnSubmitInput && !btnSubmitInput.dataset.boundSubmit) {
+        btnSubmitInput.dataset.boundSubmit = '1';
+        btnSubmitInput.addEventListener('click', function() {
+          handleMainFormSubmit('input');
         });
       }
     }

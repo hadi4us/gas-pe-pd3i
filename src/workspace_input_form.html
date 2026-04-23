@@ -1,0 +1,91 @@
+        <section id="section-input-form-shell" class="hidden mt-6">
+          <div id="dynamic-form-input" class="hidden" autocomplete="off" data-form-type="input" novalidate>
+            <div class="pd3i-form-layout">
+              <div class="pd3i-form-main">
+                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight">
+                  <div class="pd3i-card-header-row">
+                    <div>
+                      <div class="pd3i-card-eyebrow">Form input baru</div>
+                      <h3 class="pd3i-card-title"><i class="fas fa-file-circle-plus text-blue-600 mr-2"></i>Form kasus baru otonom</h3>
+                    </div>
+                    <span class="pd3i-badge-soft">Input-only workspace</span>
+                  </div>
+                  <div class="pd3i-helper-text">Workspace ini khusus untuk <strong>entri kasus baru</strong>. Form edit/review existing dipisah ke menu <strong>Cari / Edit</strong> dan workspace tahap lanjutan supaya state input baru tidak bentrok dengan state record existing.</div>
+                </section>
+
+                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
+                  <div class="pd3i-card-header-row">
+                    <div>
+                      <div class="pd3i-card-eyebrow">Input 1A</div>
+                      <h3 class="pd3i-card-title"><i class="fas fa-hospital-user text-blue-600 mr-2"></i>Informasi Pelapor</h3>
+                    </div>
+                    <span class="pd3i-badge-soft">Sumber laporan & petugas</span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-input"></div>
+                </section>
+
+                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
+                  <div class="pd3i-card-header-row">
+                    <div>
+                      <div class="pd3i-card-eyebrow">Input 1B</div>
+                      <h3 class="pd3i-card-title"><i class="fas fa-address-card text-blue-600 mr-2"></i>Data Demografi Pasien</h3>
+                    </div>
+                    <span class="pd3i-badge-soft">Identitas & lokasi</span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container-input"></div>
+                </section>
+
+                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
+                  <div class="pd3i-card-header-row">
+                    <div>
+                      <div class="pd3i-card-eyebrow">Input 1C</div>
+                      <h3 class="pd3i-card-title" id="specific-title-input"><i class="fas fa-stethoscope text-blue-600 mr-2"></i>Data Spesifik Kasus</h3>
+                    </div>
+                    <span class="pd3i-badge-soft">Klinis, epi, imunisasi, outcome</span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container-input"></div>
+                </section>
+              </div>
+
+              <aside class="pd3i-form-sidebar">
+                <div class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard">
+                  <div class="pd3i-card-header-row compact">
+                    <div>
+                      <div class="pd3i-card-eyebrow">Pemisahan mode</div>
+                      <h3 class="pd3i-card-title">Input tidak campur edit</h3>
+                    </div>
+                    <span class="pd3i-badge-soft">Isolated</span>
+                  </div>
+                  <div class="pd3i-helper-text">
+                    <strong>Input Kasus</strong> dipakai hanya untuk record baru.<br>
+                    <strong>Cari / Edit</strong> dipakai untuk buka record existing.<br>
+                    <strong>Verifikasi / Sampel / Status</strong> sekarang bergantung pada editor existing record, bukan form input baru.
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            <div id="action-panel-input" class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
+              <div class="pd3i-card-header-row compact">
+                <div>
+                  <div class="pd3i-card-eyebrow">Aksi input baru</div>
+                  <h3 class="pd3i-card-title">Simpan input awal</h3>
+                </div>
+                <span class="pd3i-badge-soft">Input-only submit</span>
+              </div>
+              <div class="pd3i-action-panel-note">
+                <i class="fas fa-shield-heart"></i>
+                <span>Form ini hanya menyimpan tahap input awal. Tahap verifikasi, hasil sampel, dan update status dilakukan dari record existing.</span>
+              </div>
+              <div class="pd3i-submit-stack">
+                <button type="button" id="btn-submit-input" class="pd3i-submit-button">
+                  <i class="fas fa-save"></i> Simpan Input Awal
+                </button>
+                <button type="button" id="btn-reset-input" class="pd3i-cancel-button">
+                  <i class="fas fa-rotate-left"></i> Reset Form Input
+                </button>
+              </div>
+              <div class="pd3i-helper-text mt-3">Setelah tersimpan, lanjut verifikasi/sampel/status dari menu record existing agar tidak bentrok dengan mode input baru.</div>
+            </div>
+          </div>
+        </section>
