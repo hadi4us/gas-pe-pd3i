@@ -220,8 +220,11 @@ function _buildWorkflowInboxData_(sess, dx) {
   const dxList = (SUPPORTED_DX_ || []).indexOf(dxNorm) !== -1 ? [dxNorm] : (SUPPORTED_DX_ || []).slice();
   const pendingVerification = [];
   const revisionQueue = [];
+  const verificationDone = [];
   const sampleQueue = [];
+  const sampleDoneQueue = [];
   const statusQueue = [];
+  const statusDoneQueue = [];
   let totalScopedRecords = 0;
   let verifiedRecords = 0;
   const kelurahanSet = {};
@@ -312,23 +315,55 @@ function _buildWorkflowInboxData_(sess, dx) {
       }
 
       if (role === 'admin' && normalizedStatus === 'PENDING') {
-        pendingVerification.push(item);
+        pendingVerification.push(Object.assign({}, item, {
+          __workflowStageState: 'queue',
+          __workflowStageLabel: 'Antrian verifikasi'
+        }));
       }
       if (normalizedStatus === 'PERLU REVISI' && (role === 'admin' || scopeMatch)) {
-        revisionQueue.push(item);
+        revisionQueue.push(Object.assign({}, item, {
+          __workflowStageState: 'queue',
+          __workflowStageLabel: 'Antrian revisi'
+        }));
+      }
+      if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch)) {
+        verificationDone.push(Object.assign({}, item, {
+          __workflowStageState: 'done',
+          __workflowStageLabel: 'Verifikasi selesai',
+          __queueStatusLabel: 'Terverifikasi',
+          __queueStatusClass: 'is-success'
+        }));
       }
       if (sampleStagePending) {
         sampleQueue.push(Object.assign({}, item, {
+          __workflowStageState: 'queue',
+          __workflowStageLabel: 'Antrian hasil sampel',
           __queueStatusLabel: normalizedSampelDilakukan === 'YA'
             ? (normalizedInterpretasi === 'BELUM KELUAR' || !normalizedInterpretasi ? 'Menunggu hasil lab' : 'Perlu review hasil sampel')
             : 'Menunggu hasil lab',
           __queueStatusClass: 'is-warning'
         }));
+      } else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && sampleDone) {
+        sampleDoneQueue.push(Object.assign({}, item, {
+          __workflowStageState: 'done',
+          __workflowStageLabel: 'Hasil sampel selesai',
+          __queueStatusLabel: normalizedSampelDilakukan === 'TIDAK' ? 'Sampel tidak dilakukan' : (interpretasiSampel || 'Hasil sampel tersimpan'),
+          __queueStatusClass: 'is-success'
+        }));
       }
       if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending) {
         statusQueue.push(Object.assign({}, item, {
+          __workflowStageState: 'queue',
+          __workflowStageLabel: 'Antrian update status',
           __queueStatusLabel: statusKasus || 'Siap update status',
           __queueStatusClass: normalizedStatusKasus === 'KONFIRMASI' ? 'is-success' : 'is-warning'
+        }));
+      } else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && (role === 'admin' || scopeMatch)) {
+        statusDoneQueue.push(Object.assign({}, item, {
+          __workflowStageState: 'done',
+          __workflowStageLabel: 'Status selesai',
+          __queueStatusLabel: statusKasus || 'Selesai',
+          __queueStatusClass: 'is-success'
         }));
       }
     });
@@ -345,8 +380,11 @@ function _buildWorkflowInboxData_(sess, dx) {
 
   const pendingSorted = sortQueue(pendingVerification);
   const revisionSorted = sortQueue(revisionQueue);
+  const verificationDoneSorted = sortQueue(verificationDone);
   const sampleSorted = sortQueue(sampleQueue);
+  const sampleDoneSorted = sortQueue(sampleDoneQueue);
   const statusSorted = sortQueue(statusQueue);
+  const statusDoneSorted = sortQueue(statusDoneQueue);
   const actionableCount = pendingSorted.length + revisionSorted.length + sampleSorted.length + statusSorted.length;
   const dxBreakdown = {};
   (SUPPORTED_DX_ || []).forEach(function(dxKey) {
@@ -362,8 +400,11 @@ function _buildWorkflowInboxData_(sess, dx) {
     summary: {
       pendingVerification: pendingSorted.length,
       revisionQueue: revisionSorted.length,
+      verificationDone: verificationDoneSorted.length,
       sampleQueue: sampleSorted.length,
+      sampleDone: sampleDoneSorted.length,
       statusQueue: statusSorted.length,
+      statusDone: statusDoneSorted.length,
       totalScopedRecords: totalScopedRecords,
       verifiedRecords: verifiedRecords,
       actionableCount: actionableCount,
@@ -373,15 +414,18 @@ function _buildWorkflowInboxData_(sess, dx) {
     },
     pendingVerification: pendingSorted,
     revisionQueue: revisionSorted,
+    verificationDone: verificationDoneSorted,
     sampleQueue: sampleSorted,
-    statusQueue: statusSorted
+    sampleDone: sampleDoneSorted,
+    statusQueue: statusSorted,
+    statusDone: statusDoneSorted
   };
 }
 
 function getWorkflowInbox(dx, token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
-    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
+    return { summary: { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0 }, pendingVerification: [], revisionQueue: [], verificationDone: [], sampleQueue: [], sampleDone: [], statusQueue: [], statusDone: [] };
   }
 
   try {
@@ -410,8 +454,11 @@ function getWorkflowInbox(dx, token) {
       summary: result.summary,
       pendingVerification: (result.pendingVerification || []).slice(0, 8),
       revisionQueue: (result.revisionQueue || []).slice(0, 8),
+      verificationDone: (result.verificationDone || []).slice(0, 8),
       sampleQueue: (result.sampleQueue || []).slice(0, 8),
-      statusQueue: (result.statusQueue || []).slice(0, 8)
+      sampleDone: (result.sampleDone || []).slice(0, 8),
+      statusQueue: (result.statusQueue || []).slice(0, 8),
+      statusDone: (result.statusDone || []).slice(0, 8)
     };
 
     if (cache) {
@@ -424,11 +471,14 @@ function getWorkflowInbox(dx, token) {
   } catch (e) {
     console.error('[getWorkflowInbox] Error:', e);
     return {
-      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 },
+      summary: { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0 },
       pendingVerification: [],
       revisionQueue: [],
+      verificationDone: [],
       sampleQueue: [],
+      sampleDone: [],
       statusQueue: [],
+      statusDone: [],
       error: String(e)
     };
   }
@@ -437,7 +487,7 @@ function getWorkflowInbox(dx, token) {
 function getOverviewSummary(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) {
-    return { summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } }, pendingVerification: [], revisionQueue: [], sampleQueue: [], statusQueue: [] };
+    return { summary: { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } }, pendingVerification: [], revisionQueue: [], verificationDone: [], sampleQueue: [], sampleDone: [], statusQueue: [], statusDone: [] };
   }
 
   try {
@@ -465,8 +515,11 @@ function getOverviewSummary(token) {
       summary: result.summary,
       pendingVerification: (result.pendingVerification || []).slice(0, 6),
       revisionQueue: (result.revisionQueue || []).slice(0, 6),
+      verificationDone: (result.verificationDone || []).slice(0, 6),
       sampleQueue: (result.sampleQueue || []).slice(0, 6),
-      statusQueue: (result.statusQueue || []).slice(0, 6)
+      sampleDone: (result.sampleDone || []).slice(0, 6),
+      statusQueue: (result.statusQueue || []).slice(0, 6),
+      statusDone: (result.statusDone || []).slice(0, 6)
     };
 
     if (cache) {
@@ -479,11 +532,14 @@ function getOverviewSummary(token) {
   } catch (e) {
     console.error('[getOverviewSummary] Error:', e);
     return {
-      summary: { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } },
+      summary: { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0, totalScopedRecords: 0, verifiedRecords: 0, actionableCount: 0, activeKelurahanCount: 0, topDx: [], dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 } },
       pendingVerification: [],
       revisionQueue: [],
+      verificationDone: [],
       sampleQueue: [],
+      sampleDone: [],
       statusQueue: [],
+      statusDone: [],
       error: String(e)
     };
   }

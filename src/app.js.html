@@ -3160,9 +3160,12 @@
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const pendingVerification = (data && data.pendingVerification) || [];
     const revisionQueue = (data && data.revisionQueue) || [];
+    const verificationDone = (data && data.verificationDone) || [];
     const sampleQueue = (data && data.sampleQueue) || [];
+    const sampleDone = (data && data.sampleDone) || [];
     const statusQueue = (data && data.statusQueue) || [];
-    const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0, sampleQueue: 0, statusQueue: 0 };
+    const statusDone = (data && data.statusDone) || [];
+    const summary = (data && data.summary) || { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0 };
     const verifCountEl = document.getElementById('intent-count-section-verifikasi');
     const pelaporCountEl = document.getElementById('intent-count-section-pelapor');
     const sampelCountEl = document.getElementById('intent-count-section-sampel');
@@ -3189,10 +3192,13 @@
     const visibleRevision = workspace === 'verifikasi'
       ? filterQueueItemsForWorkspace(revisionQueue, workspace)
       : ((workspace === 'input' || workspace === 'search') ? revisionQueue : []);
+    const visibleVerificationDone = workspace === 'verifikasi' ? filterQueueItemsForWorkspace(verificationDone, workspace) : [];
     const visibleSample = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleQueue, workspace) : [];
+    const visibleSampleDone = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleDone, workspace) : [];
     const visibleStatus = workspace === 'status' ? filterQueueItemsForWorkspace(statusQueue, workspace) : [];
+    const visibleStatusDone = workspace === 'status' ? filterQueueItemsForWorkspace(statusDone, workspace) : [];
 
-    if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleStatus.length) {
+    if (!visiblePending.length && !visibleRevision.length && !visibleVerificationDone.length && !visibleSample.length && !visibleSampleDone.length && !visibleStatus.length && !visibleStatusDone.length) {
       if (workspace === 'verifikasi' || workspace === 'sampel' || workspace === 'status') {
         let emptyTitle = 'Belum ada kasus di antrian kerja';
         let emptyCopy = 'Belum ada kasus yang cocok dengan filter saat ini.';
@@ -3215,19 +3221,39 @@
       return;
     }
 
+    const activeRecordMeta = (typeof window !== 'undefined' && window.__PD3I_ACTIVE_RECORD_META) ? window.__PD3I_ACTIVE_RECORD_META : null;
+    const activeRecordKey = String((activeRecordMeta && (activeRecordMeta.recordKey || activeRecordMeta['ID Registrasi Kasus'] || activeRecordMeta['Nomor EPID'])) || '').trim();
+    const activeRecordDx = String((activeRecordMeta && (activeRecordMeta.dx || activeRecordMeta.DX)) || '').trim().toUpperCase();
+    const activeRecordName = String((activeRecordMeta && (activeRecordMeta.nama || activeRecordMeta['Nama'])) || '').trim();
+
+    function renderProcessingCard() {
+      if (!activeRecordKey || !['verifikasi', 'sampel', 'status'].includes(workspace)) return '';
+      const labelMap = {
+        verifikasi: 'Sedang diproses di workspace Verifikasi EPID',
+        sampel: 'Sedang diproses di workspace Hasil Sampel',
+        status: 'Sedang diproses di workspace Update Status'
+      };
+      return `<div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
+        <div class="font-extrabold uppercase tracking-wide text-blue-700">Sedang diproses</div>
+        <div class="mt-1 font-semibold">${escapeHtml(activeRecordName || '-')} • ${escapeHtml(activeRecordDx || '-')}</div>
+        <div class="mt-1">${escapeHtml(labelMap[workspace] || 'Sedang diproses')} — ID: <strong>${escapeHtml(activeRecordKey)}</strong></div>
+      </div>`;
+    }
+
     let html = '<div class="pd3i-shell-card border border-amber-200 bg-amber-50/70">';
     html += '<div class="flex flex-wrap items-center justify-between gap-3">';
     html += '<div><div class="pd3i-card-eyebrow">Inbox workflow</div><h4 class="pd3i-card-title text-lg">Daftar kerja lanjutan</h4></div>';
     if (workspace === 'verifikasi') {
-      html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${summary.pendingVerification || 0}</strong> • Perlu revisi: <strong>${summary.revisionQueue || 0}</strong></div>`;
+      html += `<div class="pd3i-helper-text">Antrian verifikasi: <strong>${summary.pendingVerification || 0}</strong> • Revisi: <strong>${summary.revisionQueue || 0}</strong> • Selesai: <strong>${summary.verificationDone || 0}</strong></div>`;
     } else if (workspace === 'sampel') {
-      html += `<div class="pd3i-helper-text">Kasus menunggu hasil lab: <strong>${summary.sampleQueue || 0}</strong></div>`;
+      html += `<div class="pd3i-helper-text">Antrian hasil sampel: <strong>${summary.sampleQueue || 0}</strong> • Selesai: <strong>${summary.sampleDone || 0}</strong></div>`;
     } else if (workspace === 'status') {
-      html += `<div class="pd3i-helper-text">Kasus siap update status: <strong>${summary.statusQueue || 0}</strong></div>`;
+      html += `<div class="pd3i-helper-text">Antrian update status: <strong>${summary.statusQueue || 0}</strong> • Selesai: <strong>${summary.statusDone || 0}</strong></div>`;
     } else {
       html += `<div class="pd3i-helper-text">Pending verifikasi: <strong>${workspace === 'verifikasi' ? (summary.pendingVerification || 0) : 0}</strong> • Perlu revisi: <strong>${(workspace === 'input' || workspace === 'search' || workspace === 'verifikasi') ? (summary.revisionQueue || 0) : 0}</strong></div>`;
     }
     html += '</div>';
+    html += renderProcessingCard();
 
     if (visiblePending.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2">';
@@ -3245,15 +3271,33 @@
       html += '</div></div>';
     }
 
+    if (visibleVerificationDone.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Verifikasi selesai</div><div class="mt-2">';
+      html += renderQueueTable(visibleVerificationDone, { emptyText: 'Belum ada verifikasi selesai.', actionLabel: 'Lihat hasil' });
+      html += '</div></div>';
+    }
+
     if (visibleSample.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Kasus menunggu hasil lab</div><div class="mt-2">';
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Antrian hasil sampel</div><div class="mt-2">';
       html += renderQueueTable(visibleSample, { emptyText: 'Belum ada kasus menunggu hasil lab.', actionLabel: 'Input hasil' });
       html += '</div></div>';
     }
 
+    if (visibleSampleDone.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Hasil sampel selesai</div><div class="mt-2">';
+      html += renderQueueTable(visibleSampleDone, { emptyText: 'Belum ada hasil sampel selesai.', actionLabel: 'Lihat hasil' });
+      html += '</div></div>';
+    }
+
     if (visibleStatus.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Kasus siap update status</div><div class="mt-2">';
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Antrian update status</div><div class="mt-2">';
       html += renderQueueTable(visibleStatus, { emptyText: 'Belum ada kasus siap update status.', actionLabel: 'Update status' });
+      html += '</div></div>';
+    }
+
+    if (visibleStatusDone.length) {
+      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Status selesai</div><div class="mt-2">';
+      html += renderQueueTable(visibleStatusDone, { emptyText: 'Belum ada update status selesai.', actionLabel: 'Lihat status' });
       html += '</div></div>';
     }
 
