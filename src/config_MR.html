@@ -98,7 +98,7 @@
           { id: "Lokasi perjalanan", label: "Lokasi perjalanan", type: "text", fullWidth: true, required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pergi", label: "Tanggal pergi", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
           { id: "Tanggal pulang perjalanan", label: "Tanggal kembali", type: "date", required: true, showIf: { field: "Riwayat perjalanan 7-21 hari", values: ["Ya"] } },
-          { id: "Riwayat kontak kasus serupa", label: "Riwayat kontak dengan kasus serupa?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Riwayat kontak kasus serupa", label: "Riwayat kontak dengan kasus serupa?", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Riwayat kunjungan fasilitas kesehatan", label: "Riwayat kunjungan fasilitas kesehatan sebelum diagnosis?", type: "select", options: OPT_YA_TIDAK },
           { id: "Cluster/kejadian luar biasa", label: "Diduga bagian dari klaster/KLB?", type: "select", options: OPT_YA_TIDAK }
         ]

@@ -57,6 +57,25 @@
     return ADDRESS_LIKE_FIELD_IDS.has(String(fieldId || '').trim());
   }
 
+  function syncChoiceButtons(inputEl) {
+    if (!inputEl) return;
+    const group = inputEl.closest('.pd3i-choice-group');
+    if (!group) return;
+    const currentValue = String(inputEl.value || '').trim();
+    group.querySelectorAll('.pd3i-choice-btn').forEach(function(btn) {
+      const isActive = String(btn.getAttribute('data-choice-value') || '').trim() === currentValue;
+      btn.classList.toggle('is-active', isActive);
+    });
+  }
+
+  window.__pd3iSelectChoice = function(fieldId, value) {
+    const inputEl = document.getElementById(fieldId);
+    if (!inputEl || inputEl.disabled) return;
+    inputEl.value = String(value || '').trim();
+    syncChoiceButtons(inputEl);
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
   function hardenAddressAutofillSuppression(root) {
     const container = root && root.querySelectorAll ? root : document;
     container.querySelectorAll('#dynamic-form input, #dynamic-form textarea, #dynamic-form select').forEach(function(el) {
@@ -182,6 +201,15 @@
         <option value="">-- Pilih --</option>
         ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
       </select>`;
+    } else if (field.type === "choice_buttons") {
+      inputHtml = `<div class="pd3i-choice-group">
+        <input type="hidden" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${browserHintAttrs} data-choice-group="1">
+        <div class="pd3i-choice-button-row">
+          ${(field.options || []).map(function(o) {
+            return `<button type="button" class="pd3i-choice-btn" data-choice-value="${o}" onclick="window.__pd3iSelectChoice && window.__pd3iSelectChoice(${JSON.stringify(field.id)}, ${JSON.stringify(o)})">${o}</button>`;
+          }).join('')}
+        </div>
+      </div>`;
     } else if (field.type === "textarea") {
       inputHtml = `<textarea id="${field.id}" name="${neutralName}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
     } else {
@@ -4177,6 +4205,9 @@
       const el = document.getElementById(key);
       if (el) {
         el.value = record[key];
+        if (el.dataset && el.dataset.choiceGroup === '1') {
+          syncChoiceButtons(el);
+        }
         el.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
