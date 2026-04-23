@@ -76,6 +76,18 @@
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
+  if (!window.__PD3I_CHOICE_BUTTONS_BOUND__) {
+    window.__PD3I_CHOICE_BUTTONS_BOUND__ = true;
+    document.addEventListener('click', function(evt) {
+      const btn = evt.target && evt.target.closest ? evt.target.closest('.pd3i-choice-btn[data-field-id]') : null;
+      if (!btn) return;
+      const fieldId = String(btn.getAttribute('data-field-id') || '').trim();
+      const value = String(btn.getAttribute('data-choice-value') || '').trim();
+      if (!fieldId) return;
+      window.__pd3iSelectChoice(fieldId, value);
+    });
+  }
+
   function normalizeDateInputValue(value) {
     if (value === null || value === undefined) return '';
     const raw = String(value).trim();
@@ -233,7 +245,7 @@
         <input type="hidden" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${browserHintAttrs} data-choice-group="1">
         <div class="pd3i-choice-button-row">
           ${(field.options || []).map(function(o) {
-            return `<button type="button" class="pd3i-choice-btn" data-choice-value="${o}" onclick="window.__pd3iSelectChoice && window.__pd3iSelectChoice(${JSON.stringify(field.id)}, ${JSON.stringify(o)})">${o}</button>`;
+            return `<button type="button" class="pd3i-choice-btn" data-field-id="${field.id}" data-choice-value="${o}">${o}</button>`;
           }).join('')}
         </div>
       </div>`;
