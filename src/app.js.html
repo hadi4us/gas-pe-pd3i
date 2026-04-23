@@ -3405,13 +3405,12 @@
     const visibleRevision = workspace === 'verifikasi'
       ? filterQueueItemsForWorkspace(revisionQueue, workspace)
       : ((workspace === 'input' || workspace === 'search') ? revisionQueue : []);
-    const visibleVerificationDone = workspace === 'verifikasi' ? filterQueueItemsForWorkspace(verificationDone, workspace) : [];
     const visibleSample = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleQueue, workspace) : [];
     const visibleSampleDone = workspace === 'sampel' ? filterQueueItemsForWorkspace(sampleDone, workspace) : [];
     const visibleStatus = workspace === 'status' ? filterQueueItemsForWorkspace(statusQueue, workspace) : [];
     const visibleStatusDone = workspace === 'status' ? filterQueueItemsForWorkspace(statusDone, workspace) : [];
 
-    if (!visiblePending.length && !visibleRevision.length && !visibleVerificationDone.length && !visibleSample.length && !visibleSampleDone.length && !visibleStatus.length && !visibleStatusDone.length) {
+    if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleSampleDone.length && !visibleStatus.length && !visibleStatusDone.length) {
       if (workspace === 'verifikasi' || workspace === 'sampel' || workspace === 'status') {
         let emptyTitle = 'Belum ada kasus di antrian kerja';
         let emptyCopy = 'Belum ada kasus yang cocok dengan filter saat ini.';
@@ -3481,12 +3480,6 @@
       html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
       }), { title: 'Kasus perlu revisi', pageKey: workspace + '-revision', emptyText: 'Belum ada kasus revisi.' });
-      html += '</div></div>';
-    }
-
-    if (visibleVerificationDone.length) {
-      html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Verifikasi selesai</div><div class="mt-2">';
-      html += renderQueueTable(visibleVerificationDone, { title: 'Verifikasi selesai', pageKey: workspace + '-done', emptyText: 'Belum ada verifikasi selesai.', actionLabel: 'Lihat hasil' });
       html += '</div></div>';
     }
 
