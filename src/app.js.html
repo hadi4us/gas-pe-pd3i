@@ -3580,6 +3580,23 @@
     updateWorkflowProgressUI(normalized);
   }
 
+  function unlockVisibleSelectsInActiveStage() {
+    if (isViewerSession()) return;
+    const activeStepId = normalizeWorkflowStepId(document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
+    const activeStep = getWorkflowStepDefinitions().find(function(step) { return step.id === activeStepId; });
+    if (!activeStep) return;
+    (activeStep.sections || []).forEach(function(sectionId) {
+      const root = document.getElementById(sectionId);
+      if (!root) return;
+      root.querySelectorAll('select').forEach(function(el) {
+        if (!el) return;
+        const wrapper = el.closest('.field-wrapper');
+        if (wrapper && wrapper.classList.contains('hidden')) return;
+        el.removeAttribute('disabled');
+      });
+    });
+  }
+
   function normalizeUiRole(role) {
     return String(role || "").trim().toLowerCase();
   }
@@ -5329,6 +5346,9 @@
             updateFormStepperState(preferredStage);
             const openedWorkspace = normalizeSidebarWorkspace(preferredStage);
             openSidebarWorkspace(openedWorkspace, { scroll: false });
+            setTimeout(function() {
+              unlockVisibleSelectsInActiveStage();
+            }, 240);
             updateUiShellSummary();
             refreshWorkflowInbox();
 
