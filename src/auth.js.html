@@ -437,6 +437,7 @@
 
         if (!savedToken || !safeGsRun()) {
           closeModal(pinModal);
+          setCredentialInputsEnabled('login');
           openModal(loginModal);
           hideAuthBootOverlay();
           setTimeout(refreshLoginCaptcha, 120);
