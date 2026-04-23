@@ -20,9 +20,9 @@
           { id: "Tanggal mulai demam", label: "Tanggal mulai demam", type: "date", required: true, showIf: { field: "Demam?", values: ["Ya"] } },
           { id: "Ruam Makulopapular?", label: "Ruam makulopapular", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Tanggal mulai ruam", label: "Tanggal mulai ruam", type: "date", required: true, showIf: { field: "Ruam Makulopapular?", values: ["Ya"] } },
-          { id: "Batuk", label: "Batuk", type: "select", options: OPT_YA_TIDAK },
-          { id: "Pilek", label: "Pilek", type: "select", options: OPT_YA_TIDAK },
-          { id: "Mata merah", label: "Mata merah", type: "select", options: OPT_YA_TIDAK }
+          { id: "Batuk", label: "Batuk", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Pilek", label: "Pilek", type: "choice_buttons", options: OPT_YA_TIDAK },
+          { id: "Mata merah", label: "Mata merah", type: "choice_buttons", options: OPT_YA_TIDAK }
         ]
       },
 
@@ -91,7 +91,7 @@
         key: "epidemiologi_pajanan",
         title: "Informasi Epidemiologis",
         fields: [
-          { id: "Pemberian Vitamin A", label: "Pemberian Vitamin A", type: "select", options: OPT_YA_TIDAK, required: true },
+          { id: "Pemberian Vitamin A", label: "Pemberian Vitamin A", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Ada kasus serupa di lingkungan", label: "Ada anggota keluarga/masyarakat sekitar yang sakit sama?", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
           { id: "Jumlah kasus sekitar", label: "Jumlah kasus sekitar", type: "number", required: true, showIf: { field: "Ada kasus serupa di lingkungan", values: ["Ya"] } },
           { id: "Riwayat perjalanan 7-21 hari", label: "Apakah bepergian 1 bulan terakhir?", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
@@ -123,7 +123,7 @@
         key: "kondisi",
         title: "Kondisi Saat Ini",
         fields: [
-          { id: "Status akhir kasus", label: "Keadaan saat ini", type: "select", options: ["Hidup", "Meninggal", "Lost to follow-up"], required: true },
+          { id: "Status akhir kasus", label: "Keadaan saat ini", type: "choice_buttons", options: ["Hidup", "Meninggal", "Lost to follow-up"], required: true },
           { id: "Tanggal meninggal", label: "Tanggal meninggal", type: "date", required: true, showIf: { field: "Status akhir kasus", values: ["Meninggal"] } },
           { id: "Penyebab kematian", label: "Penyebab kematian", type: "text", fullWidth: true, required: true, showIf: { field: "Status akhir kasus", values: ["Meninggal"] } }
         ]
