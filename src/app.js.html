@@ -1462,10 +1462,26 @@
     }
   }
 
+  function hideInputDraftRestorePrompt() {
+    const card = document.getElementById('input-draft-restore-card');
+    if (card) card.classList.add('hidden');
+  }
+
+  function showInputDraftRestorePrompt(draft) {
+    const card = document.getElementById('input-draft-restore-card');
+    const textEl = document.getElementById('input-draft-restore-text');
+    if (!card || !textEl || !draft) return false;
+    const savedTime = draft.savedAt ? new Date(draft.savedAt).toLocaleString('id-ID') : 'sebelumnya';
+    textEl.innerHTML = `Ada draft input <strong>${String(draft.dx || '').trim().toUpperCase()}</strong> yang tersimpan <strong>${savedTime}</strong>. Pilih <strong>Lanjutkan Draft</strong> untuk memulihkan isian lama, atau <strong>Buka Kosong</strong> untuk membuang draft dan mulai input baru.`;
+    card.classList.remove('hidden');
+    return true;
+  }
+
   function clearFormDraft() {
     try {
       sessionStorage.removeItem(FORM_DRAFT_KEY);
     } catch (e) {}
+    hideInputDraftRestorePrompt();
   }
 
   function getFormDraft() {
@@ -1501,22 +1517,27 @@
       const currentWorkspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'overview');
       const suppressUntil = Number((typeof window !== 'undefined' && window.__PD3I_SUPPRESS_DRAFT_PROMPT_UNTIL) || 0) || 0;
       if (!opts.force && suppressUntil && Date.now() < suppressUntil) return false;
-      if (!opts.force && currentWorkspace !== 'input') return false;
-      if (isEditMode || isViewerSession()) return false;
+      if (!opts.force && currentWorkspace !== 'input') {
+        hideInputDraftRestorePrompt();
+        return false;
+      }
+      if (isEditMode || isViewerSession()) {
+        hideInputDraftRestorePrompt();
+        return false;
+      }
 
       const draft = getFormDraft();
-      if (!draft || !draft.dx) return false;
+      if (!draft || !draft.dx) {
+        hideInputDraftRestorePrompt();
+        return false;
+      }
 
       const signature = _getDraftPromptSignature_(draft);
-      if (!opts.force && window.__PD3I_LAST_DRAFT_PROMPT_SIGNATURE === signature) return false;
+      if (!opts.force && window.__PD3I_LAST_DRAFT_PROMPT_SIGNATURE === signature) {
+        return showInputDraftRestorePrompt(draft);
+      }
       window.__PD3I_LAST_DRAFT_PROMPT_SIGNATURE = signature;
-
-      const savedTime = draft.savedAt ? new Date(draft.savedAt).toLocaleString('id-ID') : 'sebelumnya';
-      const confirmed = window.confirm(
-        `Ada draft input ${draft.dx} yang tersimpan (${savedTime}).\n\nKlik OK untuk lanjutkan draft, atau Batal untuk tetap buka Input Kasus dalam keadaan kosong.`
-      );
-      if (!confirmed) return false;
-      return restoreFormDraft();
+      return showInputDraftRestorePrompt(draft);
     } catch (e) {
       console.warn('Gagal menawarkan restore draft:', e);
       return false;
@@ -1533,6 +1554,8 @@
 
       selector.value = draft.dx;
       selector.dispatchEvent(new Event("change", { bubbles: true }));
+
+      hideInputDraftRestorePrompt();
 
       setTimeout(async () => {
         const fields = draft.fields || {};
@@ -5907,6 +5930,23 @@
           renderDxWorkspaceForm(dx, 'input');
           resetInputSubmitButton();
           showTopAlert('Form input baru sudah direset.', true);
+        });
+      }
+
+      const btnRestoreInputDraft = document.getElementById('btn-restore-input-draft');
+      if (btnRestoreInputDraft && !btnRestoreInputDraft.dataset.boundRestoreDraft) {
+        btnRestoreInputDraft.dataset.boundRestoreDraft = '1';
+        btnRestoreInputDraft.addEventListener('click', function() {
+          restoreFormDraft();
+        });
+      }
+
+      const btnDiscardInputDraft = document.getElementById('btn-discard-input-draft');
+      if (btnDiscardInputDraft && !btnDiscardInputDraft.dataset.boundDiscardDraft) {
+        btnDiscardInputDraft.dataset.boundDiscardDraft = '1';
+        btnDiscardInputDraft.addEventListener('click', function() {
+          clearFormDraft();
+          showTopAlert('Draft input dibuang. Form input dibuka dalam keadaan kosong.', true);
         });
       }
 
