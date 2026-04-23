@@ -4,6 +4,7 @@
   // ============================================================
 
   window.rsChoicesInstance = window.rsChoicesInstance || null;
+  window.__PD3I_QUEUE_PAGE_STATE__ = window.__PD3I_QUEUE_PAGE_STATE__ || {};
 
   // ============================================================
   // RENDER FIELD
@@ -85,6 +86,25 @@
       const value = String(btn.getAttribute('data-choice-value') || '').trim();
       if (!fieldId) return;
       window.__pd3iSelectChoice(fieldId, value);
+    });
+  }
+
+  if (!window.__PD3I_QUEUE_PAGER_BOUND__) {
+    window.__PD3I_QUEUE_PAGER_BOUND__ = true;
+    document.addEventListener('click', function(evt) {
+      const btn = evt.target && evt.target.closest ? evt.target.closest('.pd3i-queue-page-btn[data-page-key][data-page-target]') : null;
+      if (!btn) return;
+      const pageKey = String(btn.getAttribute('data-page-key') || '').trim();
+      const targetPage = Number(btn.getAttribute('data-page-target') || 1) || 1;
+      if (!pageKey) return;
+      window.__PD3I_QUEUE_PAGE_STATE__[pageKey] = targetPage;
+      if (WORKFLOW_INBOX_CACHE && normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) !== 'overview') {
+        renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+        return;
+      }
+      if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'overview' && typeof renderOverviewWorkspace === 'function') {
+        renderOverviewWorkspace();
+      }
     });
   }
 
@@ -3274,14 +3294,24 @@
     const rows = Array.isArray(items) ? items : [];
     const actionLabel = String(opts.actionLabel || 'Buka').trim() || 'Buka';
     const title = String(opts.title || 'Daftar antrian').trim() || 'Daftar antrian';
+    const pageSize = Math.max(1, Number(opts.pageSize || 8) || 8);
+    const pageKey = String(opts.pageKey || title || 'queue').trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
     if (!rows.length) {
       return `<div class="pd3i-empty-state">${escapeHtml(opts.emptyText || 'Belum ada antrian kerja penting saat ini.')}</div>`;
     }
 
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    const savedPage = Number((window.__PD3I_QUEUE_PAGE_STATE__ && window.__PD3I_QUEUE_PAGE_STATE__[pageKey]) || 1) || 1;
+    const currentPage = Math.min(Math.max(1, savedPage), totalPages);
+    window.__PD3I_QUEUE_PAGE_STATE__[pageKey] = currentPage;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndexExclusive = Math.min(startIndex + pageSize, rows.length);
+    const visibleRows = rows.slice(startIndex, endIndexExclusive);
+
     let html = '<div class="pd3i-queue-card">';
     html += '<div class="pd3i-queue-toolbar">';
     html += `<div class="pd3i-queue-toolbar-title">${escapeHtml(title)}</div>`;
-    html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${rows.length}</strong> entri</div>`;
+    html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${visibleRows.length}</strong> dari <strong>${rows.length}</strong> entri</div>`;
     html += '</div>';
     html += '<div class="pd3i-queue-table-wrap">';
     html += '<table class="pd3i-queue-table">';
@@ -3295,7 +3325,7 @@
     html += '<th class="is-action">Aksi</th>';
     html += '</tr></thead><tbody>';
 
-    rows.forEach(function(item, index) {
+    visibleRows.forEach(function(item, visibleIndex) {
       const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
       const dxArg = JSON.stringify(String(item && item.dx || ''));
       const bucket = getQueueBucketMeta(item);
@@ -3303,9 +3333,10 @@
       const recordText = String(item && (item.recordId || item.epid) || '-');
       const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
       const noteText = String(item && item.catatanVerifikasi || '').trim();
+      const rowNumber = startIndex + visibleIndex + 1;
 
       html += `<tr class="pd3i-queue-table-row ${bucket.className}">
-        <td class="pd3i-queue-cell is-no" data-label="No.">${index + 1}</td>
+        <td class="pd3i-queue-cell is-no" data-label="No.">${rowNumber}</td>
         <td class="pd3i-queue-cell pd3i-queue-col-main" data-label="Nama kasus">
           <div class="pd3i-queue-row-title">${escapeHtml(item && item.nama || '-')}</div>
           ${noteText ? `<div class="pd3i-queue-row-subtitle">${escapeHtml(noteText)}</div>` : ''}
@@ -3321,7 +3352,16 @@
     });
 
     html += '</tbody></table></div>';
-    html += `<div class="pd3i-queue-footer">Showing 1 to ${rows.length} of ${rows.length} entries</div>`;
+    html += '<div class="pd3i-queue-footer">';
+    html += `<div class="pd3i-queue-footer-meta">Showing ${startIndex + 1} to ${endIndexExclusive} of ${rows.length} entries</div>`;
+    if (totalPages > 1) {
+      html += '<div class="pd3i-queue-pagination">';
+      html += `<button type="button" class="pd3i-queue-page-btn" data-page-key="${escapeHtml(pageKey)}" data-page-target="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''}>Prev</button>`;
+      html += `<span class="pd3i-queue-page-indicator">Page ${currentPage} / ${totalPages}</span>`;
+      html += `<button type="button" class="pd3i-queue-page-btn" data-page-key="${escapeHtml(pageKey)}" data-page-target="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>`;
+      html += '</div>';
+    }
+    html += '</div>';
     html += '</div>';
     return html;
   }
@@ -3432,7 +3472,7 @@
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu review admin</div><div class="mt-2">';
       html += renderQueueTable(visiblePending.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'pending' });
-      }), { emptyText: 'Belum ada antrian review admin.' });
+      }), { title: 'Antrian review admin', pageKey: workspace + '-pending', emptyText: 'Belum ada antrian review admin.' });
       html += '</div></div>';
     }
 
@@ -3440,37 +3480,37 @@
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus perlu revisi</div><div class="mt-2">';
       html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
-      }), { emptyText: 'Belum ada kasus revisi.' });
+      }), { title: 'Kasus perlu revisi', pageKey: workspace + '-revision', emptyText: 'Belum ada kasus revisi.' });
       html += '</div></div>';
     }
 
     if (visibleVerificationDone.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Verifikasi selesai</div><div class="mt-2">';
-      html += renderQueueTable(visibleVerificationDone, { emptyText: 'Belum ada verifikasi selesai.', actionLabel: 'Lihat hasil' });
+      html += renderQueueTable(visibleVerificationDone, { title: 'Verifikasi selesai', pageKey: workspace + '-done', emptyText: 'Belum ada verifikasi selesai.', actionLabel: 'Lihat hasil' });
       html += '</div></div>';
     }
 
     if (visibleSample.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Antrian hasil sampel</div><div class="mt-2">';
-      html += renderQueueTable(visibleSample, { emptyText: 'Belum ada kasus menunggu hasil lab.', actionLabel: 'Input hasil' });
+      html += renderQueueTable(visibleSample, { title: 'Antrian hasil sampel', pageKey: workspace + '-queue', emptyText: 'Belum ada kasus menunggu hasil lab.', actionLabel: 'Input hasil' });
       html += '</div></div>';
     }
 
     if (visibleSampleDone.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Hasil sampel selesai</div><div class="mt-2">';
-      html += renderQueueTable(visibleSampleDone, { emptyText: 'Belum ada hasil sampel selesai.', actionLabel: 'Lihat hasil' });
+      html += renderQueueTable(visibleSampleDone, { title: 'Hasil sampel selesai', pageKey: workspace + '-done', emptyText: 'Belum ada hasil sampel selesai.', actionLabel: 'Lihat hasil' });
       html += '</div></div>';
     }
 
     if (visibleStatus.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Antrian update status</div><div class="mt-2">';
-      html += renderQueueTable(visibleStatus, { emptyText: 'Belum ada kasus siap update status.', actionLabel: 'Update status' });
+      html += renderQueueTable(visibleStatus, { title: 'Antrian update status', pageKey: workspace + '-queue', emptyText: 'Belum ada kasus siap update status.', actionLabel: 'Update status' });
       html += '</div></div>';
     }
 
     if (visibleStatusDone.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Status selesai</div><div class="mt-2">';
-      html += renderQueueTable(visibleStatusDone, { emptyText: 'Belum ada update status selesai.', actionLabel: 'Lihat status' });
+      html += renderQueueTable(visibleStatusDone, { title: 'Status selesai', pageKey: workspace + '-done', emptyText: 'Belum ada update status selesai.', actionLabel: 'Lihat status' });
       html += '</div></div>';
     }
 
