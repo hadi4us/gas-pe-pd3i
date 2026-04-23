@@ -3273,22 +3273,29 @@
     const opts = options || {};
     const rows = Array.isArray(items) ? items : [];
     const actionLabel = String(opts.actionLabel || 'Buka').trim() || 'Buka';
+    const title = String(opts.title || 'Daftar antrian').trim() || 'Daftar antrian';
     if (!rows.length) {
       return `<div class="pd3i-empty-state">${escapeHtml(opts.emptyText || 'Belum ada antrian kerja penting saat ini.')}</div>`;
     }
 
-    let html = '<div class="pd3i-queue-table">';
-    html += '<div class="pd3i-queue-table-head">';
-    html += '<div>Nama kasus</div>';
-    html += '<div>Wilayah / DX</div>';
-    html += '<div>ID record</div>';
-    html += '<div>Status</div>';
-    html += '<div>Update</div>';
-    html += '<div>Aksi</div>';
+    let html = '<div class="pd3i-queue-card">';
+    html += '<div class="pd3i-queue-toolbar">';
+    html += `<div class="pd3i-queue-toolbar-title">${escapeHtml(title)}</div>`;
+    html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${rows.length}</strong> entri</div>`;
     html += '</div>';
-    html += '<div class="pd3i-queue-table-body">';
+    html += '<div class="pd3i-queue-table-wrap">';
+    html += '<table class="pd3i-queue-table">';
+    html += '<thead><tr>';
+    html += '<th class="is-no">No.</th>';
+    html += '<th>Nama kasus</th>';
+    html += '<th>Wilayah / DX</th>';
+    html += '<th>ID record</th>';
+    html += '<th>Status</th>';
+    html += '<th>Update</th>';
+    html += '<th class="is-action">Aksi</th>';
+    html += '</tr></thead><tbody>';
 
-    rows.forEach(function(item) {
+    rows.forEach(function(item, index) {
       const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
       const dxArg = JSON.stringify(String(item && item.dx || ''));
       const bucket = getQueueBucketMeta(item);
@@ -3297,22 +3304,25 @@
       const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
       const noteText = String(item && item.catatanVerifikasi || '').trim();
 
-      html += `<div class="pd3i-queue-table-row ${bucket.className}">
-        <div class="pd3i-queue-col pd3i-queue-col-main">
+      html += `<tr class="pd3i-queue-table-row ${bucket.className}">
+        <td class="pd3i-queue-cell is-no" data-label="No.">${index + 1}</td>
+        <td class="pd3i-queue-cell pd3i-queue-col-main" data-label="Nama kasus">
           <div class="pd3i-queue-row-title">${escapeHtml(item && item.nama || '-')}</div>
           ${noteText ? `<div class="pd3i-queue-row-subtitle">${escapeHtml(noteText)}</div>` : ''}
-        </div>
-        <div class="pd3i-queue-col" data-label="Wilayah / DX">${escapeHtml(wilayahText)}</div>
-        <div class="pd3i-queue-col" data-label="ID record">${escapeHtml(recordText)}</div>
-        <div class="pd3i-queue-col" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></div>
-        <div class="pd3i-queue-col" data-label="Update">${escapeHtml(updateText)}</div>
-        <div class="pd3i-queue-col pd3i-queue-col-action" data-label="Aksi">
+        </td>
+        <td class="pd3i-queue-cell" data-label="Wilayah / DX">${escapeHtml(wilayahText)}</td>
+        <td class="pd3i-queue-cell" data-label="ID record">${escapeHtml(recordText)}</td>
+        <td class="pd3i-queue-cell" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></td>
+        <td class="pd3i-queue-cell" data-label="Update">${escapeHtml(updateText)}</td>
+        <td class="pd3i-queue-cell is-action" data-label="Aksi">
           <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>${escapeHtml(actionLabel)}</button>
-        </div>
-      </div>`;
+        </td>
+      </tr>`;
     });
 
-    html += '</div></div>';
+    html += '</tbody></table></div>';
+    html += `<div class="pd3i-queue-footer">Showing 1 to ${rows.length} of ${rows.length} entries</div>`;
+    html += '</div>';
     return html;
   }
 
