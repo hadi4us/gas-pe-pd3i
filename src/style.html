@@ -4601,3 +4601,411 @@ body.pd3i-body {
     width: 100%;
   }
 }
+
+/* ============================================================
+   TABLER FORM REFRESH — LARGE FORM PASS
+   ============================================================ */
+
+#dynamic-form .pd3i-form-layout,
+#dynamic-form-input .pd3i-form-layout,
+#dynamic-form-verifikasi .pd3i-form-layout,
+#dynamic-form-sampel .pd3i-form-layout,
+#dynamic-form-status .pd3i-form-layout {
+  max-width: 1220px;
+  margin: 0 auto;
+  gap: 1.25rem;
+}
+
+#dynamic-form .pd3i-form-main,
+#dynamic-form-input .pd3i-form-main,
+#dynamic-form-verifikasi .pd3i-form-main,
+#dynamic-form-sampel .pd3i-form-main,
+#dynamic-form-status .pd3i-form-main {
+  gap: 1.25rem;
+}
+
+#dynamic-form .pd3i-form-sidebar,
+#dynamic-form-input .pd3i-form-sidebar,
+#dynamic-form-verifikasi .pd3i-form-sidebar,
+#dynamic-form-sampel .pd3i-form-sidebar,
+#dynamic-form-status .pd3i-form-sidebar {
+  order: 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+#dynamic-form .pd3i-stepper-card,
+#dynamic-form .pd3i-form-card,
+#dynamic-form .pd3i-form-card-section,
+#dynamic-form .pd3i-diagnosis-section,
+#dynamic-form .pd3i-summary-panel-card,
+#dynamic-form .pd3i-wizard-panel-card,
+#dynamic-form .pd3i-workflow-panel-card,
+#dynamic-form .pd3i-action-panel-card,
+#dynamic-form-input .pd3i-form-card,
+#dynamic-form-input .pd3i-form-card-section,
+#dynamic-form-input .pd3i-diagnosis-section,
+#dynamic-form-input .pd3i-action-panel-card,
+#dynamic-form-verifikasi .pd3i-form-card,
+#dynamic-form-verifikasi .pd3i-form-card-section,
+#dynamic-form-verifikasi .pd3i-diagnosis-section,
+#dynamic-form-verifikasi .pd3i-action-panel-card,
+#dynamic-form-sampel .pd3i-form-card,
+#dynamic-form-sampel .pd3i-form-card-section,
+#dynamic-form-sampel .pd3i-diagnosis-section,
+#dynamic-form-sampel .pd3i-action-panel-card,
+#dynamic-form-status .pd3i-form-card,
+#dynamic-form-status .pd3i-form-card-section,
+#dynamic-form-status .pd3i-diagnosis-section,
+#dynamic-form-status .pd3i-action-panel-card {
+  border-radius: 14px;
+  border: 1px solid #e6e9ef;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+#dynamic-form .pd3i-form-card-highlight,
+#dynamic-form-input .pd3i-form-card-highlight,
+#dynamic-form-verifikasi .pd3i-form-card-highlight,
+#dynamic-form-sampel .pd3i-form-card-highlight,
+#dynamic-form-status .pd3i-form-card-highlight {
+  background: #ffffff;
+}
+
+#dynamic-form .pd3i-form-card-section::before,
+#dynamic-form-input .pd3i-form-card-section::before,
+#dynamic-form-verifikasi .pd3i-form-card-section::before,
+#dynamic-form-sampel .pd3i-form-card-section::before,
+#dynamic-form-status .pd3i-form-card-section::before,
+#dynamic-form .pd3i-form-card-pelapor::before,
+#dynamic-form .pd3i-form-card-pasien::before,
+#dynamic-form .pd3i-form-card-specific::before,
+#dynamic-form .pd3i-form-card-verifikasi::before,
+#dynamic-form .pd3i-form-card-sampel::before,
+#dynamic-form .pd3i-form-card-status::before,
+#dynamic-form-input .pd3i-form-card-pelapor::before,
+#dynamic-form-input .pd3i-form-card-pasien::before,
+#dynamic-form-input .pd3i-form-card-specific::before,
+#dynamic-form-verifikasi .pd3i-form-card-pelapor::before,
+#dynamic-form-verifikasi .pd3i-form-card-pasien::before,
+#dynamic-form-verifikasi .pd3i-form-card-specific::before,
+#dynamic-form-verifikasi .pd3i-form-card-verifikasi::before,
+#dynamic-form-sampel .pd3i-form-card-pelapor::before,
+#dynamic-form-sampel .pd3i-form-card-pasien::before,
+#dynamic-form-sampel .pd3i-form-card-specific::before,
+#dynamic-form-sampel .pd3i-form-card-sampel::before,
+#dynamic-form-status .pd3i-form-card-pelapor::before,
+#dynamic-form-status .pd3i-form-card-pasien::before,
+#dynamic-form-status .pd3i-form-card-specific::before,
+#dynamic-form-status .pd3i-form-card-status::before {
+  display: none !important;
+}
+
+#dynamic-form .pd3i-card-header-row,
+#dynamic-form-input .pd3i-card-header-row,
+#dynamic-form-verifikasi .pd3i-card-header-row,
+#dynamic-form-sampel .pd3i-card-header-row,
+#dynamic-form-status .pd3i-card-header-row {
+  padding-bottom: 0.9rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eef2f7;
+}
+
+#dynamic-form .pd3i-card-title,
+#dynamic-form-input .pd3i-card-title,
+#dynamic-form-verifikasi .pd3i-card-title,
+#dynamic-form-sampel .pd3i-card-title,
+#dynamic-form-status .pd3i-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #182433;
+}
+
+#dynamic-form .pd3i-card-eyebrow,
+#dynamic-form-input .pd3i-card-eyebrow,
+#dynamic-form-verifikasi .pd3i-card-eyebrow,
+#dynamic-form-sampel .pd3i-card-eyebrow,
+#dynamic-form-status .pd3i-card-eyebrow {
+  color: #6b7280;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+#dynamic-form .pd3i-badge-soft,
+#dynamic-form-input .pd3i-badge-soft,
+#dynamic-form-verifikasi .pd3i-badge-soft,
+#dynamic-form-sampel .pd3i-badge-soft,
+#dynamic-form-status .pd3i-badge-soft {
+  background: #f6f8fb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  padding: 0.35rem 0.7rem;
+}
+
+#dynamic-form .pd3i-field-grid,
+#dynamic-form .pd3i-diagnosis-section-grid,
+#dynamic-form-input .pd3i-field-grid,
+#dynamic-form-input .pd3i-diagnosis-section-grid,
+#dynamic-form-verifikasi .pd3i-field-grid,
+#dynamic-form-verifikasi .pd3i-diagnosis-section-grid,
+#dynamic-form-sampel .pd3i-field-grid,
+#dynamic-form-sampel .pd3i-diagnosis-section-grid,
+#dynamic-form-status .pd3i-field-grid,
+#dynamic-form-status .pd3i-diagnosis-section-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem 1.25rem;
+}
+
+#dynamic-form .pd3i-field-card,
+#dynamic-form-input .pd3i-field-card,
+#dynamic-form-verifikasi .pd3i-field-card,
+#dynamic-form-sampel .pd3i-field-card,
+#dynamic-form-status .pd3i-field-card {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+  gap: 0.45rem;
+}
+
+#dynamic-form .pd3i-field-card-dependent,
+#dynamic-form-input .pd3i-field-card-dependent,
+#dynamic-form-verifikasi .pd3i-field-card-dependent,
+#dynamic-form-sampel .pd3i-field-card-dependent,
+#dynamic-form-status .pd3i-field-card-dependent {
+  padding: 0.85rem 0.9rem;
+  border: 1px dashed #d9e0e8;
+  border-radius: 10px;
+  background: #fafbfd;
+}
+
+#dynamic-form .pd3i-field-label-generated,
+#dynamic-form-input .pd3i-field-label-generated,
+#dynamic-form-verifikasi .pd3i-field-label-generated,
+#dynamic-form-sampel .pd3i-field-label-generated,
+#dynamic-form-status .pd3i-field-label-generated {
+  margin-bottom: 0.15rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #243244;
+}
+
+#dynamic-form .pd3i-generated-control,
+#dynamic-form .choices__inner,
+#dynamic-form-input .pd3i-generated-control,
+#dynamic-form-input .choices__inner,
+#dynamic-form-verifikasi .pd3i-generated-control,
+#dynamic-form-verifikasi .choices__inner,
+#dynamic-form-sampel .pd3i-generated-control,
+#dynamic-form-sampel .choices__inner,
+#dynamic-form-status .pd3i-generated-control,
+#dynamic-form-status .choices__inner {
+  min-height: 44px;
+  border-radius: 8px !important;
+  border: 1px solid #d8dde6 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  font-size: 0.94rem;
+}
+
+#dynamic-form textarea.pd3i-generated-control,
+#dynamic-form-input textarea.pd3i-generated-control,
+#dynamic-form-verifikasi textarea.pd3i-generated-control,
+#dynamic-form-sampel textarea.pd3i-generated-control,
+#dynamic-form-status textarea.pd3i-generated-control {
+  min-height: 116px;
+  padding-top: 0.75rem;
+}
+
+#dynamic-form .pd3i-generated-control:focus,
+#dynamic-form .choices.is-focused .choices__inner,
+#dynamic-form-input .pd3i-generated-control:focus,
+#dynamic-form-input .choices.is-focused .choices__inner,
+#dynamic-form-verifikasi .pd3i-generated-control:focus,
+#dynamic-form-verifikasi .choices.is-focused .choices__inner,
+#dynamic-form-sampel .pd3i-generated-control:focus,
+#dynamic-form-sampel .choices.is-focused .choices__inner,
+#dynamic-form-status .pd3i-generated-control:focus,
+#dynamic-form-status .choices.is-focused .choices__inner {
+  border-color: #206bc4 !important;
+  box-shadow: 0 0 0 3px rgba(32, 107, 196, 0.10) !important;
+}
+
+#dynamic-form .pd3i-dynamic-card,
+#dynamic-form-input .pd3i-dynamic-card,
+#dynamic-form-verifikasi .pd3i-dynamic-card,
+#dynamic-form-sampel .pd3i-dynamic-card,
+#dynamic-form-status .pd3i-dynamic-card {
+  border-radius: 10px;
+  border: 1px solid #e6e9ef;
+  background: #fbfcfe;
+  box-shadow: none;
+}
+
+#dynamic-form .pd3i-summary-grid,
+#dynamic-form-input .pd3i-summary-grid,
+#dynamic-form-verifikasi .pd3i-summary-grid,
+#dynamic-form-sampel .pd3i-summary-grid,
+#dynamic-form-status .pd3i-summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+#dynamic-form .pd3i-summary-item,
+#dynamic-form .pd3i-workflow-status-item,
+#dynamic-form-input .pd3i-summary-item,
+#dynamic-form-input .pd3i-workflow-status-item,
+#dynamic-form-verifikasi .pd3i-summary-item,
+#dynamic-form-verifikasi .pd3i-workflow-status-item,
+#dynamic-form-sampel .pd3i-summary-item,
+#dynamic-form-sampel .pd3i-workflow-status-item,
+#dynamic-form-status .pd3i-summary-item,
+#dynamic-form-status .pd3i-workflow-status-item {
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+
+#dynamic-form .pd3i-action-panel-card,
+#dynamic-form-input .pd3i-action-panel-card,
+#dynamic-form-verifikasi .pd3i-action-panel-card,
+#dynamic-form-sampel .pd3i-action-panel-card,
+#dynamic-form-status .pd3i-action-panel-card {
+  max-width: 1220px;
+  margin: 0.25rem auto 0;
+  padding: 1rem 1.15rem;
+}
+
+#dynamic-form .pd3i-action-panel-note,
+#dynamic-form-input .pd3i-action-panel-note,
+#dynamic-form-verifikasi .pd3i-action-panel-note,
+#dynamic-form-sampel .pd3i-action-panel-note,
+#dynamic-form-status .pd3i-action-panel-note {
+  background: #f8fafc;
+  border: 1px solid #e7edf4;
+  color: #475569;
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+}
+
+#dynamic-form .pd3i-submit-stack,
+#dynamic-form-input .pd3i-submit-stack,
+#dynamic-form-verifikasi .pd3i-submit-stack,
+#dynamic-form-sampel .pd3i-submit-stack,
+#dynamic-form-status .pd3i-submit-stack {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#dynamic-form .pd3i-submit-stack > button,
+#dynamic-form-input .pd3i-submit-stack > button,
+#dynamic-form-verifikasi .pd3i-submit-stack > button,
+#dynamic-form-sampel .pd3i-submit-stack > button,
+#dynamic-form-status .pd3i-submit-stack > button {
+  width: auto;
+  min-width: 190px;
+}
+
+#dynamic-form .pd3i-submit-button,
+#dynamic-form-input .pd3i-submit-button,
+#dynamic-form-verifikasi .pd3i-submit-button,
+#dynamic-form-sampel .pd3i-submit-button,
+#dynamic-form-status .pd3i-submit-button,
+#dynamic-form .pd3i-cancel-button,
+#dynamic-form-input .pd3i-cancel-button,
+#dynamic-form-verifikasi .pd3i-cancel-button,
+#dynamic-form-sampel .pd3i-cancel-button,
+#dynamic-form-status .pd3i-cancel-button {
+  min-height: 44px;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: 0.92rem;
+  padding: 0 1rem;
+}
+
+#dynamic-form .pd3i-submit-button,
+#dynamic-form-input .pd3i-submit-button,
+#dynamic-form-verifikasi .pd3i-submit-button,
+#dynamic-form-sampel .pd3i-submit-button,
+#dynamic-form-status .pd3i-submit-button {
+  background: #206bc4;
+}
+
+#dynamic-form .pd3i-submit-button:hover,
+#dynamic-form-input .pd3i-submit-button:hover,
+#dynamic-form-verifikasi .pd3i-submit-button:hover,
+#dynamic-form-sampel .pd3i-submit-button:hover,
+#dynamic-form-status .pd3i-submit-button:hover {
+  background: #1a5aa6;
+}
+
+#dynamic-form .pd3i-cancel-button,
+#dynamic-form-input .pd3i-cancel-button,
+#dynamic-form-verifikasi .pd3i-cancel-button,
+#dynamic-form-sampel .pd3i-cancel-button,
+#dynamic-form-status .pd3i-cancel-button {
+  margin-top: 0;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #d7dde6;
+}
+
+@media (max-width: 1180px) {
+  #dynamic-form .pd3i-form-sidebar,
+  #dynamic-form-input .pd3i-form-sidebar,
+  #dynamic-form-verifikasi .pd3i-form-sidebar,
+  #dynamic-form-sampel .pd3i-form-sidebar,
+  #dynamic-form-status .pd3i-form-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  #dynamic-form .pd3i-summary-grid,
+  #dynamic-form-input .pd3i-summary-grid,
+  #dynamic-form-verifikasi .pd3i-summary-grid,
+  #dynamic-form-sampel .pd3i-summary-grid,
+  #dynamic-form-status .pd3i-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  #dynamic-form .pd3i-field-grid,
+  #dynamic-form .pd3i-diagnosis-section-grid,
+  #dynamic-form-input .pd3i-field-grid,
+  #dynamic-form-input .pd3i-diagnosis-section-grid,
+  #dynamic-form-verifikasi .pd3i-field-grid,
+  #dynamic-form-verifikasi .pd3i-diagnosis-section-grid,
+  #dynamic-form-sampel .pd3i-field-grid,
+  #dynamic-form-sampel .pd3i-diagnosis-section-grid,
+  #dynamic-form-status .pd3i-field-grid,
+  #dynamic-form-status .pd3i-diagnosis-section-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #dynamic-form .pd3i-submit-stack,
+  #dynamic-form-input .pd3i-submit-stack,
+  #dynamic-form-verifikasi .pd3i-submit-stack,
+  #dynamic-form-sampel .pd3i-submit-stack,
+  #dynamic-form-status .pd3i-submit-stack {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  #dynamic-form .pd3i-submit-stack > button,
+  #dynamic-form-input .pd3i-submit-stack > button,
+  #dynamic-form-verifikasi .pd3i-submit-stack > button,
+  #dynamic-form-sampel .pd3i-submit-stack > button,
+  #dynamic-form-status .pd3i-submit-stack > button {
+    width: 100%;
+    min-width: 0;
+  }
+}
