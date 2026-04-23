@@ -301,3 +301,160 @@ function repairReferenceSheetsToScopedAccessModel() {
   }
   return _buildScopedAccessSheetsFromLegacy_(legacyUser, legacyPengampu);
 }
+
+function _normalizeDxList_(dxList) {
+  var list = Array.isArray(dxList) ? dxList : (dxList ? [dxList] : ['MR', 'DIF', 'PERT', 'TN', 'AFP']);
+  var seen = {};
+  return list.map(function(dx) { return String(dx || '').trim().toUpperCase(); }).filter(function(dx) {
+    if (!dx || seen[dx]) return false;
+    seen[dx] = true;
+    return ['MR', 'DIF', 'PERT', 'TN', 'AFP'].indexOf(dx) !== -1;
+  });
+}
+
+function _getRawSheetNameFromDx_(dx) {
+  return String(dx || '').trim().toUpperCase() + '_Raw';
+}
+
+function _getRawHeaders_(sheet) {
+  if (!sheet || sheet.getLastColumn() < 1) return [];
+  return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(v) { return String(v || '').trim(); });
+}
+
+function _findDuplicateHeaders_(headers) {
+  var seen = {};
+  var dups = [];
+  (headers || []).forEach(function(h) {
+    var key = String(h || '').trim();
+    if (!key) return;
+    if (seen[key] && dups.indexOf(key) === -1) dups.push(key);
+    seen[key] = true;
+  });
+  return dups;
+}
+
+function _buildRawHeaderAuditForDx_(dx) {
+  var sheetName = _getRawSheetNameFromDx_(dx);
+  var sheet = getSheetOrThrow_(sheetName);
+  var headers = _getRawHeaders_(sheet);
+  var canonical = getCanonicalRawHeaderOrder_(dx) || [];
+  var canonicalPresent = canonical.filter(function(h) { return headers.indexOf(h) !== -1; });
+  var legacyOrUnknown = headers.filter(function(h) { return canonical.indexOf(h) === -1; });
+  var missingCanonical = canonical.filter(function(h) { return headers.indexOf(h) === -1; });
+  var duplicates = _findDuplicateHeaders_(headers);
+  var proposed = canonicalPresent.concat(legacyOrUnknown);
+  return {
+    dx: dx,
+    sheetName: sheetName,
+    rowCount: sheet.getLastRow(),
+    columnCount: sheet.getLastColumn(),
+    headers: headers,
+    duplicateHeaders: duplicates,
+    canonicalPresent: canonicalPresent,
+    missingCanonical: missingCanonical,
+    legacyOrUnknownHeaders: legacyOrUnknown,
+    proposedHeaderOrder: proposed,
+    willChangeOrder: JSON.stringify(headers) !== JSON.stringify(proposed)
+  };
+}
+
+function inspectRawSheetHeaders(token, dxList) {
+  _requireAdminFromToken_(token);
+  var dxs = _normalizeDxList_(dxList);
+  return {
+    status: 'success',
+    spreadsheetId: getSpreadsheet_().getId(),
+    inspectedAt: new Date().toISOString(),
+    sheets: dxs.map(function(dx) { return _buildRawHeaderAuditForDx_(dx); })
+  };
+}
+
+function previewRawSheetHeaderReorder(token, dxList) {
+  return inspectRawSheetHeaders(token, dxList);
+}
+
+function _copyRawSheetBackup_(sheet) {
+  var ss = getSpreadsheet_();
+  var tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
+  var stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmmss');
+  var backup = sheet.copyTo(ss);
+  backup.setName(sheet.getName() + '_PRE_REORDER_' + stamp);
+  return backup.getName();
+}
+
+function _reorderRawSheetColumns_(sheet, proposedHeaders) {
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  if (lastCol < 1) return { changed: false, message: 'Sheet kosong.' };
+
+  var data = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  var oldHeaders = data[0].map(function(v) { return String(v || '').trim(); });
+  var newHeaders = proposedHeaders.slice();
+  var indexMap = newHeaders.map(function(header) { return oldHeaders.indexOf(header); });
+  var reordered = [newHeaders];
+
+  for (var r = 1; r < data.length; r++) {
+    var oldRow = data[r];
+    var newRow = indexMap.map(function(idx) { return idx >= 0 ? oldRow[idx] : ''; });
+    reordered.push(newRow);
+  }
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, reordered.length, newHeaders.length).setValues(reordered);
+  return { changed: true, columns: newHeaders.length, rows: reordered.length };
+}
+
+function reorderRawSheetHeaders(token, dxList, options) {
+  _requireAdminFromToken_(token);
+  var opts = options || {};
+  var doBackup = opts.backup !== false;
+  var dxs = _normalizeDxList_(dxList);
+  var results = [];
+
+  dxs.forEach(function(dx) {
+    var audit = _buildRawHeaderAuditForDx_(dx);
+    if (audit.duplicateHeaders && audit.duplicateHeaders.length) {
+      results.push({
+        dx: dx,
+        sheetName: audit.sheetName,
+        status: 'error',
+        message: 'Duplicate exact header ditemukan. Reorder dibatalkan untuk sheet ini.',
+        duplicateHeaders: audit.duplicateHeaders
+      });
+      return;
+    }
+
+    if (!audit.willChangeOrder) {
+      results.push({
+        dx: dx,
+        sheetName: audit.sheetName,
+        status: 'noop',
+        message: 'Urutan header sudah sesuai canonical order.',
+        legacyOrUnknownHeaders: audit.legacyOrUnknownHeaders,
+        missingCanonical: audit.missingCanonical
+      });
+      return;
+    }
+
+    var sheet = getSheetOrThrow_(audit.sheetName);
+    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet) : '';
+    var reorderResult = _reorderRawSheetColumns_(sheet, audit.proposedHeaderOrder);
+
+    results.push({
+      dx: dx,
+      sheetName: audit.sheetName,
+      status: 'success',
+      backupSheetName: backupSheetName,
+      changed: !!reorderResult.changed,
+      legacyOrUnknownHeaders: audit.legacyOrUnknownHeaders,
+      missingCanonical: audit.missingCanonical,
+      finalHeaders: audit.proposedHeaderOrder
+    });
+  });
+
+  return {
+    status: 'success',
+    reorderedAt: new Date().toISOString(),
+    results: results
+  };
+}
