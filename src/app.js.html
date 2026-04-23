@@ -2125,6 +2125,7 @@
   let ACTIVE_SIDEBAR_WORKSPACE = "overview";
   let WORKSPACE_RUNTIME_SEQ = 0;
   let WORKFLOW_INBOX_CACHE = null;
+  let WORKSPACE_SEARCH_FILTER_STATE = {};
 
   function normalizeSidebarWorkspace(workspaceOrSection) {
     const raw = String(workspaceOrSection || '').trim().toLowerCase();
@@ -2386,6 +2387,8 @@
     const opts = options || {};
     const normalized = normalizeSidebarWorkspace(workspace);
     const targetStage = getWorkspaceStageForSidebar(normalized);
+    const previousWorkspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'overview');
+    saveWorkflowSearchFiltersForWorkspace(previousWorkspace);
     beginWorkspaceRuntime(normalized);
     cleanupWorkspaceTransientUi(normalized);
 
@@ -2424,6 +2427,7 @@
       updateFormStepperState('section-pelapor');
       applySidebarWorkspaceLayout('search');
       applySearchShellCopyForWorkspace('search');
+      restoreWorkflowSearchFiltersForWorkspace('search');
       refreshWorkflowInbox();
       if (opts.scroll !== false) document.getElementById('section-search-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
@@ -2443,6 +2447,7 @@
     updateFormStepperState(targetStage);
     applySidebarWorkspaceLayout(normalized);
     applySearchShellCopyForWorkspace(normalized);
+    restoreWorkflowSearchFiltersForWorkspace(normalized);
 
     const activeRecordMeta = (typeof window !== 'undefined' && window.__PD3I_ACTIVE_RECORD_META) ? window.__PD3I_ACTIVE_RECORD_META : null;
     const activeRecordKey = String((activeRecordMeta && (activeRecordMeta.recordKey || activeRecordMeta['ID Registrasi Kasus'] || activeRecordMeta['Nomor EPID'])) || '').trim();
@@ -2695,15 +2700,50 @@
     };
   }
 
-  function resetWorkflowSearchFilters() {
-    ['search-epid', 'search-nama', 'search-tgl-lahir', 'search-orang-tua', 'search-alamat', 'search-kelurahan', 'search-status-verifikasi'].forEach(function(id) {
+  function applyWorkflowSearchFilters(filters) {
+    const values = filters || {};
+    const map = {
+      'search-epid': 'epid',
+      'search-nama': 'nama',
+      'search-tgl-lahir': 'tanggalLahir',
+      'search-orang-tua': 'orangTua',
+      'search-alamat': 'alamat',
+      'search-kelurahan': 'kelurahan',
+      'search-status-verifikasi': 'statusVerifikasi',
+      'search-sort': 'sortBy'
+    };
+    Object.keys(map).forEach(function(id) {
       const el = document.getElementById(id);
       if (!el) return;
-      if (el.tagName === 'SELECT') el.selectedIndex = 0;
-      else el.value = '';
+      const key = map[id];
+      const nextValue = values[key] != null ? String(values[key]) : (id === 'search-sort' ? 'updated_desc' : '');
+      el.value = nextValue;
     });
-    const sortEl = document.getElementById('search-sort');
-    if (sortEl) sortEl.value = 'updated_desc';
+  }
+
+  function saveWorkflowSearchFiltersForWorkspace(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    if (!['search', 'verifikasi', 'sampel', 'status'].includes(normalized)) return;
+    WORKSPACE_SEARCH_FILTER_STATE[normalized] = collectWorkflowSearchFilters();
+  }
+
+  function restoreWorkflowSearchFiltersForWorkspace(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    if (!['search', 'verifikasi', 'sampel', 'status'].includes(normalized)) return;
+    const saved = WORKSPACE_SEARCH_FILTER_STATE[normalized] || null;
+    if (saved) {
+      applyWorkflowSearchFilters(saved);
+    } else {
+      applyWorkflowSearchFilters({ sortBy: 'updated_desc' });
+      applySearchDefaultsForWorkspace(normalized);
+      saveWorkflowSearchFiltersForWorkspace(normalized);
+    }
+  }
+
+  function resetWorkflowSearchFilters() {
+    applyWorkflowSearchFilters({ sortBy: 'updated_desc' });
+    applySearchDefaultsForWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'search');
+    saveWorkflowSearchFiltersForWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'search');
   }
 
   function applyWorkflowSearchUiMode(workspace) {
@@ -5495,12 +5535,13 @@
         });
       }
 
-      ['search-epid', 'search-nama', 'search-kelurahan', 'search-sort'].forEach(function(id) {
+      ['search-epid', 'search-nama', 'search-kelurahan', 'search-status-verifikasi', 'search-sort'].forEach(function(id) {
         const el = document.getElementById(id);
         if (!el || el.dataset.boundFilter === '1') return;
         el.dataset.boundFilter = '1';
         const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
         el.addEventListener(eventName, function() {
+          saveWorkflowSearchFiltersForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
           if (!['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) return;
           if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
         });
