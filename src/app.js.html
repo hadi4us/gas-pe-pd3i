@@ -2820,15 +2820,15 @@
   }
 
   function getQueueBucketMeta(item) {
-    if (item && item.__queueStatusLabel) {
-      return { label: String(item.__queueStatusLabel || '').trim() || 'Aktif', className: String(item.__queueStatusClass || 'is-warning').trim() || 'is-warning' };
-    }
     const status = String(item && item.statusVerifikasi || '').trim();
     if (status === 'Perlu Revisi') {
       return { label: 'Perlu revisi', className: 'is-danger' };
     }
     if (status === 'Terverifikasi') {
       return { label: 'Terverifikasi', className: 'is-success' };
+    }
+    if (item && item.__queueStatusLabel) {
+      return { label: String(item.__queueStatusLabel || '').trim() || 'Aktif', className: String(item.__queueStatusClass || 'is-warning').trim() || 'is-warning' };
     }
     return { label: 'Pending review', className: 'is-warning' };
   }
