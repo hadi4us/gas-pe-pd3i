@@ -553,31 +553,14 @@
   // REF FASKES
   // ============================================================
   window.loadFaskesRealtime = function(selectedUnitName, forceReload) {
-    if (!safeGsRun() || !SESSION_TOKEN) return;
-
-    const hasCache = Array.isArray(MASTER_FASKES) && MASTER_FASKES.length > 0;
-    if (hasCache && !forceReload) {
-      const src = document.getElementById("Sumber Laporan");
-      const currentSelected =
-        selectedUnitName ||
-        document.getElementById("Nama unit pelapor")?.value ||
-        "";
-
-      if (src && src.value) {
-        initChoices(src.value, currentSelected);
+    return new Promise(function(resolve) {
+      if (!safeGsRun() || !SESSION_TOKEN) {
+        resolve([]);
+        return;
       }
 
-      if (document.getElementById("Nama Rumah Sakit")) {
-        const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
-        initChoicesRumahSakit(currentRs);
-      }
-      return;
-    }
-
-    google.script.run
-      .withSuccessHandler(function(data) {
-        MASTER_FASKES = Array.isArray(data) ? data : [];
-
+      const hasCache = Array.isArray(MASTER_FASKES) && MASTER_FASKES.length > 0;
+      if (hasCache && !forceReload) {
         const src = document.getElementById("Sumber Laporan");
         const currentSelected =
           selectedUnitName ||
@@ -592,12 +575,37 @@
           const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
           initChoicesRumahSakit(currentRs);
         }
-      })
-      .withFailureHandler(function(err) {
-        console.error("getFaskesFromSheet failed:", err);
-        MASTER_FASKES = [];
-      })
-      .getFaskesFromSheet(SESSION_TOKEN);
+        resolve(MASTER_FASKES || []);
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          MASTER_FASKES = Array.isArray(data) ? data : [];
+
+          const src = document.getElementById("Sumber Laporan");
+          const currentSelected =
+            selectedUnitName ||
+            document.getElementById("Nama unit pelapor")?.value ||
+            "";
+
+          if (src && src.value) {
+            initChoices(src.value, currentSelected);
+          }
+
+          if (document.getElementById("Nama Rumah Sakit")) {
+            const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
+            initChoicesRumahSakit(currentRs);
+          }
+          resolve(MASTER_FASKES || []);
+        })
+        .withFailureHandler(function(err) {
+          console.error("getFaskesFromSheet failed:", err);
+          MASTER_FASKES = [];
+          resolve([]);
+        })
+        .getFaskesFromSheet(SESSION_TOKEN);
+    });
   };
 
   function normalizeFaskesJenisLabel(value) {
@@ -3926,6 +3934,94 @@
     }
   };
 
+  function getWilayahNextFieldId(fieldId) {
+    const wilayahMap = {
+      "Provinsi": "Kab/Kota",
+      "Provinsi Pasien": "Kab/Kota Pasien",
+      "Kab/Kota Pasien": "Kecamatan",
+      "Kecamatan": "Kelurahan"
+    };
+    return wilayahMap[String(fieldId || '').trim()] || '';
+  }
+
+  function getWilayahRequestType(fieldId) {
+    if (fieldId === "Provinsi" || fieldId === "Provinsi Pasien") return "regencies";
+    if (fieldId === "Kab/Kota Pasien") return "districts";
+    if (fieldId === "Kecamatan") return "villages";
+    return "";
+  }
+
+  function ensureSelectOptionValue(selectEl, value) {
+    if (!selectEl) return;
+    const targetValue = String(value || '').trim();
+    if (!targetValue) return;
+    const exists = Array.from(selectEl.options || []).some(function(opt) {
+      return String(opt.value || '').trim() === targetValue;
+    });
+    if (exists) return;
+    const option = document.createElement('option');
+    option.value = targetValue;
+    option.textContent = targetValue;
+    option.setAttribute('data-manual', '1');
+    selectEl.appendChild(option);
+  }
+
+  function loadDependentWilayahOptions(parentEl) {
+    return new Promise(function(resolve) {
+      if (!parentEl) {
+        resolve(null);
+        return;
+      }
+      const next = getWilayahNextFieldId(parentEl.id);
+      const nextEl = document.getElementById(next);
+      if (!nextEl) {
+        resolve(null);
+        return;
+      }
+
+      const id = parentEl.options[parentEl.selectedIndex]?.getAttribute("data-id");
+      nextEl.innerHTML = '<option value="">-- Pilih --</option>';
+      if (!id) {
+        resolve(nextEl);
+        return;
+      }
+
+      const type = getWilayahRequestType(parentEl.id);
+      if (!type) {
+        resolve(nextEl);
+        return;
+      }
+
+      fetch(`${API_WILAYAH_BASE}/${type}/${id}.json`)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          const finalData = applyWilayahOptionOverrides(type, parentEl, data);
+          finalData.forEach(function(item) {
+            const option = document.createElement('option');
+            option.value = String(item && item.name || '');
+            option.setAttribute('data-id', String(item && item.id || ''));
+            option.textContent = String(item && item.name || '');
+            nextEl.appendChild(option);
+          });
+          resolve(nextEl);
+        })
+        .catch(function(err) {
+          if (type === 'villages') {
+            const finalData = applyWilayahOptionOverrides(type, parentEl, []);
+            finalData.forEach(function(item) {
+              const option = document.createElement('option');
+              option.value = String(item && item.name || '');
+              option.setAttribute('data-id', String(item && item.id || ''));
+              option.textContent = String(item && item.name || '');
+              nextEl.appendChild(option);
+            });
+          }
+          console.error("load wilayah failed:", err);
+          resolve(nextEl);
+        });
+    });
+  }
+
   function applyWilayahOptionOverrides(type, triggerEl, items) {
     const list = Array.isArray(items) ? items.slice() : [];
     if (type !== 'villages' || !triggerEl) return list;
@@ -3950,53 +4046,8 @@
   }
 
   document.addEventListener("change", function(e) {
-    const wilayahMap = {
-      "Provinsi": "Kab/Kota",
-      "Provinsi Pasien": "Kab/Kota Pasien",
-      "Kab/Kota Pasien": "Kecamatan",
-      "Kecamatan": "Kelurahan"
-    };
-
-    if (wilayahMap[e.target.id]) {
-      const next = wilayahMap[e.target.id];
-      const nextEl = document.getElementById(next);
-      if (!nextEl) return;
-
-      const id = e.target.options[e.target.selectedIndex]?.getAttribute("data-id");
-      nextEl.innerHTML = '<option value="">-- Pilih --</option>';
-      if (!id) return;
-
-      let type = "";
-      if (e.target.id === "Provinsi" || e.target.id === "Provinsi Pasien") type = "regencies";
-      else if (e.target.id === "Kab/Kota Pasien") type = "districts";
-      else if (e.target.id === "Kecamatan") type = "villages";
-      if (!type) return;
-
-      fetch(`${API_WILAYAH_BASE}/${type}/${id}.json`)
-        .then(res => res.json())
-        .then(data => {
-          const finalData = applyWilayahOptionOverrides(type, e.target, data);
-          finalData.forEach(item => {
-            const option = document.createElement('option');
-            option.value = String(item && item.name || '');
-            option.setAttribute('data-id', String(item && item.id || ''));
-            option.textContent = String(item && item.name || '');
-            nextEl.appendChild(option);
-          });
-        })
-        .catch(err => {
-          if (type === 'villages') {
-            const finalData = applyWilayahOptionOverrides(type, e.target, []);
-            finalData.forEach(item => {
-              const option = document.createElement('option');
-              option.value = String(item && item.name || '');
-              option.setAttribute('data-id', String(item && item.id || ''));
-              option.textContent = String(item && item.name || '');
-              nextEl.appendChild(option);
-            });
-          }
-          console.error("load wilayah failed:", err);
-        });
+    if (getWilayahNextFieldId(e.target.id)) {
+      loadDependentWilayahOptions(e.target);
     }
 
     if (e.target.id === "Sumber Laporan") {
@@ -4075,16 +4126,46 @@
   // ============================================================
   // EDIT MODE HELPERS
   // ============================================================
-  function hydrateRecordToForm(record) {
+  async function hydrateRecordToForm(record) {
     hardenAddressAutofillSuppression(document);
+    const deferredKeys = new Set(["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi", "Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"]);
     Object.keys(record || {}).forEach(key => {
-      if (["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi"].includes(key)) return;
+      if (deferredKeys.has(key)) return;
       const el = document.getElementById(key);
       if (el) {
         el.value = record[key];
         el.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
+
+    const wilayahChain = ["Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"];
+    for (let i = 0; i < wilayahChain.length; i++) {
+      const fieldId = wilayahChain[i];
+      const value = String((record && record[fieldId]) || '').trim();
+      const el = document.getElementById(fieldId);
+      if (!el || !value) continue;
+      ensureSelectOptionValue(el, value);
+      el.value = value;
+      if (i < wilayahChain.length - 1) {
+        await loadDependentWilayahOptions(el);
+      }
+    }
+
+    const sumberLaporan = String((record && record["Sumber Laporan"]) || '').trim();
+    if (sumberLaporan) {
+      const sumberEl = document.getElementById("Sumber Laporan");
+      if (sumberEl) {
+        sumberEl.value = sumberLaporan;
+        sumberEl.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      await loadFaskesRealtime(String(record["Nama unit pelapor"] || '').trim(), false);
+      initChoices(sumberLaporan, String(record["Nama unit pelapor"] || '').trim());
+    }
+
+    if (String((record && record["Apakah dirawat inap?"]) || '').trim() === 'Ya') {
+      initChoicesRumahSakit(String(record["Nama Rumah Sakit"] || '').trim());
+    }
+
     setTimeout(function() {
       hardenAddressAutofillSuppression(document);
     }, 160);
@@ -5223,17 +5304,10 @@
             }
 
             syncDiagnosisSelectorUi();
-            hydrateRecordToForm(record);
+            await hydrateRecordToForm(record);
             applyAllShowIf();
             updateVerificationSectionState();
             refreshRecommendedEpidPreview({ silentLoading: true });
-
-            if (record["Sumber Laporan"]) {
-              initChoices(record["Sumber Laporan"], record["Nama unit pelapor"] || "");
-            }
-            if (record["Apakah dirawat inap?"] === "Ya") {
-              setTimeout(() => { initChoicesRumahSakit(record["Nama Rumah Sakit"] || ""); }, 150);
-            }
 
             const birthValidation = validateAndApplyBirthUI({ silent: true, hard: false });
             applyBirthValidationUI(birthValidation);
