@@ -198,10 +198,12 @@
 
       if (toggleLoginPin && loginPin) {
         toggleLoginPin.addEventListener("click", function () {
-          loginPin.type = loginPin.type === "password" ? "text" : "password";
-          this.innerHTML = loginPin.type === "password"
-            ? '<i class="fas fa-eye"></i>'
-            : '<i class="fas fa-eye-slash"></i>';
+          const masked = String(loginPin.dataset.masked || '1') !== '0';
+          loginPin.dataset.masked = masked ? '0' : '1';
+          loginPin.style.webkitTextSecurity = masked ? 'none' : 'disc';
+          this.innerHTML = masked
+            ? '<i class="fas fa-eye-slash"></i>'
+            : '<i class="fas fa-eye"></i>';
         });
       }
 
