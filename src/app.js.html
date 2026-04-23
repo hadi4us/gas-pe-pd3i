@@ -4092,108 +4092,120 @@
 
   function matchesShowIf(parentValue, vals, parentId) {
     const actual = String(parentValue || "").trim();
-    const targets = Array.isArray(vals) ? vals.map(v => String(v || "").trim()) : [];
+    const targets = Array.isArray(vals) ? vals.map(function(v) { return String(v || "").trim(); }) : [];
     if (targets.includes(actual)) return true;
 
     if (parentId === "JK") {
-      if ((actual === "Perempuan" || actual === "P") && targets.some(v => v === "Perempuan" || v === "P")) return true;
-      if ((actual === "Laki-laki" || actual === "L" || actual === "Laki-Laki") && targets.some(v => v === "Laki-laki" || v === "L" || v === "Laki-Laki")) return true;
+      if ((actual === "Perempuan" || actual === "P") && targets.some(function(v) { return v === "Perempuan" || v === "P"; })) return true;
+      if ((actual === "Laki-laki" || actual === "L" || actual === "Laki-Laki") && targets.some(function(v) { return v === "Laki-laki" || v === "L" || v === "Laki-Laki"; })) return true;
     }
 
-    return targets.map(v => v.toLowerCase()).includes(actual.toLowerCase());
+    return targets.map(function(v) { return v.toLowerCase(); }).includes(actual.toLowerCase());
+  }
+
+  function stashShowIfFieldValue(inp) {
+    if (!inp) return;
+    const tag = String(inp.tagName || '').toUpperCase();
+    const type = String(inp.type || '').toLowerCase();
+    const currentValue = String(inp.value || '');
+
+    if (type === 'checkbox' || type === 'radio') {
+      inp.dataset.showIfStashChecked = inp.checked ? '1' : '0';
+      inp.dataset.showIfStashValue = currentValue;
+      inp.checked = false;
+      return;
+    }
+
+    inp.dataset.showIfStashValue = currentValue;
+    if (tag === 'SELECT') inp.selectedIndex = 0;
+    else inp.value = '';
+
+    if (inp.dataset && inp.dataset.choiceGroup === '1') {
+      syncChoiceButtons(inp);
+    }
+  }
+
+  function restoreShowIfFieldValue(inp) {
+    if (!inp) return;
+    const tag = String(inp.tagName || '').toUpperCase();
+    const type = String(inp.type || '').toLowerCase();
+    const stashedValue = String(inp.dataset.showIfStashValue || '').trim();
+    const stashedChecked = String(inp.dataset.showIfStashChecked || '0') === '1';
+
+    if (type === 'checkbox' || type === 'radio') {
+      if (!inp.checked && stashedChecked) inp.checked = true;
+      if (!inp.value && stashedValue) inp.value = stashedValue;
+      return;
+    }
+
+    if (tag === 'SELECT') {
+      if (!String(inp.value || '').trim() && stashedValue) {
+        ensureSelectOptionValue(inp, stashedValue);
+        inp.value = stashedValue;
+        stabilizeUserSelectedValue(inp, stashedValue);
+      }
+      return;
+    }
+
+    if (!String(inp.value || '').trim() && stashedValue) {
+      inp.value = stashedValue;
+    }
+    if (inp.dataset && inp.dataset.choiceGroup === '1') {
+      syncChoiceButtons(inp);
+    }
+  }
+
+  function applyShowIfVisibility(wrapper) {
+    if (!wrapper) return;
+    const wasHidden = wrapper.classList.contains('hidden');
+    const parentId = wrapper.getAttribute('data-parent');
+    const parent = document.getElementById(parentId);
+    const parentValue = getShowIfParentValue(parentId);
+    const vals = JSON.parse(wrapper.getAttribute('data-parent-vals') || '[]');
+    const required = wrapper.getAttribute('data-required') === 'true';
+    const inp = wrapper.querySelector('input, select, textarea');
+
+    let shouldShow = !!parent && matchesShowIf(parentValue, vals, parentId);
+
+    if (!shouldShow && parentId === 'JK') {
+      const jkNorm = String(parentValue || '').trim().toLowerCase();
+      const wantsPerempuan = vals.some(function(v) { return String(v || '').trim().toLowerCase() === 'perempuan'; });
+      if (wantsPerempuan && (jkNorm === 'perempuan' || jkNorm === 'p')) {
+        shouldShow = true;
+      }
+    }
+
+    if (shouldShow) {
+      wrapper.classList.remove('hidden');
+      if (required && inp) inp.required = true;
+      if (inp) restoreShowIfFieldValue(inp);
+
+      if (parentId === 'Apakah dirawat inap?' && String(parentValue || '').trim() === 'Ya' && wrapper.querySelector('#Nama\ Rumah\ Sakit')) {
+        setTimeout(function() {
+          const currentRs = document.getElementById('Nama Rumah Sakit')?.value || '';
+          if (typeof initChoicesRumahSakit === 'function') initChoicesRumahSakit(currentRs);
+        }, 50);
+      }
+    } else {
+      wrapper.classList.add('hidden');
+      if (inp) {
+        inp.required = false;
+        if (!wasHidden) {
+          stashShowIfFieldValue(inp);
+        }
+      }
+    }
   }
 
   function reevaluateShowIfFields() {
-      const wrappers = document.querySelectorAll(".field-wrapper[data-parent]");
-      wrappers.forEach(wrapper => {
-        const parentId = wrapper.getAttribute("data-parent");
-        const parent = document.getElementById(parentId);
-        const parentValue = getShowIfParentValue(parentId);
-        const vals = JSON.parse(wrapper.getAttribute("data-parent-vals") || "[]");
-        const required = wrapper.getAttribute("data-required") === "true";
-        const inp = wrapper.querySelector("input, select, textarea");
-
-        let shouldShow = !!parent && matchesShowIf(parentValue, vals, parentId);
-
-        if (!shouldShow && parentId === "JK") {
-          const jkNorm = String(parentValue || "").trim().toLowerCase();
-          const wantsPerempuan = vals.some(v => String(v || "").trim().toLowerCase() === "perempuan");
-          if (wantsPerempuan && (jkNorm === "perempuan" || jkNorm === "p")) {
-            shouldShow = true;
-          }
-        }
-
-        if (shouldShow) {
-          wrapper.classList.remove("hidden");
-          if (required && inp) inp.required = true;
-
-          if (parentId === "Apakah dirawat inap?" && parentValue === "Ya" && wrapper.querySelector("#Nama Rumah Sakit")) {
-            setTimeout(() => {
-              const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
-              initChoicesRumahSakit(currentRs);
-            }, 50);
-          }
-        } else {
-          wrapper.classList.add("hidden");
-          if (inp) {
-            inp.required = false;
-            if (inp.tagName === "SELECT") inp.selectedIndex = 0;
-            else inp.value = "";
-          }
-        }
-      });
-  }
-
-  // ============================================================
-  // GLOBAL CHANGE / BLUR HANDLER
-  // ============================================================
-
-  /**
-   * Evaluasi semua field showIf berdasarkan nilai parent saat ini.
-   * Dipanggil setelah setiap change event dan setelah form dirender.
-   */
-  function reevaluateShowIfFields() {
-    document.querySelectorAll(".field-wrapper[data-parent]").forEach(function(wrapper) {
-      const parentId = wrapper.getAttribute("data-parent");
-      const parent = document.getElementById(parentId);
-      const parentValue = getShowIfParentValue(parentId);
-      const vals = JSON.parse(wrapper.getAttribute("data-parent-vals") || "[]");
-      const required = wrapper.getAttribute("data-required") === "true";
-      const inp = wrapper.querySelector("input, select, textarea");
-
-      let shouldShow = !!parent && matchesShowIf(parentValue, vals, parentId);
-
-      if (!shouldShow && parentId === "JK") {
-        const jkNorm = String(parentValue || "").trim().toLowerCase();
-        const wantsPerempuan = vals.some(v => String(v || "").trim().toLowerCase() === "perempuan");
-        if (wantsPerempuan && (jkNorm === "perempuan" || jkNorm === "p")) {
-          shouldShow = true;
-        }
-      }
-
-      if (shouldShow) {
-        wrapper.classList.remove("hidden");
-        if (required && inp) inp.required = true;
-
-        if (parentId === "Apakah dirawat inap?" && String(parentValue || "").trim() === "Ya" && wrapper.querySelector("#Nama\\ Rumah\\ Sakit")) {
-          setTimeout(function() {
-            const currentRs = document.getElementById("Nama Rumah Sakit")?.value || "";
-            if (typeof initChoicesRumahSakit === "function") initChoicesRumahSakit(currentRs);
-          }, 50);
-        }
-      } else {
-        wrapper.classList.add("hidden");
-        if (inp) {
-          inp.required = false;
-          if (inp.tagName === "SELECT") inp.selectedIndex = 0;
-          else inp.value = "";
-        }
-      }
+    document.querySelectorAll('.field-wrapper[data-parent]').forEach(function(wrapper) {
+      applyShowIfVisibility(wrapper);
     });
   }
 
   // Alias untuk pemanggilan setelah render form
   function applyAllShowIf() {
+    reevaluateShowIfFields();
     reevaluateShowIfFields();
   }
 
@@ -4464,6 +4476,13 @@
     if (String((record && record["Apakah dirawat inap?"]) || '').trim() === 'Ya') {
       initChoicesRumahSakit(String(record["Nama Rumah Sakit"] || '').trim());
     }
+
+    applyAllShowIf();
+    [120, 320, 700].forEach(function(delayMs) {
+      setTimeout(function() {
+        applyAllShowIf();
+      }, delayMs);
+    });
 
     setTimeout(function() {
       hardenAddressAutofillSuppression(document);
