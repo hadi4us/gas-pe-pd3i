@@ -170,4 +170,23 @@ Kolom berikut muncul sebagai **source alias lama** di `data.js`. Jika masih ada 
 
 ## 8. Catatan eksekusi sheet live
 
-Audit ini baru memastikan kondisi dari **kode**. Reorder header live di spreadsheet `*_Raw` masih butuh jalur eksekusi Apps Script yang bisa benar-benar menulis ulang posisi kolom sheet live. Saat jalur itu tersedia, dokumen ini menjadi acuan canonical order dan kandidat cleanup-nya.
+Eksekusi live untuk batch reorder `*_Raw` **sudah dijalankan** pada produksi dengan pola aman:
+
+- audit header live per DX
+- batal otomatis bila ada duplicate exact header
+- buat backup sheet `*_PRE_REORDER_*`
+- reorder hanya untuk header yang memang sudah ada, lalu pertahankan kolom legacy/unknown di belakang
+
+Hasil penting setelah inspeksi pasca-reorder:
+
+- **tidak ditemukan duplicate exact header** yang memblokir reorder
+- `MR_Raw` sudah relatif dekat dengan struktur baru, tetapi masih membawa banyak kolom alias/transisi
+- `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw` ternyata masih dominan memakai struktur lama, sehingga reorder saja **belum cukup** untuk menyamakan mereka dengan schema canonical runtime saat ini
+- beberapa sheet lama masih punya **blank trailing headers**, jadi cleanup berikutnya tidak boleh langsung berupa hapus kolom massal
+
+Untuk audit pasca-reorder yang bisa direproduksi dari header sheet live, lihat:
+
+- `docs/RAW-HEADER-LIVE-AUDIT.md`
+- `scripts/audit-live-raw-headers.js`
+
+Kesimpulan batch ini: fondasi reorder live sudah beres, tetapi batch lanjutan harus fokus ke **append/backfill header canonical yang belum ada**, bukan sekadar menggeser urutan kolom.

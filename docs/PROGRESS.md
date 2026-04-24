@@ -104,3 +104,11 @@
 - [x] Beranda tidak lagi memakai inbox umum yang berat; sekarang ada endpoint ringkas khusus `getOverviewSummary(token)` untuk quick actions/ringkasan kerja supaya landing operasional lebih ringan dan tidak mudah timeout
 - [x] Visual system aplikasi dipoles agar lebih profesional: font utama beralih ke Inter, warna disatukan ke palet slate-blue yang lebih kalem, dan komponen inti (sidebar, topbar, card, input, button, dashboard metric) sekarang mengikuti satu sistem tipografi + warna yang lebih proper
 - [x] Route-aware sidebar dibetulkan agar tidak memicu reload penuh Apps Script setiap klik menu; direct link tetap ada, tapi perpindahan workspace harian sekarang cukup `history.pushState` + render client-side sehingga tidak lagi menumpuk blank page / layar `memeriksa sesi akses`
+
+## 2026-04-24
+- [x] Bridge audit/reorder header raw sheet produksi selesai dibuat dan dideploy, sehingga `MR_Raw`, `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw` bisa diinspeksi dan direorder secara aman dengan backup sheet `*_PRE_REORDER_*`
+- [x] Eksekusi live reorder `*_Raw` berhasil dijalankan di spreadsheet produksi tanpa duplicate exact header yang memblokir proses
+- [x] Audit pasca-reorder menunjukkan `MR_Raw` sudah relatif dekat dengan schema runtime baru, tetapi masih hybrid karena alias/transisi lama masih hidup berdampingan
+- [x] Audit pasca-reorder menunjukkan `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw` masih dominan memakai struktur lama, sehingga reorder saja belum cukup untuk menyamakan schema lintas DX
+- [x] Utility audit live yang bisa direproduksi ditambahkan di `scripts/audit-live-raw-headers.js`
+- [x] Hasil audit live dan implikasi cleanup non-destruktif didokumentasikan di `docs/RAW-HEADER-LIVE-AUDIT.md` dan `docs/RAW-HEADER-AUDIT.md`

@@ -1,36 +1,37 @@
 # Next Steps
 
 ## Status Saat Ini
-- Autentikasi `clasp` sudah selesai
-- Source sudah sinkron lokal ↔ GitHub ↔ Apps Script
-- Deployment produksi sudah diredeploy ke versi terbaru
-- Batch ekspansi form berdasarkan blueprint + gap audit sudah masuk ke codebase
+
+- Reorder live untuk `MR_Raw`, `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw` sudah berhasil dijalankan dengan backup sheet `*_PRE_REORDER_*`
+- Audit pasca-reorder sekarang bisa direproduksi lewat `scripts/audit-live-raw-headers.js`
+- Temuan utama: hanya `MR_Raw` yang sudah cukup dekat ke schema runtime baru, sedangkan `DIF/PERT/TN/AFP` masih dominan memakai struktur sheet lama
 
 ## Prioritas Berikutnya
 
-1. **UAT runtime batch ekspansi form**
-   - Gunakan checklist: `docs/FORM-EXPANSION-UAT.md`
-   - Verifikasi render, save, edit, dan auto-header untuk MR/DIF/PERT/TN/AFP
+1. **Append missing canonical headers secara non-destruktif**
+   - Fokus pertama: `DIF_Raw`, `PERT_Raw`, `TN_Raw`, `AFP_Raw`
+   - Tambahkan juga 7 header canonical yang masih hilang di `MR_Raw`
+   - Jangan hapus kolom legacy pada tahap ini
 
-2. **Perbarui matriks gap setelah UAT**
-   - Tandai gap yang sudah tertutup
-   - Pisahkan gap tersisa: `high / medium / low`
+2. **Buat batch backfill / normalisasi alias yang aman**
+   - Konsolidasikan pasangan alias lama → header target baru, terutama di `MR_Raw`
+   - Pertahankan kompatibilitas baca/tulis selama masa transisi
 
-3. **Review manual hasil migrasi referensi**
-   - Cek `REF_USER.Catatan Migrasi`
-   - Pastikan `UnitKerja`, `KodePuskesmas`, dan `ScopeLevel` sudah benar
-   - Gunakan `docs/REFERENCE-DATA-DICTIONARY.md` sebagai acuan perubahan
+3. **Audit blank trailing columns**
+   - Verifikasi 6 blank trailing headers pada `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw`
+   - Pastikan benar-benar kosong sebelum dipindah, diarsipkan, atau dibersihkan
 
-4. **Dashboard wilayah/hotspot lanjutan**
-   - Tambah filter drill-down lintas panel (klik kecamatan otomatis menyaring hotspot, dst.)
-   - Pertimbangkan sinkronisasi dengan data pengampu (`REF_PENGAMPU`) untuk overlay wilayah kerja puskesmas
+4. **Regression check pasca-schema append**
+   - Uji buka record existing
+   - Uji save input awal, verifikasi, hasil sampel, dan update status
+   - Uji inbox/queue serta dashboard yang membaca field workflow baru
 
-5. **Hotspot map lanjutan**
-   - Pertimbangkan heat layer / density overlay yang lebih halus
-   - Tambah popup/aksi batch dari hotspot drill-down bila perlu
-   - Sinkronkan dengan filter wilayah (kecamatan/kelurahan) secara dua arah
+5. **Baru setelah itu putuskan cleanup legacy**
+   - Tandai kolom yang hanya alias transisi
+   - Tentukan apakah cukup dipertahankan di belakang, diarsipkan, atau benar-benar dihentikan pemakaiannya
 
-6. **Polish dashboard admin review**
-   - Tambah badge status verifikasi di kartu statistik utama
-   - Pertimbangkan bulk triage / quick-open dari queue
-   - Tambah indikator antrian revisi/pending di topbar atau entry dashboard
+## Catatan Operasional
+
+- Cleanup berikutnya harus tetap **non-destruktif**
+- Urutan aman: **append missing headers → backfill/compatibility → verifikasi runtime → cleanup legacy**
+- Jangan declare schema raw “bersih” sebelum gap live lintas DX benar-benar turun dan queue/runtime tidak lagi bergantung pada campuran header lama
