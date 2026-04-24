@@ -2309,6 +2309,11 @@
 
   function beginWorkspaceRuntime(workspace) {
     ACTIVE_SIDEBAR_WORKSPACE = normalizeSidebarWorkspace(workspace);
+    try {
+      if (document && document.body) {
+        document.body.setAttribute('data-active-workspace', ACTIVE_SIDEBAR_WORKSPACE);
+      }
+    } catch (e) {}
     WORKSPACE_RUNTIME_SEQ += 1;
     return createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
   }

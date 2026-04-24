@@ -341,6 +341,18 @@ body.modal-open {
   padding: 0 2rem 2rem;
 }
 
+body[data-initial-view="dashboard"] #section-overview,
+body[data-active-workspace="dashboard"] #section-overview,
+body[data-active-workspace="dashboard"] #overview-work-summary,
+body[data-active-workspace="dashboard"] #overview-work-inbox {
+  display: none !important;
+}
+
+body[data-initial-view="dashboard"] #section-dashboard,
+body[data-active-workspace="dashboard"] #section-dashboard {
+  display: block !important;
+}
+
 .pd3i-overview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
