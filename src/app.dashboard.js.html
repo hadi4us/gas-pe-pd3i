@@ -29,214 +29,6 @@
       .replace(/'/g, '&#39;');
   }
 
-  function renderAdminVerificationQueue(stats, dx) {
-    const wrap = document.getElementById('dashboard-admin-queue');
-    if (!wrap) return;
-
-    const queue = stats && stats.verificationQueue ? stats.verificationQueue : null;
-    const role = String((getSafeSessionUser() && getSafeSessionUser().role) || '').trim().toLowerCase();
-    if (!queue || role !== 'admin') {
-      wrap.classList.add('hidden');
-      wrap.innerHTML = '';
-      return;
-    }
-
-    const counts = queue.counts || { pending: 0, perluRevisi: 0, terverifikasi: 0 };
-    const activeFilter = String(window.__ADMIN_QUEUE_FILTER || 'pending');
-    const filterMap = {
-      pending: Array.isArray(queue.pending) ? queue.pending : [],
-      perluRevisi: Array.isArray(queue.perluRevisi) ? queue.perluRevisi : [],
-      terverifikasi: Array.isArray(queue.terverifikasi) ? queue.terverifikasi : []
-    };
-    const allRows = filterMap.pending.concat(filterMap.perluRevisi, filterMap.terverifikasi);
-    const seenPuskesmas = {};
-    const puskesmasOptions = [];
-    allRows.forEach(function(item) {
-      const name = String(item && item.puskesmas || '').trim();
-      if (!name || seenPuskesmas[name]) return;
-      seenPuskesmas[name] = true;
-      puskesmasOptions.push(name);
-    });
-    puskesmasOptions.sort(function(a, b) { return a.localeCompare(b); });
-
-    const selectedPuskesmas = seenPuskesmas[String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()]
-      ? String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()
-      : '';
-    if (selectedPuskesmas !== String(window.__ADMIN_QUEUE_PUSKESMAS || '').trim()) {
-      window.__ADMIN_QUEUE_PUSKESMAS = selectedPuskesmas;
-    }
-    const selectedDate = String(window.__ADMIN_QUEUE_DATE || '').trim();
-    const baseRows = filterMap[activeFilter] || [];
-    const rows = baseRows.filter(function(item) {
-      const puskesmasMatch = !selectedPuskesmas || String(item.puskesmas || '').trim() === selectedPuskesmas;
-      const dateValue = String(item.inputAt || '').trim().slice(0, 10);
-      const dateMatch = !selectedDate || dateValue === selectedDate;
-      return puskesmasMatch && dateMatch;
-    });
-
-    function renderCard(label, count, cls) {
-      return `<div class="pd3i-admin-queue-card ${cls}"><div class="pd3i-helper-text font-extrabold uppercase">${label}</div><div class="pd3i-admin-queue-count">${count}</div></div>`;
-    }
-
-    function renderTab(key, label, count) {
-      const active = key === activeFilter ? ' is-active' : '';
-      return `<button type="button" class="pd3i-admin-queue-tab${active}" data-admin-queue-filter="${key}">${label} (${count})</button>`;
-    }
-
-    function renderRetryAction(buttonClass, iconClass, label, clickJs) {
-      return `<button type="button" class="${buttonClass}" onclick="${clickJs}"><i class="${iconClass}"></i> ${label}</button>`;
-    }
-
-    function renderStatusReasonBlock(label, status, reason) {
-      const rawStatus = String(status || '').trim();
-      const normalizedStatus = rawStatus.toUpperCase();
-      const statusText = rawStatus || 'PENDING';
-      const reasonText = String(reason || '').trim();
-      let toneClass = 'is-pending';
-      let badgeLabel = statusText;
-
-      if (['SENT', 'SYNCED'].includes(normalizedStatus)) {
-        toneClass = 'is-success';
-        badgeLabel = normalizedStatus === 'SYNCED' ? 'SYNCED' : 'TERKIRIM';
-      } else if (normalizedStatus.indexOf('FAILED') !== -1 || normalizedStatus.indexOf('ERROR') !== -1 || normalizedStatus.indexOf('HTTP_') === 0 || normalizedStatus === 'UNMAPPED' || normalizedStatus === 'NO_RECIPIENT' || normalizedStatus === 'NOT_CONFIGURED' || normalizedStatus === 'OUTSIDE_DEPOK') {
-        toneClass = 'is-failed';
-      } else if (normalizedStatus.indexOf('SKIPPED') === 0) {
-        toneClass = 'is-skipped';
-      } else if (normalizedStatus.indexOf('QUEUE') === 0 || normalizedStatus === '-' || !normalizedStatus) {
-        toneClass = 'is-pending';
-      }
-
-      const reasonHtml = reasonText && !['SENT', 'SYNCED'].includes(normalizedStatus)
-        ? `<div class="pd3i-admin-queue-reason">${escapeHtml(reasonText)}</div>`
-        : '';
-      return `<div class="pd3i-admin-queue-status-item ${toneClass}">
-        <div class="pd3i-admin-queue-status-label">${escapeHtml(label)}</div>
-        <div class="pd3i-admin-queue-status-value-row">
-          <div class="pd3i-admin-queue-status-value">${escapeHtml(statusText)}</div>
-          <span class="pd3i-admin-queue-status-badge ${toneClass}">${escapeHtml(badgeLabel)}</span>
-        </div>
-        ${reasonHtml}
-      </div>`;
-    }
-
-    const puskesmasOptionsHtml = ['<option value="">Semua puskesmas</option>']
-      .concat(puskesmasOptions.map(function(name) {
-        const selectedAttr = name === selectedPuskesmas ? ' selected' : '';
-        return `<option value="${escapeHtml(name)}"${selectedAttr}>${escapeHtml(name)}</option>`;
-      }))
-      .join('');
-
-    const listHtml = rows.length
-      ? rows.map(function(item) {
-          const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ''));
-          const epidArg = JSON.stringify(String(item.epid || ''));
-          const dxArg = JSON.stringify(String(dx || document.getElementById('dashboard-dx')?.value || 'MR').trim());
-          const inputDateText = String(item.inputAt || '').trim();
-          const updatedDateText = String(item.updatedAt || '').trim();
-          const notifBlocks = [];
-          const retryButtons = [];
-
-          if (String(item.statusVerifikasi || '').trim().toUpperCase() === 'TERVERIFIKASI') {
-            notifBlocks.push(renderStatusReasonBlock('Email kasus baru', item.statusNotifikasiKasusBaru, item.reasonNotifikasiKasusBaru));
-            notifBlocks.push(renderStatusReasonBlock('Sync pengampu', item.statusSyncPengampu, item.reasonSyncPengampu));
-            notifBlocks.push(renderStatusReasonBlock('Telegram kasus baru', item.statusTelegramKasusBaru, item.reasonTelegramKasusBaru));
-            if (String(item.epid || '').trim()) {
-              retryButtons.push(renderRetryAction('pd3i-search-result-action', 'fas fa-bell', 'Retry Email', `window.__retryCaseNotify && window.__retryCaseNotify(${epidArg}, ${dxArg})`));
-              retryButtons.push(renderRetryAction('pd3i-search-result-action', 'fas fa-rotate-right', 'Retry Sync', `window.__retryCaseSync && window.__retryCaseSync(${epidArg}, ${dxArg})`));
-              retryButtons.push(renderRetryAction('pd3i-search-result-action', 'fab fa-telegram-plane', 'Retry Telegram', `window.__retryCaseTelegram && window.__retryCaseTelegram(${epidArg}, ${dxArg})`));
-            }
-          }
-
-          if (String(item.statusVerifikasi || '').trim().toUpperCase() === 'PERLU REVISI') {
-            notifBlocks.push(renderStatusReasonBlock('Email revisi', item.statusNotifikasiRevisi, item.reasonNotifikasiRevisi));
-            notifBlocks.push(renderStatusReasonBlock('Telegram revisi', item.statusTelegramRevisi, item.reasonTelegramRevisi));
-            retryButtons.push(renderRetryAction('pd3i-search-result-action', 'fas fa-envelope-open-text', 'Retry Email Revisi', `window.__retryRevisionNotify && window.__retryRevisionNotify(${recordKeyArg}, ${dxArg})`));
-            retryButtons.push(renderRetryAction('pd3i-search-result-action', 'fab fa-telegram-plane', 'Retry Telegram Revisi', `window.__retryRevisionTelegram && window.__retryRevisionTelegram(${recordKeyArg}, ${dxArg})`));
-          }
-
-          return `<div class="pd3i-admin-queue-row">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <strong>${escapeHtml(item.nama || '-')}</strong>
-                <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml(item.puskesmas || '-')}</small>
-              </div>
-              <div class="pd3i-admin-queue-action-row">
-                <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg})'><i class="fas fa-folder-open"></i> Review</button>
-                ${retryButtons.join('')}
-              </div>
-            </div>
-            <div class="pd3i-admin-queue-meta">
-              <span class="pd3i-admin-queue-pill ${String(item.statusVerifikasi || '').trim().toUpperCase() === 'TERVERIFIKASI' ? 'is-success' : (String(item.statusVerifikasi || '').trim().toUpperCase() === 'PERLU REVISI' ? 'is-danger' : 'is-warning')} ">${escapeHtml(item.statusVerifikasi || '-')}</span>
-              <span class="pd3i-admin-queue-pill">${escapeHtml(item.kecamatan || '-')} / ${escapeHtml(item.kelurahan || '-')}</span>
-              ${item.epid ? `<span class="pd3i-admin-queue-pill">EPID ${escapeHtml(item.epid)}</span>` : '<span class="pd3i-admin-queue-pill">Belum ada EPID final</span>'}
-              ${inputDateText ? `<span class="pd3i-admin-queue-pill">Input ${escapeHtml(inputDateText.slice(0, 10))}</span>` : ''}
-              ${updatedDateText ? `<span class="pd3i-admin-queue-pill">Update ${escapeHtml(updatedDateText.slice(0, 10))}</span>` : ''}
-            </div>
-            ${item.catatanVerifikasi ? `<small>Catatan: ${escapeHtml(item.catatanVerifikasi)}</small>` : ''}
-            ${notifBlocks.length ? `<div class="pd3i-admin-queue-status-grid">${notifBlocks.join('')}</div>` : ''}
-          </div>`;
-        }).join('')
-      : '<div class="pd3i-empty-state">Belum ada kasus pada kombinasi filter ini.</div>';
-
-    wrap.innerHTML = `
-      <div class="pd3i-card-header-row mt-4">
-        <div>
-          <div class="pd3i-card-eyebrow">Admin verification queue</div>
-          <h3 class="pd3i-card-title">Antrian review verifikasi</h3>
-        </div>
-        <span class="pd3i-badge-soft">Queue</span>
-      </div>
-      <div class="pd3i-admin-queue-grid">
-        ${renderCard('Pending review', counts.pending || 0, 'pending')}
-        ${renderCard('Perlu revisi', counts.perluRevisi || 0, 'revisi')}
-        ${renderCard('Terverifikasi', counts.terverifikasi || 0, 'verified')}
-      </div>
-      <div class="pd3i-admin-queue-toolbar">
-        ${renderTab('pending', 'Pending', counts.pending || 0)}
-        ${renderTab('perluRevisi', 'Perlu Revisi', counts.perluRevisi || 0)}
-        ${renderTab('terverifikasi', 'Terverifikasi', counts.terverifikasi || 0)}
-      </div>
-      <div class="pd3i-admin-queue-filterbar mt-3">
-        <select id="dashboard-admin-queue-puskesmas" class="pd3i-shell-input">${puskesmasOptionsHtml}</select>
-        <input id="dashboard-admin-queue-date" type="date" class="pd3i-shell-input" value="${escapeHtml(selectedDate)}">
-        <button type="button" id="dashboard-admin-queue-reset" class="pd3i-ghost-button pd3i-inline-button"><i class="fas fa-rotate-left"></i> Reset filter</button>
-      </div>
-      <div class="pd3i-helper-text mt-3">Menampilkan <strong>${rows.length}</strong> dari <strong>${baseRows.length}</strong> kasus pada tab <strong>${escapeHtml(activeFilter)}</strong>.</div>
-      <div class="pd3i-admin-queue-list">${listHtml}</div>
-    `;
-    wrap.classList.remove('hidden');
-
-    wrap.querySelectorAll('[data-admin-queue-filter]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        window.__ADMIN_QUEUE_FILTER = String(btn.getAttribute('data-admin-queue-filter') || 'pending');
-        renderAdminVerificationQueue(stats, dx);
-      });
-    });
-
-    const puskesmasSelect = wrap.querySelector('#dashboard-admin-queue-puskesmas');
-    const dateInput = wrap.querySelector('#dashboard-admin-queue-date');
-    const resetBtn = wrap.querySelector('#dashboard-admin-queue-reset');
-    if (puskesmasSelect) {
-      puskesmasSelect.addEventListener('change', function() {
-        window.__ADMIN_QUEUE_PUSKESMAS = String(puskesmasSelect.value || '').trim();
-        renderAdminVerificationQueue(stats, dx);
-      });
-    }
-    if (dateInput) {
-      dateInput.addEventListener('change', function() {
-        window.__ADMIN_QUEUE_DATE = String(dateInput.value || '').trim();
-        renderAdminVerificationQueue(stats, dx);
-      });
-    }
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function() {
-        window.__ADMIN_QUEUE_PUSKESMAS = '';
-        window.__ADMIN_QUEUE_DATE = '';
-        renderAdminVerificationQueue(stats, dx);
-      });
-    }
-  }
-
   function renderHotspotMap(stats, dx, tahun) {
     const mapWrap = document.getElementById('dashboard-hotspot-map');
     const listWrap = document.getElementById('dashboard-hotspot-list');
@@ -614,62 +406,108 @@
     const safeUser = getSafeSessionUser();
     const isAdmin = safeUser && safeUser.role === "admin";
     const isViewer = safeUser && safeUser.role === "viewer";
+    const qc = stats.qualityCards || {};
+    const epi = stats.epidemiology || {};
+    const verificationCounts = (stats.verificationQueue && stats.verificationQueue.counts) || {};
+    const totalCases = Number(stats.totalKasus || 0);
+    const verifiedCount = Number(verificationCounts.terverifikasi || 0);
+    const pendingReviewCount = Number(verificationCounts.pending || qc.pendingVerification || 0);
+    const revisionCount = Number(verificationCounts.perluRevisi || 0);
+    const decisionCount = Number(qc.confirmed || 0) + Number(qc.discarded || 0) + Number(qc.clinical || 0);
+    const verificationRate = totalCases > 0 ? Math.round((verifiedCount / totalCases) * 100) : null;
+    const decisionRate = totalCases > 0 ? Math.round((decisionCount / totalCases) * 100) : null;
+    const notifikasiKasusBaru = stats.statusNotifikasi || { sent: 0, failed: 0, pending: 0 };
+    const sinkronisasiPengampu = stats.statusSinkronisasi || { synced: 0, failed: 0, pending: 0 };
+    const notifikasiRevisiEmail = stats.statusNotifikasiRevisi || { sent: 0, failed: 0, pending: 0 };
+    const notifikasiRevisiTelegram = stats.statusTelegramRevisi || { sent: 0, failed: 0, pending: 0 };
 
     let html = '';
 
-    // Total kasus (Req 6.1)
-    html += `<div class="pd3i-dashboard-overview-grid mb-6">
-      <div class="pd3i-dashboard-metric-card tone-emerald is-hero">
-        <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Total Kasus ${dx} ${tahun}</div>
-        <div class="text-4xl font-black text-emerald-900">${stats.totalKasus || 0}</div>
-      </div>`;
-
-    // Status notifikasi & sinkronisasi operasional — admin only
-    if (isAdmin && stats.statusNotifikasi) {
-      const n = stats.statusNotifikasi;
-      html += `<div class="pd3i-dashboard-metric-card tone-blue">
-        <div class="text-xs font-extrabold uppercase text-blue-700 mb-2">Notifikasi Email Kasus Baru</div>
-        <div class="pd3i-dashboard-submetric-grid">
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${n.sent}</div><div class="text-xs text-slate-500">Terkirim</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${n.failed}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${n.pending}</div><div class="text-xs text-slate-500">Pending</div></div>
+    html += `<div class="pd3i-dashboard-block mb-6">
+      <div class="pd3i-card-header-row mb-3">
+        <div>
+          <div class="pd3i-card-eyebrow">Capaian kinerja</div>
+          <div class="pd3i-dashboard-block-title">Ringkasan kinerja petugas dan admin</div>
+          <div class="pd3i-helper-text mt-2">Dashboard ini fokus ke capaian kerja dan mutu operasional, bukan tabel antrian kasus satu per satu.</div>
         </div>
-      </div>`;
-
-      const s = stats.statusSinkronisasi || {};
-      html += `<div class="pd3i-dashboard-metric-card tone-purple">
-        <div class="text-xs font-extrabold uppercase text-purple-700 mb-2">Sinkronisasi Pengampu</div>
-        <div class="pd3i-dashboard-submetric-grid">
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${s.synced || 0}</div><div class="text-xs text-slate-500">Synced</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${s.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${s.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        <span class="pd3i-badge-soft">Performance</span>
+      </div>
+      <div class="pd3i-dashboard-overview-grid">
+        <div class="pd3i-dashboard-metric-card tone-emerald is-hero">
+          <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Total Kasus ${dx} ${tahun}</div>
+          <div class="text-4xl font-black text-emerald-900">${totalCases}</div>
+          <div class="pd3i-helper-text mt-2">Cakupan kasus pada filter dashboard aktif.</div>
         </div>
-      </div>`;
-
-      const rn = stats.statusNotifikasiRevisi || {};
-      html += `<div class="pd3i-dashboard-metric-card tone-orange">
-        <div class="text-xs font-extrabold uppercase text-orange-700 mb-2">Notifikasi Revisi Email</div>
-        <div class="pd3i-dashboard-submetric-grid">
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${rn.sent || 0}</div><div class="text-xs text-slate-500">Terkirim</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${rn.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${rn.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+        <div class="pd3i-dashboard-metric-card tone-blue">
+          <div class="text-xs font-extrabold uppercase text-blue-700 mb-1">Pelacakan Hari yang Sama</div>
+          <div class="text-3xl font-black text-blue-900">${epi.sameDayReportTrackingRate != null ? epi.sameDayReportTrackingRate + '%' : '-'}</div>
+          <div class="pd3i-helper-text mt-2">Kecepatan tindak lanjut petugas dari laporan ke pelacakan.</div>
         </div>
-      </div>`;
+        <div class="pd3i-dashboard-metric-card tone-purple">
+          <div class="text-xs font-extrabold uppercase text-purple-700 mb-1">Kelengkapan Workflow</div>
+          <div class="text-3xl font-black text-purple-900">${epi.workflowCompletenessRate != null ? epi.workflowCompletenessRate + '%' : '-'}</div>
+          <div class="pd3i-helper-text mt-2">Menggambarkan konsistensi input, verifikasi, sampel, dan status.</div>
+        </div>
+        <div class="pd3i-dashboard-metric-card tone-indigo">
+          <div class="text-xs font-extrabold uppercase text-indigo-700 mb-1">Kasus Sudah Punya Keputusan</div>
+          <div class="text-3xl font-black text-indigo-900">${decisionCount}</div>
+          <div class="pd3i-helper-text mt-2">${decisionRate != null ? decisionRate + '% dari total kasus sudah berstatus konfirmasi, discarded, atau klinis.' : 'Belum ada data keputusan status.'}</div>
+        </div>
+        <div class="pd3i-dashboard-metric-card tone-amber">
+          <div class="text-xs font-extrabold uppercase text-amber-700 mb-1">Verifikasi Admin Selesai</div>
+          <div class="text-3xl font-black text-amber-900">${verifiedCount}</div>
+          <div class="pd3i-helper-text mt-2">${verificationRate != null ? verificationRate + '% dari total kasus sudah tervalidasi admin.' : 'Belum ada data verifikasi.'}</div>
+        </div>
+      </div>
+    </div>`;
 
-      const rt = stats.statusTelegramRevisi || {};
-      html += `<div class="pd3i-dashboard-metric-card tone-cyan">
-        <div class="text-xs font-extrabold uppercase text-cyan-700 mb-2">Notifikasi Revisi Telegram</div>
-        <div class="pd3i-dashboard-submetric-grid">
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-green-700">${rt.sent || 0}</div><div class="text-xs text-slate-500">Terkirim</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-red-600">${rt.failed || 0}</div><div class="text-xs text-slate-500">Gagal</div></div>
-          <div class="pd3i-dashboard-submetric"><div class="text-xl font-black text-amber-600">${rt.pending || 0}</div><div class="text-xs text-slate-500">Pending</div></div>
+    if (isAdmin) {
+      html += `<div class="pd3i-dashboard-block mb-6">
+        <div class="pd3i-dashboard-block-title">Capaian operasional admin</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Perlu Tindakan Admin</div>
+            <div class="text-2xl font-black text-slate-900">${pendingReviewCount}</div>
+            <div class="pd3i-helper-text mt-2">Kasus yang masih perlu diputuskan pada tahap verifikasi admin.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Kasus Dikembalikan Revisi</div>
+            <div class="text-2xl font-black text-slate-900">${revisionCount}</div>
+            <div class="pd3i-helper-text mt-2">Membantu admin memantau tindak lanjut revisi dari petugas.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Email Kasus Baru Terkirim</div>
+            <div class="text-2xl font-black text-slate-900">${notifikasiKasusBaru.sent || 0}</div>
+            <div class="pd3i-helper-text mt-2">${notifikasiKasusBaru.failed || 0} gagal, ${notifikasiKasusBaru.pending || 0} masih pending.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Sinkronisasi Pengampu Berhasil</div>
+            <div class="text-2xl font-black text-slate-900">${sinkronisasiPengampu.synced || 0}</div>
+            <div class="pd3i-helper-text mt-2">${sinkronisasiPengampu.failed || 0} gagal, ${sinkronisasiPengampu.pending || 0} masih pending.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Email Revisi Terkirim</div>
+            <div class="text-2xl font-black text-slate-900">${notifikasiRevisiEmail.sent || 0}</div>
+            <div class="pd3i-helper-text mt-2">${notifikasiRevisiEmail.failed || 0} gagal, ${notifikasiRevisiEmail.pending || 0} masih pending.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Telegram Revisi Terkirim</div>
+            <div class="text-2xl font-black text-slate-900">${notifikasiRevisiTelegram.sent || 0}</div>
+            <div class="pd3i-helper-text mt-2">${notifikasiRevisiTelegram.failed || 0} gagal, ${notifikasiRevisiTelegram.pending || 0} masih pending.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Menunggu Hasil Sampel</div>
+            <div class="text-2xl font-black text-slate-900">${qc.waitingSampleResult || 0}</div>
+            <div class="pd3i-helper-text mt-2">Kasus yang masih menunggu pemutakhiran hasil pemeriksaan.</div>
+          </div>
+          <div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Median Laporan → Pelacakan</div>
+            <div class="text-2xl font-black text-slate-900">${epi.medianReportToTrackingDays != null ? epi.medianReportToTrackingDays + ' hari' : '-'}</div>
+            <div class="pd3i-helper-text mt-2">Membantu admin membaca kecepatan kerja lapangan secara ringkas.</div>
+          </div>
         </div>
       </div>`;
     }
-
-    html += `</div>`;
-
-    const qc = stats.qualityCards || {};
     html += `<div class="pd3i-dashboard-block mb-6">
       <div class="pd3i-dashboard-block-title">Kartu Mutu / Status Operasional</div>
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
@@ -696,7 +534,6 @@
       </div>
     </div>`;
 
-    const epi = stats.epidemiology || {};
     html += `<div class="pd3i-dashboard-block mb-6">
       <div class="pd3i-dashboard-block-title">Indikator Epidemiologis Ringkas</div>
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
@@ -772,10 +609,6 @@
     }
 
     html += `<div id="dashboard-drilldown-panel" class="mb-6 hidden"></div>`;
-
-    if (isAdmin) {
-      html += `<div id="dashboard-admin-queue" class="mb-6"></div>`;
-    }
 
     const wilayah = stats.wilayahSummary || {};
     const topKecamatan = Array.isArray(wilayah.topKecamatan) ? wilayah.topKecamatan : [];
@@ -951,9 +784,6 @@
     content.dataset.loaded = '1';
     content.innerHTML = html;
     renderHotspotMap(stats, dx, tahun);
-    if (isAdmin) {
-      renderAdminVerificationQueue(stats, dx);
-    }
     bindDashboardDrilldownActions(dx, tahun);
     if (window.__DASHBOARD_DRILLDOWN_STATE && window.__DASHBOARD_DRILLDOWN_STATE.dx === dx && String(window.__DASHBOARD_DRILLDOWN_STATE.tahun) === String(tahun)) {
       openDashboardDrilldown(
