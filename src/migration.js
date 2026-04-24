@@ -352,9 +352,13 @@ function _buildRawHeaderAuditForDx_(dx) {
     duplicateHeaders: duplicates,
     canonicalPresent: canonicalPresent,
     missingCanonical: missingCanonical,
+    canonicalPresentCount: canonicalPresent.length,
+    missingCanonicalCount: missingCanonical.length,
     legacyOrUnknownHeaders: legacyOrUnknown,
+    legacyOrUnknownCount: legacyOrUnknown.length,
     proposedHeaderOrder: proposed,
-    willChangeOrder: JSON.stringify(headers) !== JSON.stringify(proposed)
+    willChangeOrder: JSON.stringify(headers) !== JSON.stringify(proposed),
+    willAppendMissing: !!missingCanonical.length
   };
 }
 
@@ -373,13 +377,49 @@ function previewRawSheetHeaderReorder(token, dxList) {
   return inspectRawSheetHeaders(token, dxList);
 }
 
-function _copyRawSheetBackup_(sheet) {
+function previewRawSheetHeaderAppend(token, dxList) {
+  return inspectRawSheetHeaders(token, dxList);
+}
+
+function _copyRawSheetBackup_(sheet, label) {
   var ss = getSpreadsheet_();
   var tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
   var stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMdd_HHmmss');
   var backup = sheet.copyTo(ss);
-  backup.setName(sheet.getName() + '_PRE_REORDER_' + stamp);
+  var safeLabel = String(label || 'PRE_REORDER').trim().toUpperCase().replace(/[^A-Z0-9_]+/g, '_') || 'PRE_REORDER';
+  backup.setName(sheet.getName() + '_' + safeLabel + '_' + stamp);
   return backup.getName();
+}
+
+function _ensureSheetColumnCapacity_(sheet, wantedColumnCount) {
+  wantedColumnCount = Math.max(0, Number(wantedColumnCount) || 0);
+  var currentMax = sheet.getMaxColumns();
+  if (wantedColumnCount <= currentMax) return;
+  sheet.insertColumnsAfter(currentMax, wantedColumnCount - currentMax);
+}
+
+function _appendMissingRawHeaders_(sheet, missingHeaders) {
+  var currentHeaders = _getRawHeaders_(sheet);
+  var additions = (missingHeaders || []).filter(function(header) {
+    var key = String(header || '').trim();
+    return key && currentHeaders.indexOf(key) === -1;
+  });
+  if (!additions.length) {
+    return {
+      changed: false,
+      appendedHeaders: [],
+      finalColumnCount: sheet.getLastColumn()
+    };
+  }
+
+  var startCol = sheet.getLastColumn() + 1;
+  _ensureSheetColumnCapacity_(sheet, startCol + additions.length - 1);
+  sheet.getRange(1, startCol, 1, additions.length).setValues([additions]);
+  return {
+    changed: true,
+    appendedHeaders: additions,
+    finalColumnCount: sheet.getLastColumn()
+  };
 }
 
 function _reorderRawSheetColumns_(sheet, proposedHeaders) {
@@ -437,7 +477,7 @@ function reorderRawSheetHeaders(token, dxList, options) {
     }
 
     var sheet = getSheetOrThrow_(audit.sheetName);
-    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet) : '';
+    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet, 'PRE_REORDER') : '';
     var reorderResult = _reorderRawSheetColumns_(sheet, audit.proposedHeaderOrder);
 
     results.push({
@@ -455,6 +495,74 @@ function reorderRawSheetHeaders(token, dxList, options) {
   return {
     status: 'success',
     reorderedAt: new Date().toISOString(),
+    results: results
+  };
+}
+
+function appendMissingRawSheetHeaders(token, dxList, options) {
+  _requireAdminFromToken_(token);
+  var opts = options || {};
+  var doBackup = opts.backup !== false;
+  var reorderAfterAppend = opts.reorderAfterAppend === true;
+  var dxs = _normalizeDxList_(dxList);
+  var results = [];
+
+  dxs.forEach(function(dx) {
+    var audit = _buildRawHeaderAuditForDx_(dx);
+    if (audit.duplicateHeaders && audit.duplicateHeaders.length) {
+      results.push({
+        dx: dx,
+        sheetName: audit.sheetName,
+        status: 'error',
+        message: 'Duplicate exact header ditemukan. Append missing header dibatalkan untuk sheet ini.',
+        duplicateHeaders: audit.duplicateHeaders
+      });
+      return;
+    }
+
+    if (!audit.missingCanonical || !audit.missingCanonical.length) {
+      results.push({
+        dx: dx,
+        sheetName: audit.sheetName,
+        status: audit.willChangeOrder && reorderAfterAppend ? 'pending_reorder_only' : 'noop',
+        message: audit.willChangeOrder && reorderAfterAppend
+          ? 'Tidak ada header canonical yang hilang, tetapi sheet masih bisa direorder.'
+          : 'Tidak ada header canonical yang perlu ditambahkan.',
+        missingCanonical: [],
+        legacyOrUnknownHeaders: audit.legacyOrUnknownHeaders
+      });
+      return;
+    }
+
+    var sheet = getSheetOrThrow_(audit.sheetName);
+    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet, 'PRE_APPEND') : '';
+    var appendResult = _appendMissingRawHeaders_(sheet, audit.missingCanonical);
+    var auditAfterAppend = _buildRawHeaderAuditForDx_(dx);
+    var reorderResult = { changed: false };
+
+    if (reorderAfterAppend && auditAfterAppend.willChangeOrder) {
+      reorderResult = _reorderRawSheetColumns_(sheet, auditAfterAppend.proposedHeaderOrder);
+      auditAfterAppend = _buildRawHeaderAuditForDx_(dx);
+    }
+
+    results.push({
+      dx: dx,
+      sheetName: audit.sheetName,
+      status: 'success',
+      backupSheetName: backupSheetName,
+      appendedHeaders: appendResult.appendedHeaders || [],
+      appendedCount: (appendResult.appendedHeaders || []).length,
+      reordered: !!reorderResult.changed,
+      remainingMissingCanonical: auditAfterAppend.missingCanonical,
+      finalHeaders: auditAfterAppend.headers,
+      legacyOrUnknownHeaders: auditAfterAppend.legacyOrUnknownHeaders
+    });
+  });
+
+  return {
+    status: 'success',
+    appendedAt: new Date().toISOString(),
+    reorderAfterAppend: reorderAfterAppend,
     results: results
   };
 }

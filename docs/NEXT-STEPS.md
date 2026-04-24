@@ -9,6 +9,7 @@
 ## Prioritas Berikutnya
 
 1. **Append missing canonical headers secara non-destruktif**
+   - Fondasi helper backend sudah siap di `src/migration.js` (`previewRawSheetHeaderAppend`, `appendMissingRawSheetHeaders`)
    - Fokus pertama: `DIF_Raw`, `PERT_Raw`, `TN_Raw`, `AFP_Raw`
    - Tambahkan juga 7 header canonical yang masih hilang di `MR_Raw`
    - Jangan hapus kolom legacy pada tahap ini

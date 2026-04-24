@@ -189,4 +189,9 @@ Untuk audit pasca-reorder yang bisa direproduksi dari header sheet live, lihat:
 - `docs/RAW-HEADER-LIVE-AUDIT.md`
 - `scripts/audit-live-raw-headers.js`
 
-Kesimpulan batch ini: fondasi reorder live sudah beres, tetapi batch lanjutan harus fokus ke **append/backfill header canonical yang belum ada**, bukan sekadar menggeser urutan kolom.
+Batch lanjutan sekarang juga sudah punya fondasi helper backend untuk migrasi non-destruktif:
+
+- `previewRawSheetHeaderAppend(token, dxList)`
+- `appendMissingRawSheetHeaders(token, dxList, options)`
+
+Kesimpulan batch ini: fondasi reorder live sudah beres, dan jalur kode untuk **append/backfill header canonical yang belum ada** juga sudah siap, sehingga pekerjaan berikutnya tidak perlu mulai dari nol lagi.

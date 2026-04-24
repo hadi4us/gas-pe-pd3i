@@ -112,3 +112,4 @@
 - [x] Audit pasca-reorder menunjukkan `DIF_Raw`, `PERT_Raw`, `TN_Raw`, dan `AFP_Raw` masih dominan memakai struktur lama, sehingga reorder saja belum cukup untuk menyamakan schema lintas DX
 - [x] Utility audit live yang bisa direproduksi ditambahkan di `scripts/audit-live-raw-headers.js`
 - [x] Hasil audit live dan implikasi cleanup non-destruktif didokumentasikan di `docs/RAW-HEADER-LIVE-AUDIT.md` dan `docs/RAW-HEADER-AUDIT.md`
+- [x] Fondasi helper backend untuk batch schema berikutnya ditambahkan di `src/migration.js`: preview/append missing canonical raw headers secara non-destruktif (`previewRawSheetHeaderAppend`, `appendMissingRawSheetHeaders`)
