@@ -2498,15 +2498,22 @@
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
-    if (overviewSection) overviewSection.classList.toggle('hidden', normalized !== 'overview');
-    if (inputLauncherSection) inputLauncherSection.classList.toggle('hidden', !isInputWorkspace);
-    if (inputFormSection) inputFormSection.classList.toggle('hidden', !(isInputWorkspace && hasDx && !hasOpenRecord));
-    if (searchSection) searchSection.classList.toggle('hidden', !(isSearchWorkspace || isDeferredWorkspace));
-    if (verifikasiFormSection) verifikasiFormSection.classList.toggle('hidden', !(normalized === 'verifikasi' && hasOpenRecord));
-    if (sampelFormSection) sampelFormSection.classList.toggle('hidden', !(normalized === 'sampel' && hasOpenRecord));
-    if (statusFormSection) statusFormSection.classList.toggle('hidden', !(normalized === 'status' && hasOpenRecord));
-    if (dashboardSection) dashboardSection.classList.toggle('hidden', !isDashboardWorkspace);
-    if (guideSection) guideSection.classList.toggle('hidden', !isGuideWorkspace);
+    function setWorkspaceSectionVisibility(sectionEl, shouldShow) {
+      if (!sectionEl) return;
+      sectionEl.classList.toggle('hidden', !shouldShow);
+      sectionEl.style.display = shouldShow ? '' : 'none';
+      sectionEl.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+    }
+
+    setWorkspaceSectionVisibility(overviewSection, normalized === 'overview');
+    setWorkspaceSectionVisibility(inputLauncherSection, isInputWorkspace);
+    setWorkspaceSectionVisibility(inputFormSection, isInputWorkspace && hasDx && !hasOpenRecord);
+    setWorkspaceSectionVisibility(searchSection, isSearchWorkspace || isDeferredWorkspace);
+    setWorkspaceSectionVisibility(verifikasiFormSection, normalized === 'verifikasi' && hasOpenRecord);
+    setWorkspaceSectionVisibility(sampelFormSection, normalized === 'sampel' && hasOpenRecord);
+    setWorkspaceSectionVisibility(statusFormSection, normalized === 'status' && hasOpenRecord);
+    setWorkspaceSectionVisibility(dashboardSection, isDashboardWorkspace);
+    setWorkspaceSectionVisibility(guideSection, isGuideWorkspace);
     applySearchDefaultsForWorkspace(normalized);
 
     if (editorForm) {
@@ -3060,6 +3067,13 @@
     const summaryWrap = document.getElementById('overview-work-summary');
     const inboxWrap = document.getElementById('overview-work-inbox');
     if (!quickWrap || !roleWrap || !kpiWrap || !focusWrap || !summaryWrap || !inboxWrap) return;
+
+    summaryWrap.classList.remove('hidden');
+    summaryWrap.style.display = '';
+    summaryWrap.setAttribute('aria-hidden', 'false');
+    inboxWrap.classList.remove('hidden');
+    inboxWrap.style.display = '';
+    inboxWrap.setAttribute('aria-hidden', 'false');
 
     const caps = getRoleCapabilities(SESSION_USER);
     const quickActions = [

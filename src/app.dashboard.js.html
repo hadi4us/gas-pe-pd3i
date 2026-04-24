@@ -295,8 +295,24 @@
   function openDashboardSection(options) {
     const opts = options || {};
     const section = document.getElementById('section-dashboard');
+    const overviewInbox = document.getElementById('overview-work-inbox');
+    const overviewSummary = document.getElementById('overview-work-summary');
     if (typeof applySidebarWorkspaceLayout === 'function') applySidebarWorkspaceLayout('dashboard');
-    if (section) section.classList.remove('hidden');
+    if (section) {
+      section.classList.remove('hidden');
+      section.style.display = '';
+      section.setAttribute('aria-hidden', 'false');
+    }
+    if (overviewInbox) {
+      overviewInbox.classList.add('hidden');
+      overviewInbox.style.display = 'none';
+      overviewInbox.innerHTML = '';
+    }
+    if (overviewSummary) {
+      overviewSummary.classList.add('hidden');
+      overviewSummary.style.display = 'none';
+      overviewSummary.innerHTML = '';
+    }
     if (typeof initDashboard === 'function') initDashboard();
     if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('dashboard');
     if (section && opts.scroll !== false) {
