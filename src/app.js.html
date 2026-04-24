@@ -3076,9 +3076,9 @@
     summaryWrap.classList.remove('hidden');
     summaryWrap.style.display = '';
     summaryWrap.setAttribute('aria-hidden', 'false');
-    inboxWrap.classList.remove('hidden');
-    inboxWrap.style.display = '';
-    inboxWrap.setAttribute('aria-hidden', 'false');
+    inboxWrap.classList.add('hidden');
+    inboxWrap.style.display = 'none';
+    inboxWrap.setAttribute('aria-hidden', 'true');
 
     const caps = getRoleCapabilities(SESSION_USER);
     const quickActions = [
@@ -3104,7 +3104,7 @@
     roleWrap.textContent = caps.summary || 'Belum ada sesi aktif.';
     kpiWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat KPI operasional...</div>';
     focusWrap.innerHTML = '';
-    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat antrian kerja...</div>';
+    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat prioritas kerja...</div>';
     inboxWrap.innerHTML = '';
 
     quickWrap.querySelectorAll('[data-overview-workspace]').forEach(function(btn) {
@@ -3118,7 +3118,7 @@
     const sessionToken = getSafeSessionTokenLocal();
     if (!safeGsRun() || !sessionToken) {
       kpiWrap.innerHTML = '<div class="pd3i-helper-text">KPI beranda belum tersedia karena sesi belum siap.</div>';
-      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Antrian kerja belum tersedia karena sesi belum siap.</div>';
+      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Ringkasan prioritas kerja belum tersedia karena sesi belum siap.</div>';
       return;
     }
 
@@ -3188,36 +3188,22 @@
             `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
             `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`,
             `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`
+            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`,
+            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Ringkasan prioritas</div><div class="pd3i-overview-focus-title">Beranda hanya menampilkan angka prioritas</div><div class="pd3i-overview-focus-copy">Daftar kasus detail dipindahkan ke workspace operasional seperti Verifikasi EPID, Hasil Sampel, dan Status Pasien, supaya beranda tetap ringkas.</div></div>`
           ].join('');
 
-          const pendingItems = ((res && res.pendingVerification) || []).map(function(item) {
-            return Object.assign({}, item, { __queueBucket: 'pending' });
-          });
-          const revisionItems = ((res && res.revisionQueue) || []).map(function(item) {
-            return Object.assign({}, item, { __queueBucket: 'revision' });
-          });
-          const sampleItems = ((res && res.sampleQueue) || []).map(function(item) {
-            return Object.assign({}, item, { __queueBucket: 'sample' });
-          });
-          const statusItems = ((res && res.statusQueue) || []).map(function(item) {
-            return Object.assign({}, item, { __queueBucket: 'status' });
-          });
-          const items = pendingItems.concat(revisionItems, sampleItems, statusItems).slice(0, 8);
-          inboxWrap.innerHTML = renderQueueTable(items, {
-            emptyText: 'Belum ada antrian kerja penting saat ini.'
-          });
+          inboxWrap.innerHTML = '';
         } catch (err) {
           console.error('renderOverviewWorkspace success handler failed:', err);
           kpiWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">KPI beranda gagal dirender.</div>';
-          summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Antrian kerja gagal dirender.</div>';
+          summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Ringkasan prioritas kerja gagal dirender.</div>';
         }
       })
       .withFailureHandler(function(err) {
         if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         console.error('renderOverviewWorkspace failed:', err);
         kpiWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat KPI beranda.</div>';
-        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat antrian kerja beranda.</div>';
+        summaryWrap.innerHTML = '<div class="pd3i-helper-text text-red-600">Gagal memuat ringkasan prioritas kerja beranda.</div>';
       })
       .getOverviewSummary(sessionToken);
   }
