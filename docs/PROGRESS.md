@@ -113,3 +113,12 @@
 - [x] Utility audit live yang bisa direproduksi ditambahkan di `scripts/audit-live-raw-headers.js`
 - [x] Hasil audit live dan implikasi cleanup non-destruktif didokumentasikan di `docs/RAW-HEADER-LIVE-AUDIT.md` dan `docs/RAW-HEADER-AUDIT.md`
 - [x] Fondasi helper backend untuk batch schema berikutnya ditambahkan di `src/migration.js`: preview/append missing canonical raw headers secara non-destruktif (`previewRawSheetHeaderAppend`, `appendMissingRawSheetHeaders`)
+
+## 2026-04-29
+- [x] Repo dipulihkan ke workspace lokal, token GitHub valid digunakan sementara untuk clone/push, dan remote lokal dibersihkan agar token tidak tersimpan
+- [x] Audit live terbaru menunjukkan missing canonical header sudah `0` untuk semua DX (`MR`, `DIF`, `PERT`, `TN`, `AFP`)
+- [x] Script audit cleanup live ditambahkan di `scripts/analyze-live-raw-cleanup.js` untuk membaca blank header, alias backfill candidates, non-canonical live, dan missing canonical secara reproducible
+- [x] Snapshot cleanup terbaru didokumentasikan di `docs/RAW-CLEANUP-CURRENT-AUDIT.md`, termasuk temuan `PERT_Raw` kolom 179 blank header berdata
+- [x] `docs/NEXT-STEPS.md` diperbarui dari fokus append header ke fokus cleanup/backfill non-destruktif
+- [x] Helper backend alias backfill ditambahkan di `src/migration.js`: `previewRawSheetAliasBackfill(token, dxList)` dan `backfillRawSheetAliases(token, dxList, options)`
+- [x] Syntax check, unit test, audit cleanup, commit GitHub, dan `clasp push -f` berhasil
