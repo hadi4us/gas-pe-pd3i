@@ -69,8 +69,26 @@
     });
   }
 
-  window.__pd3iSelectChoice = function(fieldId, value) {
-    const inputEl = document.getElementById(fieldId);
+  function getFormScopeForElement(el) {
+    if (!el || !el.closest) return document;
+    return el.closest('#dynamic-form, #dynamic-form-input, #dynamic-form-verifikasi, #dynamic-form-sampel, #dynamic-form-status') || document;
+  }
+
+  function findScopedFieldControl(fieldId, scope) {
+    const targetId = String(fieldId || '').trim();
+    if (!targetId) return null;
+    const root = scope && scope.querySelectorAll ? scope : document;
+    const controls = root.querySelectorAll('input, select, textarea');
+    for (let i = 0; i < controls.length; i++) {
+      const el = controls[i];
+      const semanticId = String((el.dataset && el.dataset.fieldId) || el.id || '').trim();
+      if (semanticId === targetId) return el;
+    }
+    return null;
+  }
+
+  window.__pd3iSelectChoice = function(fieldId, value, scope) {
+    const inputEl = findScopedFieldControl(fieldId, scope);
     if (!inputEl || inputEl.disabled) return;
     inputEl.value = String(value || '').trim();
     syncChoiceButtons(inputEl);
@@ -85,7 +103,7 @@
       const fieldId = String(btn.getAttribute('data-field-id') || '').trim();
       const value = String(btn.getAttribute('data-choice-value') || '').trim();
       if (!fieldId) return;
-      window.__pd3iSelectChoice(fieldId, value);
+      window.__pd3iSelectChoice(fieldId, value, getFormScopeForElement(btn));
     });
   }
 
