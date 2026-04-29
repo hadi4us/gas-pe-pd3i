@@ -242,9 +242,13 @@
               <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
             </button>
           </div>
+          <input type="text" id="geo-search-query"
+            class="flex-1 min-w-[220px] border border-slate-300 bg-white text-slate-700 text-sm rounded-lg px-4 py-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Ketik alamat atau koordinat lat,lon"
+            autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
           <div id="geo-status"
-            class="flex-1 px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">
-            Klik tombol untuk mengambil titik koordinat atau cari dari alamat domisili.
+            class="lg:w-[32rem] px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">
+            Klik tombol untuk mengambil titik koordinat, atau ketik alamat/koordinat lalu cari.
           </div>
         </div>
       </div>`;
@@ -485,6 +489,25 @@
     return parts.map(function(v) { return String(v || "").trim(); }).filter(Boolean).join(", ");
   }
 
+  function parseCoordinateSearchQuery(query) {
+    const raw = String(query || "").trim();
+    if (!raw) return null;
+
+    const cleaned = raw
+      .replace(/latitude|longitude|lat|lon|lng/gi, " ")
+      .replace(/[;|]/g, ",")
+      .replace(/\s+/g, " ")
+      .trim();
+    const match = cleaned.match(/(-?\d+(?:[.,]\d+)?)\s*[,\s]\s*(-?\d+(?:[.,]\d+)?)/);
+    if (!match) return null;
+
+    const lat = Number(String(match[1]).replace(",", "."));
+    const lon = Number(String(match[2]).replace(",", "."));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+
   async function geocodeDomisiliAddress(query) {
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`;
     const res = await fetch(url, {
@@ -526,8 +549,18 @@
     const latEl = document.getElementById("Latitude");
     const lonEl = document.getElementById("Longitude");
     const statusEl = document.getElementById("geo-status");
+    const searchInput = document.getElementById("geo-search-query");
 
     if (!btn || !latEl || !lonEl || !statusEl) return;
+    const geoStatusClass = function(color) {
+      const palette = {
+        blue: "border-blue-200 bg-blue-50 text-blue-700",
+        green: "border-green-200 bg-green-50 text-green-700",
+        red: "border-red-200 bg-red-50 text-red-700",
+        slate: "border-slate-200 bg-slate-50 text-slate-600"
+      };
+      return "lg:w-[32rem] px-4 py-3 rounded-lg border " + (palette[color] || palette.slate) + " text-sm font-semibold";
+    };
     setCoordinateManualMode(false);
     if (btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
@@ -537,13 +570,13 @@
       if (!navigator.geolocation) {
         setCoordinateManualMode(true);
         statusEl.textContent = "Geolocation tidak didukung di perangkat/browser ini. Isi latitude/longitude manual.";
-        statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+        statusEl.className = geoStatusClass("red");
         return;
       }
 
       setCoordinateManualMode(false);
       statusEl.textContent = "Sedang mengambil lokasi...";
-      statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
+      statusEl.className = geoStatusClass("blue");
 
       navigator.geolocation.getCurrentPosition(
         function(position) {
@@ -553,7 +586,7 @@
           lonEl.value = lon;
           setCoordinateManualMode(false);
           statusEl.textContent = `Lokasi berhasil diambil. Lat: ${lat}, Lon: ${lon}`;
-          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
+          statusEl.className = geoStatusClass("green");
         },
         function(error) {
           let msg = "Gagal mengambil lokasi.";
@@ -562,48 +595,71 @@
           else if (error.code === 3) msg = "Permintaan lokasi timeout.";
           setCoordinateManualMode(true);
           statusEl.textContent = msg + " Isi latitude/longitude manual jika perlu.";
-          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
+          statusEl.className = geoStatusClass("red");
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     });
 
-    if (btnCariAlamat) {
-      btnCariAlamat.addEventListener("click", async function() {
-        const query = buildDomisiliAddressQuery();
-        if (!query) {
-          setCoordinateManualMode(true);
-          statusEl.textContent = "Alamat domisili belum cukup lengkap untuk dicari. Isi alamat, wilayah, atau koordinat manual.";
-          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
-          return;
+    async function runGeoAddressSearch() {
+      const manualQuery = searchInput ? String(searchInput.value || "").trim() : "";
+      const parsedCoordinate = parseCoordinateSearchQuery(manualQuery);
+      if (parsedCoordinate) {
+        const lat = parsedCoordinate.lat.toFixed(6);
+        const lon = parsedCoordinate.lon.toFixed(6);
+        latEl.value = lat;
+        lonEl.value = lon;
+        setCoordinateManualMode(false);
+        statusEl.textContent = `Koordinat diisi dari input. Lat: ${lat}, Lon: ${lon}`;
+        statusEl.className = geoStatusClass("green");
+        return;
+      }
+
+      const query = manualQuery || buildDomisiliAddressQuery();
+      if (!query) {
+        setCoordinateManualMode(true);
+        statusEl.textContent = "Alamat domisili/input search belum cukup lengkap. Isi alamat, wilayah, atau koordinat manual.";
+        statusEl.className = geoStatusClass("red");
+        return;
+      }
+
+      btnCariAlamat.disabled = true;
+      btnCariAlamat.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+      setCoordinateManualMode(false);
+      statusEl.textContent = `Mencari koordinat dari: ${query}`;
+      statusEl.className = geoStatusClass("blue");
+
+      try {
+        const match = await geocodeDomisiliAddress(query);
+        if (!match || !match.lat || !match.lon) {
+          throw new Error("Alamat tidak ditemukan.");
         }
 
-        btnCariAlamat.disabled = true;
-        btnCariAlamat.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+        const lat = Number(match.lat).toFixed(6);
+        const lon = Number(match.lon).toFixed(6);
+        latEl.value = lat;
+        lonEl.value = lon;
         setCoordinateManualMode(false);
-        statusEl.textContent = `Mencari koordinat dari alamat: ${query}`;
-        statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-semibold";
+        statusEl.textContent = `Koordinat ditemukan. Lat: ${lat}, Lon: ${lon}`;
+        statusEl.className = geoStatusClass("green");
+      } catch (err) {
+        setCoordinateManualMode(true);
+        statusEl.textContent = ((err && err.message) || "Gagal mencari koordinat dari alamat.") + " Isi latitude/longitude manual jika perlu.";
+        statusEl.className = geoStatusClass("red");
+      } finally {
+        btnCariAlamat.disabled = false;
+        btnCariAlamat.innerHTML = '<i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat';
+      }
+    }
 
-        try {
-          const match = await geocodeDomisiliAddress(query);
-          if (!match || !match.lat || !match.lon) {
-            throw new Error("Alamat tidak ditemukan.");
-          }
-
-          const lat = Number(match.lat).toFixed(6);
-          const lon = Number(match.lon).toFixed(6);
-          latEl.value = lat;
-          lonEl.value = lon;
-          setCoordinateManualMode(false);
-          statusEl.textContent = `Koordinat ditemukan dari alamat. Lat: ${lat}, Lon: ${lon}`;
-          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
-        } catch (err) {
-          setCoordinateManualMode(true);
-          statusEl.textContent = ((err && err.message) || "Gagal mencari koordinat dari alamat.") + " Isi latitude/longitude manual jika perlu.";
-          statusEl.className = "flex-1 px-4 py-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-semibold";
-        } finally {
-          btnCariAlamat.disabled = false;
-          btnCariAlamat.innerHTML = '<i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat';
+    if (btnCariAlamat) {
+      btnCariAlamat.addEventListener("click", runGeoAddressSearch);
+    }
+    if (searchInput) {
+      searchInput.addEventListener("keydown", function(ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          runGeoAddressSearch();
         }
       });
     }
