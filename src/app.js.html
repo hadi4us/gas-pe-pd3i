@@ -3424,7 +3424,7 @@
         <td class="pd3i-queue-cell" data-label="Status"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span></td>
         <td class="pd3i-queue-cell" data-label="Update">${escapeHtml(updateText)}</td>
         <td class="pd3i-queue-cell is-action" data-label="Aksi">
-          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>${escapeHtml(actionLabel)}</button>
+          <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>${escapeHtml(actionLabel)}</button>
         </td>
       </tr>`;
     });
@@ -5968,7 +5968,7 @@
                 </div>
               </div>
               <div class="pd3i-search-result-cta-wrap">
-                <button type="button" class="pd3i-search-result-action" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg})'>
+                <button type="button" class="pd3i-search-result-action" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>
                   <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : workflowActionLabel}
                 </button>
               </div>
@@ -6005,6 +6005,25 @@
             : requestedWorkspace === 'status'
               ? btnSubmitStatus
               : btnSubmit;
+        const triggerButton = opts.triggerButton && opts.triggerButton.nodeType === 1 ? opts.triggerButton : null;
+        const triggerButtonOriginalHtml = triggerButton ? triggerButton.innerHTML : '';
+        function setOpenTriggerLoading() {
+          if (!triggerButton) return;
+          triggerButton.dataset.loadingRecord = '1';
+          triggerButton.disabled = true;
+          triggerButton.setAttribute('aria-busy', 'true');
+          triggerButton.classList.add('opacity-70', 'cursor-wait');
+          triggerButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Membuka...`;
+        }
+        function resetOpenTriggerLoading() {
+          if (!triggerButton) return;
+          triggerButton.disabled = false;
+          triggerButton.removeAttribute('aria-busy');
+          triggerButton.classList.remove('opacity-70', 'cursor-wait');
+          triggerButton.innerHTML = triggerButtonOriginalHtml || 'Buka';
+          delete triggerButton.dataset.loadingRecord;
+        }
+        setOpenTriggerLoading();
         if (loadingButton) {
           loadingButton.disabled = true;
           loadingButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Data...`;
@@ -6015,6 +6034,7 @@
         setTimeout(function() {
           if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
           if (loadingButton && !loadingButton.disabled) return;
+          resetOpenTriggerLoading();
           if (loadingButton) loadingButton.disabled = false;
           resetSubmitButtonByMode(requestedWorkspace);
           showTopAlert('Membuka record terlalu lama. Coba ulangi dari hasil pencarian.', false);
@@ -6025,6 +6045,7 @@
             if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             if (!record) {
               showTopAlert("Data tidak ditemukan.", false);
+              resetOpenTriggerLoading();
               if (loadingButton) loadingButton.disabled = false;
               resetSubmitButtonByMode(requestedWorkspace);
               return;
@@ -6099,6 +6120,7 @@
             }, 240);
             updateUiShellSummary();
             refreshWorkflowInbox();
+            resetOpenTriggerLoading();
 
             if (['verifikasi', 'sampel', 'status'].includes(openedWorkspace)) {
               hideTopAlert();
@@ -6111,6 +6133,7 @@
             if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             console.error("getRecordByKey failed:", err);
             showTopAlert("Gagal memuat data.", false);
+            resetOpenTriggerLoading();
             if (loadingButton) loadingButton.disabled = false;
             resetSubmitButtonByMode(requestedWorkspace);
           })

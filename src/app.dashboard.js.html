@@ -126,7 +126,7 @@
                 <strong>${escapeHtml(item.nama || '-')}</strong>
                 <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml([item.kecamatan, item.kelurahan, item.rw ? 'RW ' + item.rw : '', item.rt ? 'RT ' + item.rt : ''].filter(Boolean).join(' / ') || '-')}</small>
               </div>
-              <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg})'><i class="fas fa-folder-open"></i> Buka</button>
+              <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-folder-open"></i> Buka</button>
             </div>
             <div class="pd3i-admin-queue-meta">
               ${item.statusVerifikasi ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi)}</span>` : ''}
@@ -193,9 +193,9 @@
       } catch (e) {}
     }
 
-    window.__openAdminQueueRecord = function(recordKey, dxValue) {
+    window.__openAdminQueueRecord = function(recordKey, dxValue, triggerButton) {
       if (typeof window._loadRecordFromSearch_ === 'function') {
-        window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR');
+        window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR', { triggerButton: triggerButton });
       } else {
         showTopAlert('Fungsi buka record belum siap. Coba lagi sebentar.', false);
       }
