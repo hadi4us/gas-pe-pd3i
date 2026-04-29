@@ -693,6 +693,137 @@ function _buildRawAliasBackfillAuditForDx_(dx) {
   };
 }
 
+function _buildPertRawBlankHeaderRepairPlan_() {
+  var dx = 'PERT';
+  var sheetName = 'PERT_Raw';
+  var sheet = getSheetOrThrow_(sheetName);
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  var headers = _getRawHeaders_(sheet);
+  var blankColumnIndexes = [];
+  headers.forEach(function(header, idx) {
+    if (!String(header || '').trim()) blankColumnIndexes.push(idx + 1);
+  });
+
+  var targetHeader = 'No Telp/WA Orang Tua/Wali';
+  var targetIdx = headers.indexOf(targetHeader);
+  var blankIdx = blankColumnIndexes.length === 1 ? blankColumnIndexes[0] - 1 : -1;
+  var rows = lastRow > 1 && lastCol > 0 ? sheet.getRange(2, 1, lastRow - 1, lastCol).getValues() : [];
+  var nonEmptyBlankCells = [];
+  var movableCells = [];
+  var blockedCells = [];
+
+  if (blankIdx !== -1) {
+    rows.forEach(function(row, rowOffset) {
+      var value = row[blankIdx];
+      if (value === undefined || value === null || String(value).trim() === '') return;
+      var rowNumber = rowOffset + 2;
+      var targetValue = targetIdx !== -1 ? row[targetIdx] : '';
+      var targetEmpty = targetValue === undefined || targetValue === null || String(targetValue).trim() === '';
+      nonEmptyBlankCells.push({
+        rowNumber: rowNumber,
+        blankColumnIndex: blankIdx + 1,
+        targetHeader: targetHeader,
+        targetColumnIndex: targetIdx + 1,
+        targetEmpty: targetEmpty
+      });
+      if (targetIdx !== -1 && targetEmpty) {
+        movableCells.push({
+          rowNumber: rowNumber,
+          fromColumnIndex: blankIdx + 1,
+          toHeader: targetHeader,
+          toColumnIndex: targetIdx + 1
+        });
+      } else {
+        blockedCells.push({
+          rowNumber: rowNumber,
+          reason: targetIdx === -1 ? 'Target header tidak ditemukan.' : 'Target canonical sudah berisi nilai.'
+        });
+      }
+    });
+  }
+
+  return {
+    dx: dx,
+    sheetName: sheetName,
+    rowCount: lastRow,
+    columnCount: lastCol,
+    blankColumnIndexes: blankColumnIndexes,
+    expectedSingleBlankColumn: blankColumnIndexes.length === 1 ? blankColumnIndexes[0] : null,
+    targetHeader: targetHeader,
+    targetColumnIndex: targetIdx + 1,
+    nonEmptyBlankCellCount: nonEmptyBlankCells.length,
+    nonEmptyBlankCells: nonEmptyBlankCells,
+    movableCellCount: movableCells.length,
+    movableCells: movableCells,
+    blockedCellCount: blockedCells.length,
+    blockedCells: blockedCells,
+    canRepair: blankColumnIndexes.length === 1 && targetIdx !== -1 && nonEmptyBlankCells.length === movableCells.length
+  };
+}
+
+function previewPertRawBlankHeaderRepair(token) {
+  _requireAdminFromToken_(token);
+  return {
+    status: 'success',
+    inspectedAt: new Date().toISOString(),
+    plan: _buildPertRawBlankHeaderRepairPlan_()
+  };
+}
+
+function repairPertRawBlankHeader(token, options) {
+  _requireAdminFromToken_(token);
+  var opts = options || {};
+  var doBackup = opts.backup !== false;
+  var deleteBlankColumn = opts.deleteBlankColumn !== false;
+  var plan = _buildPertRawBlankHeaderRepairPlan_();
+  if (!plan.canRepair) {
+    return {
+      status: 'error',
+      message: 'Rencana repair tidak aman. Tidak ada perubahan dilakukan.',
+      plan: plan
+    };
+  }
+  if (!plan.movableCellCount) {
+    return {
+      status: 'noop',
+      message: 'Tidak ada nilai pada blank header PERT_Raw yang perlu dipindahkan.',
+      plan: plan
+    };
+  }
+
+  var sheet = getSheetOrThrow_(plan.sheetName);
+  var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet, 'PRE_PERT_BLANK_REPAIR') : '';
+  var values = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
+  plan.movableCells.forEach(function(cell) {
+    values[cell.rowNumber - 1][cell.toColumnIndex - 1] = values[cell.rowNumber - 1][cell.fromColumnIndex - 1];
+    values[cell.rowNumber - 1][cell.fromColumnIndex - 1] = '';
+  });
+  sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+
+  var deletedColumnIndex = null;
+  if (deleteBlankColumn) {
+    var blankCol = plan.expectedSingleBlankColumn;
+    var afterMoveValues = sheet.getRange(2, blankCol, Math.max(sheet.getLastRow() - 1, 1), 1).getValues();
+    var hasRemainingData = afterMoveValues.some(function(row) { return String(row[0] || '').trim() !== ''; });
+    if (!hasRemainingData) {
+      sheet.deleteColumn(blankCol);
+      deletedColumnIndex = blankCol;
+    }
+  }
+
+  return {
+    status: 'success',
+    repairedAt: new Date().toISOString(),
+    backupSheetName: backupSheetName,
+    movedCellCount: plan.movableCellCount,
+    movedCells: plan.movableCells,
+    deletedBlankColumnIndex: deletedColumnIndex,
+    beforePlan: plan,
+    afterPlan: _buildPertRawBlankHeaderRepairPlan_()
+  };
+}
+
 function previewRawSheetAliasBackfill(token, dxList) {
   _requireAdminFromToken_(token);
   var dxs = _normalizeDxList_(dxList);

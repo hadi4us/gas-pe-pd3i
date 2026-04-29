@@ -20,6 +20,8 @@ Untuk investigasi contoh nilai secara lokal saja, gunakan opsi `--max-examples N
 ## Rekomendasi batch berikutnya
 
 1. Tangani kolom blank `PERT_Raw` kolom 179 secara manual/terkontrol: identifikasi header asalnya, pindahkan nilainya ke canonical yang tepat bila valid, lalu audit ulang.
+   - Helper backend tersedia di `src/migration.js`: `previewPertRawBlankHeaderRepair(token)` dan `repairPertRawBlankHeader(token, options)`.
+   - Default repair membuat backup `PERT_Raw_PRE_PERT_BLANK_REPAIR_*`, memindahkan nilai ke `No Telp/WA Orang Tua/Wali` bila target kosong, lalu menghapus kolom blank hanya jika sudah kosong setelah pemindahan.
 2. Buat helper backfill alias untuk pasangan MR yang target canonical masih kosong, terutama `Provinsi` → `Provinsi unit pelapor` dan `Kab/Kota` → `Kab/Kota unit pelapor`.
    - Helper backend tersedia di `src/migration.js`: `previewRawSheetAliasBackfill(token, dxList)` dan `backfillRawSheetAliases(token, dxList, options)`.
    - Default backfill hanya mengisi target canonical yang kosong dan membuat backup `*_PRE_ALIAS_BACKFILL_*`; nilai target yang sudah berisi tidak dioverwrite kecuali `options.applyDifferentValues === true`.

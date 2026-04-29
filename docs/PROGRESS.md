@@ -121,4 +121,6 @@
 - [x] Snapshot cleanup terbaru didokumentasikan di `docs/RAW-CLEANUP-CURRENT-AUDIT.md`, termasuk temuan `PERT_Raw` kolom 179 blank header berdata
 - [x] `docs/NEXT-STEPS.md` diperbarui dari fokus append header ke fokus cleanup/backfill non-destruktif
 - [x] Helper backend alias backfill ditambahkan di `src/migration.js`: `previewRawSheetAliasBackfill(token, dxList)` dan `backfillRawSheetAliases(token, dxList, options)`
+- [x] Helper backend repair `PERT_Raw` blank header ditambahkan di `src/migration.js`: `previewPertRawBlankHeaderRepair(token)` dan `repairPertRawBlankHeader(token, options)`
+- [x] Percobaan eksekusi live via `clasp run` dan Sheets API langsung belum bisa dipakai dari CLI karena project belum tersedia sebagai API executable dan token clasp tidak punya akses Sheets API langsung; helper sudah dipush untuk eksekusi lewat jalur admin Apps Script yang tersedia
 - [x] Syntax check, unit test, audit cleanup, commit GitHub, dan `clasp push -f` berhasil
