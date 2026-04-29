@@ -566,3 +566,214 @@ function appendMissingRawSheetHeaders(token, dxList, options) {
     results: results
   };
 }
+
+function _getRawAliasBackfillPairs_(dx) {
+  dx = String(dx || '').trim().toUpperCase();
+  var pairs = [
+    { targetHeader: 'Nama Orang Tua/Wali', sourceHeaders: ['Nama orang tua/wali'] },
+    { targetHeader: 'No Telp/WA Orang Tua/Wali', sourceHeaders: ['No. kontak orang tua/wali'] },
+    { targetHeader: 'Petugas', sourceHeaders: ['Nama Petugas'] },
+    { targetHeader: 'Tanggal Mulai Demam', sourceHeaders: ['Tanggal mulai demam'] },
+    { targetHeader: 'Tanggal Mulai Ruam', sourceHeaders: ['Tanggal mulai ruam'] },
+    { targetHeader: 'Mata Merah', sourceHeaders: ['Mata merah'] },
+    { targetHeader: 'Umur Kehamilan', sourceHeaders: ['Umur kehamilan'] },
+    { targetHeader: 'Gejala Lain', sourceHeaders: ['Gejala lain'] },
+    { targetHeader: 'Sebutkan Gejala Lain', sourceHeaders: ['Sebutkan gejala lain'] },
+    { targetHeader: 'Komp_Diare', sourceHeaders: ['Diare'] },
+    { targetHeader: 'Komp_Bronchopneumonia', sourceHeaders: ['Bronchopneumonia'] },
+    { targetHeader: 'Komp_Kebutaan', sourceHeaders: ['Kebutaan'] },
+    { targetHeader: 'Komp_Otitis Media', sourceHeaders: ['Otitis media'] },
+    { targetHeader: 'Komp_Pneumonia', sourceHeaders: ['Pneumonia'] },
+    { targetHeader: 'Komp_Encephalitis', sourceHeaders: ['Encephalitis'] },
+    { targetHeader: 'Komp_Malnutrisi', sourceHeaders: ['Malnutrisi'] },
+    { targetHeader: 'Komp_Ulkus Mukosa Mulut', sourceHeaders: ['Ulkus mukosa mulut'] },
+    { targetHeader: 'Komp_Lainnya', sourceHeaders: ['Lainnya komplikasi'] },
+    { targetHeader: 'Komp_Lainnya_Sebutkan', sourceHeaders: ['Sebutkan komplikasi lain'] },
+    { targetHeader: 'Rawat inap?', sourceHeaders: ['Apakah dirawat inap?'] },
+    { targetHeader: 'Ada kasus sekitar?', sourceHeaders: ['Ada kasus serupa di lingkungan'] },
+    { targetHeader: 'Pemberian vitamin A?', sourceHeaders: ['Pemberian Vitamin A'] },
+    { targetHeader: 'Berpergian 1 bulan terakhir?', sourceHeaders: ['Riwayat perjalanan 7-21 hari'] },
+    { targetHeader: 'Tujuan perjalanan', sourceHeaders: ['Lokasi perjalanan'] },
+    { targetHeader: 'Tanggal pulang', sourceHeaders: ['Tanggal pulang perjalanan', 'Tanggal kembali'] },
+    { targetHeader: 'Apakah spesimen darah diambil', sourceHeaders: ['Spesimen diambil?'] },
+    { targetHeader: 'Jenis Sampel Darah', sourceHeaders: ['Jenis spesimen'] },
+    { targetHeader: 'Tanggal ambil spesimen darah', sourceHeaders: ['Tanggal ambil spesimen'] },
+    { targetHeader: 'Tanggal pengiriman spesimen darah ke lab', sourceHeaders: ['Tanggal kirim spesimen'] },
+    { targetHeader: 'Jenis Sampel Lain', sourceHeaders: ['Jenis spesimen lainnya'] },
+    { targetHeader: 'Keadaan saat ini', sourceHeaders: ['Status akhir kasus'] },
+    { targetHeader: 'KontakEratJSON', sourceHeaders: ['Kontak Erat'] }
+  ];
+  if (dx === 'MR') {
+    pairs.push(
+      { targetHeader: 'Provinsi', sourceHeaders: ['Provinsi Pasien'] },
+      { targetHeader: 'Kab/Kota', sourceHeaders: ['Kab/Kota Pasien'] },
+      { targetHeader: 'Provinsi unit pelapor', sourceHeaders: ['Provinsi'] },
+      { targetHeader: 'Kab/Kota unit pelapor', sourceHeaders: ['Kab/Kota'] }
+    );
+  }
+  return pairs;
+}
+
+function _getFirstFilledSourceValue_(row, headers, sourceHeaders) {
+  for (var i = 0; i < sourceHeaders.length; i++) {
+    var idx = headers.indexOf(sourceHeaders[i]);
+    if (idx === -1) continue;
+    var value = row[idx];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return { header: sourceHeaders[i], columnIndex: idx + 1, value: value };
+    }
+  }
+  return null;
+}
+
+function _buildRawAliasBackfillAuditForDx_(dx) {
+  var sheetName = _getRawSheetNameFromDx_(dx);
+  var sheet = getSheetOrThrow_(sheetName);
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  var headers = _getRawHeaders_(sheet);
+  var rows = lastRow > 1 && lastCol > 0 ? sheet.getRange(2, 1, lastRow - 1, lastCol).getValues() : [];
+  var pairs = _getRawAliasBackfillPairs_(dx);
+  var candidates = [];
+
+  pairs.forEach(function(pair) {
+    var targetIdx = headers.indexOf(pair.targetHeader);
+    if (targetIdx === -1) return;
+    var sourceHeaders = (pair.sourceHeaders || []).filter(function(sourceHeader) {
+      return sourceHeader !== pair.targetHeader && headers.indexOf(sourceHeader) !== -1;
+    });
+    if (!sourceHeaders.length) return;
+
+    var fillableRows = [];
+    var differentRows = [];
+    rows.forEach(function(row, rowOffset) {
+      var source = _getFirstFilledSourceValue_(row, headers, sourceHeaders);
+      if (!source) return;
+      var targetValue = row[targetIdx];
+      var hasTarget = targetValue !== undefined && targetValue !== null && String(targetValue).trim() !== '';
+      if (!hasTarget) {
+        fillableRows.push({
+          rowNumber: rowOffset + 2,
+          sourceHeader: source.header,
+          sourceColumnIndex: source.columnIndex,
+          targetColumnIndex: targetIdx + 1
+        });
+      } else if (String(source.value).trim() !== String(targetValue).trim()) {
+        differentRows.push({
+          rowNumber: rowOffset + 2,
+          sourceHeader: source.header,
+          sourceColumnIndex: source.columnIndex,
+          targetColumnIndex: targetIdx + 1
+        });
+      }
+    });
+
+    if (fillableRows.length || differentRows.length) {
+      candidates.push({
+        targetHeader: pair.targetHeader,
+        sourceHeaders: sourceHeaders,
+        targetColumnIndex: targetIdx + 1,
+        fillableCount: fillableRows.length,
+        differentCount: differentRows.length,
+        fillableRows: fillableRows,
+        differentRows: differentRows
+      });
+    }
+  });
+
+  return {
+    dx: dx,
+    sheetName: sheetName,
+    rowCount: lastRow,
+    columnCount: lastCol,
+    candidates: candidates,
+    candidateCount: candidates.length,
+    fillableCellCount: candidates.reduce(function(sum, item) { return sum + item.fillableCount; }, 0),
+    differentCellCount: candidates.reduce(function(sum, item) { return sum + item.differentCount; }, 0)
+  };
+}
+
+function previewRawSheetAliasBackfill(token, dxList) {
+  _requireAdminFromToken_(token);
+  var dxs = _normalizeDxList_(dxList);
+  return {
+    status: 'success',
+    inspectedAt: new Date().toISOString(),
+    results: dxs.map(function(dx) { return _buildRawAliasBackfillAuditForDx_(dx); })
+  };
+}
+
+function backfillRawSheetAliases(token, dxList, options) {
+  _requireAdminFromToken_(token);
+  var opts = options || {};
+  var doBackup = opts.backup !== false;
+  var applyDifferentValues = opts.applyDifferentValues === true;
+  var dxs = _normalizeDxList_(dxList);
+  var results = [];
+
+  dxs.forEach(function(dx) {
+    var audit = _buildRawAliasBackfillAuditForDx_(dx);
+    if (!audit.fillableCellCount && (!applyDifferentValues || !audit.differentCellCount)) {
+      results.push({
+        dx: dx,
+        sheetName: audit.sheetName,
+        status: 'noop',
+        message: 'Tidak ada nilai alias yang perlu dibackfill ke target canonical.',
+        audit: audit
+      });
+      return;
+    }
+
+    var sheet = getSheetOrThrow_(audit.sheetName);
+    var headers = _getRawHeaders_(sheet);
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var values = lastRow > 1 && lastCol > 0 ? sheet.getRange(2, 1, lastRow - 1, lastCol).getValues() : [];
+    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet, 'PRE_ALIAS_BACKFILL') : '';
+    var changedCells = [];
+
+    audit.candidates.forEach(function(candidate) {
+      var targetIdx = candidate.targetColumnIndex - 1;
+      var rowRefs = candidate.fillableRows.slice();
+      if (applyDifferentValues) rowRefs = rowRefs.concat(candidate.differentRows || []);
+      rowRefs.forEach(function(ref) {
+        var rowIdx = ref.rowNumber - 2;
+        var row = values[rowIdx];
+        var source = _getFirstFilledSourceValue_(row, headers, candidate.sourceHeaders);
+        if (!source) return;
+        var currentTarget = row[targetIdx];
+        var hasTarget = currentTarget !== undefined && currentTarget !== null && String(currentTarget).trim() !== '';
+        if (hasTarget && !applyDifferentValues) return;
+        row[targetIdx] = source.value;
+        changedCells.push({
+          rowNumber: ref.rowNumber,
+          targetHeader: candidate.targetHeader,
+          targetColumnIndex: candidate.targetColumnIndex,
+          sourceHeader: source.header,
+          sourceColumnIndex: source.columnIndex,
+          overwritten: hasTarget
+        });
+      });
+    });
+
+    if (changedCells.length) {
+      sheet.getRange(2, 1, values.length, lastCol).setValues(values);
+    }
+
+    results.push({
+      dx: dx,
+      sheetName: audit.sheetName,
+      status: changedCells.length ? 'success' : 'noop',
+      backupSheetName: backupSheetName,
+      applyDifferentValues: applyDifferentValues,
+      changedCellCount: changedCells.length,
+      changedCells: changedCells
+    });
+  });
+
+  return {
+    status: 'success',
+    backfilledAt: new Date().toISOString(),
+    results: results
+  };
+}
