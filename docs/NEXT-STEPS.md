@@ -13,6 +13,7 @@
 1. **Tangani blank header `PERT_Raw` secara terkontrol**
    - Audit terbaru menemukan blank header di kolom 179 dan kolom itu berisi data pada 1 baris
    - Helper backend tersedia di `src/migration.js`: `previewPertRawBlankHeaderRepair(token)` dan `repairPertRawBlankHeader(token, options)`
+   - Admin WebApp sekarang menyediakan tombol **Repair PERT Raw Blank Header** di menu Admin untuk menjalankan preview terlebih dahulu, lalu meminta konfirmasi sebelum eksekusi repair
    - Default repair membuat backup `PERT_Raw_PRE_PERT_BLANK_REPAIR_*`, memindahkan nilai ke `No Telp/WA Orang Tua/Wali` bila target kosong, lalu menghapus kolom blank hanya jika sudah kosong setelah pemindahan
    - Setelah tindakan, jalankan ulang `node scripts/analyze-live-raw-cleanup.js --format md`
 

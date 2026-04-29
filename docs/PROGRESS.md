@@ -122,5 +122,6 @@
 - [x] `docs/NEXT-STEPS.md` diperbarui dari fokus append header ke fokus cleanup/backfill non-destruktif
 - [x] Helper backend alias backfill ditambahkan di `src/migration.js`: `previewRawSheetAliasBackfill(token, dxList)` dan `backfillRawSheetAliases(token, dxList, options)`
 - [x] Helper backend repair `PERT_Raw` blank header ditambahkan di `src/migration.js`: `previewPertRawBlankHeaderRepair(token)` dan `repairPertRawBlankHeader(token, options)`
+- [x] Menu Admin WebApp ditambahkan tombol **Repair PERT Raw Blank Header** yang melakukan preview via `google.script.run`, meminta konfirmasi, lalu menjalankan repair dengan backup dan penghapusan kolom blank hanya bila aman
 - [x] Percobaan eksekusi live via `clasp run` dan Sheets API langsung belum bisa dipakai dari CLI karena project belum tersedia sebagai API executable dan token clasp tidak punya akses Sheets API langsung; helper sudah dipush untuk eksekusi lewat jalur admin Apps Script yang tersedia
 - [x] Syntax check, unit test, audit cleanup, commit GitHub, dan `clasp push -f` berhasil

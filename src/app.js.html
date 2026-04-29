@@ -4957,6 +4957,7 @@
       const btnRetryTelegram = document.getElementById("btn-retry-telegram");
       const btnRetryRevisionNotify = document.getElementById("btn-retry-revision-notify");
       const btnRetryRevisionTelegram = document.getElementById("btn-retry-revision-telegram");
+      const btnRepairPertRaw = document.getElementById("btn-repair-pert-raw");
       const btnSidebarDashboard = document.getElementById("btn-sidebar-dashboard");
       const btnSidebarToggle = document.getElementById("btn-sidebar-toggle");
       const btnSidebarClose = document.getElementById("btn-sidebar-close");
@@ -5340,6 +5341,85 @@
             adminMenuDropdown.classList.add("hidden");
           }
         });
+      }
+
+      if (btnRepairPertRaw) {
+        if (!isAdmin) {
+          btnRepairPertRaw.classList.add("hidden");
+        } else {
+          btnRepairPertRaw.classList.remove("hidden");
+          btnRepairPertRaw.addEventListener("click", function() {
+            if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
+            if (!safeGsRun()) {
+              showTopAlert("Repair PERT Raw hanya berfungsi di lingkungan WebApp (/exec).", false);
+              return;
+            }
+            if (!SESSION_TOKEN) {
+              showTopAlert("Sesi admin tidak ditemukan. Silakan login ulang.", false);
+              return;
+            }
+
+            btnRepairPertRaw.disabled = true;
+            btnRepairPertRaw.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Previewing...';
+
+            google.script.run
+              .withSuccessHandler(function(previewRes) {
+                const plan = previewRes && previewRes.plan ? previewRes.plan : null;
+                if (!plan || !plan.canRepair) {
+                  btnRepairPertRaw.disabled = false;
+                  btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
+                  const reason = plan
+                    ? `Blank: ${(plan.blankColumnIndexes || []).join(', ') || '-'}, movable: ${plan.movableCellCount || 0}, blocked: ${plan.blockedCellCount || 0}.`
+                    : 'Preview tidak mengembalikan rencana repair.';
+                  showTopAlert('Repair PERT Raw tidak aman dijalankan. ' + reason, false);
+                  return;
+                }
+
+                const confirmMsg = [
+                  'Preview repair PERT_Raw:',
+                  '- Blank column: ' + ((plan.blankColumnIndexes || []).join(', ') || '-'),
+                  '- Target: ' + (plan.targetHeader || '-'),
+                  '- Sel dipindahkan: ' + (plan.movableCellCount || 0),
+                  '- Blocked: ' + (plan.blockedCellCount || 0),
+                  '',
+                  'Lanjut eksekusi dengan backup dan hapus blank column jika sudah kosong?'
+                ].join('\n');
+
+                if (!confirm(confirmMsg)) {
+                  btnRepairPertRaw.disabled = false;
+                  btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
+                  showTopAlert('Repair PERT Raw dibatalkan setelah preview.', false);
+                  return;
+                }
+
+                btnRepairPertRaw.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Repairing...';
+                google.script.run
+                  .withSuccessHandler(function(repairRes) {
+                    btnRepairPertRaw.disabled = false;
+                    btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
+                    if (repairRes && repairRes.status === 'success') {
+                      showTopAlert(`Repair PERT Raw selesai. Dipindahkan: ${repairRes.movedCellCount || 0}, kolom dihapus: ${repairRes.deletedBlankColumnIndex || '-'}, backup: ${repairRes.backupSheetName || '-'}`, true);
+                    } else if (repairRes && repairRes.status === 'noop') {
+                      showTopAlert(repairRes.message || 'Repair PERT Raw tidak membuat perubahan.', true);
+                    } else {
+                      showTopAlert((repairRes && repairRes.message) || 'Repair PERT Raw gagal.', false);
+                    }
+                  })
+                  .withFailureHandler(function(err) {
+                    btnRepairPertRaw.disabled = false;
+                    btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
+                    showTopAlert('Repair PERT Raw gagal: ' + (err && err.message ? err.message : err), false);
+                  })
+                  .repairPertRawBlankHeader(SESSION_TOKEN, { backup: true, deleteBlankColumn: true });
+              })
+              .withFailureHandler(function(err) {
+                btnRepairPertRaw.disabled = false;
+                btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
+                showTopAlert('Preview repair PERT Raw gagal: ' + (err && err.message ? err.message : err), false);
+              })
+              .previewPertRawBlankHeaderRepair(SESSION_TOKEN);
+          });
+        }
       }
 
       if (btnRetrySync) {
