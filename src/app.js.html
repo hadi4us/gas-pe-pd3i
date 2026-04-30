@@ -2362,6 +2362,7 @@
   let WORKSPACE_RUNTIME_SEQ = 0;
   let WORKFLOW_INBOX_CACHE = null;
   let WORKSPACE_SEARCH_FILTER_STATE = {};
+  const PD3I_LAST_WORKSPACE_KEY = 'pd3i:last-workspace:v1';
 
   function normalizeSidebarWorkspace(workspaceOrSection) {
     const raw = String(workspaceOrSection || '').trim().toLowerCase();
@@ -2389,6 +2390,41 @@
     return map[raw] || 'overview';
   }
 
+  function isWorkspaceRestorable(workspace) {
+    return ['overview', 'search', 'input', 'verifikasi', 'sampel', 'status', 'dashboard', 'guide'].includes(normalizeSidebarWorkspace(workspace));
+  }
+
+  function saveLastWorkspace(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    if (!isWorkspaceRestorable(normalized)) return;
+    try {
+      if (window && window.localStorage) {
+        window.localStorage.setItem(PD3I_LAST_WORKSPACE_KEY, normalized);
+      }
+    } catch (e) {}
+  }
+
+  function getLastWorkspace() {
+    try {
+      const saved = window && window.localStorage ? window.localStorage.getItem(PD3I_LAST_WORKSPACE_KEY) : '';
+      const normalized = normalizeSidebarWorkspace(saved || '');
+      return isWorkspaceRestorable(normalized) ? normalized : '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function getUrlRequestedWorkspace() {
+    try {
+      const url = new URL(window.location.href);
+      const view = String(url.searchParams.get('view') || '').trim().toLowerCase();
+      if (view === 'dashboard') return 'dashboard';
+      const workspace = String(url.searchParams.get('workspace') || '').trim();
+      if (workspace) return normalizeSidebarWorkspace(workspace);
+    } catch (e) {}
+    return '';
+  }
+
   function createWorkspaceRuntimeGuard(workspace) {
     return {
       seq: WORKSPACE_RUNTIME_SEQ,
@@ -2410,6 +2446,7 @@
       }
     } catch (e) {}
     WORKSPACE_RUNTIME_SEQ += 1;
+    saveLastWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     return createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
   }
 
@@ -2494,7 +2531,10 @@
 
   function applyInitialRouteView() {
     const boot = getRouteBootConfig();
-    const requestedWorkspace = boot.initialView === 'dashboard' ? 'dashboard' : boot.initialWorkspace;
+    const urlWorkspace = getUrlRequestedWorkspace();
+    const bootWorkspace = boot.initialView === 'dashboard' ? 'dashboard' : boot.initialWorkspace;
+    const savedWorkspace = getLastWorkspace();
+    const requestedWorkspace = urlWorkspace || (bootWorkspace !== 'overview' ? bootWorkspace : (savedWorkspace || bootWorkspace));
     if (!SESSION_USER) {
       return openSidebarWorkspace(requestedWorkspace, {
         scroll: false,
