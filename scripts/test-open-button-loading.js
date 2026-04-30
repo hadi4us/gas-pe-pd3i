@@ -22,6 +22,14 @@ assert(
   '_loadRecordFromSearch_ must set a visible Membuka... loading state on the clicked Buka button.'
 );
 assert(
+  /pd3i-open-record-loading/.test(app) && /Membuka form\.\.\./.test(app) && /showOpenRecordLoadingOverlay/.test(app),
+  '_loadRecordFromSearch_ must show a visible global overlay while the form is being opened.'
+);
+assert(
+  /hideOpenRecordLoadingOverlay/.test(app) && /document\.body\.classList\.remove\('pd3i-record-loading-open'\)/.test(app),
+  '_loadRecordFromSearch_ must hide the global opening overlay on completion paths.'
+);
+assert(
   /triggerButton\.disabled\s*=\s*true/.test(app) && /aria-busy/.test(app),
   'Clicked Buka button must be disabled and marked aria-busy while loading.'
 );

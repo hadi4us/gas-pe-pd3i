@@ -6007,21 +6007,51 @@
               : btnSubmit;
         const triggerButton = opts.triggerButton && opts.triggerButton.nodeType === 1 ? opts.triggerButton : null;
         const triggerButtonOriginalHtml = triggerButton ? triggerButton.innerHTML : '';
+        function showOpenRecordLoadingOverlay(label) {
+          let overlay = document.getElementById('pd3i-open-record-loading');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pd3i-open-record-loading';
+            overlay.setAttribute('role', 'status');
+            overlay.setAttribute('aria-live', 'polite');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);padding:20px;';
+            document.body.appendChild(overlay);
+          }
+          overlay.innerHTML = `
+            <div style="width:min(92vw,420px);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.24);border:1px solid rgba(226,232,240,.95);padding:24px;text-align:center;color:#0f172a;">
+              <div style="width:54px;height:54px;margin:0 auto 14px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;font-size:24px;">
+                <i class="fas fa-spinner fa-spin"></i>
+              </div>
+              <div style="font-weight:900;font-size:18px;letter-spacing:-.01em;">Membuka form...</div>
+              <div style="margin-top:6px;font-size:13px;font-weight:700;color:#64748b;line-height:1.45;">${escapeHtml(label || 'Mohon tunggu, data kasus sedang dimuat ke form.')}</div>
+            </div>`;
+          overlay.classList.remove('hidden');
+          document.body.classList.add('pd3i-record-loading-open');
+        }
+        function hideOpenRecordLoadingOverlay() {
+          const overlay = document.getElementById('pd3i-open-record-loading');
+          if (overlay) overlay.classList.add('hidden');
+          document.body.classList.remove('pd3i-record-loading-open');
+        }
         function setOpenTriggerLoading() {
-          if (!triggerButton) return;
-          triggerButton.dataset.loadingRecord = '1';
-          triggerButton.disabled = true;
-          triggerButton.setAttribute('aria-busy', 'true');
-          triggerButton.classList.add('opacity-70', 'cursor-wait');
-          triggerButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Membuka...`;
+          if (triggerButton) {
+            triggerButton.dataset.loadingRecord = '1';
+            triggerButton.disabled = true;
+            triggerButton.setAttribute('aria-busy', 'true');
+            triggerButton.classList.add('opacity-70', 'cursor-wait');
+            triggerButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Membuka...`;
+          }
+          showOpenRecordLoadingOverlay('Form sedang disiapkan. Jangan klik ulang dulu ya, MasBro.');
         }
         function resetOpenTriggerLoading() {
-          if (!triggerButton) return;
-          triggerButton.disabled = false;
-          triggerButton.removeAttribute('aria-busy');
-          triggerButton.classList.remove('opacity-70', 'cursor-wait');
-          triggerButton.innerHTML = triggerButtonOriginalHtml || 'Buka';
-          delete triggerButton.dataset.loadingRecord;
+          if (triggerButton) {
+            triggerButton.disabled = false;
+            triggerButton.removeAttribute('aria-busy');
+            triggerButton.classList.remove('opacity-70', 'cursor-wait');
+            triggerButton.innerHTML = triggerButtonOriginalHtml || 'Buka';
+            delete triggerButton.dataset.loadingRecord;
+          }
+          hideOpenRecordLoadingOverlay();
         }
         setOpenTriggerLoading();
         if (loadingButton) {
