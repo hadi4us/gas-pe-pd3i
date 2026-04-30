@@ -36,5 +36,17 @@ assert(
   /const\s+browserAutocomplete\s*=\s*isBrowserAutofillRiskFieldId\(field\.id\) \? 'new-password' : 'off'/.test(app),
   'Generated controls must apply the same autofill suppression at render time.'
 );
+assert(
+  /hardenAddressAutofillSuppression\(document,\s*\{\s*keepReadonly:\s*true\s*\}\)/.test(app),
+  'Record hydration must keep risky fields readonly for the full programmatic fill window.'
+);
+assert(
+  /const\s+suppressChangeEvent\s*=\s*isBrowserAutofillRiskFieldId\(fieldKey\)/.test(app) && /if\s*\(!suppressChangeEvent\)\s*\{\s*el\.dispatchEvent\(new Event\("change",\s*\{\s*bubbles:\s*true\s*\}\)\);\s*\}/.test(app),
+  'Hydration must not dispatch synthetic change events for address/person/contact fields that trigger Chrome save-address prompts.'
+);
+assert(
+  /function\s+releaseBrowserAutofillHydrationReadonly\s*\(/.test(app) && /releaseBrowserAutofillHydrationReadonly\(document,\s*650\)/.test(app),
+  'Readonly guard must be released after hydration so fields stay editable after the Chrome prompt-risk window.'
+);
 
-console.log('PASS: browser address autofill/save prompt is suppressed for workspace forms.');
+console.log('PASS: browser address autofill/save prompt is suppressed for workspace forms and record hydration.');

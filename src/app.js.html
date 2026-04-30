@@ -162,7 +162,8 @@
     return raw;
   }
 
-  function hardenAddressAutofillSuppression(root) {
+  function hardenAddressAutofillSuppression(root, options) {
+    const opts = options || {};
     const container = root && root.querySelectorAll ? root : document;
     const formSelector = '#dynamic-form, #dynamic-form-input, #dynamic-form-verifikasi, #dynamic-form-sampel, #dynamic-form-status';
     container.querySelectorAll(formSelector).forEach(function(formRoot) {
@@ -187,11 +188,25 @@
       el.setAttribute('data-1p-ignore', 'true');
       if (risk && el.type !== 'hidden') {
         el.setAttribute('readonly', 'readonly');
-        setTimeout(function() {
-          if (!el.disabled) el.removeAttribute('readonly');
-        }, 300);
+        if (!opts.keepReadonly) {
+          setTimeout(function() {
+            if (!el.disabled) el.removeAttribute('readonly');
+          }, Number(opts.releaseDelayMs || 300));
+        }
       }
     });
+  }
+
+  function releaseBrowserAutofillHydrationReadonly(root, delayMs) {
+    const container = root && root.querySelectorAll ? root : document;
+    const releaseDelay = Number(delayMs || 650);
+    setTimeout(function() {
+      container.querySelectorAll('input, textarea, select').forEach(function(el) {
+        const fieldId = String((el.dataset && el.dataset.fieldId) || el.id || '').trim();
+        if (!isBrowserAutofillRiskFieldId(fieldId)) return;
+        if (!el.disabled) el.removeAttribute('readonly');
+      });
+    }, releaseDelay);
   }
 
   function generateHTML(field) {
@@ -4681,17 +4696,21 @@
   // EDIT MODE HELPERS
   // ============================================================
   async function hydrateRecordToForm(record) {
-    hardenAddressAutofillSuppression(document);
+    hardenAddressAutofillSuppression(document, { keepReadonly: true });
     const deferredKeys = new Set(["Nama unit pelapor", "Nama Rumah Sakit", "Nomor EPID Rekomendasi", "Provinsi", "Kab/Kota", "Provinsi Pasien", "Kab/Kota Pasien", "Kecamatan", "Kelurahan"]);
     Object.keys(record || {}).forEach(key => {
       if (deferredKeys.has(key)) return;
       const el = document.getElementById(key);
       if (el) {
+        const fieldKey = _getSemanticFieldKey_(el) || key;
+        const suppressChangeEvent = isBrowserAutofillRiskFieldId(fieldKey);
         el.value = (el.type === 'date') ? normalizeDateInputValue(record[key]) : record[key];
         if (el.dataset && el.dataset.choiceGroup === '1') {
           syncChoiceButtons(el);
         }
-        el.dispatchEvent(new Event("change", { bubbles: true }));
+        if (!suppressChangeEvent) {
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }
       }
     });
 
@@ -4722,7 +4741,8 @@
     });
 
     setTimeout(function() {
-      hardenAddressAutofillSuppression(document);
+      hardenAddressAutofillSuppression(document, { keepReadonly: true });
+      releaseBrowserAutofillHydrationReadonly(document, 650);
     }, 160);
   }
 
