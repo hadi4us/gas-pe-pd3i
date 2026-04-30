@@ -209,6 +209,45 @@
     }, releaseDelay);
   }
 
+  function setBrowserAutofillReviewFieldLock(workspace) {
+    const normalizedWorkspace = String(workspace || '').trim().toLowerCase();
+    document.querySelectorAll('[data-pd3i-autofill-review-locked="1"]').forEach(function(el) {
+      const wasDisabled = el.dataset.pd3iOrigDisabled === '1';
+      if (!wasDisabled) el.disabled = false;
+      el.removeAttribute('aria-disabled');
+      delete el.dataset.pd3iAutofillReviewLocked;
+      delete el.dataset.pd3iOrigDisabled;
+    });
+
+    if (['verifikasi', 'sampel', 'status'].indexOf(normalizedWorkspace) === -1) return;
+    const formId = normalizedWorkspace === 'verifikasi'
+      ? 'dynamic-form-verifikasi'
+      : normalizedWorkspace === 'sampel'
+        ? 'dynamic-form-sampel'
+        : 'dynamic-form-status';
+    const editableRootId = normalizedWorkspace === 'verifikasi'
+      ? 'verifikasi-fields-container-workspace'
+      : normalizedWorkspace === 'sampel'
+        ? 'sampel-fields-container-workspace'
+        : 'status-fields-container-workspace';
+    const formRoot = document.getElementById(formId);
+    const editableRoot = document.getElementById(editableRootId);
+    if (!formRoot) return;
+
+    formRoot.querySelectorAll('input, textarea, select').forEach(function(el) {
+      if (!el || el.type === 'hidden') return;
+      if (editableRoot && editableRoot.contains(el)) return;
+      const fieldId = _getSemanticFieldKey_(el);
+      if (!isBrowserAutofillRiskFieldId(fieldId)) return;
+      el.dataset.pd3iAutofillReviewLocked = '1';
+      el.dataset.pd3iOrigDisabled = el.disabled ? '1' : '0';
+      el.disabled = true;
+      el.setAttribute('aria-disabled', 'true');
+      el.setAttribute('readonly', 'readonly');
+      el.setAttribute('autocomplete', 'new-password');
+    });
+  }
+
   function generateHTML(field) {
     if (field.type === "header") {
       return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
@@ -6230,7 +6269,9 @@
             } else {
               applySidebarWorkspaceLayout(openedWorkspace);
             }
+            setBrowserAutofillReviewFieldLock(openedWorkspace);
             setTimeout(function() {
+              setBrowserAutofillReviewFieldLock(openedWorkspace);
               unlockVisibleSelectsInActiveStage();
             }, 240);
             updateUiShellSummary();

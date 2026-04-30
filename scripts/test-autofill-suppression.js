@@ -48,5 +48,17 @@ assert(
   /function\s+releaseBrowserAutofillHydrationReadonly\s*\(/.test(app) && /releaseBrowserAutofillHydrationReadonly\(document,\s*650\)/.test(app),
   'Readonly guard must be released after hydration so fields stay editable after the Chrome prompt-risk window.'
 );
+assert(
+  /function\s+setBrowserAutofillReviewFieldLock\s*\(workspace\)/.test(app) && /data-pd3i-autofill-review-locked/.test(app),
+  'Deferred review workspaces must lock non-stage risky review fields so Chrome cannot classify them as a savable address profile.'
+);
+assert(
+  /if\s*\(editableRoot\s*&&\s*editableRoot\.contains\(el\)\)\s*return;/.test(app) && /el\.disabled\s*=\s*true/.test(app),
+  'Review-field lock must leave the active workflow stage editable while disabling risky context fields.'
+);
+assert(
+  /setBrowserAutofillReviewFieldLock\(openedWorkspace\);/.test(app),
+  'Record-open flow must apply the review-field autofill lock after workspace switch.'
+);
 
-console.log('PASS: browser address autofill/save prompt is suppressed for workspace forms and record hydration.');
+console.log('PASS: browser address autofill/save prompt is suppressed for workspace forms, record hydration, and review context fields.');
