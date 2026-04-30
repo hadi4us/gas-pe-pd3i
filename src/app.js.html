@@ -53,9 +53,18 @@
     'Nama sekolah/tempat bekerja', 'Nama unit pelapor', 'Nama Rumah Sakit',
     'Latitude', 'Longitude', 'Koordinat (lat,lon)'
   ]);
+  const PERSON_OR_CONTACT_FIELD_IDS = new Set([
+    'Nama Pasien', 'Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Ayah', 'Nama Ibu',
+    'Email Petugas', 'No Whatsapp Petugas', 'No. Kontak Orang Tua/Wali', 'No Telp/WA Orang Tua/Wali'
+  ]);
 
   function isAddressLikeFieldId(fieldId) {
     return ADDRESS_LIKE_FIELD_IDS.has(String(fieldId || '').trim());
+  }
+
+  function isBrowserAutofillRiskFieldId(fieldId) {
+    const key = String(fieldId || '').trim();
+    return isAddressLikeFieldId(key) || PERSON_OR_CONTACT_FIELD_IDS.has(key) || /alamat|email|kontak|whatsapp|telepon|telp|nama pasien|orang tua|wali/i.test(key);
   }
 
   function syncChoiceButtons(inputEl) {
@@ -155,10 +164,20 @@
 
   function hardenAddressAutofillSuppression(root) {
     const container = root && root.querySelectorAll ? root : document;
-    container.querySelectorAll('#dynamic-form input, #dynamic-form textarea, #dynamic-form select').forEach(function(el) {
+    const formSelector = '#dynamic-form, #dynamic-form-input, #dynamic-form-verifikasi, #dynamic-form-sampel, #dynamic-form-status';
+    container.querySelectorAll(formSelector).forEach(function(formRoot) {
+      formRoot.setAttribute('autocomplete', 'off');
+      formRoot.setAttribute('data-form-type', 'other');
+      formRoot.setAttribute('data-lpignore', 'true');
+      formRoot.setAttribute('data-1p-ignore', 'true');
+    });
+    container.querySelectorAll(formSelector + ' input, ' + formSelector + ' textarea, ' + formSelector + ' select').forEach(function(el) {
       const fieldId = String((el.dataset && el.dataset.fieldId) || el.id || '').trim();
-      if (!isAddressLikeFieldId(fieldId)) return;
-      el.setAttribute('autocomplete', 'off');
+      const risk = isBrowserAutofillRiskFieldId(fieldId);
+      if (!risk && !(el.classList && el.classList.contains('pd3i-generated-control'))) return;
+      const neutralName = _getNeutralFieldName_(fieldId || el.name || 'field');
+      el.setAttribute('name', neutralName);
+      el.setAttribute('autocomplete', risk ? 'new-password' : 'off');
       el.setAttribute('aria-autocomplete', 'none');
       el.setAttribute('autocorrect', 'off');
       el.setAttribute('autocapitalize', 'off');
@@ -166,10 +185,12 @@
       el.setAttribute('data-form-type', 'other');
       el.setAttribute('data-lpignore', 'true');
       el.setAttribute('data-1p-ignore', 'true');
-      el.setAttribute('readonly', 'readonly');
-      setTimeout(function() {
-        if (!el.disabled) el.removeAttribute('readonly');
-      }, 80);
+      if (risk && el.type !== 'hidden') {
+        el.setAttribute('readonly', 'readonly');
+        setTimeout(function() {
+          if (!el.disabled) el.removeAttribute('readonly');
+        }, 300);
+      }
     });
   }
 
@@ -274,7 +295,7 @@
 
     let inputHtml = "";
     const neutralName = _getNeutralFieldName_(field.id);
-    const browserAutocomplete = (field.type === 'date' || field.type === 'number' || isAddressLikeFieldId(field.id)) ? 'off' : 'new-password';
+    const browserAutocomplete = isBrowserAutofillRiskFieldId(field.id) ? 'new-password' : 'off';
     const browserHintAttrs = `autocomplete="${browserAutocomplete}" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-field-id="${field.id}"`;
 
     if (field.type === "select" || field.type === "search_select") {
