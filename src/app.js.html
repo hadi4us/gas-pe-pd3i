@@ -6026,11 +6026,15 @@
               <div style="margin-top:6px;font-size:13px;font-weight:700;color:#64748b;line-height:1.45;">${escapeHtml(label || 'Mohon tunggu, data kasus sedang dimuat ke form.')}</div>
             </div>`;
           overlay.classList.remove('hidden');
+          overlay.style.display = 'flex';
           document.body.classList.add('pd3i-record-loading-open');
         }
         function hideOpenRecordLoadingOverlay() {
           const overlay = document.getElementById('pd3i-open-record-loading');
-          if (overlay) overlay.classList.add('hidden');
+          if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.style.display = 'none';
+          }
           document.body.classList.remove('pd3i-record-loading-open');
         }
         function setOpenTriggerLoading() {

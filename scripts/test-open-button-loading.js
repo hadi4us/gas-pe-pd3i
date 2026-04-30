@@ -30,6 +30,10 @@ assert(
   '_loadRecordFromSearch_ must hide the global opening overlay on completion paths.'
 );
 assert(
+  /overlay\.style\.display\s*=\s*'none'/.test(app) && /overlay\.style\.display\s*=\s*'flex'/.test(app),
+  'Opening overlay must toggle inline display because inline display:flex overrides the hidden class.'
+);
+assert(
   /triggerButton\.disabled\s*=\s*true/.test(app) && /aria-busy/.test(app),
   'Clicked Buka button must be disabled and marked aria-busy while loading.'
 );
