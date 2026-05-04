@@ -6347,24 +6347,48 @@
           return { modal: modal, buttons: Array.from(modal.querySelectorAll('button')) };
         }
 
+        function closeVerificationSuccessModal(modal) {
+          try {
+            if (modal && typeof closeModal === 'function') {
+              closeModal(modal);
+              return;
+            }
+          } catch (e) {}
+          try {
+            if (modal) {
+              modal.classList.add('hidden');
+              modal.classList.remove('flex');
+              modal.style.display = 'none';
+            }
+          } catch (e) {}
+        }
+
+        function replaceVerificationSuccessButton(button, label, modal) {
+          if (!button || !button.parentNode) return null;
+          const clone = button.cloneNode(true);
+          clone.textContent = label;
+          delete clone.dataset.bound;
+          clone.dataset.verificationQueueButton = '1';
+          clone.addEventListener('click', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+            returnToVerificationQueueAfterSave();
+            closeVerificationSuccessModal(modal);
+            return false;
+          }, true);
+          button.parentNode.replaceChild(clone, button);
+          return clone;
+        }
+
         function relabelVerificationSuccessButtons() {
           const refs = findSuccessModalElements();
           if (!refs.modal) return;
           const buttons = refs.buttons || [];
-          const queueBtn = buttons.find(btn => /Input Data Baru/i.test(String(btn.textContent || '').trim()));
-          const stayBtn = buttons.find(btn => /Tetap di Halaman/i.test(String(btn.textContent || '').trim()));
-          if (queueBtn) {
-            queueBtn.textContent = 'Kembali ke Daftar Verifikasi';
-            queueBtn.onclick = function() {
-              if (typeof closeSuccessModal === 'function') closeSuccessModal();
-            };
-          }
-          if (stayBtn) {
-            stayBtn.textContent = 'Tetap di Daftar Verifikasi';
-            stayBtn.onclick = function() {
-              if (typeof closeSuccessModal === 'function') closeSuccessModal();
-            };
-          }
+          const queueBtn = document.getElementById('btn-new-entry') || buttons.find(btn => /Input Data Baru|Kembali ke Daftar Verifikasi/i.test(String(btn.textContent || '').trim()));
+          const stayBtn = document.getElementById('btn-close-success') || buttons.find(btn => /Tetap di Halaman|Tetap di Daftar Verifikasi/i.test(String(btn.textContent || '').trim()));
+          replaceVerificationSuccessButton(queueBtn, 'Kembali ke Daftar Verifikasi', refs.modal);
+          replaceVerificationSuccessButton(stayBtn, 'Tetap di Daftar Verifikasi', refs.modal);
         }
 
         function returnToVerificationQueueAfterSave(result) {
