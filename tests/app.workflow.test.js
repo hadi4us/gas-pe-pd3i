@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const appHtml = fs.readFileSync(path.join(__dirname, 'app.js.html'), 'utf8');
+const appHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js.html'), 'utf8');
 
 test('verification success modal replaces original action buttons to avoid resetForNewEntry listener', () => {
   assert.match(appHtml, /function replaceVerificationSuccessButton\(button, label, modal\)/);
@@ -21,7 +21,7 @@ test('verification modal buttons are resolved by stable ids after original showS
   assert.match(appHtml, /Tetap di Daftar Verifikasi/);
 });
 
-const routesJs = fs.readFileSync(path.join(__dirname, 'routes.js'), 'utf8');
+const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'routes.js'), 'utf8');
 
 test('deferred workflow saves can target pending records by registration id before final EPID exists', () => {
   assert.match(routesJs, /data\["ID Registrasi Kasus"\]/);
