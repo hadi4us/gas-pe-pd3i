@@ -6363,17 +6363,19 @@
           } catch (e) {}
         }
 
-        function replaceVerificationSuccessButton(button, label, modal) {
+        function replaceVerificationSuccessButton(button, label, modal, action) {
           if (!button || !button.parentNode) return null;
           const clone = button.cloneNode(true);
           clone.textContent = label;
           delete clone.dataset.bound;
-          clone.dataset.verificationQueueButton = '1';
+          clone.dataset.verificationRedirectAction = action || 'stay';
           clone.addEventListener('click', function(ev) {
             ev.preventDefault();
             ev.stopPropagation();
             if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-            returnToVerificationQueueAfterSave();
+            if (action === 'queue') {
+              returnToVerificationQueueAfterSave();
+            }
             closeVerificationSuccessModal(modal);
             return false;
           }, true);
@@ -6386,9 +6388,9 @@
           if (!refs.modal) return;
           const buttons = refs.buttons || [];
           const queueBtn = document.getElementById('btn-new-entry') || buttons.find(btn => /Input Data Baru|Kembali ke Daftar Verifikasi/i.test(String(btn.textContent || '').trim()));
-          const stayBtn = document.getElementById('btn-close-success') || buttons.find(btn => /Tetap di Halaman|Tetap di Daftar Verifikasi/i.test(String(btn.textContent || '').trim()));
-          replaceVerificationSuccessButton(queueBtn, 'Kembali ke Daftar Verifikasi', refs.modal);
-          replaceVerificationSuccessButton(stayBtn, 'Tetap di Daftar Verifikasi', refs.modal);
+          const stayBtn = document.getElementById('btn-close-success') || buttons.find(btn => /Tetap di Halaman|Tetap di Halaman Verifikasi|Tetap di Daftar Verifikasi/i.test(String(btn.textContent || '').trim()));
+          replaceVerificationSuccessButton(queueBtn, 'Kembali ke Daftar Verifikasi', refs.modal, 'queue');
+          replaceVerificationSuccessButton(stayBtn, 'Tetap di Halaman Verifikasi', refs.modal, 'stay');
         }
 
         function returnToVerificationQueueAfterSave(result) {
@@ -6416,13 +6418,9 @@
         }
 
         showSuccessModal = function() {
-          const result = arguments[0] || {};
-          const shouldReturnToQueue = isVerificationWorkspaceActive();
-          if (shouldReturnToQueue) {
-            returnToVerificationQueueAfterSave(result);
-          }
+          const shouldRelabelRedirectOptions = isVerificationWorkspaceActive();
           const out = originalShowSuccessModal.apply(this, arguments);
-          if (shouldReturnToQueue) {
+          if (shouldRelabelRedirectOptions) {
             setTimeout(relabelVerificationSuccessButtons, 60);
           }
           return out;

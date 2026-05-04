@@ -6,19 +6,20 @@ const path = require('node:path');
 const appHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js.html'), 'utf8');
 
 test('verification success modal replaces original action buttons to avoid resetForNewEntry listener', () => {
-  assert.match(appHtml, /function replaceVerificationSuccessButton\(button, label, modal\)/);
+  assert.match(appHtml, /function replaceVerificationSuccessButton\(button, label, modal, action\)/);
   assert.match(appHtml, /const clone = button\.cloneNode\(true\);/);
   assert.match(appHtml, /delete clone\.dataset\.bound;/);
   assert.match(appHtml, /ev\.stopImmediatePropagation/);
   assert.match(appHtml, /button\.parentNode\.replaceChild\(clone, button\);/);
-  assert.match(appHtml, /returnToVerificationQueueAfterSave\(\);/);
+  assert.match(appHtml, /if \(action === 'queue'\) \{\s*returnToVerificationQueueAfterSave\(\);\s*\}/);
 });
 
-test('verification modal buttons are resolved by stable ids after original showSuccessModal binds them', () => {
+test('verification modal redirect buttons have distinct actions after original showSuccessModal binds them', () => {
   assert.match(appHtml, /document\.getElementById\('btn-new-entry'\)/);
   assert.match(appHtml, /document\.getElementById\('btn-close-success'\)/);
-  assert.match(appHtml, /Kembali ke Daftar Verifikasi/);
-  assert.match(appHtml, /Tetap di Daftar Verifikasi/);
+  assert.match(appHtml, /replaceVerificationSuccessButton\(queueBtn, 'Kembali ke Daftar Verifikasi', refs\.modal, 'queue'\)/);
+  assert.match(appHtml, /replaceVerificationSuccessButton\(stayBtn, 'Tetap di Halaman Verifikasi', refs\.modal, 'stay'\)/);
+  assert.doesNotMatch(appHtml, /const result = arguments\[0\] \|\| \{\};\s*const shouldReturnToQueue = isVerificationWorkspaceActive\(\);/);
 });
 
 const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'routes.js'), 'utf8');
