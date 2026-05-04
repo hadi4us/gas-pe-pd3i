@@ -1476,8 +1476,13 @@ function _requireWriteAccessFromSession_(sess, workflowStage, data) {
     return role || "petugas";
   }
 
-  if (normalizedStage !== "section-pelapor" && !String((data && data["Nomor EPID"]) || "").trim()) {
-    throw new Error("Tahap verifikasi / hasil pemeriksaan / update status hanya boleh untuk record existing setelah input awal tersimpan.");
+  if (normalizedStage !== "section-pelapor") {
+    const hasExistingRecordKey = !!String(
+      (data && (data["ID Registrasi Kasus"] || data.RAW_ROW_NUMBER || data["Nomor EPID"] || data["Nomor EPID Final"])) || ""
+    ).trim();
+    if (!hasExistingRecordKey) {
+      throw new Error("Tahap verifikasi / hasil pemeriksaan / update status hanya boleh untuk record existing setelah input awal tersimpan.");
+    }
   }
 
   if (allowedStages.length && allowedStages.indexOf(normalizedStage) === -1) {

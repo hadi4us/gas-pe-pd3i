@@ -20,3 +20,12 @@ test('verification modal buttons are resolved by stable ids after original showS
   assert.match(appHtml, /Kembali ke Daftar Verifikasi/);
   assert.match(appHtml, /Tetap di Daftar Verifikasi/);
 });
+
+const routesJs = fs.readFileSync(path.join(__dirname, 'routes.js'), 'utf8');
+
+test('deferred workflow saves can target pending records by registration id before final EPID exists', () => {
+  assert.match(routesJs, /data\["ID Registrasi Kasus"\]/);
+  assert.match(routesJs, /data\.RAW_ROW_NUMBER/);
+  assert.match(routesJs, /data\["Nomor EPID"\]/);
+  assert.doesNotMatch(routesJs, /normalizedStage !== "section-pelapor" && !String\(\(data && data\["Nomor EPID"\]\)/);
+});
