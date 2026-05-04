@@ -1,4 +1,3 @@
 # Local Node.js tests must not be uploaded to Apps Script runtime.
 # Apps Script does not provide CommonJS `require`, so Node-only test files break production.
-app.workflow.test.js
 *.node.test.js
