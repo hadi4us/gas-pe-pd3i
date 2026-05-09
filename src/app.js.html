@@ -6383,7 +6383,7 @@
                 </div>
               </div>
               <div class="pd3i-search-result-cta-wrap">
-                <button type="button" class="pd3i-search-result-action" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>
+                <button type="button" class="pd3i-search-result-action is-edit" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>
                   <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : 'Edit'}
                 </button>
                 ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}

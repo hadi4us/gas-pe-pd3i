@@ -10,6 +10,7 @@ const pinHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'pin.html'), '
 const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'index.html'), 'utf8');
 const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_sampel_form.html'), 'utf8');
 const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_search.html'), 'utf8');
+const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'style.html'), 'utf8');
 
 test('credential UI uses password wording and accepts non-numeric passwords', () => {
   assert.match(loginHtml, /Login petugas \(Password\) \+ Captcha/);
@@ -122,6 +123,10 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(appHtml, /title: 'List Kasus'/);
   assert.match(appHtml, /search: 'List Kasus'/);
   assert.match(appHtml, /isViewerMode \? 'Buka \/ Lihat' : 'Edit'/);
+  assert.match(appHtml, /class=\"pd3i-search-result-action is-edit\"/);
+  assert.match(styleHtml, /\.pd3i-search-result-cta-wrap \{[\s\S]*?gap: 0\.7rem;[\s\S]*?flex-wrap: wrap;/);
+  assert.match(styleHtml, /\.pd3i-search-result-action\.is-edit \{[\s\S]*?#3b82f6[\s\S]*?#1d4ed8/);
+  assert.match(styleHtml, /\.pd3i-search-result-action\.is-danger \{[\s\S]*?#ef4444[\s\S]*?#dc2626/);
   assert.match(workspaceSearchHtml, /id="search-diagnosis"/);
   assert.match(workspaceSearchHtml, /id="search-kecamatan"/);
   assert.match(workspaceSearchHtml, /id="search-kelurahan"/);
