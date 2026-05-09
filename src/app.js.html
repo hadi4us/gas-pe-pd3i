@@ -6352,7 +6352,12 @@
               : "Tidak ada sampel";
             const resolvedDx = String(item.dx || dx || '').trim();
             const dxArg = JSON.stringify(resolvedDx);
-            const canDeleteRecord = item.canDelete === true || (typeof item.canDelete === 'undefined' && isAdminMode && !isViewerMode);
+            const normalizedVerificationStatus = String(statusVerifikasi || '')
+              .trim()
+              .toUpperCase()
+              .replace(/\s+/g, ' ');
+            const isPendingVerification = !normalizedVerificationStatus || ['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI'].includes(normalizedVerificationStatus);
+            const canDeleteRecord = item.canDelete === true || (typeof item.canDelete === 'undefined' && !isViewerMode && (isAdminMode || isPendingVerification));
             html += `<div class="pd3i-search-result-card">
               <div class="pd3i-search-result-leading">
                 <span class="pd3i-search-result-index">${startNumber + index}</span>

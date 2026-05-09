@@ -173,8 +173,8 @@ function deleteCaseRecord(token, payload) {
   headers.forEach(function(header, idx) { rowData[header] = values[rowIndex - 1][idx]; });
   rowData.RAW_ROW_NUMBER = rowIndex;
   if (String(rowData['Deleted At'] || '').trim()) throw new Error('Data kasus sudah ditandai terhapus.');
-  if (!_canSessionDeleteCaseRecord_(sess, rowData)) {
-    throw new Error('Hapus data hanya dapat dilakukan oleh admin atau penginput awal sebelum verifikasi.');
+  if (!_canSessionDeleteCaseRecord_(sess, dx, rowData)) {
+    throw new Error('Hapus data hanya dapat dilakukan oleh admin atau pengguna berwenang pada data yang belum diverifikasi.');
   }
 
   const now = new Date();
@@ -638,7 +638,7 @@ function searchRecords(dx, filters, token) {
       if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
 
       const item = _mapSearchResultItem_(dxItem, record);
-      item.canDelete = _canSessionDeleteCaseRecord_(sess, record);
+      item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
       if (String(item.deletedAt || '').trim()) return;
       if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
       if (!item.recordKey) {
@@ -748,7 +748,7 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
       if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
 
       const item = _mapSearchResultItem_(dxItem, record);
-      item.canDelete = _canSessionDeleteCaseRecord_(sess, record);
+      item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
       if (String(item.deletedAt || '').trim()) return;
       if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
       if (!item.recordKey) item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
@@ -1680,13 +1680,14 @@ function _isSessionOriginalInputerUsername_(sess, data) {
   return !!(username && inputerUsername && username === inputerUsername);
 }
 
-function _canSessionDeleteCaseRecord_(sess, data) {
+function _canSessionDeleteCaseRecord_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
   const verificationStatus = _normalizeVerificationStatus_((data && data['Status Verifikasi EPID']) || '');
   const isPending = verificationStatus === 'PENDING' || verificationStatus === 'BELUM DIVERIFIKASI' || verificationStatus === 'BELUM VERIFIKASI';
   if (role === 'admin') return true;
+  if (["viewer", "readonly", "read_only", "read-only"].indexOf(role) !== -1) return false;
   if (!isPending) return false;
-  return _isSessionOriginalInputerUsername_(sess, data || {});
+  return _canSessionReadRecordByScope_(sess, dx, data || {});
 }
 
 function _canSessionReadRecordByScope_(sess, dx, data) {
