@@ -240,6 +240,14 @@ test('rejected cases stay visible and readable to both original inputer and mapp
   assert.match(routesJs, /_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
+test('List Kasus direct search can show pending records created by the logged-in petugas without widening all-status reads', () => {
+  assert.match(routesJs, /\['Diinput Oleh'\]/);
+  assert.match(routesJs, /\['Input Awal Diisi Oleh'\]/);
+  assert.match(routesJs, /function _isSessionOriginalInputerUsername_\(sess, data\)/);
+  assert.match(routesJs, /verificationStatus === 'PENDING' && _isSessionOriginalInputerUsername_\(sess, data \|\| \{\}\)\) return true;/);
+  assert.doesNotMatch(routesJs, /if \(_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
+});
+
 test('verified cases leave verification queue and enter exactly sample or monitoring queue by marker', () => {
   assert.match(dashboardJs, /role === 'admin' && normalizedStatus === 'PENDING'/);
   assert.match(dashboardJs, /sampleStagePending = normalizedStatus === 'TERVERIFIKASI'[\s\S]*?sampleRelevant[\s\S]*?!sampleDone/);

@@ -507,6 +507,8 @@ function _buildSearchProjectionRecord_(headers, row) {
     ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
     ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
     ['Deleted At'],
+    ['Diinput Oleh'],
+    ['Input Awal Diisi Oleh'],
     ['Timestamp'],
     ['Updated At']
   ];
@@ -1655,6 +1657,12 @@ function _isSessionOriginalInputer_(sess, data) {
   return !!((username && inputerUsername && username === inputerUsername) || (nama && inputerName && nama === inputerName));
 }
 
+function _isSessionOriginalInputerUsername_(sess, data) {
+  const username = _normalizeAccessScopeKey_((sess && sess.user && sess.user.username) || '');
+  const inputerUsername = _normalizeAccessScopeKey_((data && data['Diinput Oleh']) || '');
+  return !!(username && inputerUsername && username === inputerUsername);
+}
+
 function _canSessionReadRecordByScope_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
   if (role === 'admin') return true;
@@ -1664,6 +1672,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const verificationStatus = _normalizeVerificationStatus_((data && data['Status Verifikasi EPID']) || '');
   if ((verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') && _isSessionOriginalInputer_(sess, data || {})) return true;
+  if (verificationStatus === 'PENDING' && _isSessionOriginalInputerUsername_(sess, data || {})) return true;
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
