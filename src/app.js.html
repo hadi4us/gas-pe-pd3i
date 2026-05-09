@@ -6352,7 +6352,7 @@
               : "Tidak ada sampel";
             const resolvedDx = String(item.dx || dx || '').trim();
             const dxArg = JSON.stringify(resolvedDx);
-            const canDeleteRecord = isAdminMode && !isViewerMode;
+            const canDeleteRecord = item.canDelete === true || (typeof item.canDelete === 'undefined' && isAdminMode && !isViewerMode);
             html += `<div class="pd3i-search-result-card">
               <div class="pd3i-search-result-leading">
                 <span class="pd3i-search-result-index">${startNumber + index}</span>
@@ -6417,8 +6417,8 @@
         recordKey = String(recordKey || '').trim();
         dx = String(dx || '').trim().toUpperCase();
         if (!recordKey || !dx) return;
-        if (normalizeUiRole(SESSION_USER && SESSION_USER.role) !== 'admin') {
-          showTopAlert('Hapus data kasus hanya dapat dilakukan oleh admin.', false);
+        if (isViewerSession()) {
+          showTopAlert('Mode lihat tidak dapat menghapus data kasus.', false);
           return;
         }
         if (!safeGsRun()) {

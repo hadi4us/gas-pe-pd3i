@@ -129,10 +129,17 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(appHtml, /diagnosis: \(document\.getElementById\('search-diagnosis'\)/);
   assert.match(appHtml, /kelurahan: \(document\.getElementById\('search-kelurahan'\)/);
   assert.match(appHtml, /function deleteCaseRecordFromList\(recordKey, dx, triggerButton\)/);
+  assert.match(appHtml, /item\.canDelete === true/);
+  assert.match(appHtml, /Mode lihat tidak dapat menghapus data kasus/);
   assert.match(appHtml, /Hapus data kasus ini/);
   assert.match(appHtml, /\.deleteCaseRecord\(SESSION_TOKEN, \{ dx: dx, recordKey: recordKey \}\)/);
   assert.match(routesJs, /case 'deleteCaseRecord': return deleteCaseRecord\(token, payload\);/);
   assert.match(routesJs, /function deleteCaseRecord\(token, payload\)/);
+  assert.match(routesJs, /function _canSessionDeleteCaseRecord_\(sess, data\)/);
+  assert.match(routesJs, /role === 'admin'\) return true/);
+  assert.match(routesJs, /verificationStatus === 'PENDING'/);
+  assert.match(routesJs, /_isSessionOriginalInputerUsername_\(sess, data \|\| \{\}\)/);
+  assert.match(routesJs, /item\.canDelete = _canSessionDeleteCaseRecord_\(sess, record\)/);
   assert.match(routesJs, /["']Deleted At["']/);
   assert.match(routesJs, /const diagnosisNeedle = String\(filters\.diagnosis \|\| filters\.dxFilter \|\| ''\)/);
   assert.match(routesJs, /if \(diagnosisNeedle && diagnosisNeedle !== 'ALL' && String\(item\.dx \|\| ''\)\.toUpperCase\(\) !== diagnosisNeedle\) return;/);
