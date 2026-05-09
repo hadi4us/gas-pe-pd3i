@@ -9,6 +9,7 @@ const loginHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'login.html'
 const pinHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'pin.html'), 'utf8');
 const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'index.html'), 'utf8');
 const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_sampel_form.html'), 'utf8');
+const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_verifikasi_form.html'), 'utf8');
 const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_search.html'), 'utf8');
 const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'style.html'), 'utf8');
 
@@ -347,6 +348,17 @@ test('verification workspace keeps address and GPS context fields editable for a
   assert.match(appHtml, /function setBrowserAutofillReviewFieldLock\(workspace\)/);
   assert.match(appHtml, /if \(normalizedWorkspace === 'verifikasi'\) return;/);
   assert.doesNotMatch(appHtml, /\['verifikasi', 'sampel', 'status'\]\.indexOf\(normalizedWorkspace\) === -1/);
+});
+
+test('verification submit button has direct fallback handler and saves the active form scope', () => {
+  assert.match(workspaceVerifikasiHtml, /id="btn-submit-verifikasi"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(appHtml, /window\.__PD3I_SUBMIT_WORKFLOW_CLICK = function\(ev, mode\)/);
+  assert.match(appHtml, /ev\.stopImmediatePropagation\(\)/);
+  assert.match(appHtml, /const activeFormElement = submitMode === 'input'[\s\S]*?\? inputFormElement[\s\S]*?submitMode === 'verifikasi'[\s\S]*?\? formElementVerifikasi/);
+  assert.match(appHtml, /validateNumericOnlyRequiredFields\(activeFormElement\)/);
+  assert.match(appHtml, /validateAndApplyBirthUI\(\{ silent: false, hard: true, scope: activeFormElement \}\)/);
+  assert.match(appHtml, /validateDxBusinessRules\(activeFormElement\)/);
+  assert.match(appHtml, /findScopedFieldControl\("Nama unit pelapor", activeFormElement\)/);
 });
 
 test('Hasil Sampel workspace shows a case summary instead of the full initial input context form', () => {

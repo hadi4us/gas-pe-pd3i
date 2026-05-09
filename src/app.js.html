@@ -1808,11 +1808,12 @@
     const opts = options || {};
     const silent = opts.silent === true;
     const hard = opts.hard === true;
+    const scope = opts.scope && opts.scope.querySelectorAll ? opts.scope : document;
 
-    const dobEl = document.getElementById("Tanggal Lahir");
-    const refEl = document.getElementById("Tanggal Pelacakan");
-    const umurEl = document.getElementById("Umur (auto)");
-    const epiEl = document.getElementById("Kelompok Umur Epidemiologis");
+    const dobEl = findScopedFieldControl("Tanggal Lahir", scope);
+    const refEl = findScopedFieldControl("Tanggal Pelacakan", scope);
+    const umurEl = findScopedFieldControl("Umur (auto)", scope);
+    const epiEl = findScopedFieldControl("Kelompok Umur Epidemiologis", scope);
 
     const dobValue = dobEl?.value || "";
     const refValue = refEl?.value || "";
@@ -1820,7 +1821,7 @@
     if (!isCompleteDateValue(dobValue)) {
       if (umurEl) umurEl.value = "";
       if (epiEl) epiEl.value = "";
-      syncSchoolActivityOptionsByAge(null);
+      syncSchoolActivityOptionsByAge(null, scope);
       return { ok: false, pending: true };
     }
 
@@ -1830,7 +1831,7 @@
     if (!res.ok) {
       if (umurEl) umurEl.value = "";
       if (epiEl) epiEl.value = "";
-      syncSchoolActivityOptionsByAge(null);
+      syncSchoolActivityOptionsByAge(null, scope);
 
       if (!silent && hard) {
         showTopAlert(res.message, false);
@@ -1840,7 +1841,7 @@
 
     if (umurEl) umurEl.value = res.ageText || "";
     if (epiEl) epiEl.value = res.epiGroup || "";
-    syncSchoolActivityOptionsByAge(res);
+    syncSchoolActivityOptionsByAge(res, scope);
 
     return res;
   }
@@ -1945,9 +1946,9 @@
     }
   }
 
-  function validateNumericOnlyRequiredFields() {
+  function validateNumericOnlyRequiredFields(formScope) {
     const invalids = [];
-    const form = document.getElementById("dynamic-form");
+    const form = formScope && formScope.querySelectorAll ? formScope : document.getElementById("dynamic-form");
     if (!form) return { ok: true, invalids: [] };
 
     form.querySelectorAll("input[name], textarea[name]").forEach(function(el) {
@@ -2002,8 +2003,9 @@
     return baseOptions.slice();
   }
 
-  function syncSchoolActivityOptionsByAge(validationRes) {
-    const statusEl = document.getElementById("Apakah sekolah/bekerja?");
+  function syncSchoolActivityOptionsByAge(validationRes, scope) {
+    const root = scope && scope.querySelectorAll ? scope : document;
+    const statusEl = findScopedFieldControl("Apakah sekolah/bekerja?", root);
     if (!statusEl) return;
 
     const allowed = getAllowedSchoolActivityOptions(validationRes);
@@ -2018,8 +2020,8 @@
     statusEl.value = nextValue;
 
     if (!allowed.includes(currentValue)) {
-      const kelasEl = document.getElementById("Kelas Saat Ini");
-      const namaSekolahEl = document.getElementById("Nama sekolah/tempat bekerja");
+      const kelasEl = findScopedFieldControl("Kelas Saat Ini", root);
+      const namaSekolahEl = findScopedFieldControl("Nama sekolah/tempat bekerja", root);
       if (kelasEl) kelasEl.value = "";
       if (namaSekolahEl) namaSekolahEl.value = "";
       if (typeof reevaluateShowIfFields === "function") {
@@ -2028,13 +2030,14 @@
     }
   }
 
-  function checkConsistencyWarnings() {
+  function checkConsistencyWarnings(scope) {
     const warnings = [];
+    const root = scope && scope.querySelectorAll ? scope : document;
 
-    const dobValue = document.getElementById("Tanggal Lahir")?.value || "";
-    const refValue = document.getElementById("Tanggal Pelacakan")?.value || "";
-    const statusSekolah = String(document.getElementById("Apakah sekolah/bekerja?")?.value || "").trim();
-    const kelasSaatIni = String(document.getElementById("Kelas Saat Ini")?.value || "").trim();
+    const dobValue = findScopedFieldControl("Tanggal Lahir", root)?.value || "";
+    const refValue = findScopedFieldControl("Tanggal Pelacakan", root)?.value || "";
+    const statusSekolah = String(findScopedFieldControl("Apakah sekolah/bekerja?", root)?.value || "").trim();
+    const kelasSaatIni = String(findScopedFieldControl("Kelas Saat Ini", root)?.value || "").trim();
     const dx = String(document.getElementById("form-selector")?.value || "").toUpperCase();
 
     if (!isCompleteDateValue(dobValue)) return warnings;
@@ -2068,12 +2071,13 @@
     return warnings;
   }
 
-  function getFieldValueSafe(fieldId) {
-    return String(document.getElementById(fieldId)?.value || "").trim();
+  function getFieldValueSafe(fieldId, scope) {
+    const root = scope && scope.querySelectorAll ? scope : document;
+    return String(findScopedFieldControl(fieldId, root)?.value || "").trim();
   }
 
-  function isNonEmptyField(fieldId) {
-    return getFieldValueSafe(fieldId) !== "";
+  function isNonEmptyField(fieldId, scope) {
+    return getFieldValueSafe(fieldId, scope) !== "";
   }
 
   function parseDateInputValue(value) {
@@ -2120,14 +2124,15 @@
     };
   }
 
-  function validateDxBusinessRules() {
+  function validateDxBusinessRules(scope) {
+    const root = scope && scope.querySelectorAll ? scope : document;
     const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
     const errors = [];
     const warnings = [];
 
-    const tglLapor = getFieldValueSafe("Tanggal terima laporan");
-    const tglLacak = getFieldValueSafe("Tanggal Pelacakan");
-    const tglLahir = getFieldValueSafe("Tanggal Lahir");
+    const tglLapor = getFieldValueSafe("Tanggal terima laporan", root);
+    const tglLacak = getFieldValueSafe("Tanggal Pelacakan", root);
+    const tglLahir = getFieldValueSafe("Tanggal Lahir", root);
 
     if (tglLapor && tglLacak && compareDateInputValues(tglLapor, tglLacak) === 1) {
       errors.push("Tanggal terima laporan tidak boleh lebih akhir dari tanggal pelacakan.");
@@ -2137,7 +2142,7 @@
       errors.push("Tanggal lahir tidak boleh lebih akhir dari tanggal pelacakan.");
     }
 
-    const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID");
+    const statusVerifikasi = getFieldValueSafe("Status Verifikasi EPID", root);
     const activeStage = normalizeWorkflowStepId(document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
     if (activeStage === 'section-pelapor' && !statusVerifikasi) {
       warnings.push("Status verifikasi EPID akan disimpan sebagai Pending sampai ditinjau admin.");
@@ -2146,28 +2151,28 @@
       errors.push("Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.");
     }
     if (statusVerifikasi === "Terverifikasi") {
-      if (!isNonEmptyField("Tanggal Verifikasi EPID")) {
+      if (!isNonEmptyField("Tanggal Verifikasi EPID", root)) {
         errors.push("Tanggal verifikasi EPID wajib diisi jika status verifikasi sudah terverifikasi.");
       }
-      if (!isNonEmptyField("Petugas Verifikator")) {
+      if (!isNonEmptyField("Petugas Verifikator", root)) {
         errors.push("Petugas verifikator wajib diisi jika status verifikasi sudah terverifikasi.");
       }
     }
-    if (statusVerifikasi === 'Perlu Revisi' && !isNonEmptyField('Catatan Verifikasi EPID')) {
+    if (statusVerifikasi === 'Perlu Revisi' && !isNonEmptyField('Catatan Verifikasi EPID', root)) {
       errors.push('Catatan verifikasi wajib diisi jika admin memilih Perlu Revisi.');
     }
 
-    if (getFieldValueSafe("Pemeriksaan Sampel Dilakukan") === "Ya") {
-      if (!isNonEmptyField("Tanggal Hasil Sampel")) {
+    if (getFieldValueSafe("Pemeriksaan Sampel Dilakukan", root) === "Ya") {
+      if (!isNonEmptyField("Tanggal Hasil Sampel", root)) {
         warnings.push("Tanggal hasil pemeriksaan belum diisi walau pemeriksaan ditandai dilakukan.");
       }
-      if (!isNonEmptyField("Interpretasi Hasil Sampel")) {
+      if (!isNonEmptyField("Interpretasi Hasil Sampel", root)) {
         warnings.push("Interpretasi hasil pemeriksaan belum diisi.");
       }
     }
 
-    const statusKasusGlobal = getFieldValueSafe("Status Pasien/Kasus");
-    if ((statusKasusGlobal === "Konfirmasi" || statusKasusGlobal === "Discarded" || statusKasusGlobal === "Klinis") && !isNonEmptyField("Dasar Penetapan Status")) {
+    const statusKasusGlobal = getFieldValueSafe("Status Pasien/Kasus", root);
+    if ((statusKasusGlobal === "Konfirmasi" || statusKasusGlobal === "Discarded" || statusKasusGlobal === "Klinis") && !isNonEmptyField("Dasar Penetapan Status", root)) {
       errors.push("Dasar penetapan status wajib diisi untuk status kasus klinis/discarded/konfirmasi.");
     }
 
@@ -2179,9 +2184,9 @@
       }
     }
 
-    const dobForSchool = document.getElementById("Tanggal Lahir")?.value || "";
-    const refForSchool = document.getElementById("Tanggal Pelacakan")?.value || "";
-    const schoolStatus = getFieldValueSafe("Apakah sekolah/bekerja?");
+    const dobForSchool = getFieldValueSafe("Tanggal Lahir", root);
+    const refForSchool = getFieldValueSafe("Tanggal Pelacakan", root);
+    const schoolStatus = getFieldValueSafe("Apakah sekolah/bekerja?", root);
     const schoolBirthVal = validateBirthDateEpi(dobForSchool, isCompleteDateValue(refForSchool) ? refForSchool : "");
     if (schoolBirthVal && schoolBirthVal.ok) {
       const allowedSchoolOptions = getAllowedSchoolActivityOptions(schoolBirthVal);
@@ -2191,13 +2196,13 @@
     }
 
     if (dx === "MR") {
-      const tglPergi = getFieldValueSafe("Tanggal pergi");
-      const tglKembali = getFieldValueSafe("Tanggal pulang perjalanan");
-      const darahAmbil = getFieldValueSafe("Tanggal ambil spesimen darah");
-      const darahKirim = getFieldValueSafe("Tanggal pengiriman spesimen darah ke lab");
-      const lainAmbil = getFieldValueSafe("Tanggal ambil spesimen lain");
-      const lainKirim = getFieldValueSafe("Tanggal pengiriman spesimen lain ke lab");
-      const statusAkhir = getFieldValueSafe("Status akhir kasus");
+      const tglPergi = getFieldValueSafe("Tanggal pergi", root);
+      const tglKembali = getFieldValueSafe("Tanggal pulang perjalanan", root);
+      const darahAmbil = getFieldValueSafe("Tanggal ambil spesimen darah", root);
+      const darahKirim = getFieldValueSafe("Tanggal pengiriman spesimen darah ke lab", root);
+      const lainAmbil = getFieldValueSafe("Tanggal ambil spesimen lain", root);
+      const lainKirim = getFieldValueSafe("Tanggal pengiriman spesimen lain ke lab", root);
+      const statusAkhir = getFieldValueSafe("Status akhir kasus", root);
 
       if (tglPergi && tglKembali && compareDateInputValues(tglPergi, tglKembali) === 1) {
         errors.push("Tanggal kembali perjalanan MR tidak boleh lebih awal dari tanggal pergi.");
@@ -2208,35 +2213,35 @@
       if (lainAmbil && lainKirim && compareDateInputValues(lainAmbil, lainKirim) === 1) {
         errors.push("Tanggal kirim spesimen lain MR tidak boleh lebih awal dari tanggal ambil.");
       }
-      if (statusAkhir === "Meninggal" && !isNonEmptyField("Penyebab kematian")) {
+      if (statusAkhir === "Meninggal" && !isNonEmptyField("Penyebab kematian", root)) {
         errors.push("Penyebab kematian wajib diisi jika status akhir MR adalah meninggal.");
       }
     }
 
     if (dx === "DIF") {
-      const antibiotik = getFieldValueSafe("Antibiotik diberikan?");
-      const ads = getFieldValueSafe("ADS diberikan?");
-      const kondisi = getFieldValueSafe("Kondisi kasus saat ini");
+      const antibiotik = getFieldValueSafe("Antibiotik diberikan?", root);
+      const ads = getFieldValueSafe("ADS diberikan?", root);
+      const kondisi = getFieldValueSafe("Kondisi kasus saat ini", root);
 
-      if (antibiotik === "Ya" && !isNonEmptyField("Jenis antibiotik")) {
+      if (antibiotik === "Ya" && !isNonEmptyField("Jenis antibiotik", root)) {
         errors.push("Jenis antibiotik wajib diisi pada kasus difteri jika antibiotik diberikan.");
       }
-      if (ads === "Ya" && !isNonEmptyField("Dosis ADS (IU)")) {
+      if (ads === "Ya" && !isNonEmptyField("Dosis ADS (IU)", root)) {
         errors.push("Dosis ADS wajib diisi pada kasus difteri jika ADS diberikan.");
       }
-      if (kondisi === "Meninggal" && !isNonEmptyField("Tanggal meninggal DIF")) {
+      if (kondisi === "Meninggal" && !isNonEmptyField("Tanggal meninggal DIF", root)) {
         errors.push("Tanggal meninggal wajib diisi pada kasus difteri jika kondisi akhir meninggal.");
       }
     }
 
     if (dx === "PERT") {
-      const masuk = getFieldValueSafe("Tanggal Masuk Rawat Inap");
-      const keluar = getFieldValueSafe("Tanggal Logout");
-      const tglPergi = getFieldValueSafe("Tanggal pergi PERT");
-      const tglKembali = getFieldValueSafe("Tanggal kembali PERT");
-      const ambil2 = getFieldValueSafe("Tanggal ambil spesimen lain pertusis");
-      const kirim2 = getFieldValueSafe("Tanggal kirim spesimen lain pertusis");
-      const status = getFieldValueSafe("Status akhir PERT");
+      const masuk = getFieldValueSafe("Tanggal Masuk Rawat Inap", root);
+      const keluar = getFieldValueSafe("Tanggal Logout", root);
+      const tglPergi = getFieldValueSafe("Tanggal pergi PERT", root);
+      const tglKembali = getFieldValueSafe("Tanggal kembali PERT", root);
+      const ambil2 = getFieldValueSafe("Tanggal ambil spesimen lain pertusis", root);
+      const kirim2 = getFieldValueSafe("Tanggal kirim spesimen lain pertusis", root);
+      const status = getFieldValueSafe("Status akhir PERT", root);
 
       if (masuk && keluar && compareDateInputValues(masuk, keluar) === 1) {
         errors.push("Tanggal keluar rawat inap pertusis tidak boleh lebih awal dari tanggal masuk.");
@@ -2247,14 +2252,14 @@
       if (ambil2 && kirim2 && compareDateInputValues(ambil2, kirim2) === 1) {
         errors.push("Tanggal kirim spesimen lain pertusis tidak boleh lebih awal dari tanggal ambil.");
       }
-      if (status === "Meninggal" && !isNonEmptyField("Tanggal meninggal PERT")) {
+      if (status === "Meninggal" && !isNonEmptyField("Tanggal meninggal PERT", root)) {
         errors.push("Tanggal meninggal wajib diisi pada kasus pertusis jika status akhir meninggal.");
       }
     }
 
     if (dx === "TN") {
-      const dobValue = document.getElementById("Tanggal Lahir")?.value || "";
-      const refValue = document.getElementById("Tanggal Pelacakan")?.value || "";
+      const dobValue = getFieldValueSafe("Tanggal Lahir", root);
+      const refValue = getFieldValueSafe("Tanggal Pelacakan", root);
       const birthVal = validateBirthDateEpi(dobValue, isCompleteDateValue(refValue) ? refValue : "");
 
       if (birthVal && birthVal.ok) {
@@ -2264,26 +2269,26 @@
         }
       }
 
-      if (getFieldValueSafe("Apakah bayi dirawat") === "Ya") {
-        if (!isNonEmptyField("Tempat perawatan TN")) {
+      if (getFieldValueSafe("Apakah bayi dirawat", root) === "Ya") {
+        if (!isNonEmptyField("Tempat perawatan TN", root)) {
           errors.push("Tempat perawatan TN wajib diisi jika bayi dirawat.");
         }
-        if (!isNonEmptyField("Tanggal mulai dirawat TN")) {
+        if (!isNonEmptyField("Tanggal mulai dirawat TN", root)) {
           errors.push("Tanggal mulai dirawat TN wajib diisi jika bayi dirawat.");
         }
       }
     }
 
     if (dx === "AFP") {
-      const sifatAkut = getFieldValueSafe("Sifat akut");
-      const lumpuhLayuh = getFieldValueSafe("Lumpuh layuh");
-      const rudapaksa = getFieldValueSafe("Rudapaksa AFP");
-      const t1 = getFieldValueSafe("Tanggal tinja 1");
-      const t1a = getFieldValueSafe("Tanggal kirim tinja 1 kab-prov");
-      const t1b = getFieldValueSafe("Tanggal kirim tinja 1 prov-lab");
-      const t2 = getFieldValueSafe("Tanggal tinja 2");
-      const t2a = getFieldValueSafe("Tanggal kirim tinja 2 kab-prov");
-      const t2b = getFieldValueSafe("Tanggal kirim tinja 2 prov-lab");
+      const sifatAkut = getFieldValueSafe("Sifat akut", root);
+      const lumpuhLayuh = getFieldValueSafe("Lumpuh layuh", root);
+      const rudapaksa = getFieldValueSafe("Rudapaksa AFP", root);
+      const t1 = getFieldValueSafe("Tanggal tinja 1", root);
+      const t1a = getFieldValueSafe("Tanggal kirim tinja 1 kab-prov", root);
+      const t1b = getFieldValueSafe("Tanggal kirim tinja 1 prov-lab", root);
+      const t2 = getFieldValueSafe("Tanggal tinja 2", root);
+      const t2a = getFieldValueSafe("Tanggal kirim tinja 2 kab-prov", root);
+      const t2b = getFieldValueSafe("Tanggal kirim tinja 2 prov-lab", root);
 
       if (sifatAkut && sifatAkut !== "Ya") {
         errors.push("Kasus AFP harus memiliki kelemahan/kelumpuhan akut (1-14 hari).");
@@ -2306,7 +2311,7 @@
       if (t2a && t2b && compareDateInputValues(t2a, t2b) === 1) {
         errors.push("Tanggal kirim spesimen II AFP ke lab tidak boleh lebih awal dari tanggal kirim ke provinsi.");
       }
-      if (isNonEmptyField("Tanggal follow up 60 hari") && !isNonEmptyField("Masih ada kelumpuhan")) {
+      if (isNonEmptyField("Tanggal follow up 60 hari", root) && !isNonEmptyField("Masih ada kelumpuhan", root)) {
         warnings.push("Tanggal follow up 60 hari AFP sudah diisi, tetapi hasil follow up masih kosong.");
       }
     }
@@ -6812,16 +6817,19 @@
         }
         if (submitMode === 'verifikasi' && btnSubmitVerifikasi) {
           btnSubmitVerifikasi.disabled = !!isViewerSession();
+          btnSubmitVerifikasi.removeAttribute('aria-busy');
           btnSubmitVerifikasi.innerHTML = `<i class="fas fa-id-card-clip"></i> Simpan Verifikasi EPID`;
           return;
         }
         if (submitMode === 'sampel' && btnSubmitSampel) {
           btnSubmitSampel.disabled = !!isViewerSession();
+          btnSubmitSampel.removeAttribute('aria-busy');
           btnSubmitSampel.innerHTML = `<i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan`;
           return;
         }
         if (submitMode === 'status' && btnSubmitStatus) {
           btnSubmitStatus.disabled = !!isViewerSession();
+          btnSubmitStatus.removeAttribute('aria-busy');
           btnSubmitStatus.innerHTML = `<i class="fas fa-list-check"></i> Simpan Update Status`;
           return;
         }
@@ -6857,6 +6865,9 @@
           showTopAlert('Form aktif tidak tersedia.', false);
           return;
         }
+        if (activeSubmitButton.getAttribute('aria-busy') === 'true') {
+          return;
+        }
 
         const activeStageOnSubmit = submitMode === 'input'
           ? 'section-pelapor'
@@ -6882,7 +6893,7 @@
         }
 
         const numericCheck = (typeof validateNumericOnlyRequiredFields === "function")
-          ? validateNumericOnlyRequiredFields()
+          ? validateNumericOnlyRequiredFields(activeFormElement)
           : { ok: true, invalids: [] };
 
         if (!numericCheck.ok) {
@@ -6895,14 +6906,14 @@
           return;
         }
 
-        const birthValidation = validateAndApplyBirthUI({ silent: false, hard: true });
+        const birthValidation = validateAndApplyBirthUI({ silent: false, hard: true, scope: activeFormElement });
         if (!birthValidation || !birthValidation.ok) {
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
           return;
         }
 
-        const dxRuleCheck = validateDxBusinessRules();
+        const dxRuleCheck = validateDxBusinessRules(activeFormElement);
         if (!dxRuleCheck.ok) {
           showTopAlert(dxRuleCheck.errors.join(" "), false);
           activeSubmitButton.disabled = false;
@@ -6910,7 +6921,7 @@
           return;
         }
 
-        const warnings = checkConsistencyWarnings().concat(dxRuleCheck.warnings || []);
+        const warnings = checkConsistencyWarnings(activeFormElement).concat(dxRuleCheck.warnings || []);
         if (warnings.length > 0) {
           showTopAlert(warnings.join(" "), false);
         }
@@ -6919,6 +6930,7 @@
         syncStatusHistoryTimeline();
 
         activeSubmitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
+        activeSubmitButton.setAttribute('aria-busy', 'true');
         activeSubmitButton.disabled = true;
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit), __submitMode: submitMode };
@@ -6988,12 +7000,12 @@
           return;
         }
 
-        const unitSelect = document.getElementById("Nama unit pelapor");
+        const unitSelect = findScopedFieldControl("Nama unit pelapor", activeFormElement);
         dataObj["FaskesKey"] =
           unitSelect?.options[unitSelect.selectedIndex]?.getAttribute("data-key")
           || (dataObj["Nama unit pelapor"] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-        const rsSelect = document.getElementById("Nama Rumah Sakit");
+        const rsSelect = findScopedFieldControl("Nama Rumah Sakit", activeFormElement);
         if (rsSelect) {
           dataObj["Nama Rumah Sakit"] = dataObj["Nama Rumah Sakit"] || rsSelect.value || "";
           if (dataObj["Nama Rumah Sakit"]) {
@@ -7124,6 +7136,19 @@
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
         }
+      };
+
+      window.__PD3I_SUBMIT_WORKFLOW = function(mode) {
+        return handleMainFormSubmit(mode);
+      };
+      window.__PD3I_SUBMIT_WORKFLOW_CLICK = function(ev, mode) {
+        if (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        }
+        handleMainFormSubmit(mode);
+        return false;
       };
 
       if (btnSubmit && !btnSubmit.dataset.boundSubmit) {
