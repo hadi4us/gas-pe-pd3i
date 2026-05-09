@@ -598,8 +598,8 @@ function searchRecords(dx, filters, token) {
       allowedVerificationStatuses = ['TERVERIFIKASI'];
     }
   }
-  const page = Math.max(1, parseInt(filters.page, 10) || 1);
-  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
+  let page = Math.max(1, parseInt(filters.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 10));
   const results = [];
 
   dxList.forEach(function(dxItem) {
@@ -666,6 +666,8 @@ function searchRecords(dx, filters, token) {
   });
 
   const total = results.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  page = Math.min(page, totalPages);
   const start = (page - 1) * pageSize;
   const pagedResults = results.slice(start, start + pageSize);
   return {
@@ -673,7 +675,7 @@ function searchRecords(dx, filters, token) {
     total: total,
     page: page,
     pageSize: pageSize,
-    totalPages: Math.ceil(total / pageSize)
+    totalPages: totalPages
   };
 }
 
@@ -716,8 +718,8 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
     }
   }
 
-  const page = Math.max(1, parseInt(filters.page, 10) || 1);
-  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
+  let page = Math.max(1, parseInt(filters.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 10));
   const results = [];
 
   dxList.forEach(function(dxItem) {
@@ -770,13 +772,15 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
   });
 
   const total = results.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  page = Math.min(page, totalPages);
   const start = (page - 1) * pageSize;
   return {
     results: results.slice(start, start + pageSize),
     total: total,
     page: page,
     pageSize: pageSize,
-    totalPages: Math.ceil(total / pageSize),
+    totalPages: totalPages,
     source: 'spreadsheet-direct'
   };
 }

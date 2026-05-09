@@ -248,6 +248,18 @@ test('List Kasus direct search can show pending records created by the logged-in
   assert.doesNotMatch(routesJs, /if \(_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
+test('List Kasus search is paginated at 10 records per page with next and previous controls', () => {
+  assert.match(routesJs, /const pageSize = Math\.min\(100, Math\.max\(1, parseInt\(filters\.pageSize, 10\) \|\| 10\)\);/);
+  assert.match(appHtml, /const SEARCH_RESULTS_PAGE_SIZE = 10;/);
+  assert.match(appHtml, /filters\.page = Math\.max\(1, parseInt\(page, 10\) \|\| 1\);/);
+  assert.match(appHtml, /filters\.pageSize = SEARCH_RESULTS_PAGE_SIZE;/);
+  assert.match(appHtml, /_renderSearchResultsList\(data, dx\);/);
+  assert.match(appHtml, /data-search-page-target="\$\{Math\.max\(1, page - 1\)\}"/);
+  assert.match(appHtml, /data-search-page-target="\$\{Math\.min\(totalPages, page \+ 1\)\}"/);
+  assert.match(appHtml, /Halaman \$\{page\} dari \$\{totalPages\}/);
+  assert.match(appHtml, /Menampilkan \$\{startNumber\}–\$\{endNumber\} dari \$\{total\} record/);
+});
+
 test('verified cases leave verification queue and enter exactly sample or monitoring queue by marker', () => {
   assert.match(dashboardJs, /role === 'admin' && normalizedStatus === 'PENDING'/);
   assert.match(dashboardJs, /sampleStagePending = normalizedStatus === 'TERVERIFIKASI'[\s\S]*?sampleRelevant[\s\S]*?!sampleDone/);

@@ -5,6 +5,7 @@
 
   window.rsChoicesInstance = window.rsChoicesInstance || null;
   window.__PD3I_QUEUE_PAGE_STATE__ = window.__PD3I_QUEUE_PAGE_STATE__ || {};
+  const SEARCH_RESULTS_PAGE_SIZE = 10;
 
   // ============================================================
   // RENDER FIELD
@@ -6202,61 +6203,64 @@
         });
       });
 
+      function runWorkflowSearchPage(page) {
+        const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
+        const dx = getEffectiveDxScopeForWorkspace(workspace);
+        const filters = Object.assign({}, collectWorkflowSearchFilters(), {
+          workspace: String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
+          workflowIntent: String(WORKFLOW_SEARCH_INTENT || '').trim()
+        });
+        filters.page = Math.max(1, parseInt(page, 10) || 1);
+        filters.pageSize = SEARCH_RESULTS_PAGE_SIZE;
+
+        if (['verifikasi', 'sampel', 'status'].includes(workspace)) {
+          hideTopAlert();
+          if (WORKFLOW_INBOX_CACHE) {
+            renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+          } else {
+            refreshWorkflowInbox();
+          }
+          return;
+        }
+
+        const hasFilter = filters.keyword || filters.epid || filters.nama || filters.tanggalLahir ||
+                          filters.orangTua || filters.alamat || filters.diagnosis || filters.kecamatan ||
+                          filters.kelurahan || filters.statusKasus || filters.statusVerifikasi;
+
+        if (workspace !== 'search' && !hasFilter) {
+          showTopAlert("Isi minimal satu kriteria pencarian.", false);
+          return;
+        }
+        if (!safeGsRun()) {
+          showTopAlert("Fitur Cari/Edit hanya berfungsi di lingkungan WebApp (/exec).", false);
+          return;
+        }
+
+        const searchResultsBox = document.getElementById("search-results");
+        if (searchResultsBox) {
+          searchResultsBox.classList.remove("hidden");
+          searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>${workspace === 'search' && !hasFilter ? 'Memuat data halaman ' + filters.page + '...' : 'Mencari data halaman ' + filters.page + '...'}</span></div>`;
+        }
+
+        const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
+        const searchRunner = google.script.run
+          .withSuccessHandler(function(data) {
+            if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+            _renderSearchResultsList(data, dx);
+          })
+          .withFailureHandler(function(err) {
+            if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+            console.error("searchRecords failed:", err);
+            if (searchResultsBox) {
+              searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-error">Gagal mencari data. Silakan coba lagi.</div>`;
+            }
+          });
+        searchRunner.searchRecords(dx, filters, SESSION_TOKEN);
+      }
+
       if (btnSearchEpid) {
         btnSearchEpid.addEventListener("click", function() {
-          const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
-          const dx = getEffectiveDxScopeForWorkspace(workspace);
-          const filters = Object.assign({}, collectWorkflowSearchFilters(), {
-            workspace: String(ACTIVE_SIDEBAR_WORKSPACE || '').trim(),
-            workflowIntent: String(WORKFLOW_SEARCH_INTENT || '').trim()
-          });
-
-          if (['verifikasi', 'sampel', 'status'].includes(workspace)) {
-            hideTopAlert();
-            if (WORKFLOW_INBOX_CACHE) {
-              renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
-            } else {
-              refreshWorkflowInbox();
-            }
-            return;
-          }
-
-          const hasFilter = filters.keyword || filters.epid || filters.nama || filters.tanggalLahir ||
-                            filters.orangTua || filters.alamat || filters.diagnosis || filters.kecamatan ||
-                            filters.kelurahan || filters.statusKasus || filters.statusVerifikasi;
-
-          if (workspace !== 'search' && !hasFilter) {
-            showTopAlert("Isi minimal satu kriteria pencarian.", false);
-            return;
-          }
-          if (!safeGsRun()) {
-            showTopAlert("Fitur Cari/Edit hanya berfungsi di lingkungan WebApp (/exec).", false);
-            return;
-          }
-
-          const searchResultsBox = document.getElementById("search-results");
-          if (searchResultsBox) {
-            searchResultsBox.classList.remove("hidden");
-            searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>${workspace === 'search' && !hasFilter ? 'Memuat semua data existing...' : 'Mencari data existing...'}</span></div>`;
-          }
-
-          const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
-          const searchRunner = google.script.run
-            .withSuccessHandler(function(data) {
-              if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
-              // data bisa array (lama) atau objek paginasi baru
-              const results = Array.isArray(data) ? data : (data && data.results ? data.results : []);
-              const total   = Array.isArray(data) ? data.length : (data && data.total != null ? data.total : results.length);
-              _renderSearchResultsList(results, total, dx);
-            })
-            .withFailureHandler(function(err) {
-              if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
-              console.error("searchRecords failed:", err);
-              if (searchResultsBox) {
-                searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-error">Gagal mencari data. Silakan coba lagi.</div>`;
-              }
-            });
-          searchRunner.searchRecords(dx, filters, SESSION_TOKEN);
+          runWorkflowSearchPage(1);
         });
       }
 
@@ -6296,9 +6300,17 @@
       /**
        * Render daftar hasil pencarian multi-kriteria.
        */
-      function _renderSearchResultsList(results, total, dx) {
+      function _renderSearchResultsList(data, dx) {
         const box = document.getElementById("search-results");
         if (!box) return;
+
+        const results = Array.isArray(data) ? data : (data && data.results ? data.results : []);
+        const total = Array.isArray(data) ? data.length : (data && data.total != null ? Number(data.total) : results.length);
+        const page = Math.max(1, Array.isArray(data) ? 1 : (parseInt(data && data.page, 10) || 1));
+        const pageSize = Math.max(1, Array.isArray(data) ? (results.length || SEARCH_RESULTS_PAGE_SIZE) : (parseInt(data && data.pageSize, 10) || SEARCH_RESULTS_PAGE_SIZE));
+        const totalPages = Math.max(1, Array.isArray(data) ? 1 : (parseInt(data && data.totalPages, 10) || Math.ceil(total / pageSize) || 1));
+        const startNumber = total > 0 ? ((page - 1) * pageSize) + 1 : 0;
+        const endNumber = total > 0 ? Math.min(startNumber + results.length - 1, total) : 0;
 
         const safeEscape = typeof escapeHtml === "function"
           ? escapeHtml
@@ -6325,7 +6337,7 @@
           let html = `<div class="pd3i-search-results-head">
             <div>
               <div class="pd3i-card-eyebrow">Hasil pencarian</div>
-              <div class="pd3i-search-results-title">Menampilkan ${results.length} dari ${total} record</div>
+              <div class="pd3i-search-results-title">Menampilkan ${startNumber}–${endNumber} dari ${total} record</div>
             </div>
             <span class="pd3i-badge-soft">${safeEscape(workflowActionLabel)}</span>
           </div>`;
@@ -6343,7 +6355,7 @@
             const canDeleteRecord = isAdminMode && !isViewerMode;
             html += `<div class="pd3i-search-result-card">
               <div class="pd3i-search-result-leading">
-                <span class="pd3i-search-result-index">${index + 1}</span>
+                <span class="pd3i-search-result-index">${startNumber + index}</span>
               </div>
               <div class="min-w-0 flex-1">
                 <div class="pd3i-search-result-title-row">
@@ -6375,7 +6387,26 @@
           });
 
           html += `</div>`;
+          if (totalPages > 1) {
+            html += `<div class="pd3i-search-pagination" role="navigation" aria-label="Navigasi halaman List Kasus">
+              <button type="button" class="pd3i-search-page-btn" data-search-page-target="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i> Sebelumnya
+              </button>
+              <span class="pd3i-search-page-indicator">Halaman ${page} dari ${totalPages}</span>
+              <button type="button" class="pd3i-search-page-btn" data-search-page-target="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>
+                Berikutnya <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>`;
+          }
           box.innerHTML = html;
+          box.querySelectorAll('[data-search-page-target]').forEach(function(btn) {
+            if (btn.dataset.bound === '1') return;
+            btn.dataset.bound = '1';
+            btn.addEventListener('click', function() {
+              const targetPage = parseInt(btn.getAttribute('data-search-page-target'), 10) || 1;
+              runWorkflowSearchPage(targetPage);
+            });
+          });
         } catch (err) {
           console.error("_renderSearchResultsList failed:", err);
           box.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">List kasus gagal dirender. Silakan refresh lalu coba lagi.</div>`;
