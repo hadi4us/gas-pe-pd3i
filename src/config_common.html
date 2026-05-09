@@ -12,7 +12,7 @@
   ];
 
   const COMMON_PASIEN_FIELDS = [
-    { id: "Nomor EPID", label: "Nomor EPID", type: "text", group: "pasien", readonly: true },
+    { id: "Nomor EPID", label: "Nomor EPID", type: "text", group: "pasien", readonly: true, hideInWorkspaces: ["input"] },
     { id: "NIK", label: "NIK Pasien", type: "text", pattern: "^[0-9]{16}$", group: "pasien" },
     { id: "Nama", label: "Nama Lengkap Pasien", type: "text", group: "pasien", required: true },
     { id: "JK", label: "Jenis Kelamin", type: "select", options: OPT_JK, group: "pasien", required: true },
@@ -44,22 +44,88 @@
     { id: "Petugas Verifikator", label: "Petugas Verifikator", type: "text" },
     { id: "Nomor EPID Rekomendasi", label: "Nomor EPID Rekomendasi", type: "text", readonly: true, showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi"] } },
     { id: "Nomor EPID Final", label: "Nomor EPID Final (boleh override)", type: "text", showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi"] } },
-    { id: "Review Admin Terakhir", label: "Review Admin Terakhir", type: "text", readonly: true, showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi", "Perlu Revisi"] } },
+    { id: "Review Admin Terakhir", label: "Tinjauan Admin Terakhir", type: "text", readonly: true, showIf: { field: "Status Verifikasi EPID", values: ["Terverifikasi", "Perlu Revisi"] } },
     { id: "Catatan Verifikasi EPID", label: "Catatan Verifikasi EPID / Alasan Revisi", type: "textarea", rows: 3, fullWidth: true }
   ];
 
-  const COMMON_HASIL_SAMPEL_FIELDS = [
-    { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "choice_buttons", options: ["Ya", "Tidak"] },
-    { id: "Jenis Sampel Diuji", label: "Jenis Sampel Diuji", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
-    { id: "Nomor Sampel / Lab", label: "Nomor Sampel / Lab", type: "text", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
-    { id: "Tanggal Hasil Sampel", label: "Tanggal Hasil Sampel", type: "date", showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
-    { id: "Hasil Pemeriksaan Sampel", label: "Hasil Pemeriksaan Sampel", type: "textarea", rows: 3, fullWidth: true, showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } },
-    { id: "Interpretasi Hasil Sampel", label: "Interpretasi Hasil Sampel", type: "select", options: ["", "Positif", "Negatif", "Inkonklusif", "Belum keluar"], showIf: { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] } }
-  ];
+  const SAMPLE_FIELD_SHOW_IF_YA = { field: "Pemeriksaan Sampel Dilakukan", values: ["Ya"] };
+
+  const SAMPLE_FIELDS_BY_DX = {
+    DEFAULT: {
+      specimenLabel: "Jenis Sampel Diuji",
+      specimenOptions: ["", "Serum", "Darah lengkap", "Swab", "Tinja", "Lainnya"],
+      labNumberLabel: "Nomor Sampel / Lab",
+      resultLabel: "Hasil Pemeriksaan Sampel",
+      interpretationOptions: ["", "Positif", "Negatif", "Inkonklusif", "Belum keluar"]
+    },
+    MR: {
+      specimenLabel: "Jenis spesimen MR diuji",
+      specimenOptions: ["", "Serum", "Darah lengkap", "Swab tenggorok", "Urine", "Lainnya"],
+      labNumberLabel: "Nomor spesimen/lab MR",
+      resultLabel: "Hasil pemeriksaan MR / campak-rubela",
+      interpretationOptions: ["", "IgM Campak Positif", "IgM Rubela Positif", "Negatif", "Inkonklusif", "Belum keluar"]
+    },
+    DIF: {
+      specimenLabel: "Jenis spesimen Difteri diuji",
+      specimenOptions: ["", "Swab tenggorokan", "Swab hidung", "Swab tenggorokan + hidung", "Lainnya"],
+      labNumberLabel: "No. kode spesimen / lab Difteri",
+      resultLabel: "Hasil kultur/PCR Difteri",
+      interpretationOptions: ["", "Positif toksigenik", "Positif non-toksigenik", "Negatif", "Inkonklusif", "Belum keluar"]
+    },
+    PERT: {
+      specimenLabel: "Jenis spesimen Pertusis diuji",
+      specimenOptions: ["", "Swab nasofaring", "Aspirat nasofaring", "Spesimen lain"],
+      labNumberLabel: "Nomor spesimen/lab Pertusis",
+      resultLabel: "Hasil PCR/kultur Pertusis",
+      interpretationOptions: ["", "Positif", "Negatif", "Inkonklusif", "Belum keluar"]
+    },
+    AFP: {
+      specimenLabel: "Jenis spesimen AFP diuji",
+      specimenOptions: ["", "Tinja 1", "Tinja 2", "Tinja 1 dan 2", "Lainnya"],
+      labNumberLabel: "Nomor spesimen/lab AFP",
+      resultLabel: "Hasil pemeriksaan virologi AFP",
+      interpretationOptions: ["", "Polio virus liar", "VDPV", "Sabin-like", "Enterovirus non-polio", "Negatif", "Inadekuat", "Belum keluar"]
+    },
+    TN: {
+      specimenLabel: "Jenis pemeriksaan pendukung TN",
+      specimenOptions: ["", "Tidak ada pemeriksaan lab rutin", "Pemeriksaan klinis", "Pemeriksaan pendukung lain"],
+      labNumberLabel: "Nomor pemeriksaan pendukung",
+      resultLabel: "Hasil pemeriksaan pendukung TN",
+      interpretationOptions: ["", "Klinis mendukung", "Tidak mendukung", "Inkonklusif", "Belum keluar"]
+    }
+  };
+
+  function getSampleFieldConfigByDx(dx) {
+    const key = String(dx || "").trim().toUpperCase();
+    return SAMPLE_FIELDS_BY_DX[key] || SAMPLE_FIELDS_BY_DX.DEFAULT;
+  }
+
+  function getSampleFieldsForDx(dx) {
+    const cfg = getSampleFieldConfigByDx(dx);
+    return [
+      { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "choice_buttons", options: ["Ya", "Tidak"] },
+      {
+        id: "Rincian Hasil Sampel",
+        label: "Rincian jenis spesimen / nomor / tanggal hasil / hasil pemeriksaan",
+        type: "dynamic_table",
+        fullWidth: true,
+        showIf: SAMPLE_FIELD_SHOW_IF_YA,
+        columns: [
+          { name: "Jenis Spesimen", type: "select", width: "w-56", options: cfg.specimenOptions },
+          { name: "Nomor Spesimen", type: "text", width: "w-44", label: cfg.labNumberLabel },
+          { name: "Tanggal Hasil", type: "date", width: "w-40" },
+          { name: "Hasil", type: "textarea", width: "w-72", label: cfg.resultLabel }
+        ]
+      },
+      { id: "Interpretasi Hasil Sampel", label: "Interpretasi Hasil Pemeriksaan", type: "select", options: cfg.interpretationOptions, showIf: SAMPLE_FIELD_SHOW_IF_YA }
+    ];
+  }
+
+  const COMMON_HASIL_SAMPEL_FIELDS = getSampleFieldsForDx("DEFAULT");
 
   const COMMON_STATUS_FIELDS = [
     { id: "Status Pasien/Kasus", label: "Status Pasien / Kasus", type: "select", options: ["Suspek", "Discarded", "Klinis", "Probable", "Konfirmasi", "Menunggu hasil lab", "Follow up", "Sembuh", "Meninggal", "Lost to follow-up"], required: true },
-    { id: "Tanggal Update Status", label: "Tanggal Update Status", type: "date", required: true },
+    { id: "Tanggal Update Status", label: "Tanggal Pembaruan Status", type: "date", required: true },
     { id: "Dasar Penetapan Status", label: "Dasar Penetapan Status", type: "select", options: ["", "Klinis", "Epidemiologis", "Laboratorium", "Verifikasi program"] },
     { id: "Catatan Status Pasien", label: "Catatan Status Pasien", type: "textarea", rows: 3, fullWidth: true },
     {

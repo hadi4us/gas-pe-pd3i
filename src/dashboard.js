@@ -107,6 +107,40 @@ function _diffDays_(a, b) {
   return Math.round((db.getTime() - da.getTime()) / 86400000);
 }
 
+const DASHBOARD_SURVEILLANCE_AGE_GROUPS_ = [
+  { key: "<1 tahun", label: "<1 tahun", minDays: 0, maxDays: 364 },
+  { key: "1–4 tahun", label: "1–4 tahun", minDays: 365, maxDays: 1824 },
+  { key: "5–9 tahun", label: "5–9 tahun", minDays: 1825, maxDays: 3649 },
+  { key: "10–14 tahun", label: "10–14 tahun", minDays: 3650, maxDays: 5474 },
+  { key: "15–19 tahun", label: "15–19 tahun", minDays: 5475, maxDays: 7299 },
+  { key: "20–44 tahun", label: "20–44 tahun", minDays: 7300, maxDays: 16424 },
+  { key: "45–59 tahun", label: "45–59 tahun", minDays: 16425, maxDays: 21914 },
+  { key: "≥60 tahun", label: "≥60 tahun", minDays: 21915, maxDays: null }
+];
+
+function _ageTotalDaysForDashboard_(birthValue, refValue) {
+  const birth = _parseDateStr_(_formatDateValue_(birthValue));
+  if (!birth) return null;
+  let ref = _parseDateStr_(_formatDateValue_(refValue));
+  if (!ref) {
+    const now = new Date();
+    ref = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  }
+  const totalDays = Math.floor((ref.getTime() - birth.getTime()) / 86400000);
+  return totalDays >= 0 ? totalDays : null;
+}
+
+function _classifySurveillanceAgeGroup_(totalDays) {
+  if (typeof totalDays !== 'number' || isNaN(totalDays) || totalDays < 0) return "Usia tidak diketahui";
+  for (var i = 0; i < DASHBOARD_SURVEILLANCE_AGE_GROUPS_.length; i++) {
+    var group = DASHBOARD_SURVEILLANCE_AGE_GROUPS_[i];
+    if (totalDays >= group.minDays && (group.maxDays === null || totalDays <= group.maxDays)) {
+      return group.key;
+    }
+  }
+  return "Usia tidak diketahui";
+}
+
 function _medianNumber_(arr) {
   arr = (arr || []).filter(function(v) { return typeof v === 'number' && !isNaN(v); }).sort(function(a, b) { return a - b; });
   if (!arr.length) return null;
@@ -187,6 +221,17 @@ function _buildDashboardRecordSummary_(row, idxMap) {
   };
 }
 
+function _getPengampuByWilayahCachedForDashboard_(kecamatan, kelurahan, kabKota) {
+  const key = [_normalizeWilayahKey_(kabKota || ''), _normalizeWilayahKey_(kecamatan || ''), _normalizeWilayahKey_(kelurahan || '')].join('|');
+  const now = Date.now();
+  if (!_getPengampuByWilayahCachedForDashboard_.memo) _getPengampuByWilayahCachedForDashboard_.memo = {};
+  const memo = _getPengampuByWilayahCachedForDashboard_.memo;
+  if (memo[key] && (now - memo[key].ts) < 60000) return memo[key].value;
+  const value = getPengampuByWilayah_(kecamatan, kelurahan, kabKota);
+  memo[key] = { ts: now, value: value };
+  return value;
+}
+
 function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPengampu, rawKodePuskesmas, kabKota, kecamatan, kelurahan) {
   if (role === 'admin') return true;
 
@@ -202,7 +247,7 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
   if (!normKecamatan || !normKelurahan) return false;
 
   try {
-    const pengampu = getPengampuByWilayah_(normKecamatan, normKelurahan, normKabKota);
+    const pengampu = _getPengampuByWilayahCachedForDashboard_(normKecamatan, normKelurahan, normKabKota);
     if (!pengampu || !pengampu.found) return false;
     const mappedKode = _normalizeWilayahKey_(pengampu.kodePuskesmas || '');
     const mappedUnit = _normalizeWilayahKey_(pengampu.namaPuskesmas || '');
@@ -210,6 +255,15 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
   } catch (e) {
     return false;
   }
+}
+
+function _isDashboardInputerMatch_(sess, inputerUsername, inputerName) {
+  const username = _normalizeWilayahKey_((sess && sess.user && sess.user.username) || '');
+  const nama = _normalizeWilayahKey_((sess && sess.user && sess.user.nama) || '');
+  const rawUsername = _normalizeWilayahKey_(inputerUsername || '');
+  const rawName = _normalizeWilayahKey_(inputerName || '');
+  if (!username && !nama) return false;
+  return !!((username && rawUsername && username === rawUsername) || (nama && rawName && nama === rawName));
 }
 
 function _buildWorkflowInboxData_(sess, dx) {
@@ -244,6 +298,14 @@ function _buildWorkflowInboxData_(sess, dx) {
     const idxKelurahan = headers.indexOf('Kelurahan');
     const idxVerifikasi = headers.indexOf('Status Verifikasi EPID');
     const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
+    const idxDiinputOleh = headers.indexOf('Diinput Oleh');
+    const idxInputAwalOleh = headers.indexOf('Input Awal Diisi Oleh');
+    const idxWorkflowQueue = headers.indexOf('Workflow Current Queue');
+    const idxWorkflowLabel = headers.indexOf('Workflow Current Label');
+    const idxProsesVerifikasi = headers.indexOf('Status Proses Verifikasi EPID');
+    const idxProsesPemeriksaan = headers.indexOf('Status Proses Pemeriksaan');
+    const idxProsesPemantauan = headers.indexOf('Status Proses Pemantauan');
+    const idxProsesPerbaikan = headers.indexOf('Status Proses Perbaikan');
     const idxTimestamp = headers.indexOf('Timestamp');
     const idxUpdated = headers.indexOf('Updated At');
     const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
@@ -271,6 +333,15 @@ function _buildWorkflowInboxData_(sess, dx) {
       const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '';
       const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '';
       const scopeMatch = _isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmas, kabKota, kecamatan, kelurahan);
+      const inputerUsername = idxDiinputOleh !== -1 ? String(row[idxDiinputOleh] || '').trim() : '';
+      const inputerName = idxInputAwalOleh !== -1 ? String(row[idxInputAwalOleh] || '').trim() : '';
+      const inputerMatch = _isDashboardInputerMatch_(sess, inputerUsername, inputerName);
+      const workflowQueue = idxWorkflowQueue !== -1 ? String(row[idxWorkflowQueue] || '').trim() : '';
+      const workflowLabel = idxWorkflowLabel !== -1 ? String(row[idxWorkflowLabel] || '').trim() : '';
+      const prosesVerifikasi = idxProsesVerifikasi !== -1 ? String(row[idxProsesVerifikasi] || '').trim() : '';
+      const prosesPemeriksaan = idxProsesPemeriksaan !== -1 ? String(row[idxProsesPemeriksaan] || '').trim() : '';
+      const prosesPemantauan = idxProsesPemantauan !== -1 ? String(row[idxProsesPemantauan] || '').trim() : '';
+      const prosesPerbaikan = idxProsesPerbaikan !== -1 ? String(row[idxProsesPerbaikan] || '').trim() : '';
 
       const statusKasus = idxStatusKasus !== -1 ? String(row[idxStatusKasus] || '').trim() : '';
       const sampelDilakukan = idxSampelDilakukan !== -1 ? String(row[idxSampelDilakukan] || '').trim() : '';
@@ -303,6 +374,14 @@ function _buildWorkflowInboxData_(sess, dx) {
         sampelDilakukan: sampelDilakukan,
         interpretasiSampel: interpretasiSampel,
         catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || '').trim() : '',
+        diinputOleh: inputerUsername,
+        inputAwalOleh: inputerName,
+        workflowCurrentQueue: workflowQueue,
+        workflowCurrentLabel: workflowLabel,
+        statusProsesVerifikasi: prosesVerifikasi,
+        statusProsesPemeriksaan: prosesPemeriksaan,
+        statusProsesPemantauan: prosesPemantauan,
+        statusProsesPerbaikan: prosesPerbaikan,
         inputAt: idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxTimestamp]) : '',
         updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
       };
@@ -320,10 +399,12 @@ function _buildWorkflowInboxData_(sess, dx) {
           __workflowStageLabel: 'Antrian verifikasi'
         }));
       }
-      if (normalizedStatus === 'PERLU REVISI' && (role === 'admin' || scopeMatch)) {
+      if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (role === 'admin' || scopeMatch || inputerMatch)) {
         revisionQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
-          __workflowStageLabel: 'Antrian revisi'
+          __workflowStageLabel: inputerMatch && !scopeMatch && role !== 'admin' ? 'Kasus ditolak - perbaiki input' : 'Antrian revisi puskesmas pengampu',
+          __queueStatusLabel: workflowLabel || (normalizedStatus === 'DITOLAK' ? 'Ditolak' : 'Perlu revisi'),
+          __queueStatusClass: 'is-danger'
         }));
       }
       if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch)) {
@@ -351,7 +432,7 @@ function _buildWorkflowInboxData_(sess, dx) {
           __queueStatusClass: 'is-success'
         }));
       }
-      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending) {
+      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && (role === 'admin' || scopeMatch)) {
         statusQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian update status',
@@ -422,8 +503,10 @@ function _buildWorkflowInboxData_(sess, dx) {
   };
 }
 
-function getWorkflowInbox(dx, token) {
+function getWorkflowInbox(dx, token, options) {
   const sess = _getSessionFromToken_(token);
+  options = options || {};
+  const forceRefresh = !!(options.forceRefresh || options.noCache || options.bustCache);
   if (!sess.ok) {
     return { summary: { pendingVerification: 0, revisionQueue: 0, verificationDone: 0, sampleQueue: 0, sampleDone: 0, statusQueue: 0, statusDone: 0 }, pendingVerification: [], revisionQueue: [], verificationDone: [], sampleQueue: [], sampleDone: [], statusQueue: [], statusDone: [] };
   }
@@ -442,7 +525,7 @@ function getWorkflowInbox(dx, token) {
     const dxNorm = String(dx || '').trim().toUpperCase() || 'ALL';
     const cacheKey = ['workflow-inbox', dxNorm, role, userUnit, userKode].join(':');
 
-    if (cache) {
+    if (cache && !forceRefresh) {
       try {
         const cached = cache.get(cacheKey);
         if (cached) return JSON.parse(cached);
@@ -463,7 +546,7 @@ function getWorkflowInbox(dx, token) {
 
     if (cache) {
       try {
-        cache.put(cacheKey, JSON.stringify(cachedResult), 120);
+        cache.put(cacheKey, JSON.stringify(cachedResult), 15);
       } catch (writeErr) {}
     }
 
@@ -643,6 +726,7 @@ function getDashboardStats(dx, tahun, token) {
         wilayahSummary: { kecamatanCount: 0, kelurahanCount: 0, rwCount: 0, rtRwCount: 0, topKecamatan: [], topKelurahan: [], topRw: [], topRtRw: [] },
         coordinateSummary: { totalWithCoordinates: 0, missingCoordinates: 0, clusteredPointCount: 0, topHotspots: [], points: [] },
         perKelompokUmur: {},
+        perKelompokUsiaSurveilans: {},
         perJenisKelamin: {},
         verificationQueue: { counts: { pending: 0, perluRevisi: 0, terverifikasi: 0 }, pending: [], perluRevisi: [], terverifikasi: [] },
         statusNotifikasi: { sent: 0, failed: 0, pending: 0 },
@@ -670,6 +754,7 @@ function getDashboardStats(dx, tahun, token) {
     const idxRT = headers.indexOf("RT");
     const idxRW = headers.indexOf("RW");
     const idxKelompokUmur = headers.indexOf("Kelompok Umur Epidemiologis");
+    const idxTanggalLahir = _findFirstHeaderIndex_(headers, ["Tanggal Lahir", "Tgl Lahir", "Tanggal lahir"]);
     const idxJK = headers.indexOf("JK");
     const idxStatusNotif = headers.indexOf("Status Notifikasi Pengampu");
     const idxReasonNotif = headers.indexOf("Reason Notifikasi Pengampu");
@@ -707,6 +792,7 @@ function getDashboardStats(dx, tahun, token) {
     const perBulan = {};
     const perStatusKasus = {};
     const perKelompokUmur = {};
+    const perKelompokUsiaSurveilans = {};
     const perJenisKelamin = {};
     const qualityCards = {
       pendingVerification: 0,
@@ -817,6 +903,11 @@ function getDashboardStats(dx, tahun, token) {
         const kelompok = String(row[idxKelompokUmur] || "").trim() || "Tidak diketahui";
         perKelompokUmur[kelompok] = (perKelompokUmur[kelompok] || 0) + 1;
       }
+
+      const surveillanceAgeGroup = idxTanggalLahir !== -1
+        ? _classifySurveillanceAgeGroup_(_ageTotalDaysForDashboard_(row[idxTanggalLahir], idxTglPelacakan !== -1 ? row[idxTglPelacakan] : null))
+        : "Usia tidak diketahui";
+      _incrementCounter_(perKelompokUsiaSurveilans, surveillanceAgeGroup);
 
       if (idxJK !== -1) {
         const jk = String(row[idxJK] || "").trim() || "Tidak diketahui";
@@ -1026,6 +1117,7 @@ function getDashboardStats(dx, tahun, token) {
       perBulan: perBulan,
       perStatusKasus: perStatusKasus,
       perKelompokUmur: perKelompokUmur,
+      perKelompokUsiaSurveilans: perKelompokUsiaSurveilans,
       perJenisKelamin: perJenisKelamin,
       qualityCards: qualityCards,
       wilayahSummary: wilayahSummary,

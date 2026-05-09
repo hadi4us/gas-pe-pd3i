@@ -45,7 +45,9 @@ function doPost(e) {
       return responseJSON({ status: "error", message: "Payload JSON tidak valid." });
     }
 
-    const result = saveFormPayload_(data);
+    data.__alreadyLocked = true;
+    const action = String(data.__action || data.action || "").trim();
+    const result = action ? _routeDedicatedWorkflowAction_(action, data) : saveFormPayload_(data);
     return responseJSON(result);
   } catch (err) {
     return responseJSON({ status: "error", message: String(err) });
@@ -65,6 +67,156 @@ function saveFormData(data) {
   } finally {
     try { lock.releaseLock(); } catch (e2) {}
   }
+}
+
+function _routeDedicatedWorkflowAction_(action, payload) {
+  action = String(action || '').trim();
+  payload = Object.assign({}, payload || {});
+  const token = String(payload.__token || '').trim();
+  const dx = String(payload.dx || '').trim().toUpperCase();
+  const recordKey = String(payload.recordKey || payload['ID Registrasi Kasus'] || payload.RAW_ROW_NUMBER || payload['Nomor EPID'] || payload['Nomor EPID Final'] || '').trim();
+  const filters = payload.filters || payload;
+  switch (action) {
+    case 'createInitialCase': return createInitialCase(token, payload);
+    case 'getEditableRecords': return getEditableRecords(token, dx, filters);
+    case 'getEditableRecord': return getEditableRecord(token, dx, recordKey);
+    case 'saveInitialReportEdit': return saveInitialReportEdit(token, payload);
+    case 'deleteCaseRecord': return deleteCaseRecord(token, payload);
+    case 'getVerificationQueue': return getVerificationQueue(dx, token, filters);
+    case 'getVerificationRecord': return getVerificationRecord(dx, recordKey, token);
+    case 'saveVerificationDecision': return saveVerificationDecision(token, payload);
+    case 'getSampleQueue': return getSampleQueue(dx, token, filters);
+    case 'getSampleRecord': return getSampleRecord(dx, recordKey, token);
+    case 'saveSampleResult': return saveSampleResult(token, payload);
+    case 'getStatusQueue': return getStatusQueue(dx, token, filters);
+    case 'getStatusRecord': return getStatusRecord(dx, recordKey, token);
+    case 'saveCaseStatusUpdate': return saveCaseStatusUpdate(token, payload);
+    default: throw new Error('Aksi workflow tidak dikenal: ' + action);
+  }
+}
+
+function _saveDedicatedWorkflowPayload_(token, payload, workflowStage, extra) {
+  payload = Object.assign({}, payload || {}, extra || {});
+  payload.__token = token || payload.__token || '';
+  payload.__workflowStage = workflowStage;
+  if (payload.__alreadyLocked) return saveFormPayload_(payload);
+  return saveFormData(payload);
+}
+
+function createInitialCase(token, payload) {
+  return _saveDedicatedWorkflowPayload_(token, payload, 'section-pelapor', { 'Status Verifikasi EPID': String((payload && payload['Status Verifikasi EPID']) || '').trim() || 'Pending' });
+}
+
+function getEditableRecords(token, dx, filters) {
+  filters = Object.assign({}, filters || {}, { workspace: 'edit', workflowIntent: 'section-pelapor' });
+  return _searchRecordsDirectFromSheet_(dx, filters, token);
+}
+
+function getEditableRecord(token, dx, recordKey) {
+  return getRecordByKey(dx, recordKey, token);
+}
+
+function saveInitialReportEdit(token, payload) {
+  return _saveDedicatedWorkflowPayload_(token, payload, 'section-pelapor', { __editMode: 'initial_report' });
+}
+
+function searchEditableRecords(token, dx, filters) {
+  return getEditableRecords(token, dx, filters);
+}
+
+function updateInitialReport(token, payload) {
+  return saveInitialReportEdit(token, payload);
+}
+
+function deleteCaseRecord(token, payload) {
+  const user = _requireAdminFromToken_(token);
+  payload = Object.assign({}, payload || {});
+  const dx = String(payload.dx || '').trim().toUpperCase();
+  const recordKey = String(payload.recordKey || payload['ID Registrasi Kasus'] || payload['Nomor EPID'] || '').trim();
+  if (ALL_DX.indexOf(dx) === -1) throw new Error('Diagnosis tidak valid.');
+  if (!recordKey) throw new Error('recordKey wajib diisi.');
+
+  const sheet = getSheetOrThrow_(dx + '_Raw');
+  let headers = getTrimmedHeaders_(sheet);
+  headers = _ensureSheetHeaders_(sheet, ['Deleted At', 'Deleted By', 'Deleted Reason']);
+
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) throw new Error('Data kasus tidak ditemukan.');
+  headers = values[0].map(function(h) { return String(h || '').trim(); });
+  const idxRecordId = headers.indexOf('ID Registrasi Kasus');
+  const idxEpid = headers.indexOf('Nomor EPID');
+  const idxDeletedAt = headers.indexOf('Deleted At');
+  const idxDeletedBy = headers.indexOf('Deleted By');
+  const idxDeletedReason = headers.indexOf('Deleted Reason');
+  const rowKeyMatch = recordKey.match(/^ROW:(\d+)$/i);
+  let rowIndex = -1;
+
+  if (rowKeyMatch) {
+    const rowNumber = parseInt(rowKeyMatch[1], 10);
+    if (!isNaN(rowNumber) && rowNumber >= 2 && rowNumber <= values.length) rowIndex = rowNumber;
+  }
+  if (rowIndex === -1) {
+    for (let i = 1; i < values.length; i++) {
+      const rowRecordId = idxRecordId !== -1 ? String(values[i][idxRecordId] || '').trim() : '';
+      const rowEpid = idxEpid !== -1 ? String(values[i][idxEpid] || '').trim() : '';
+      if ((rowRecordId && rowRecordId === recordKey) || (rowEpid && rowEpid === recordKey)) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+  }
+  if (rowIndex === -1) throw new Error('Data kasus tidak ditemukan.');
+
+  const now = new Date();
+  if (idxDeletedAt !== -1) sheet.getRange(rowIndex, idxDeletedAt + 1).setValue(now);
+  if (idxDeletedBy !== -1) sheet.getRange(rowIndex, idxDeletedBy + 1).setValue(String(user.username || user.name || user.role || 'admin'));
+  if (idxDeletedReason !== -1) sheet.getRange(rowIndex, idxDeletedReason + 1).setValue(String(payload.reason || 'Dihapus melalui List Kasus').trim());
+
+  try { Cache_Manager.invalidateSheetCache(dx + '_Raw'); } catch (e) {}
+  try {
+    Audit_Logger.logChange(user, dx, recordKey, 'DELETE', { 'Deleted At': { old: '', new: String(now) } }, { source: 'List Kasus' });
+  } catch (e) {}
+
+  return { ok: true, status: 'success', dx: dx, recordKey: recordKey, rowIndex: rowIndex };
+}
+
+function getVerificationQueue(dx, token, filters) {
+  filters = Object.assign({}, filters || {}, { workspace: 'verifikasi', workflowIntent: 'section-verifikasi' });
+  return _searchRecordsDirectFromSheet_(dx, filters, token);
+}
+
+function getVerificationRecord(dx, recordKey, token) {
+  return getRecordByKey(dx, recordKey, token);
+}
+
+function saveVerificationDecision(token, payload) {
+  return _saveDedicatedWorkflowPayload_(token, payload, 'section-verifikasi');
+}
+
+function getSampleQueue(dx, token, filters) {
+  filters = Object.assign({}, filters || {}, { workspace: 'sampel', workflowIntent: 'section-sampel' });
+  return _searchRecordsDirectFromSheet_(dx, filters, token);
+}
+
+function getSampleRecord(dx, recordKey, token) {
+  return getRecordByKey(dx, recordKey, token);
+}
+
+function saveSampleResult(token, payload) {
+  return _saveDedicatedWorkflowPayload_(token, payload, 'section-sampel');
+}
+
+function getStatusQueue(dx, token, filters) {
+  filters = Object.assign({}, filters || {}, { workspace: 'status', workflowIntent: 'section-status' });
+  return _searchRecordsDirectFromSheet_(dx, filters, token);
+}
+
+function getStatusRecord(dx, recordKey, token) {
+  return getRecordByKey(dx, recordKey, token);
+}
+
+function saveCaseStatusUpdate(token, payload) {
+  return _saveDedicatedWorkflowPayload_(token, payload, 'section-status');
 }
 
 function _getRowObjectByEpid_(dx, epid) {
@@ -310,6 +462,26 @@ function _searchIncludes_(haystack, needle) {
   return source.indexOf(target) !== -1;
 }
 
+function _searchItemMatchesKeyword_(item, keyword) {
+  const target = String(keyword || '').trim();
+  if (!target) return true;
+  const haystack = [
+    item && item.epid,
+    item && item.recordId,
+    item && item.recordKey,
+    item && item.namaSearch,
+    item && item.nama,
+    item && item.tanggalLahir,
+    item && item.orangTua,
+    item && item.alamat,
+    item && item.kecamatan,
+    item && item.kelurahan,
+    item && item.statusKasus,
+    item && item.statusVerifikasi
+  ].filter(Boolean).join(' ');
+  return _searchIncludes_(haystack, target);
+}
+
 function _normalizeVerificationStatus_(value) {
   const raw = _searchNormalizeText_(value);
   if (!raw) return 'PENDING';
@@ -317,6 +489,37 @@ function _normalizeVerificationStatus_(value) {
   if (raw === 'PERLU REVISI') return 'PERLU REVISI';
   if (raw === 'PENDING') return 'PENDING';
   return raw;
+}
+
+function _buildSearchProjectionRecord_(headers, row) {
+  const candidateGroups = [
+    ['ID Registrasi Kasus'],
+    ['Nomor EPID'],
+    ['Nama Pasien', 'Nama'],
+    ['Tanggal Lahir'],
+    ['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu'],
+    ['Alamat', 'Alamat Domisili', 'Alamat Lengkap'],
+    ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota'],
+    ['Kecamatan'],
+    ['Kelurahan', 'Kelurahan domisili', 'Kelurahan/Desa'],
+    ['Status Pasien/Kasus', 'Keadaan saat ini'],
+    ['Status Verifikasi EPID'],
+    ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
+    ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
+    ['Deleted At'],
+    ['Timestamp'],
+    ['Updated At']
+  ];
+  const record = {};
+  const idxMemo = {};
+  candidateGroups.forEach(function(group) {
+    group.forEach(function(key) {
+      if (idxMemo[key] === undefined) idxMemo[key] = headers.indexOf(key);
+      var idx = idxMemo[key];
+      if (idx !== -1) record[key] = row[idx];
+    });
+  });
+  return record;
 }
 
 function _mapSearchResultItem_(dx, record) {
@@ -349,6 +552,7 @@ function _mapSearchResultItem_(dx, record) {
     statusVerifikasi: getFirst(['Status Verifikasi EPID']),
     sampelDilakukan: getFirst(['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil']),
     interpretasiSampel: getFirst(['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab']),
+    deletedAt: getFirst(['Deleted At']),
     inputAt: getFirst(['Timestamp']),
     updatedAt: getFirst(['Updated At'])
   };
@@ -364,12 +568,16 @@ function searchRecords(dx, filters, token) {
   const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
   const isLooseSearchWorkspace = workspace === 'search';
   const dxList = isLooseSearchWorkspace ? ALL_DX.slice() : (ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice());
+  const keywordNeedle = String(filters.keyword || filters.q || '').trim();
   const epidNeedle = String(filters.epid || '').trim();
   const namaNeedle = String(filters.nama || '').trim();
   const tanggalNeedle = _searchNormalizeDate_(filters.tanggalLahir || '');
   const orangTuaNeedle = String(filters.orangTua || '').trim();
   const alamatNeedle = String(filters.alamat || '').trim();
+  const diagnosisNeedle = String(filters.diagnosis || filters.dxFilter || '').trim().toUpperCase();
+  const kecamatanNeedle = String(filters.kecamatan || '').trim();
   const kelurahanNeedle = String(filters.kelurahan || '').trim();
+  const statusKasusNeedle = String(filters.statusKasus || '').trim();
   const statusVerifikasiNeedle = String(filters.statusVerifikasi || '').trim();
   const sortBy = String(filters.sortBy || 'updated_desc').trim();
   const explicitStatus = _normalizeVerificationStatus_(statusVerifikasiNeedle);
@@ -381,7 +589,9 @@ function searchRecords(dx, filters, token) {
     } else if (statusVerifikasiNeedle) {
       allowedVerificationStatuses = [explicitStatus];
     } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
-      allowedVerificationStatuses = ['PENDING', 'PERLU REVISI'];
+      allowedVerificationStatuses = ['PENDING'];
+    } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
+      allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
     } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
       allowedVerificationStatuses = ['TERVERIFIKASI'];
     }
@@ -409,28 +619,27 @@ function searchRecords(dx, filters, token) {
     }
 
     rows.forEach(function(row, rowIdx) {
-      const record = (typeof deserializeRecord_ === 'function')
-        ? deserializeRecord_(row, headers)
-        : (function() {
-            const obj = {};
-            headers.forEach(function(h, idx) { obj[h] = row[idx]; });
-            return obj;
-          })();
+      const record = _buildSearchProjectionRecord_(headers, row);
       record.RAW_ROW_NUMBER = rowIdx + 2;
 
       if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
 
       const item = _mapSearchResultItem_(dxItem, record);
+      if (String(item.deletedAt || '').trim()) return;
+      if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
       if (!item.recordKey) {
         item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
       }
       if (!item.recordKey) return;
+      if (!_searchItemMatchesKeyword_(item, keywordNeedle)) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
       if (!_searchIncludes_(item.namaSearch || item.nama, namaNeedle)) return;
       if (tanggalNeedle && _searchNormalizeDate_(item.tanggalLahir) !== tanggalNeedle) return;
       if (!_searchIncludes_(item.orangTua, orangTuaNeedle)) return;
       if (!_searchIncludes_(item.alamat, alamatNeedle)) return;
+      if (!_searchIncludes_(item.kecamatan, kecamatanNeedle)) return;
       if (!_searchIncludes_(item.kelurahan, kelurahanNeedle)) return;
+      if (!_searchIncludes_(item.statusKasus, statusKasusNeedle)) return;
 
       const normalizedVerificationStatus = _normalizeVerificationStatus_(item.statusVerifikasi || 'Pending');
       if (allowedVerificationStatuses && allowedVerificationStatuses.indexOf(normalizedVerificationStatus) === -1) return;
@@ -463,6 +672,110 @@ function searchRecords(dx, filters, token) {
     page: page,
     pageSize: pageSize,
     totalPages: Math.ceil(total / pageSize)
+  };
+}
+
+function _searchRecordsDirectFromSheet_(dx, filters, token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || 'Sesi tidak valid.');
+
+  dx = String(dx || '').trim().toUpperCase();
+  filters = filters || {};
+  const workspace = String(filters.workspace || '').trim().toLowerCase();
+  const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
+  const isLooseSearchWorkspace = workspace === 'search';
+  const dxList = isLooseSearchWorkspace ? ALL_DX.slice() : (ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice());
+  const keywordNeedle = String(filters.keyword || filters.q || '').trim();
+  const epidNeedle = String(filters.epid || '').trim();
+  const namaNeedle = String(filters.nama || '').trim();
+  const tanggalNeedle = _searchNormalizeDate_(filters.tanggalLahir || '');
+  const orangTuaNeedle = String(filters.orangTua || '').trim();
+  const alamatNeedle = String(filters.alamat || '').trim();
+  const diagnosisNeedle = String(filters.diagnosis || filters.dxFilter || '').trim().toUpperCase();
+  const kecamatanNeedle = String(filters.kecamatan || '').trim();
+  const kelurahanNeedle = String(filters.kelurahan || '').trim();
+  const statusKasusNeedle = String(filters.statusKasus || '').trim();
+  const statusVerifikasiNeedle = String(filters.statusVerifikasi || '').trim();
+  const sortBy = String(filters.sortBy || 'updated_desc').trim();
+  const explicitStatus = _normalizeVerificationStatus_(statusVerifikasiNeedle);
+  let allowedVerificationStatuses = null;
+
+  if (!isLooseSearchWorkspace) {
+    if (explicitStatus && explicitStatus !== 'PENDING') {
+      allowedVerificationStatuses = [explicitStatus];
+    } else if (statusVerifikasiNeedle) {
+      allowedVerificationStatuses = [explicitStatus];
+    } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
+      allowedVerificationStatuses = ['PENDING'];
+    } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
+      allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
+    } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
+      allowedVerificationStatuses = ['TERVERIFIKASI'];
+    }
+  }
+
+  const page = Math.max(1, parseInt(filters.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 50));
+  const results = [];
+
+  dxList.forEach(function(dxItem) {
+    var sheet = getSheetOrThrow_(dxItem + '_Raw');
+    var values = sheet.getDataRange().getValues();
+    if (!values || values.length < 2) return;
+    var headers = values[0].map(function(h) { return String(h || '').trim(); });
+    var rows = values.slice(1);
+
+    rows.forEach(function(row, rowIdx) {
+      const record = _buildSearchProjectionRecord_(headers, row);
+      record.RAW_ROW_NUMBER = rowIdx + 2;
+
+      if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
+
+      const item = _mapSearchResultItem_(dxItem, record);
+      if (String(item.deletedAt || '').trim()) return;
+      if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
+      if (!item.recordKey) item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
+      if (!item.recordKey) return;
+      if (!_searchItemMatchesKeyword_(item, keywordNeedle)) return;
+      if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
+      if (!_searchIncludes_(item.namaSearch || item.nama, namaNeedle)) return;
+      if (tanggalNeedle && _searchNormalizeDate_(item.tanggalLahir) !== tanggalNeedle) return;
+      if (!_searchIncludes_(item.orangTua, orangTuaNeedle)) return;
+      if (!_searchIncludes_(item.alamat, alamatNeedle)) return;
+      if (!_searchIncludes_(item.kecamatan, kecamatanNeedle)) return;
+      if (!_searchIncludes_(item.kelurahan, kelurahanNeedle)) return;
+      if (!_searchIncludes_(item.statusKasus, statusKasusNeedle)) return;
+
+      const normalizedVerificationStatus = _normalizeVerificationStatus_(item.statusVerifikasi || 'Pending');
+      if (allowedVerificationStatuses && allowedVerificationStatuses.indexOf(normalizedVerificationStatus) === -1) return;
+      if (!allowedVerificationStatuses && !_searchIncludes_(item.statusVerifikasi, statusVerifikasiNeedle)) return;
+
+      results.push(item);
+    });
+  });
+
+  const compareText = function(a, b) {
+    return String(a || '').localeCompare(String(b || ''), 'id', { sensitivity: 'base' });
+  };
+  results.sort(function(a, b) {
+    if (sortBy === 'name_asc') return compareText(a.nama, b.nama);
+    if (sortBy === 'name_desc') return compareText(b.nama, a.nama);
+    if (sortBy === 'birth_asc') return compareText(a.tanggalLahir, b.tanggalLahir);
+    if (sortBy === 'birth_desc') return compareText(b.tanggalLahir, a.tanggalLahir);
+    if (sortBy === 'epid_asc') return compareText(a.epid || a.recordId, b.epid || b.recordId);
+    if (sortBy === 'epid_desc') return compareText(b.epid || b.recordId, a.epid || a.recordId);
+    return compareText(b.updatedAt || b.inputAt, a.updatedAt || a.inputAt);
+  });
+
+  const total = results.length;
+  const start = (page - 1) * pageSize;
+  return {
+    results: results.slice(start, start + pageSize),
+    total: total,
+    page: page,
+    pageSize: pageSize,
+    totalPages: Math.ceil(total / pageSize),
+    source: 'spreadsheet-direct'
   };
 }
 
@@ -1333,12 +1646,24 @@ function _getRecordDomisiliForAccess_(dx, data) {
   }
 }
 
+function _isSessionOriginalInputer_(sess, data) {
+  const username = _normalizeAccessScopeKey_((sess && sess.user && sess.user.username) || '');
+  const nama = _normalizeAccessScopeKey_((sess && sess.user && sess.user.nama) || '');
+  const inputerUsername = _normalizeAccessScopeKey_((data && data['Diinput Oleh']) || '');
+  const inputerName = _normalizeAccessScopeKey_((data && data['Input Awal Diisi Oleh']) || '');
+  if (!username && !nama) return false;
+  return !!((username && inputerUsername && username === inputerUsername) || (nama && inputerName && nama === inputerName));
+}
+
 function _canSessionReadRecordByScope_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
   if (role === 'admin') return true;
 
   const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
   if (userScopeLevel === 'dinkes') return true;
+
+  const verificationStatus = _normalizeVerificationStatus_((data && data['Status Verifikasi EPID']) || '');
+  if ((verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') && _isSessionOriginalInputer_(sess, data || {})) return true;
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
@@ -1406,6 +1731,130 @@ function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
   return true;
 }
 
+
+function _isInitialReportEditPayload_(data) {
+  return String((data && data.__editMode) || '').trim() === 'initial_report';
+}
+
+function _getInitialReportStageOnlyFields_() {
+  var fields = [];
+  try { fields = fields.concat((RAW_SCHEMA_COMMON_ && RAW_SCHEMA_COMMON_.pelapor) || []); } catch (e) {}
+  try { fields = fields.concat((RAW_SCHEMA_COMMON_ && RAW_SCHEMA_COMMON_.pasien) || []); } catch (e) {}
+  try {
+    var dx = String(arguments[0] || '').trim().toUpperCase();
+    fields = fields.concat((RAW_SCHEMA_DIAGNOSIS_FIELDS_ && RAW_SCHEMA_DIAGNOSIS_FIELDS_[dx]) || []);
+  } catch (e2) {}
+  return fields;
+}
+
+function _getExistingRecordForPayload_(dx, data, token) {
+  try {
+    var key = String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'] || data['Nomor EPID Final'])) || '').trim();
+    if (!key) return null;
+    return getRecordByKey(dx, key, token) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function _buildEditDiffSummary_(existing, data, allowMap) {
+  var diffs = [];
+  var ignored = { dx: true, __token: true, __workflowStage: true, __editMode: true, RAW_ROW_NUMBER: true, 'ID Registrasi Kasus': true, 'Nomor EPID': true, 'Nomor EPID Rekomendasi': true, 'Nomor EPID Final': true };
+  Object.keys(data || {}).forEach(function(field) {
+    if (!allowMap[field] || ignored[field]) return;
+    var before = String((existing && existing[field]) || '').trim();
+    var after = String((data && data[field]) || '').trim();
+    if (before !== after) diffs.push(field);
+  });
+  return diffs.slice(0, 24).join(', ');
+}
+
+
+function _getWorkflowStageAllowedUpdateFields_(workflowStage) {
+  const normalizedStage = _normalizeWorkflowStage_(workflowStage) || "section-pelapor";
+  const commonIdentity = [
+    'dx', '__token', '__workflowStage', '__submitMode', '__action', '__alreadyLocked',
+    'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Final', 'Nomor EPID Rekomendasi'
+  ];
+  const auditAndWorkflow = [
+    'Tahap Workflow Terakhir', 'Label Tahap Workflow Terakhir', 'Diupdate Oleh Tahap Terakhir', 'Role Pengupdate Tahap Terakhir', 'Waktu Update Tahap Terakhir',
+    'Workflow Current Queue', 'Workflow Current Label', 'Status Proses Verifikasi EPID', 'Status Proses Pemeriksaan', 'Status Proses Pemantauan', 'Status Proses Perbaikan', 'Workflow Selesai'
+  ];
+  const stageMap = {
+    'section-verifikasi': [
+      'Status Verifikasi EPID', 'Tanggal Verifikasi EPID', 'Petugas Verifikator', 'Catatan Verifikasi EPID',
+      'Review Admin Terakhir', 'Waktu Permintaan Revisi', 'Notifikasi Revisi Dibaca',
+      'Status Notifikasi Pengampu', 'Reason Notifikasi Pengampu', 'Status Sinkronisasi Pengampu', 'Reason Sinkronisasi Pengampu',
+      'Status Notifikasi Telegram', 'Reason Notifikasi Telegram',
+      'Status Notifikasi Revisi Pengampu', 'Reason Notifikasi Revisi Pengampu', 'Status Notifikasi Revisi Telegram', 'Reason Notifikasi Revisi Telegram',
+      'Verifikasi EPID Diupdate Oleh', 'Role Pengupdate Verifikasi EPID', 'Waktu Update Verifikasi EPID'
+    ],
+    'section-sampel': [
+      'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jenis Sampel Diuji', 'Nomor Sampel / Lab', 'Tanggal Hasil Sampel',
+      'Hasil Pemeriksaan Sampel', 'Interpretasi Hasil Sampel',
+      'Hasil Pemeriksaan Diupdate Oleh', 'Role Pengupdate Hasil Pemeriksaan', 'Waktu Update Hasil Pemeriksaan'
+    ],
+    'section-status': [
+      'Status Pasien/Kasus', 'Tanggal Update Status', 'Dasar Penetapan Status', 'Catatan Status Pasien', 'Riwayat Status Kasus',
+      'Status Kasus Diupdate Oleh', 'Role Pengupdate Status Kasus', 'Waktu Update Status Kasus'
+    ]
+  };
+  return commonIdentity.concat(auditAndWorkflow).concat(stageMap[normalizedStage] || []);
+}
+
+function _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess) {
+  data = data || {};
+  const normalizedStage = _normalizeWorkflowStage_(data.__workflowStage);
+  if (!normalizedStage || normalizedStage === 'section-pelapor' || _isInitialReportEditPayload_(data)) return data;
+  const allowed = {};
+  _getWorkflowStageAllowedUpdateFields_(normalizedStage).forEach(function(field) { allowed[field] = true; });
+  const cleaned = {};
+  Object.keys(data || {}).forEach(function(field) {
+    if (allowed[field]) cleaned[field] = data[field];
+  });
+  const existing = _getExistingRecordForPayload_(dx, data, String(data.__token || '').trim()) || {};
+  ['ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Final', 'Nomor EPID Rekomendasi', 'Status Verifikasi EPID', 'Status Pasien/Kasus', 'Pemeriksaan Sampel Dilakukan', 'Interpretasi Hasil Sampel'].forEach(function(field) {
+    if (!String(cleaned[field] || '').trim() && String(existing[field] || '').trim()) cleaned[field] = existing[field];
+  });
+  cleaned.__existingRecordForWorkflow = existing;
+  return cleaned;
+}
+
+function _sanitizeInitialReportEditPayload_(dx, data, sess) {
+  if (!_isInitialReportEditPayload_(data)) return data;
+  dx = String(dx || '').trim().toUpperCase();
+  data = data || {};
+  var token = String(data.__token || '').trim();
+  var existing = _getExistingRecordForPayload_(dx, data, token) || {};
+  var allowed = {};
+  ['dx', '__token', '__workflowStage', '__editMode', 'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Rekomendasi', 'Nomor EPID Final'].forEach(function(field) { allowed[field] = true; });
+  _getInitialReportStageOnlyFields_(dx).forEach(function(field) { allowed[String(field || '').trim()] = true; });
+
+  var cleaned = {};
+  Object.keys(data || {}).forEach(function(field) {
+    if (allowed[field]) cleaned[field] = data[field];
+  });
+
+  if (existing['ID Registrasi Kasus']) cleaned['ID Registrasi Kasus'] = existing['ID Registrasi Kasus'];
+  if (existing['Nomor EPID']) cleaned['Nomor EPID'] = existing['Nomor EPID'];
+  if (existing['Nomor EPID Final']) cleaned['Nomor EPID Final'] = existing['Nomor EPID Final'];
+  if (existing['Nomor EPID Rekomendasi']) cleaned['Nomor EPID Rekomendasi'] = existing['Nomor EPID Rekomendasi'];
+
+  var actor = (sess && sess.user && (sess.user.nama || sess.user.username)) || 'unknown';
+  var diffSummary = _buildEditDiffSummary_(existing, cleaned, allowed);
+  cleaned['Edited At'] = new Date();
+  cleaned['Edited By'] = actor;
+  cleaned['Edit Reason'] = String(data['Edit Reason'] || data.__editReason || '').trim() || 'Koreksi inputan awal';
+  cleaned['Edit Diff Summary'] = diffSummary || 'Tidak ada perubahan field input awal yang terdeteksi';
+
+  var normalizedExistingStatus = String(existing['Status Verifikasi EPID'] || '').trim().toUpperCase();
+  if (normalizedExistingStatus === 'TERVERIFIKASI' && diffSummary) {
+    cleaned['Edit Inputan Perlu Review Ulang'] = 'Ya';
+    cleaned['Edit Inputan Review Note'] = 'Inputan awal diubah setelah verifikasi: ' + diffSummary;
+  }
+  return cleaned;
+}
+
 function _applyWorkflowStageAuditFields_(data, sess, workflowStage) {
   data = data || {};
   sess = sess || {};
@@ -1450,6 +1899,10 @@ function _applyWorkflowStageAuditFields_(data, sess, workflowStage) {
     data[mapping.by] = actorName;
     data[mapping.role] = actorRole;
     data[mapping.at] = now;
+    if (normalizedStage === "section-pelapor") {
+      data["Diinput Oleh"] = String(user.username || actorName || "").trim();
+      data["Role Penginput"] = actorRole;
+    }
   }
 
   data.__user = { username: String(user.username || "").trim(), role: actorRole, nama: actorName };
@@ -1492,6 +1945,103 @@ function _requireWriteAccessFromSession_(sess, workflowStage, data) {
   _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data);
 
   return role || "petugas";
+}
+
+
+function _isFinalCaseStatus_(statusKasus) {
+  const normalized = String(statusKasus || '').trim().toUpperCase();
+  return ['DISCARDED', 'SEMBUH', 'MENINGGAL', 'LOST TO FOLLOW-UP', 'LOST TO FOLLOW UP'].indexOf(normalized) !== -1;
+}
+
+function _recordRequiresSampleStage_(record) {
+  record = record || {};
+  const directSample = String(record['Pemeriksaan Sampel Dilakukan'] || '').trim().toUpperCase();
+  const statusKasus = String(record['Status Pasien/Kasus'] || '').trim().toUpperCase();
+  const interpretasi = String(record['Interpretasi Hasil Sampel'] || '').trim().toUpperCase();
+  const specimenRequested = Object.keys(record).some(function(field) {
+    return /spesimen/i.test(field) && /(diambil|dikirim)/i.test(field) && String(record[field] || '').trim().toUpperCase() === 'YA';
+  });
+  const sampleRelevant = specimenRequested || directSample === 'YA' || statusKasus === 'MENUNGGU HASIL LAB';
+  const sampleDone = directSample === 'TIDAK' || (directSample === 'YA' && !!interpretasi && interpretasi !== 'BELUM KELUAR');
+  return sampleRelevant && !sampleDone && !_isFinalCaseStatus_(statusKasus);
+}
+
+function _recordSampleStageIsDone_(record) {
+  record = record || {};
+  const directSample = String(record['Pemeriksaan Sampel Dilakukan'] || '').trim().toUpperCase();
+  const interpretasi = String(record['Interpretasi Hasil Sampel'] || '').trim().toUpperCase();
+  return directSample === 'TIDAK' || (directSample === 'YA' && !!interpretasi && interpretasi !== 'BELUM KELUAR');
+}
+
+function _applyWorkflowProcessMarkers_(record) {
+  record = record || {};
+  const verificationStatus = String(record['Status Verifikasi EPID'] || '').trim().toUpperCase() || 'PENDING';
+  const statusKasus = String(record['Status Pasien/Kasus'] || '').trim().toUpperCase();
+  const isFinalStatus = _isFinalCaseStatus_(statusKasus);
+  const samplePending = _recordRequiresSampleStage_(record);
+  const sampleDone = _recordSampleStageIsDone_(record);
+
+  let currentQueue = 'verifikasi_epid';
+  let currentLabel = 'Menunggu verifikasi EPID';
+  let verificationMarker = 'PENDING';
+  let sampleMarker = 'BELUM_SIAP';
+  let monitoringMarker = 'BELUM_SIAP';
+  let revisionMarker = 'TIDAK_ADA';
+  let workflowDone = 'Tidak';
+
+  if (verificationStatus === 'TERVERIFIKASI') {
+    verificationMarker = 'SELESAI';
+    revisionMarker = 'TIDAK_ADA';
+    if (samplePending) {
+      currentQueue = 'input_pemeriksaan';
+      currentLabel = 'Menunggu input hasil pemeriksaan';
+      sampleMarker = 'PENDING';
+      monitoringMarker = 'BELUM_SIAP';
+    } else if (!isFinalStatus) {
+      currentQueue = 'pemantauan';
+      currentLabel = sampleDone ? 'Pemeriksaan selesai, masuk pemantauan' : 'Tidak perlu pemeriksaan, masuk pemantauan';
+      sampleMarker = sampleDone ? 'SELESAI' : 'TIDAK_PERLU';
+      monitoringMarker = 'PENDING';
+    } else {
+      currentQueue = 'selesai';
+      currentLabel = 'Workflow kasus selesai';
+      sampleMarker = sampleDone ? 'SELESAI' : 'TIDAK_PERLU';
+      monitoringMarker = 'SELESAI';
+      workflowDone = 'Ya';
+    }
+  } else if (verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') {
+    currentQueue = 'kasus_ditolak';
+    currentLabel = 'Ditolak/perlu revisi input awal';
+    verificationMarker = 'DITOLAK';
+    revisionMarker = 'PENDING';
+  }
+
+  record['Workflow Current Queue'] = currentQueue;
+  record['Workflow Current Label'] = currentLabel;
+  record['Status Proses Verifikasi EPID'] = verificationMarker;
+  record['Status Proses Pemeriksaan'] = sampleMarker;
+  record['Status Proses Pemantauan'] = monitoringMarker;
+  record['Status Proses Perbaikan'] = revisionMarker;
+  record['Workflow Selesai'] = workflowDone;
+  return record;
+}
+
+function _resolveNextWorkflowAfterSave_(savedRecord) {
+  savedRecord = savedRecord || {};
+  const verificationStatus = String(savedRecord['Status Verifikasi EPID'] || '').trim().toUpperCase();
+  if (verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') {
+    return { stage: 'section-pelapor', workspace: 'edit', label: 'Masuk daftar kasus ditolak/perlu perbaikan' };
+  }
+  if (verificationStatus !== 'TERVERIFIKASI') {
+    return { stage: 'section-verifikasi', workspace: 'verifikasi', label: 'Menunggu verifikasi EPID' };
+  }
+  if (_recordRequiresSampleStage_(savedRecord)) {
+    return { stage: 'section-sampel', workspace: 'sampel', label: 'Masuk daftar Input Hasil Sampel/Lab' };
+  }
+  if (!_isFinalCaseStatus_(savedRecord['Status Pasien/Kasus'])) {
+    return { stage: 'section-status', workspace: 'status', label: 'Masuk daftar Update Status Pemantauan' };
+  }
+  return { stage: 'done', workspace: 'history', label: 'Workflow kasus selesai' };
 }
 
 function _isAsyncPipelineEnabled_() {
@@ -1665,8 +2215,16 @@ function saveFormPayload_(data) {
     return { status: "error", message: "dx wajib diisi." };
   }
 
+  data = _sanitizeInitialReportEditPayload_(dx, data, sess);
+  data = _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess);
   data = _applyWorkflowStageAuditFields_(data, sess, data.__workflowStage);
 
+  const workflowMarkerSource = Object.assign({}, data.__existingRecordForWorkflow || {}, data);
+  delete data.__existingRecordForWorkflow;
+  const workflowMarkedData = _applyWorkflowProcessMarkers_(workflowMarkerSource);
+  ['Workflow Current Queue', 'Workflow Current Label', 'Status Proses Verifikasi EPID', 'Status Proses Pemeriksaan', 'Status Proses Pemantauan', 'Status Proses Perbaikan', 'Workflow Selesai'].forEach(function(field) {
+    data[field] = workflowMarkedData[field];
+  });
   const saved = saveDxRecord_(dx, data);
   const hasFinalEpid = !!String(saved.epid || '').trim();
   const printUrl = hasFinalEpid ? safeGetPdfPrintUrl_(dx, saved.epid, token) : '';
@@ -1693,6 +2251,22 @@ function saveFormPayload_(data) {
     savedRecord = data;
   }
 
+  savedRecord = _applyWorkflowProcessMarkers_(savedRecord || data);
+  try {
+    saveDxRecord_(dx, {
+      "ID Registrasi Kasus": saved.recordId,
+      "Nomor EPID": saved.epid || String((savedRecord && savedRecord["Nomor EPID"]) || '').trim(),
+      "Status Verifikasi EPID": String((savedRecord && savedRecord["Status Verifikasi EPID"]) || '').trim(),
+      "Workflow Current Queue": savedRecord["Workflow Current Queue"],
+      "Workflow Current Label": savedRecord["Workflow Current Label"],
+      "Status Proses Verifikasi EPID": savedRecord["Status Proses Verifikasi EPID"],
+      "Status Proses Pemeriksaan": savedRecord["Status Proses Pemeriksaan"],
+      "Status Proses Pemantauan": savedRecord["Status Proses Pemantauan"],
+      "Status Proses Perbaikan": savedRecord["Status Proses Perbaikan"],
+      "Workflow Selesai": savedRecord["Workflow Selesai"]
+    });
+  } catch (markerErr) {}
+
   let revisionPipelineResult = {
     revisionNotification: { sent: false, reason: 'SKIPPED_NOT_REVISION' },
     revisionTelegramNotification: { sent: false, reason: 'SKIPPED_NOT_REVISION' },
@@ -1700,7 +2274,7 @@ function saveFormPayload_(data) {
   };
 
   const verificationStatus = String((saved && saved.verificationStatus) || (savedRecord && savedRecord["Status Verifikasi EPID"]) || '').trim().toUpperCase();
-  if (verificationStatus === 'PERLU REVISI') {
+  if (verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') {
     revisionPipelineResult = _runRevisionNotificationPipeline_(dx, savedRecord, saved);
   }
 
@@ -1750,6 +2324,7 @@ function saveFormPayload_(data) {
   }
 
   const finalVerificationStatus = String((saved && saved.verificationStatus) || '').trim() || 'Pending';
+  const nextWorkflow = _resolveNextWorkflowAfterSave_(savedRecord);
   const successMessage = finalVerificationStatus === 'Perlu Revisi'
     ? 'Kasus ditandai Perlu Revisi dan masuk daftar tindak lanjut puskesmas.'
     : (finalVerificationStatus === 'Terverifikasi'
@@ -1771,6 +2346,9 @@ function saveFormPayload_(data) {
     pengampuSync: pipelineResult.pengampuSync,
     telegramNotification: pipelineResult.telegramNotification,
     revisionNotification: revisionPipelineResult.revisionNotification,
-    revisionTelegramNotification: revisionPipelineResult.revisionTelegramNotification
+    revisionTelegramNotification: revisionPipelineResult.revisionTelegramNotification,
+    nextWorkflowStage: nextWorkflow.stage,
+    nextWorkflowWorkspace: nextWorkflow.workspace,
+    nextWorkflowLabel: nextWorkflow.label
   };
 }

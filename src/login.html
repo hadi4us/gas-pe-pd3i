@@ -15,7 +15,7 @@
         <i class="fas fa-user-shield text-blue-600 text-xl"></i>
       </div>
       <h1 class="text-lg sm:text-xl font-bold text-slate-900">Akses Surveilans PD3I</h1>
-      <p class="text-[12px] sm:text-[13px] text-slate-500 mt-0.5 font-medium">Login petugas (PIN) + Captcha</p>
+      <p class="text-[12px] sm:text-[13px] text-slate-500 mt-0.5 font-medium">Login petugas (Password) + Captcha</p>
     </div>
 
     <div id="login-alert" class="hidden mt-3 p-2.5 rounded-lg text-[12px] sm:text-[13px] font-semibold border"></div>
@@ -32,12 +32,12 @@
       </div>
 
       <div>
-        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">PIN Akses</label>
+        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Password Akses</label>
         <div class="relative">
           <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-pin" type="text" inputmode="numeric" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-masked="1" style="-webkit-text-security: disc;"
+          <input id="login-pin" type="password" autocomplete="current-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-masked="1"
             class="w-full pl-8 sm:pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
-            placeholder="PIN akses" />
+            placeholder="Password akses" />
           <button type="button" id="toggle-login-pin"
             class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 text-[10px] sm:text-[11px]">
             <i class="fas fa-eye"></i>

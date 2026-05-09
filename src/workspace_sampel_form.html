@@ -5,38 +5,30 @@
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight">
                   <div class="pd3i-card-header-row">
                     <div>
-                      <div class="pd3i-card-eyebrow">Workspace hasil sampel</div>
+                      <div class="pd3i-card-eyebrow">Ruang kerja hasil pemeriksaan</div>
                       <h3 class="pd3i-card-title"><i class="fas fa-vials text-blue-600 mr-2"></i>Input hasil pemeriksaan terpisah</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Spreadsheet-direct lab stage</span>
+                    <span class="pd3i-badge-soft">Data laboratorium langsung dari spreadsheet</span>
                   </div>
-                  <div class="pd3i-helper-text">Workspace ini fetch ulang record dari spreadsheet/server saat dibuka, lalu fokus ke tahap hasil sampel tanpa numpang state workspace lain.</div>
+                  <div class="pd3i-helper-text">Ruang kerja ini mengambil ulang data dari spreadsheet/server saat dibuka, lalu fokus pada tahap hasil pemeriksaan tanpa bergantung pada ruang kerja lain.</div>
                 </section>
 
-                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Context</span></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-sampel"></div>
-                </section>
-
-                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1B</div><h3 class="pd3i-card-title">Data Demografi Pasien</h3></div><span class="pd3i-badge-soft">Context kasus</span></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container-sampel"></div>
-                </section>
-
-                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1C</div><h3 class="pd3i-card-title" id="specific-title-sampel">Data Spesifik Kasus</h3></div><span class="pd3i-badge-soft">Klinis & epi</span></div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container-sampel"></div>
+                <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section" id="sampel-case-summary-card">
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Ringkasan kasus</div><h3 class="pd3i-card-title">Identitas & konteks kasus</h3></div><span class="pd3i-badge-soft">Ringkasan</span></div>
+                  <div id="sampel-case-summary" class="pd3i-summary-grid">
+                    <div class="pd3i-helper-text">Pilih satu data dari antrean hasil pemeriksaan untuk melihat ringkasan kasus.</div>
+                  </div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-sampel">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Input Hasil Pemeriksaan Sampel</h3></div><span class="pd3i-badge-soft">Lab stage</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Input Hasil Pemeriksaan Sampel</h3></div><span class="pd3i-badge-soft">Tahap laboratorium</span></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="sampel-fields-container-workspace"></div>
                 </section>
               </div>
             </div>
 
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
-              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi hasil sampel</div><h3 class="pd3i-card-title">Simpan Hasil Pemeriksaan</h3></div><span class="pd3i-badge-soft">Sample only</span></div>
+              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi hasil pemeriksaan</div><h3 class="pd3i-card-title">Simpan Hasil Pemeriksaan</h3></div><span class="pd3i-badge-soft">Khusus hasil pemeriksaan</span></div>
               <div class="pd3i-submit-stack">
                 <button type="button" id="btn-submit-sampel" class="pd3i-submit-button"><i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan</button>
               </div>

@@ -83,12 +83,57 @@ function findRowByColumnValue_(sheet, columnIndex, targetValue) {
 // ─── serializeRecord_ & deserializeRecord_ (Req 16.1–16.4, 16.6) ────────────
 
 /** Kolom yang berisi data tabel dinamis (JSON array/object). */
-const DYNAMIC_TABLE_COLUMNS_ = ["Riwayat Imunisasi", "Kontak Erat", "KontakEratJSON"];
+const DYNAMIC_TABLE_COLUMNS_ = ["Riwayat Imunisasi", "Kontak Erat", "KontakEratJSON", "Rincian Hasil Sampel"];
+const FORMULA_INJECTION_PREFIX_RE_ = /^[=\+\-@]/;
+const DEFAULT_TEXT_MAX_LENGTH_ = 2000;
+const LONG_TEXT_HEADER_RE_ = /catatan|alamat|keterangan|rincian|riwayat|hasil|gejala|uraian|deskripsi/i;
+
+function _maxSheetTextLengthForHeader_(header) {
+  return LONG_TEXT_HEADER_RE_.test(String(header || "")) ? 5000 : DEFAULT_TEXT_MAX_LENGTH_;
+}
+
+function sanitizeSheetTextValue_(value, header) {
+  let text = String(value === null || value === undefined ? "" : value);
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/g, "");
+  const maxLength = _maxSheetTextLengthForHeader_(header);
+  if (text.length > maxLength) {
+    text = text.slice(0, maxLength);
+  }
+  if (FORMULA_INJECTION_PREFIX_RE_.test(text)) {
+    text = "'" + text;
+  }
+  return text;
+}
+
+function sanitizeStructuredValueForSheet_(value, header) {
+  if (value === null || value === undefined) return value;
+  if (value instanceof Date) return value;
+  if (typeof value === "string") return sanitizeSheetTextValue_(value, header);
+  if (Array.isArray(value)) {
+    return value.map(function (item) {
+      return sanitizeStructuredValueForSheet_(item, header);
+    });
+  }
+  if (typeof value === "object") {
+    const result = {};
+    Object.keys(value).forEach(function (key) {
+      result[key] = sanitizeStructuredValueForSheet_(value[key], key);
+    });
+    return result;
+  }
+  return value;
+}
+
+function sanitizeSerializedValueForSheet_(value, header) {
+  if (typeof value === "string") return sanitizeSheetTextValue_(value, header);
+  return value;
+}
 
 /**
  * Serialize record sebelum disimpan ke sheet.
  * - Format semua nilai Date ke yyyy-MM-dd (Req 16.1)
  * - Serialize objek/array ke JSON string (Req 16.3)
+ * - Hardening teks bebas sebelum ditulis ke Google Sheets
  * @param {Object} record - key-value pasangan header → nilai
  * @param {string[]} headers
  * @returns {Object} record yang sudah di-serialize
@@ -105,12 +150,13 @@ function serializeRecord_(record, headers) {
     } else if (val !== null && val !== undefined && typeof val === "object") {
       // Req 16.3: serialize objek/array ke JSON string
       try {
+        val = sanitizeStructuredValueForSheet_(val, h);
         val = JSON.stringify(val);
       } catch (e) {
         val = "";
       }
     }
-    result[h] = val;
+    result[h] = sanitizeSerializedValueForSheet_(val, h);
   });
   return result;
 }
@@ -247,10 +293,31 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
     return { found: false, status: "OUTSIDE_DEPOK" };
   }
 
+  const memoKey = [kabNorm || "DEPOK", _normalizeWilayahKey_(kecamatan), _normalizeWilayahKey_(kelurahan)].join("|");
+  const nowMs = Date.now();
+  if (!getPengampuByWilayah_._memo) getPengampuByWilayah_._memo = {};
+  const memo = getPengampuByWilayah_._memo[memoKey];
+  if (memo && (nowMs - memo.ts) < 60000) return memo.value;
+
   const sheet = getSheetOrNull_("REF_PENGAMPU");
   if (!sheet) return { found: false, status: "UNMAPPED" };
 
-  const data = sheet.getDataRange().getValues();
+  let data = null;
+  try {
+    if (typeof Cache_Manager !== "undefined" && Cache_Manager && typeof Cache_Manager.getSheetData === "function") {
+      data = Cache_Manager.getSheetData("REF_PENGAMPU");
+    }
+  } catch (e) {
+    data = null;
+  }
+  if (!data) {
+    data = sheet.getDataRange().getValues();
+    try {
+      if (typeof Cache_Manager !== "undefined" && Cache_Manager && typeof Cache_Manager.setSheetData === "function") {
+        Cache_Manager.setSheetData("REF_PENGAMPU", data);
+      }
+    } catch (e) {}
+  }
   if (!data || data.length < 2) return { found: false, status: "UNMAPPED" };
 
   const headers = data[0].map(h => String(h || "").trim());
@@ -278,7 +345,7 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
     const rb = idxKab !== -1 ? _normalizeWilayahKey_(r[idxKab]) : "";
     const kabMatch = !kabNorm || !rb || rb === kabNorm || (kabNorm === "DEPOK" && rb === "KOTA DEPOK");
     if (kabMatch && rk === kecNorm && rl === kelNorm) {
-      return {
+      const result = {
         found: true,
         status: "MATCHED",
         kabKota: rb,
@@ -295,10 +362,14 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
         spreadsheetUrl: idxSpreadsheetUrl !== -1 ? String(r[idxSpreadsheetUrl] || "").trim() : "",
         telegramChatId: idxTelegramChatId !== -1 ? String(r[idxTelegramChatId] || "").trim() : ""
       };
+      getPengampuByWilayah_._memo[memoKey] = { ts: nowMs, value: result };
+      return result;
     }
   }
 
-  return { found: false, status: "UNMAPPED" };
+  const result = { found: false, status: "UNMAPPED" };
+  getPengampuByWilayah_._memo[memoKey] = { ts: nowMs, value: result };
+  return result;
 }
 
 // ─── _ensureSheetHeaders_ ────────────────────────────────────────────────────
@@ -351,6 +422,16 @@ const COMMON_PIPELINE_HEADERS_ = [
   "Revision Telegram Target",
   "Revision Notification Fingerprint",
   "Revision Notification Last Run At"
+];
+
+const WORKFLOW_PROCESS_HEADERS_ = [
+  "Workflow Current Queue",
+  "Workflow Current Label",
+  "Status Proses Verifikasi EPID",
+  "Status Proses Pemeriksaan",
+  "Status Proses Pemantauan",
+  "Status Proses Perbaikan",
+  "Workflow Selesai"
 ];
 
 const INTERNAL_TRACKING_HEADERS_ = [
@@ -550,8 +631,8 @@ function saveDxRecord_(dx, data) {
     });
 
   headers = _ensureSheetHeaders_(sheet, (dx === "MR"
-    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_).concat(INTERNAL_TRACKING_HEADERS_)
-    : COMMON_PIPELINE_HEADERS_.concat(INTERNAL_TRACKING_HEADERS_)).concat(incomingFieldHeaders));
+    ? mrOnlyHeaders.concat(COMMON_PIPELINE_HEADERS_).concat(WORKFLOW_PROCESS_HEADERS_).concat(INTERNAL_TRACKING_HEADERS_)
+    : COMMON_PIPELINE_HEADERS_.concat(WORKFLOW_PROCESS_HEADERS_).concat(INTERNAL_TRACKING_HEADERS_)).concat(incomingFieldHeaders));
   data = _applyHeaderAliases_(dx, data || {}, headers);
 
   const idxRecordId = headers.indexOf("ID Registrasi Kasus");
@@ -571,8 +652,8 @@ function saveDxRecord_(dx, data) {
     data["ID Registrasi Kasus"] = recordId;
   }
 
-  const verificationStatus = String(data["Status Verifikasi EPID"] || "").trim() || "Pending";
-  data["Status Verifikasi EPID"] = verificationStatus;
+  const incomingVerificationStatus = String(data["Status Verifikasi EPID"] || "").trim();
+  let verificationStatus = incomingVerificationStatus;
   if (!data["Nomor EPID Rekomendasi"]) {
     try {
       data["Nomor EPID Rekomendasi"] = recommendEpid_(dx, data);
@@ -664,8 +745,9 @@ function saveDxRecord_(dx, data) {
   }
 
   if (existingRowObject) {
-    if (!String(data['Status Verifikasi EPID'] || '').trim()) {
-      data['Status Verifikasi EPID'] = String(existingRowObject['Status Verifikasi EPID'] || '').trim() || verificationStatus;
+    if (!incomingVerificationStatus) {
+      verificationStatus = String(existingRowObject['Status Verifikasi EPID'] || '').trim() || 'Pending';
+      data['Status Verifikasi EPID'] = verificationStatus;
     }
     if (!String(data['Nomor EPID Rekomendasi'] || '').trim()) {
       data['Nomor EPID Rekomendasi'] = String(existingRowObject['Nomor EPID Rekomendasi'] || '').trim();
@@ -678,7 +760,7 @@ function saveDxRecord_(dx, data) {
     }
   }
 
-  const normalizedStatus = String(data['Status Verifikasi EPID'] || verificationStatus).trim() || 'Pending';
+  const normalizedStatus = String(data['Status Verifikasi EPID'] || verificationStatus || 'Pending').trim() || 'Pending';
   data['Status Verifikasi EPID'] = normalizedStatus;
   if (normalizedStatus === 'Terverifikasi') {
     epidValue = String(data['Nomor EPID Final'] || data['Nomor EPID'] || epidValue || '').trim();

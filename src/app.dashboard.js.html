@@ -45,8 +45,8 @@
     const points = summary && Array.isArray(summary.points) ? summary.points : [];
     const topHotspots = summary && Array.isArray(summary.topHotspots) ? summary.topHotspots : [];
     if (!summary || !points.length) {
-      mapWrap.innerHTML = '<div class="pd3i-empty-state">Belum ada koordinat valid pada filter dashboard ini.</div>';
-      listWrap.innerHTML = '<div class="pd3i-empty-state">Belum ada hotspot yang bisa ditampilkan.</div>';
+      mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada koordinat valid pada filter dashboard ini.</div>';
+      listWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
       return;
     }
 
@@ -60,10 +60,10 @@
             <div class="pd3i-hotspot-count">${item.count || 0}</div>
           </button>`;
         }).join('')
-      : '<div class="pd3i-empty-state">Belum ada hotspot yang bisa ditampilkan.</div>';
+      : '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
 
     if (!window.L) {
-      mapWrap.innerHTML = '<div class="pd3i-empty-state">Library peta belum termuat. Coba refresh halaman untuk memuat hotspot map.</div>';
+      mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Pustaka peta belum termuat. Muat ulang halaman untuk menampilkan peta hotspot kasus.</div>';
       return;
     }
 
@@ -111,7 +111,7 @@
 
     if (!result || result.status === 'error') {
       wrap.classList.remove('hidden');
-      wrap.innerHTML = `<div class="pd3i-empty-state">${escapeHtml((result && result.message) || 'Gagal memuat detail dashboard.')}</div>`;
+      wrap.innerHTML = `<div class="pd3i-empty-keadaan">${escapeHtml((result && result.message) || 'Gagal memuat detail dasbor.')}</div>`;
       return;
     }
 
@@ -132,17 +132,17 @@
               ${item.statusVerifikasi ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi)}</span>` : ''}
               ${item.statusKasus ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusKasus)}</span>` : ''}
               ${item.inputAt ? `<span class="pd3i-admin-queue-pill">Input ${escapeHtml(String(item.inputAt).slice(0, 10))}</span>` : ''}
-              ${item.updatedAt ? `<span class="pd3i-admin-queue-pill">Update ${escapeHtml(String(item.updatedAt).slice(0, 10))}</span>` : ''}
+              ${item.updatedAt ? `<span class="pd3i-admin-queue-pill">Diperbarui ${escapeHtml(String(item.updatedAt).slice(0, 10))}</span>` : ''}
             </div>
             ${item.alamat ? `<small>${escapeHtml(item.alamat)}</small>` : ''}
           </div>`;
         }).join('')
-      : '<div class="pd3i-empty-state">Belum ada kasus pada drill-down ini.</div>';
+      : '<div class="pd3i-empty-keadaan">Belum ada kasus pada drill-down ini.</div>';
 
     wrap.innerHTML = `
       <div class="pd3i-card-header-row mt-4">
         <div>
-          <div class="pd3i-card-eyebrow">Dashboard drill-down</div>
+          <div class="pd3i-card-eyebrow">Rincian dashboard</div>
           <h3 class="pd3i-card-title">${escapeHtml(result.label || 'Detail kasus')}</h3>
           <div class="pd3i-helper-text mt-1">Menampilkan <strong>${items.length}</strong> dari total <strong>${result.total || 0}</strong> kasus untuk filter ini.</div>
         </div>
@@ -166,7 +166,7 @@
     if (!wrap || !safeGsRun() || !getSafeSessionToken()) return;
     window.__DASHBOARD_DRILLDOWN_STATE = { type: type, key: key, label: label, dx: dx, tahun: tahun };
     wrap.classList.remove('hidden');
-    wrap.innerHTML = '<div class="pd3i-empty-state"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kasus...</div>';
+    wrap.innerHTML = '<div class="pd3i-empty-keadaan"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kasus...</div>';
     google.script.run
       .withSuccessHandler(function(res) {
         renderDashboardDrilldownPanel(res, dx, tahun);
@@ -197,7 +197,7 @@
       if (typeof window._loadRecordFromSearch_ === 'function') {
         window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR', { triggerButton: triggerButton });
       } else {
-        showTopAlert('Fungsi buka record belum siap. Coba lagi sebentar.', false);
+        showTopAlert('Fungsi membuka data belum siap. Coba lagi sebentar.', false);
       }
     };
 
@@ -293,6 +293,11 @@
 // ============================================================
 
   function openDashboardSection(options) {
+    if (typeof canAccessSidebarWorkspace === 'function' && !canAccessSidebarWorkspace('dashboard', SESSION_USER)) {
+      if (typeof showTopAlert === 'function') showTopAlert('Dashboard statistik hanya tersedia untuk role admin.', false);
+      if (typeof openSidebarWorkspace === 'function') openSidebarWorkspace('overview', { scroll: false, useRoute: true, replaceRoute: true });
+      return;
+    }
     const opts = options || {};
     const section = document.getElementById('section-dashboard');
     const overviewInbox = document.getElementById('overview-work-inbox');
@@ -388,10 +393,10 @@
     const runtimeGuard = (typeof createWorkspaceRuntimeGuard === 'function')
       ? createWorkspaceRuntimeGuard('dashboard')
       : null;
-    content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
+    content.innerHTML = '<div class="pd3i-dashboard-keadaan is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dasbor...</span></div>';
 
     if (!safeGsRun() || !getSafeSessionToken()) {
-      content.innerHTML = '<div class="pd3i-dashboard-state is-error">Tidak dapat terhubung ke server.</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">Tidak dapat terhubung ke server.</div>';
       return;
     }
 
@@ -404,7 +409,7 @@
       .withFailureHandler(function (err) {
         if (content.dataset.loadingRequest !== requestId) return;
         if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
-        content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
+        content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
       .getDashboardStats(dx, tahun, getSafeSessionToken());
   }
@@ -415,7 +420,7 @@
 
     if (!stats || stats.status === "error") {
       content.dataset.loaded = '';
-      content.innerHTML = '<div class="pd3i-dashboard-state is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
       return;
     }
 
@@ -427,7 +432,7 @@
     const verificationCounts = (stats.verificationQueue && stats.verificationQueue.counts) || {};
     const totalCases = Number(stats.totalKasus || 0);
     const verifiedCount = Number(verificationCounts.terverifikasi || 0);
-    const pendingReviewCount = Number(verificationCounts.pending || qc.pendingVerification || 0);
+    const pendingPeninjauanCount = Number(verificationCounts.pending || qc.pendingVerification || 0);
     const revisionCount = Number(verificationCounts.perluRevisi || 0);
     const decisionCount = Number(qc.confirmed || 0) + Number(qc.discarded || 0) + Number(qc.clinical || 0);
     const verificationRate = totalCases > 0 ? Math.round((verifiedCount / totalCases) * 100) : null;
@@ -444,7 +449,7 @@
         <div>
           <div class="pd3i-card-eyebrow">Capaian kinerja</div>
           <div class="pd3i-dashboard-block-title">Ringkasan kinerja petugas dan admin</div>
-          <div class="pd3i-helper-text mt-2">Dashboard ini fokus ke capaian kerja dan mutu operasional, bukan tabel antrian kasus satu per satu.</div>
+          <div class="pd3i-helper-text mt-2">Dasbor ini berfokus pada capaian kerja dan mutu operasional, bukan tabel antrian kasus satu per satu.</div>
         </div>
         <span class="pd3i-badge-soft">Performance</span>
       </div>
@@ -452,7 +457,7 @@
         <div class="pd3i-dashboard-metric-card tone-emerald is-hero">
           <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Total Kasus ${dx} ${tahun}</div>
           <div class="text-4xl font-black text-emerald-900">${totalCases}</div>
-          <div class="pd3i-helper-text mt-2">Cakupan kasus pada filter dashboard aktif.</div>
+          <div class="pd3i-helper-text mt-2">Cakupan kasus pada filter dasbor aktif.</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-blue">
           <div class="text-xs font-extrabold uppercase text-blue-700 mb-1">Pelacakan Hari yang Sama</div>
@@ -483,7 +488,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <div class="pd3i-dashboard-metric-card tone-neutral">
             <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Perlu Tindakan Admin</div>
-            <div class="text-2xl font-black text-slate-900">${pendingReviewCount}</div>
+            <div class="text-2xl font-black text-slate-900">${pendingPeninjauanCount}</div>
             <div class="pd3i-helper-text mt-2">Kasus yang masih perlu diputuskan pada tahap verifikasi admin.</div>
           </div>
           <div class="pd3i-dashboard-metric-card tone-neutral">
@@ -512,7 +517,7 @@
             <div class="pd3i-helper-text mt-2">${notifikasiRevisiTelegram.failed || 0} gagal, ${notifikasiRevisiTelegram.pending || 0} masih pending.</div>
           </div>
           <div class="pd3i-dashboard-metric-card tone-neutral">
-            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Menunggu Hasil Sampel</div>
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Menunggu Hasil Pemeriksaan</div>
             <div class="text-2xl font-black text-slate-900">${qc.waitingSampleResult || 0}</div>
             <div class="pd3i-helper-text mt-2">Kasus yang masih menunggu pemutakhiran hasil pemeriksaan.</div>
           </div>
@@ -532,7 +537,7 @@
           <div class="text-2xl font-black text-amber-900">${qc.pendingVerification || 0}</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-sky">
-          <div class="text-xs font-extrabold uppercase text-sky-700 mb-1">Menunggu Hasil Sampel</div>
+          <div class="text-xs font-extrabold uppercase text-sky-700 mb-1">Menunggu Hasil Pemeriksaan</div>
           <div class="text-2xl font-black text-sky-900">${qc.waitingSampleResult || 0}</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-emerald">
@@ -574,7 +579,7 @@
 
     const actionAlerts = [];
     if ((qc.pendingVerification || 0) > 0) actionAlerts.push(`${qc.pendingVerification} kasus masih belum / menunggu verifikasi EPID.`);
-    if ((qc.waitingSampleResult || 0) > 0) actionAlerts.push(`${qc.waitingSampleResult} kasus menunggu hasil sampel.`);
+    if ((qc.waitingSampleResult || 0) > 0) actionAlerts.push(`${qc.waitingSampleResult} kasus menunggu hasil pemeriksaan.`);
     if (epi.workflowCompletenessRate != null && epi.workflowCompletenessRate < 70) actionAlerts.push(`Kelengkapan workflow baru ${epi.workflowCompletenessRate}% — perlu perapihan data.`);
     if (epi.medianReportToTrackingDays != null && epi.medianReportToTrackingDays > 2) actionAlerts.push(`Median laporan ke pelacakan ${epi.medianReportToTrackingDays} hari — timeliness perlu dipercepat.`);
 
@@ -712,6 +717,31 @@
       html += `</div></div>`;
     }
 
+    const perUsiaSurveilans = stats.perKelompokUsiaSurveilans || {};
+    const usiaSurveilansOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
+    const usiaSurveilansKeys = usiaSurveilansOrder.filter(function(k) { return perUsiaSurveilans[k] > 0; });
+    if (usiaSurveilansKeys.length > 0) {
+      const maxUsiaSurveilans = Math.max.apply(null, usiaSurveilansKeys.map(function(k) { return perUsiaSurveilans[k] || 0; }));
+      const totalUsiaSurveilans = usiaSurveilansKeys.reduce(function(sum, k) { return sum + (perUsiaSurveilans[k] || 0); }, 0);
+      html += `<div class="pd3i-dashboard-block mb-6">
+        <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
+        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table space-y-3">
+          <div class="pd3i-helper-text">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Kelompok umur epidemiologis umum tetap dipertahankan terpisah.</div>`;
+      usiaSurveilansKeys.forEach(function(k) {
+        const val = perUsiaSurveilans[k] || 0;
+        const pctOfMax = maxUsiaSurveilans > 0 ? Math.round((val / maxUsiaSurveilans) * 100) : 0;
+        const pctTotal = totalUsiaSurveilans > 0 ? Math.round((val / totalUsiaSurveilans) * 100) : 0;
+        html += `<div class="pd3i-dashboard-month-row">
+          <div class="pd3i-dashboard-month-label">${escapeHtml(k)}</div>
+          <div class="pd3i-dashboard-month-track">
+            <div class="pd3i-dashboard-month-fill" style="width:${pctOfMax}%"></div>
+          </div>
+          <div class="pd3i-dashboard-month-value">${val} <span class="text-xs font-semibold text-slate-400">(${pctTotal}%)</span></div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+
     const perJK = stats.perJenisKelamin || {};
     const jkKeys = Object.keys(perJK).sort(function(a, b) { return perJK[b] - perJK[a]; });
     const perUmur = stats.perKelompokUmur || {};
@@ -732,7 +762,7 @@
       }
       if (umurKeys.length > 0) {
         html += `<div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
-          <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur</div>`;
+          <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>`;
         umurKeys.forEach(function(k) {
           html += `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 gap-3">
             <span class="text-sm font-semibold text-slate-700">${escapeHtml(k)}</span>
@@ -867,7 +897,7 @@
       if (!confirmed) return;
     }
     const dx = document.getElementById("form-selector")?.value || "";
-    clearFormDraft(dx);
+    clearFormulirDraft(dx);
     resetForNewEntry();
   }
 
@@ -879,7 +909,7 @@
     }
   });
 
-  // Override tombol "Batal Edit / Reset Form" agar pakai konfirmasi
+  // Override tombol "Batal Edit / Reset Formulir" agar pakai konfirmasi
   // GAS HtmlService: gunakan window.onload sebagai fallback DOMContentLoaded
   function _initDashboardOnLoad_() {
     initDashboard();

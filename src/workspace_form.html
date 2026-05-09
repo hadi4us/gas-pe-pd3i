@@ -6,7 +6,7 @@
                   <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
                   <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
                 </div>
-                <div class="pd3i-edit-badge-title">Record existing sedang dibuka untuk verifikasi / pembaruan status</div>
+                <div class="pd3i-edit-badge-title">Data yang sudah ada sedang dibuka untuk verifikasi / pembaruan status</div>
                 <div class="pd3i-edit-badge-meta">
                   <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
                   <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
@@ -18,7 +18,7 @@
                   <span class="pd3i-viewer-badge-pill"><i class="fas fa-eye"></i> MODE LIHAT</span>
                   <span class="pd3i-viewer-badge-pill subtle" id="viewer-badge-dx">DX -</span>
                 </div>
-                <div class="pd3i-viewer-badge-title">Role viewer hanya boleh melihat data. Field input dikunci dan perubahan tidak bisa disimpan.</div>
+                <div class="pd3i-viewer-badge-title">Peran viewer hanya boleh melihat data. Field input dikunci dan perubahan tidak bisa disimpan.</div>
                 <div class="pd3i-viewer-badge-meta">
                   <span><strong>EPID:</strong> <span id="viewer-badge-epid">-</span></span>
                   <span><strong>Status:</strong> <span id="viewer-badge-status">-</span></span>
@@ -27,11 +27,11 @@
 
               <div id="alert-box" class="pd3i-alert-card" hidden></div>
 
-              <section id="form-stepper-card" class="pd3i-shell-card pd3i-stepper-card">
+              <section id="formulir-stepper-card" class="pd3i-shell-card pd3i-stepper-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Progress input</div>
-                    <h3 class="pd3i-card-title">Alur kerja form</h3>
+                    <h3 class="pd3i-card-title">Alur kerja formulir</h3>
                   </div>
                   <span class="pd3i-badge-soft">Stepper</span>
                 </div>
@@ -53,7 +53,7 @@
                   <a href="#section-sampel" class="pd3i-stepper-item" data-step-target="section-sampel">
                     <span class="pd3i-stepper-index">3</span>
                     <span class="pd3i-stepper-copy">
-                      <strong>Hasil Sampel</strong>
+                      <strong>Hasil Pemeriksaan</strong>
                       <small>Opsional sesuai ketersediaan pemeriksaan</small>
                     </span>
                   </a>
@@ -108,7 +108,7 @@
                   </div>
                   <span class="pd3i-badge-soft">Validasi kasus & EPID</span>
                 </div>
-                <div id="verification-admin-helper" class="pd3i-helper-text mb-4">Admin mereview kelengkapan input petugas puskesmas. Jika lengkap, admin menetapkan status <strong>Terverifikasi</strong> dan memilih nomor EPID final (default dari rekomendasi sistem, tetap bisa di-override). Jika belum lengkap, pilih <strong>Perlu Revisi</strong> agar kasus masuk daftar revisi akun puskesmas.</div>
+                <div id="verification-admin-helper" class="pd3i-helper-text mb-4">Admin meninjau kelengkapan input petugas puskesmas. Jika lengkap, admin menetapkan status <strong>Terverifikasi</strong> dan memilih nomor EPID final (default dari rekomendasi sistem, tetap bisa di-override). Jika belum lengkap, pilih <strong>Perlu Revisi</strong> agar kasus masuk daftar revisi akun puskesmas.</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="verifikasi-fields-container"></div>
               </section>
 
@@ -127,7 +127,7 @@
                 <div class="pd3i-card-header-row">
                   <div>
                     <div class="pd3i-card-eyebrow">Step 4</div>
-                    <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Update Status Pasien / Kasus</h3>
+                    <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Pembaruan Status Pasien / Kasus</h3>
                   </div>
                   <span class="pd3i-badge-soft">Suspek / discarded / klinis / konfirmasi / dll</span>
                 </div>
@@ -140,9 +140,9 @@
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Ringkasan kasus</div>
-                    <h3 class="pd3i-card-title">Summary Panel</h3>
+                    <h3 class="pd3i-card-title">Panel Ringkasan</h3>
                   </div>
-                  <span class="pd3i-badge-soft">Live summary</span>
+                  <span class="pd3i-badge-soft">Ringkasan aktif</span>
                 </div>
                 <div class="pd3i-summary-grid">
                   <div class="pd3i-summary-item">
@@ -167,10 +167,10 @@
                   </div>
                   <div class="pd3i-summary-item">
                     <span class="pd3i-summary-label">Mode kerja</span>
-                    <span class="pd3i-summary-value" id="summary-mode">Input baru</span>
+                    <span class="pd3i-summary-value" id="summary-mode">Entri baru</span>
                   </div>
                   <div class="pd3i-summary-item full">
-                    <span class="pd3i-summary-label">User aktif</span>
+                    <span class="pd3i-summary-label">Pengguna aktif</span>
                     <span class="pd3i-summary-value" id="summary-user">Belum login</span>
                   </div>
                   <div class="pd3i-summary-item full">
@@ -198,12 +198,12 @@
                     <span class="pd3i-summary-value" id="summary-verifikasi-epid">Belum diverifikasi</span>
                   </div>
                   <div class="pd3i-summary-item full">
-                    <span class="pd3i-summary-label">Hasil sampel</span>
+                    <span class="pd3i-summary-label">Hasil pemeriksaan</span>
                     <span class="pd3i-summary-value" id="summary-sampel-state">Tidak ada sampel</span>
                   </div>
                   <div class="pd3i-summary-item full">
                     <span class="pd3i-summary-label">Peringatan validasi</span>
-                    <span class="pd3i-summary-value" id="summary-warning-count">0 warning</span>
+                    <span class="pd3i-summary-value" id="summary-warning-count">0 peringatan</span>
                   </div>
                 </div>
               </div>
@@ -233,29 +233,29 @@
                     Langkah Berikutnya <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
-                <div id="workflow-stage-helper" class="pd3i-helper-text mt-3">Tahap input, verifikasi, hasil pemeriksaan, dan update status dipisah. Simpan input awal dulu, lalu buka record existing untuk tahap lanjutan.</div>
+                <div id="workflow-stage-helper" class="pd3i-helper-text mt-3">Tahap input, verifikasi, hasil pemeriksaan, dan pembaruan status dipisah. Simpan entri awal dulu, lalu buka data yang sudah ada untuk tahap lanjutan.</div>
               </div>
 
               <div id="workflow-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-workflow-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Workflow</div>
-                    <h3 class="pd3i-card-title">Ringkasan alur record aktif</h3>
+                    <h3 class="pd3i-card-title">Ringkasan alur data aktif</h3>
                   </div>
                   <span class="pd3i-badge-soft">Stage tracker</span>
                 </div>
                 <div class="pd3i-workflow-status-list">
                   <div class="pd3i-workflow-status-item">
-                    <span class="pd3i-workflow-status-label">1. Input kasus</span>
-                    <span class="pd3i-workflow-status-value" id="workflow-input-state">Dalam pengisian</span>
+                    <span class="pd3i-workflow-status-label">1. Entri kasus</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-input-keadaan">Dalam pengisian</span>
                   </div>
                   <div class="pd3i-workflow-status-item">
                     <span class="pd3i-workflow-status-label">2. Verifikasi EPID</span>
-                    <span class="pd3i-workflow-status-value" id="workflow-verifikasi-state">Belum diverifikasi</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-verifikasi-keadaan">Belum diverifikasi</span>
                   </div>
                   <div class="pd3i-workflow-status-item">
-                    <span class="pd3i-workflow-status-label">3. Hasil sampel</span>
-                    <span class="pd3i-workflow-status-value" id="workflow-sampel-state">Tidak ada sampel</span>
+                    <span class="pd3i-workflow-status-label">3. Hasil pemeriksaan</span>
+                    <span class="pd3i-workflow-status-value" id="workflow-sampel-keadaan">Tidak ada sampel</span>
                   </div>
                   <div class="pd3i-workflow-status-item">
                     <span class="pd3i-workflow-status-label">4. Status pasien / kasus</span>
@@ -276,16 +276,16 @@
             </div>
             <div id="action-panel-note" class="pd3i-action-panel-note">
               <i class="fas fa-shield-heart"></i>
-              <span>Simpan record setelah lolos validasi wajib, numeric guard, dan rule epidemiologis awal.</span>
+              <span>Simpan data setelah lolos validasi wajib, pemeriksaan angka, dan aturan epidemiologis awal.</span>
             </div>
             <div class="pd3i-submit-stack">
               <button type="button" id="btn-submit" class="pd3i-submit-button">
                 <i class="fas fa-save"></i> Simpan Data ke Database
               </button>
               <button type="button" id="btn-cancel-edit" class="hidden pd3i-cancel-button">
-                <i class="fas fa-rotate-left"></i> Batal Edit / Reset Form
+                <i class="fas fa-rotate-left"></i> Batal Edit / Reset Formulir
               </button>
             </div>
-            <div id="action-panel-helper" class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke form/input bersih.</div>
+            <div id="action-panel-helper" class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke formulir/input bersih.</div>
           </div>
         </div>

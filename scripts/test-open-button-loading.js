@@ -22,7 +22,7 @@ assert(
   '_loadRecordFromSearch_ must set a visible Membuka... loading state on the clicked Buka button.'
 );
 assert(
-  /pd3i-open-record-loading/.test(app) && /Membuka form\.\.\./.test(app) && /showOpenRecordLoadingOverlay/.test(app),
+  /pd3i-open-record-loading/.test(app) && /Membuka formulir\.\.\./.test(app) && /showOpenRecordLoadingOverlay/.test(app),
   '_loadRecordFromSearch_ must show a visible global overlay while the form is being opened.'
 );
 assert(

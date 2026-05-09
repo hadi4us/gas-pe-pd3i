@@ -5,31 +5,31 @@
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight">
                   <div class="pd3i-card-header-row">
                     <div>
-                      <div class="pd3i-card-eyebrow">Workspace verifikasi</div>
-                      <h3 class="pd3i-card-title"><i class="fas fa-id-card-clip text-blue-600 mr-2"></i>Verifikasi EPID terpisah</h3>
+                      <div class="pd3i-card-eyebrow">Ruang kerja verifikasi</div>
+                      <h3 class="pd3i-card-title"><i class="fas fa-id-card-clip text-blue-600 mr-2"></i>Verifikasi EPID</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Spreadsheet-direct review</span>
+                    <span class="pd3i-badge-soft">Data langsung dari spreadsheet</span>
                   </div>
-                  <div class="pd3i-helper-text">Workspace ini mengambil ulang record langsung dari spreadsheet/server untuk proses verifikasi. Tidak numpang state dari Input atau Cari/Edit.</div>
+                  <div class="pd3i-helper-text">Ruang kerja ini mengambil ulang data langsung dari spreadsheet/server untuk proses verifikasi. Data tidak bergantung pada mode Entri Baru atau List Kasus.</div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Readonly/edit sesuai role</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Lihat/ubah sesuai peran</span></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-verifikasi"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1B</div><h3 class="pd3i-card-title">Data Demografi Pasien</h3></div><span class="pd3i-badge-soft">Context kasus</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1B</div><h3 class="pd3i-card-title">Data Demografi Pasien</h3></div><span class="pd3i-badge-soft">Konteks kasus</span></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container-verifikasi"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1C</div><h3 class="pd3i-card-title" id="specific-title-verifikasi">Data Spesifik Kasus</h3></div><span class="pd3i-badge-soft">Klinis & epi</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1C</div><h3 class="pd3i-card-title" id="specific-title-verifikasi">Data Spesifik Kasus</h3></div><span class="pd3i-badge-soft">Klinis dan epidemiologi</span></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container-verifikasi"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-verifikasi">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Verifikasi Penentuan Nomor EPID</h3></div><span class="pd3i-badge-soft">Admin review</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Verifikasi Penentuan Nomor EPID</h3></div><span class="pd3i-badge-soft">Peninjauan admin</span></div>
                   <div class="pd3i-helper-text mb-4">Pilih <strong>Terverifikasi</strong> atau <strong>Perlu Revisi</strong>. Nomor EPID final bisa mengikuti rekomendasi sistem atau diubah manual.</div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="verifikasi-fields-container-workspace"></div>
                 </section>
@@ -37,7 +37,7 @@
             </div>
 
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
-              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi verifikasi</div><h3 class="pd3i-card-title">Simpan Verifikasi EPID</h3></div><span class="pd3i-badge-soft">Verifikasi only</span></div>
+              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi verifikasi</div><h3 class="pd3i-card-title">Simpan Verifikasi EPID</h3></div><span class="pd3i-badge-soft">Khusus verifikasi</span></div>
               <div class="pd3i-submit-stack">
                 <button type="button" id="btn-submit-verifikasi" class="pd3i-submit-button"><i class="fas fa-id-card-clip"></i> Simpan Verifikasi EPID</button>
               </div>

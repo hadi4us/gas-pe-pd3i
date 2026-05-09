@@ -1422,6 +1422,66 @@ body[data-active-workspace="dashboard"] #section-dashboard {
   -webkit-overflow-scrolling: touch;
 }
 
+.pd3i-dynamic-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.pd3i-dynamic-table-container {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+}
+
+.pd3i-dynamic-table-container .pd3i-dynamic-table {
+  width: max-content !important;
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.pd3i-dynamic-table-container th,
+.pd3i-dynamic-table-container td {
+  white-space: nowrap;
+}
+
+.pd3i-dynamic-table-container .pd3i-generated-control {
+  min-width: 8rem;
+}
+
+.pd3i-table-scroll-hint {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.55rem 0 0.35rem 0.55rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 768px) {
+  .pd3i-dynamic-table-container {
+    padding-bottom: 0.5rem;
+  }
+
+  .pd3i-dynamic-table-container .pd3i-dynamic-table {
+    min-width: 56rem;
+  }
+}
+
 .table-container::-webkit-scrollbar {
   height: 8px;
   width: 8px;

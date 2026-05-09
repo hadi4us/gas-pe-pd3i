@@ -6,6 +6,7 @@
   (function () {
     let __authInitialized = false;
     let loginAttempt = 0;
+    const AUTH_RESTORE_TIMEOUT_MS = 8000;
     let AUTH_SESSION_META = null;
 
     function initAuthModule() {
@@ -200,7 +201,8 @@
         toggleLoginPin.addEventListener("click", function () {
           const masked = String(loginPin.dataset.masked || '1') !== '0';
           loginPin.dataset.masked = masked ? '0' : '1';
-          loginPin.style.webkitTextSecurity = masked ? 'none' : 'disc';
+          loginPin.type = masked ? 'text' : 'password';
+          loginPin.style.webkitTextSecurity = masked ? 'none' : '';
           this.innerHTML = masked
             ? '<i class="fas fa-eye-slash"></i>'
             : '<i class="fas fa-eye"></i>';
@@ -225,7 +227,7 @@
           const capAns = Number(((loginCaptchaAnswerInput && loginCaptchaAnswerInput.value) || "").trim());
 
           if (!username || !pin) {
-            setAlert(loginAlert, "Username dan PIN wajib diisi.", false);
+            setAlert(loginAlert, "Username dan password wajib diisi.", false);
             if (loginCard) {
               loginCard.classList.add("shake");
               setTimeout(() => loginCard.classList.remove("shake"), 450);
@@ -354,17 +356,17 @@
           const capAns = Number(((pinCaptchaAnswerInput && pinCaptchaAnswerInput.value) || "").trim());
 
           if (!oldPin || !newPin || !newPin2) {
-            setAlert(pinAlert, "Semua field PIN wajib diisi.", false);
+            setAlert(pinAlert, "Semua field password wajib diisi.", false);
             return;
           }
 
           if (newPin.length < 6) {
-            setAlert(pinAlert, "PIN baru minimal 6 karakter.", false);
+            setAlert(pinAlert, "Password baru minimal 6 karakter.", false);
             return;
           }
 
           if (newPin !== newPin2) {
-            setAlert(pinAlert, "Ulangi PIN Baru tidak sama.", false);
+            setAlert(pinAlert, "Konfirmasi password baru tidak sama.", false);
             return;
           }
 
@@ -403,16 +405,16 @@
             .withSuccessHandler(function (res) {
               if (btnSavePin) {
                 btnSavePin.disabled = false;
-                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan PIN Baru`;
+                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan Password Baru`;
               }
 
               if (!res || res.status !== "success") {
-                setAlert(pinAlert, (res && res.message) || "Gagal mengubah PIN.", false);
+                setAlert(pinAlert, (res && res.message) || "Gagal mengubah password.", false);
                 refreshPinCaptcha();
                 return;
               }
 
-              setAlert(pinAlert, res.message || "PIN berhasil diubah.", true);
+              setAlert(pinAlert, res.message || "Password berhasil diubah.", true);
               refreshPinCaptcha();
 
               setTimeout(function () {
@@ -424,9 +426,9 @@
               console.error("authChangePin failed:", err);
               if (btnSavePin) {
                 btnSavePin.disabled = false;
-                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan PIN Baru`;
+                btnSavePin.innerHTML = `<i class="fas fa-floppy-disk"></i> Simpan Password Baru`;
               }
-              setAlert(pinAlert, "Gagal mengubah PIN.", false);
+              setAlert(pinAlert, "Gagal mengubah password.", false);
               refreshPinCaptcha();
             })
             .authChangePin(SESSION_TOKEN, oldPin, newPin);
@@ -446,30 +448,51 @@
           return;
         }
 
+        let restoreFinished = false;
+        const restoreTimeout = window.setTimeout(function () {
+          if (restoreFinished) return;
+          restoreFinished = true;
+          console.warn("authCheck timeout after", AUTH_RESTORE_TIMEOUT_MS, "ms");
+          setLoggedOutUI();
+          setAlert(loginAlert, "Pemeriksaan sesi terlalu lama. Silakan login ulang.", false);
+        }, AUTH_RESTORE_TIMEOUT_MS);
+
+        function finishRestoreSession(action) {
+          if (restoreFinished) return false;
+          restoreFinished = true;
+          window.clearTimeout(restoreTimeout);
+          if (typeof action === "function") action();
+          return true;
+        }
+
         google.script.run
           .withSuccessHandler(function (res) {
-            if (!res || res.status !== "success") {
-              setLoggedOutUI();
-              return;
-            }
+            finishRestoreSession(function () {
+              if (!res || res.status !== "success") {
+                setLoggedOutUI();
+                return;
+              }
 
-            SESSION_TOKEN = savedToken;
-            SESSION_USER = (res && res.user) || savedUser || null;
-            try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
-            setAuthSessionMeta({
-              ttlSec: Number(res.ttlSec || 0),
-              issuedAt: Number(res.issuedAt || 0),
-              expiresAt: Number(res.expiresAt || 0)
+              SESSION_TOKEN = savedToken;
+              SESSION_USER = (res && res.user) || savedUser || null;
+              try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
+              setAuthSessionMeta({
+                ttlSec: Number(res.ttlSec || 0),
+                issuedAt: Number(res.issuedAt || 0),
+                expiresAt: Number(res.expiresAt || 0)
+              });
+
+              saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
+              setLoggedInUI(SESSION_USER);
+              refreshIdleSession();
+
+              if (window.loadFaskesRealtime) window.loadFaskesRealtime();
             });
-
-            saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
-            setLoggedInUI(SESSION_USER);
-            refreshIdleSession();
-
-            if (window.loadFaskesRealtime) window.loadFaskesRealtime();
           })
           .withFailureHandler(function () {
-            setLoggedOutUI();
+            finishRestoreSession(function () {
+              setLoggedOutUI();
+            });
           })
           .authCheck(savedToken);
       }

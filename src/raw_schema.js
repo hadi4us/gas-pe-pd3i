@@ -49,6 +49,7 @@ const RAW_SCHEMA_COMMON_ = {
   ],
   "sampel": [
     "Pemeriksaan Sampel Dilakukan",
+    "Rincian Hasil Sampel",
     "Jenis Sampel Diuji",
     "Nomor Sampel / Lab",
     "Tanggal Hasil Sampel",
@@ -372,7 +373,20 @@ const RAW_SCHEMA_SYSTEM_FIELDS_ = [
   "Label Tahap Workflow Terakhir",
   "Diupdate Oleh Tahap Terakhir",
   "Role Pengupdate Tahap Terakhir",
-  "Waktu Update Tahap Terakhir"
+  "Waktu Update Tahap Terakhir",
+  "Workflow Current Queue",
+  "Workflow Current Label",
+  "Status Proses Verifikasi EPID",
+  "Status Proses Pemeriksaan",
+  "Status Proses Pemantauan",
+  "Status Proses Perbaikan",
+  "Workflow Selesai",
+  "Edited At",
+  "Edited By",
+  "Edit Reason",
+  "Edit Diff Summary",
+  "Edit Inputan Perlu Review Ulang",
+  "Edit Inputan Review Note"
 ];
 
 const RAW_SCHEMA_PIPELINE_FIELDS_ = [

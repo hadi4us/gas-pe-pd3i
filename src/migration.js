@@ -908,3 +908,180 @@ function backfillRawSheetAliases(token, dxList, options) {
     results: results
   };
 }
+
+
+const WORKFLOW_MARKER_BACKFILL_HEADERS_ = [
+  "Workflow Current Queue",
+  "Workflow Current Label",
+  "Status Proses Verifikasi EPID",
+  "Status Proses Pemeriksaan",
+  "Status Proses Pemantauan",
+  "Status Proses Perbaikan",
+  "Workflow Selesai"
+];
+
+function _buildWorkflowMarkerBackfillAuditForDx_(dx, options) {
+  var opts = options || {};
+  var overwrite = opts.overwrite === true;
+  var sheetName = _getRawSheetNameFromDx_(dx);
+  var sheet = getSheetOrThrow_(sheetName);
+  var headers = _getRawHeaders_(sheet);
+  var missingHeaders = WORKFLOW_MARKER_BACKFILL_HEADERS_.filter(function(h) { return headers.indexOf(h) === -1; });
+  var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
+  var queueCounts = {};
+  var rowsNeedingBackfill = [];
+  var changedCellCount = 0;
+  var inspectedRows = Math.max(0, lastRow - 1);
+
+  if (lastRow < 2 || lastCol < 1) {
+    return {
+      dx: dx,
+      sheetName: sheetName,
+      rowCount: lastRow,
+      inspectedRows: inspectedRows,
+      missingMarkerHeaders: missingHeaders,
+      missingMarkerHeaderCount: missingHeaders.length,
+      rowsNeedingBackfill: 0,
+      changedCellCount: 0,
+      queueCounts: queueCounts,
+      sampleRows: []
+    };
+  }
+
+  var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  values.forEach(function(row, idx) {
+    var record = (typeof deserializeRecord_ === 'function')
+      ? deserializeRecord_(row, headers)
+      : (function() {
+          var obj = {};
+          headers.forEach(function(h, j) { obj[h] = row[j]; });
+          return obj;
+        })();
+    var marked = _applyWorkflowProcessMarkers_(Object.assign({}, record));
+    var queue = String(marked['Workflow Current Queue'] || '').trim() || 'unknown';
+    queueCounts[queue] = (queueCounts[queue] || 0) + 1;
+
+    var rowChangedCells = 0;
+    WORKFLOW_MARKER_BACKFILL_HEADERS_.forEach(function(header) {
+      var colIdx = headers.indexOf(header);
+      var before = colIdx !== -1 ? String(row[colIdx] || '').trim() : '';
+      var after = String(marked[header] || '').trim();
+      if (colIdx === -1 || (!before && after) || (overwrite && before !== after)) {
+        rowChangedCells += 1;
+      }
+    });
+    if (rowChangedCells > 0) {
+      changedCellCount += rowChangedCells;
+      rowsNeedingBackfill.push({ rowNumber: idx + 2, workflowCurrentQueue: queue, changedCellCount: rowChangedCells });
+    }
+  });
+
+  return {
+    dx: dx,
+    sheetName: sheetName,
+    rowCount: lastRow,
+    inspectedRows: inspectedRows,
+    missingMarkerHeaders: missingHeaders,
+    missingMarkerHeaderCount: missingHeaders.length,
+    rowsNeedingBackfill: rowsNeedingBackfill.length,
+    changedCellCount: changedCellCount,
+    queueCounts: queueCounts,
+    sampleRows: rowsNeedingBackfill.slice(0, 10)
+  };
+}
+
+function previewWorkflowMarkerBackfill(token, dxList, options) {
+  _requireAdminFromToken_(token);
+  var dxs = _normalizeDxList_(dxList);
+  return {
+    status: 'success',
+    previewedAt: new Date().toISOString(),
+    overwrite: !!(options && options.overwrite === true),
+    results: dxs.map(function(dx) { return _buildWorkflowMarkerBackfillAuditForDx_(dx, options || {}); })
+  };
+}
+
+function backfillWorkflowMarkers(token, dxList, options) {
+  _requireAdminFromToken_(token);
+  var opts = options || {};
+  var overwrite = opts.overwrite === true;
+  var doBackup = opts.backup !== false;
+  var dxs = _normalizeDxList_(dxList);
+  var results = [];
+
+  dxs.forEach(function(dx) {
+    var audit = _buildWorkflowMarkerBackfillAuditForDx_(dx, opts);
+    if (!audit.rowsNeedingBackfill && !audit.missingMarkerHeaderCount) {
+      results.push(Object.assign({}, audit, {
+        status: 'noop',
+        message: 'Marker workflow sudah lengkap dan sesuai.',
+        backupSheetName: ''
+      }));
+      return;
+    }
+
+    var sheet = getSheetOrThrow_(audit.sheetName);
+    var backupSheetName = doBackup ? _copyRawSheetBackup_(sheet, 'PRE_WORKFLOW_MARKER_BACKFILL') : '';
+    var headers = _ensureSheetHeaders_(sheet, WORKFLOW_MARKER_BACKFILL_HEADERS_);
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var values = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, lastCol).getValues() : [];
+    var changedRows = [];
+    var changedCellCount = 0;
+
+    values.forEach(function(row, idx) {
+      var record = (typeof deserializeRecord_ === 'function')
+        ? deserializeRecord_(row, headers)
+        : (function() {
+            var obj = {};
+            headers.forEach(function(h, j) { obj[h] = row[j]; });
+            return obj;
+          })();
+      var marked = _applyWorkflowProcessMarkers_(Object.assign({}, record));
+      var rowChangedCells = 0;
+      WORKFLOW_MARKER_BACKFILL_HEADERS_.forEach(function(header) {
+        var colIdx = headers.indexOf(header);
+        if (colIdx === -1) return;
+        var before = String(row[colIdx] || '').trim();
+        var after = String(marked[header] || '').trim();
+        if ((!before && after) || (overwrite && before !== after)) {
+          row[colIdx] = marked[header] || '';
+          rowChangedCells += 1;
+        }
+      });
+      if (rowChangedCells > 0) {
+        changedCellCount += rowChangedCells;
+        changedRows.push({
+          rowNumber: idx + 2,
+          workflowCurrentQueue: String(marked['Workflow Current Queue'] || '').trim(),
+          changedCellCount: rowChangedCells
+        });
+      }
+    });
+
+    if (values.length && changedRows.length) {
+      sheet.getRange(2, 1, values.length, lastCol).setValues(values);
+      try { Cache_Manager.invalidateSheetCache(dx + '_Raw'); } catch (e) {}
+    }
+
+    results.push({
+      dx: dx,
+      sheetName: audit.sheetName,
+      status: 'success',
+      backupSheetName: backupSheetName,
+      overwrite: overwrite,
+      appendedMarkerHeaders: audit.missingMarkerHeaders,
+      changedRows: changedRows.length,
+      changedCellCount: changedCellCount,
+      sampleRows: changedRows.slice(0, 10)
+    });
+  });
+
+  return {
+    status: 'success',
+    backfilledAt: new Date().toISOString(),
+    overwrite: overwrite,
+    results: results
+  };
+}

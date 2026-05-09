@@ -74,7 +74,7 @@ function authLogin(username, pin) {
     pin = String(pin || "").trim();
 
     if (!username || !pin) {
-      return { status: "error", message: "Username dan PIN wajib diisi." };
+      return { status: "error", message: "Username dan password wajib diisi." };
     }
 
     const attemptState = _readLoginAttemptState_(username);
@@ -103,7 +103,7 @@ function authLogin(username, pin) {
     const ixAktif = headers.indexOf("Aktif") !== -1 ? headers.indexOf("Aktif") : headers.indexOf("StatusAktif");
 
     if (ixUser === -1 || ixPin === -1) {
-      return { status: "error", message: "Kolom Username/PIN belum ada di REF_USER." };
+      return { status: "error", message: "Kolom Username/PIN untuk password belum ada di REF_USER." };
     }
 
     const uLower = username.toLowerCase();
@@ -154,7 +154,7 @@ function authLogin(username, pin) {
         return { status: "error", message: "Terlalu banyak percobaan login. Akun dikunci sementara selama 5 menit." };
       }
 
-      return { status: "error", message: "Username atau PIN salah." };
+      return { status: "error", message: "Username atau password salah." };
     }
 
     _clearLoginAttemptState_(username);
@@ -248,7 +248,7 @@ function authChangePin(token, oldPin, newPin) {
     }
 
     if (newPin.length < 6) {
-      return { status: "error", message: "PIN baru minimal 6 karakter." };
+      return { status: "error", message: "Password baru minimal 6 karakter." };
     }
 
     const username = String(sess.user.username || "").trim();
@@ -271,7 +271,7 @@ function authChangePin(token, oldPin, newPin) {
     const ixPin = headers.indexOf("PIN");
 
     if (ixUser === -1 || ixPin === -1) {
-      return { status: "error", message: "Kolom Username/PIN belum ada di REF_USER." };
+      return { status: "error", message: "Kolom Username/PIN untuk password belum ada di REF_USER." };
     }
 
     for (let i = 1; i < data.length; i++) {
@@ -280,11 +280,11 @@ function authChangePin(token, oldPin, newPin) {
 
       const p = String(data[i][ixPin] || "").trim();
       if (!_verifyPinValue_(p, oldPin)) {
-        return { status: "error", message: "PIN lama salah." };
+        return { status: "error", message: "Password lama salah." };
       }
 
       sh.getRange(i + 1, ixPin + 1).setValue(_hashPinForStorage_(newPin));
-      return { status: "success", message: "PIN berhasil diubah." };
+      return { status: "success", message: "Password berhasil diubah." };
     }
 
     return { status: "error", message: "User tidak ditemukan." };
