@@ -371,6 +371,11 @@ test('performance tuning avoids repeated DOM reparsing and full row deserializat
   assert.match(routesJs, /const record = _buildSearchProjectionRecord_\(headers, row\);\s*record\.RAW_ROW_NUMBER = rowIdx \+ 2;[\s\S]*?_canSessionReadRecordByScope_\(sess, dxItem, record\)/);
   assert.match(dashboardJs, /function _getPengampuByWilayahCachedForDashboard_\(kecamatan, kelurahan, kabKota\)/);
   assert.match(dashboardJs, /_getPengampuByWilayahCachedForDashboard_\(normKecamatan, normKelurahan, normKabKota\)/);
+  assert.match(dashboardJs, /function _buildWorkflowInboxData_\(sess, dx, options\)/);
+  assert.match(dashboardJs, /const summaryOnly = !!options\.summaryOnly/);
+  assert.match(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?pendingVerificationCount \+= 1;[\s\S]*?return;[\s\S]*?\}/);
+  assert.match(dashboardJs, /_buildWorkflowInboxData_\(sess, '', \{ summaryOnly: true \}\)/);
+  assert.doesNotMatch(dashboardJs, /getOverviewSummary[\s\S]*?pendingVerification: \(result\.pendingVerification \|\| \[\]\)\.slice\(0, 6\)/);
 });
 
 test('session restore does not leave auth boot overlay loading indefinitely', () => {

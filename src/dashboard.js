@@ -266,7 +266,9 @@ function _isDashboardInputerMatch_(sess, inputerUsername, inputerName) {
   return !!((username && rawUsername && username === rawUsername) || (nama && rawName && nama === rawName));
 }
 
-function _buildWorkflowInboxData_(sess, dx) {
+function _buildWorkflowInboxData_(sess, dx, options) {
+  options = options || {};
+  const summaryOnly = !!options.summaryOnly;
   const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
   const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
   const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
@@ -279,6 +281,13 @@ function _buildWorkflowInboxData_(sess, dx) {
   const sampleDoneQueue = [];
   const statusQueue = [];
   const statusDoneQueue = [];
+  let pendingVerificationCount = 0;
+  let revisionQueueCount = 0;
+  let verificationDoneCount = 0;
+  let sampleQueueCount = 0;
+  let sampleDoneCount = 0;
+  let statusQueueCount = 0;
+  let statusDoneCount = 0;
   let totalScopedRecords = 0;
   let verifiedRecords = 0;
   const kelurahanSet = {};
@@ -360,6 +369,24 @@ function _buildWorkflowInboxData_(sess, dx) {
         && sampleRelevant
         && !isFinalStatus
         && !sampleDone;
+
+      if (summaryOnly) {
+        const scopedForWork = role === 'admin' || scopeMatch;
+        if (scopedForWork) {
+          totalScopedRecords += 1;
+          if (normalizedStatus === 'TERVERIFIKASI') verifiedRecords += 1;
+          if (kelurahan) kelurahanSet[kelurahan] = true;
+          dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
+        }
+        if (role === 'admin' && normalizedStatus === 'PENDING') pendingVerificationCount += 1;
+        if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (scopedForWork || inputerMatch)) revisionQueueCount += 1;
+        if (normalizedStatus === 'TERVERIFIKASI' && scopedForWork) verificationDoneCount += 1;
+        if (sampleStagePending) sampleQueueCount += 1;
+        else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && scopedForWork && sampleDone) sampleDoneCount += 1;
+        if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && scopedForWork) statusQueueCount += 1;
+        else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && scopedForWork) statusDoneCount += 1;
+        return;
+      }
 
       const item = {
         dx: dxItem,
@@ -449,6 +476,43 @@ function _buildWorkflowInboxData_(sess, dx) {
       }
     });
   });
+
+  if (summaryOnly) {
+    const dxBreakdownSummary = {};
+    (SUPPORTED_DX_ || []).forEach(function(dxKey) {
+      dxBreakdownSummary[dxKey] = dxCounts[dxKey] || 0;
+    });
+    const topDxSummary = Object.keys(dxCounts).sort(function(a, b) {
+      if ((dxCounts[b] || 0) !== (dxCounts[a] || 0)) return (dxCounts[b] || 0) - (dxCounts[a] || 0);
+      return String(a || '').localeCompare(String(b || ''));
+    }).map(function(dxKey) {
+      return { dx: dxKey, count: dxCounts[dxKey] || 0 };
+    });
+    return {
+      summary: {
+        pendingVerification: pendingVerificationCount,
+        revisionQueue: revisionQueueCount,
+        verificationDone: verificationDoneCount,
+        sampleQueue: sampleQueueCount,
+        sampleDone: sampleDoneCount,
+        statusQueue: statusQueueCount,
+        statusDone: statusDoneCount,
+        totalScopedRecords: totalScopedRecords,
+        verifiedRecords: verifiedRecords,
+        actionableCount: pendingVerificationCount + revisionQueueCount + sampleQueueCount + statusQueueCount,
+        activeKelurahanCount: Object.keys(kelurahanSet).length,
+        topDx: topDxSummary,
+        dxBreakdown: dxBreakdownSummary
+      },
+      pendingVerification: [],
+      revisionQueue: [],
+      verificationDone: [],
+      sampleQueue: [],
+      sampleDone: [],
+      statusQueue: [],
+      statusDone: []
+    };
+  }
 
   function sortQueue(items) {
     return (items || []).sort(function(a, b) {
@@ -593,16 +657,16 @@ function getOverviewSummary(token) {
       } catch (readErr) {}
     }
 
-    const result = _buildWorkflowInboxData_(sess, '');
+    const result = _buildWorkflowInboxData_(sess, '', { summaryOnly: true });
     const overviewResult = {
       summary: result.summary,
-      pendingVerification: (result.pendingVerification || []).slice(0, 6),
-      revisionQueue: (result.revisionQueue || []).slice(0, 6),
-      verificationDone: (result.verificationDone || []).slice(0, 6),
-      sampleQueue: (result.sampleQueue || []).slice(0, 6),
-      sampleDone: (result.sampleDone || []).slice(0, 6),
-      statusQueue: (result.statusQueue || []).slice(0, 6),
-      statusDone: (result.statusDone || []).slice(0, 6)
+      pendingVerification: [],
+      revisionQueue: [],
+      verificationDone: [],
+      sampleQueue: [],
+      sampleDone: [],
+      statusQueue: [],
+      statusDone: []
     };
 
     if (cache) {
