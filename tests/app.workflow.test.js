@@ -74,9 +74,12 @@ test('dynamic table serialization sanitizes nested string cells before JSON stor
   assert.match(dataJs, /val = sanitizeStructuredValueForSheet_\(val, h\);[\s\S]*?val = JSON\.stringify\(val\);/);
 });
 
-test('workflow stage saves follow queue-first blueprint instead of stale modal flow', () => {
+test('workflow stage saves follow queue-first blueprint and only offer PDF after EPID verification', () => {
   assert.match(appHtml, /refreshWorkflowInbox\(\{ forceRefresh: true \}\)/);
-  assert.match(appHtml, /activeStageNormalized === 'section-verifikasi'[\s\S]*?openSidebarWorkspace\('verifikasi', \{ scroll: false, skipRecordReload: true \}\)[\s\S]*?Daftar verifikasi sudah diperbarui/);
+  assert.match(appHtml, /btnPrint\.classList\.add\("hidden", "opacity-60", "pointer-events-none"\)/);
+  assert.match(appHtml, /btnPrint\.classList\.remove\("hidden", "opacity-60", "pointer-events-none"\)/);
+  assert.match(appHtml, /activeStageNormalized === 'section-verifikasi'[\s\S]*?openSidebarWorkspace\('verifikasi', \{ scroll: false, skipRecordReload: true \}\)[\s\S]*?verificationStatusSaved === 'Terverifikasi' && printUrl[\s\S]*?PDF PE sudah tersedia setelah verifikasi EPID[\s\S]*?showSuccessModal\(/);
+  assert.match(appHtml, /activeStageNormalized === 'section-verifikasi'[\s\S]*?else \{[\s\S]*?Daftar verifikasi sudah diperbarui/);
   assert.match(appHtml, /activeStageNormalized === 'section-sampel'[\s\S]*?openSidebarWorkspace\('sampel', \{ scroll: true, skipRecordReload: true \}\)/);
   assert.match(appHtml, /activeStageNormalized === 'section-status'[\s\S]*?openSidebarWorkspace\('status', \{ scroll: true, skipRecordReload: true \}\)/);
 });

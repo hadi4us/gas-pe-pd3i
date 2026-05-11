@@ -5224,10 +5224,10 @@
       btnPrint.rel = "noopener noreferrer";
 
       if (!safeUrl) {
-        btnPrint.classList.add("opacity-60", "pointer-events-none");
+        btnPrint.classList.add("hidden", "opacity-60", "pointer-events-none");
         btnPrint.setAttribute("aria-disabled", "true");
       } else {
-        btnPrint.classList.remove("opacity-60", "pointer-events-none");
+        btnPrint.classList.remove("hidden", "opacity-60", "pointer-events-none");
         btnPrint.removeAttribute("aria-disabled");
       }
 
@@ -7104,10 +7104,20 @@
                 { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
               );
             } else if (activeStageNormalized === 'section-verifikasi') {
+              const verificationStatusSaved = String((res && res.verificationStatus) || dataObj["Status Verifikasi EPID"] || '').trim();
               clearActiveRecordContext();
               openSidebarWorkspace('verifikasi', { scroll: false, skipRecordReload: true });
               refreshWorkflowInbox({ forceRefresh: true });
-              showTopAlert((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. Daftar verifikasi sudah diperbarui.', true);
+              if (verificationStatusSaved === 'Terverifikasi' && printUrl) {
+                showTopAlert((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. PDF PE sudah tersedia setelah verifikasi EPID.', true);
+                showSuccessModal(
+                  res.message || 'Verifikasi EPID selesai. PDF PE sudah dapat dicetak.',
+                  printUrl,
+                  { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
+                );
+              } else {
+                showTopAlert((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. Daftar verifikasi sudah diperbarui.', true);
+              }
             } else if (activeStageNormalized === 'section-sampel') {
               clearActiveRecordContext();
               openSidebarWorkspace('sampel', { scroll: true, skipRecordReload: true });
