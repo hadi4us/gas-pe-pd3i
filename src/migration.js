@@ -579,7 +579,7 @@ function _getRawAliasBackfillPairs_(dx) {
     { targetHeader: 'Umur Kehamilan', sourceHeaders: ['Umur kehamilan'] },
     { targetHeader: 'Gejala lain', sourceHeaders: ['Gejala Lain'] },
     { targetHeader: 'Sebutkan gejala lain', sourceHeaders: ['Sebutkan Gejala Lain'] },
-    { targetHeader: 'Komp_Diare', sourceHeaders: ['Diare'] },
+    { targetHeader: 'Diare', sourceHeaders: ['Komp_Diare'] },
     { targetHeader: 'Komp_Bronchopneumonia', sourceHeaders: ['Bronchopneumonia'] },
     { targetHeader: 'Komp_Kebutaan', sourceHeaders: ['Kebutaan'] },
     { targetHeader: 'Komp_Otitis Media', sourceHeaders: ['Otitis media'] },

@@ -229,7 +229,7 @@ function _applyHeaderAliases_(dx, data, headers) {
   putIfMissing("Umur Kehamilan", ["Umur kehamilan"]);
   putIfMissing("Gejala lain", ["Gejala Lain"]);
   putIfMissing("Sebutkan gejala lain", ["Sebutkan Gejala Lain"]);
-  putIfMissing("Komp_Diare", ["Diare"]);
+  putIfMissing("Diare", ["Komp_Diare"]);
   putIfMissing("Komp_Bronchopneumonia", ["Bronchopneumonia"]);
   putIfMissing("Komp_Kebutaan", ["Kebutaan"]);
   putIfMissing("Komp_Otitis Media", ["Otitis media"]);
