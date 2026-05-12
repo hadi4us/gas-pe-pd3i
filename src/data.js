@@ -227,8 +227,8 @@ function _applyHeaderAliases_(dx, data, headers) {
     data["Ruam Makulopapular?"] = String(data["Tanggal mulai ruam"] || "").trim() ? "Ya" : "Tidak";
   }
   putIfMissing("Umur Kehamilan", ["Umur kehamilan"]);
-  putIfMissing("Gejala Lain", ["Gejala lain"]);
-  putIfMissing("Sebutkan Gejala Lain", ["Sebutkan gejala lain"]);
+  putIfMissing("Gejala lain", ["Gejala Lain"]);
+  putIfMissing("Sebutkan gejala lain", ["Sebutkan Gejala Lain"]);
   putIfMissing("Komp_Diare", ["Diare"]);
   putIfMissing("Komp_Bronchopneumonia", ["Bronchopneumonia"]);
   putIfMissing("Komp_Kebutaan", ["Kebutaan"]);
