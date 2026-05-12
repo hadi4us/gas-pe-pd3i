@@ -213,12 +213,22 @@ function _applyHeaderAliases_(dx, data, headers) {
     }
   }
 
-  putIfMissing("Nama Orang Tua/Wali", ["Nama orang tua/wali"]);
-  putIfMissing("No Telp/WA Orang Tua/Wali", ["No. kontak orang tua/wali"]);
-  putIfMissing("Petugas", ["Nama Petugas"]);
-  putIfMissing("Tanggal Mulai Demam", ["Tanggal mulai demam"]);
-  putIfMissing("Tanggal Mulai Ruam", ["Tanggal mulai ruam"]);
-  putIfMissing("Mata Merah", ["Mata merah"]);
+  putIfMissing("DX", ["dx"]);
+  putIfMissing("Nama orang tua/wali", ["Nama Orang Tua/Wali"]);
+  putIfMissing("No. kontak orang tua/wali", ["No Telp/WA Orang Tua/Wali"]);
+  putIfMissing("Nama Petugas", ["Petugas"]);
+  putIfMissing("Tanggal mulai demam", ["Tanggal Mulai Demam"]);
+  putIfMissing("Tanggal mulai ruam", ["Tanggal Mulai Ruam"]);
+  putIfMissing("Mata merah", ["Mata Merah"]);
+  putIfMissing("Keluhan Utama", ["Keluhan utama"]);
+  putIfMissing("Status Gizi", ["Status gizi"]);
+  putIfMissing("Tanggal Masuk Rawat Inap", ["Tanggal masuk rawat inap"]);
+  putIfMissing("Tanggal Keluar", ["Tanggal keluar"]);
+  putIfMissing("Nomor Rekam Medik", ["Nomor rekam medik"]);
+  putIfMissing("Pekerjaan ibu", ["Pekerjaan Ibu"]);
+  putIfMissing("Pendidikan ibu", ["Pendidikan Ibu"]);
+  putIfMissing("Tempat pemeriksaan ibu hamil", ["Tempat pemeriksaan Ibu Hamil"]);
+  putIfMissing("Tempat persalinan lainnya", ["Tempat persalinan - Lainnya"]);
 
   if (headers.includes("Demam?") && (data["Demam?"] === undefined || String(data["Demam?"]).trim() === "")) {
     data["Demam?"] = String(data["Tanggal mulai demam"] || "").trim() ? "Ya" : "Tidak";
@@ -226,7 +236,7 @@ function _applyHeaderAliases_(dx, data, headers) {
   if (headers.includes("Ruam Makulopapular?") && (data["Ruam Makulopapular?"] === undefined || String(data["Ruam Makulopapular?"]).trim() === "")) {
     data["Ruam Makulopapular?"] = String(data["Tanggal mulai ruam"] || "").trim() ? "Ya" : "Tidak";
   }
-  putIfMissing("Umur Kehamilan", ["Umur kehamilan"]);
+  putIfMissing("Umur kehamilan", ["Umur Kehamilan"]);
   putIfMissing("Gejala lain", ["Gejala Lain"]);
   putIfMissing("Sebutkan gejala lain", ["Sebutkan Gejala Lain"]);
   putIfMissing("Diare", ["Komp_Diare"]);
@@ -246,7 +256,7 @@ function _applyHeaderAliases_(dx, data, headers) {
   putIfMissing("Berpergian 1 bulan terakhir?", ["Riwayat perjalanan 7-21 hari"]);
   putIfMissing("Tujuan perjalanan", ["Lokasi perjalanan"]);
   putIfMissing("Tanggal pergi", ["Tanggal pergi"]);
-  putIfMissing("Tanggal pulang", ["Tanggal pulang perjalanan", "Tanggal kembali"]);
+  putIfMissing("Tanggal Pulang", ["Tanggal pulang", "Tanggal pulang perjalanan", "Tanggal kembali"]);
   putIfMissing("Apakah spesimen darah diambil", ["Apakah spesimen darah diambil", "Spesimen diambil?"]);
   putIfMissing("Jenis Sampel Darah", ["Jenis Sampel Darah", "Jenis spesimen"]);
   putIfMissing("Tanggal ambil spesimen darah", ["Tanggal ambil spesimen darah", "Tanggal ambil spesimen"]);
