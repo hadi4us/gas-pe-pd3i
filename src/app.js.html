@@ -5402,6 +5402,31 @@
     }
   }
 
+  const WORKFLOW_SAVE_TIMEOUT_MS = 45000;
+
+  function withWorkflowSaveTimeout(promise, label) {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const timer = window.setTimeout(function() {
+        if (done) return;
+        done = true;
+        reject(new Error((label || 'Penyimpanan') + ' terlalu lama merespons. Silakan cek koneksi lalu coba lagi.'));
+      }, WORKFLOW_SAVE_TIMEOUT_MS);
+
+      Promise.resolve(promise).then(function(value) {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        resolve(value);
+      }).catch(function(err) {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        reject(err);
+      });
+    });
+  }
+
   function getWorkflowSaveActionForMode(submitMode) {
     const mode = normalizeSidebarWorkspace(submitMode || 'search');
     const actions = {
@@ -6965,6 +6990,33 @@
         resetSubmitButtonForCurrentStage();
       }
 
+      function getWorkflowSubmitStatusElement(mode) {
+        const submitMode = normalizeSidebarWorkspace(mode || 'search');
+        if (submitMode === 'verifikasi') return document.getElementById('workflow-submit-status-verifikasi');
+        return null;
+      }
+
+      function setWorkflowSubmitFeedback(mode, message, ok) {
+        const el = getWorkflowSubmitStatusElement(mode);
+        if (!el) return;
+        const safeMessage = String(message || '').trim();
+        if (!safeMessage) {
+          el.textContent = '';
+          el.classList.add('hidden');
+          el.classList.remove('is-success', 'is-error', 'is-loading');
+          return;
+        }
+        el.textContent = safeMessage;
+        el.classList.remove('hidden', 'is-success', 'is-error', 'is-loading');
+        el.classList.add(ok === true ? 'is-success' : ok === false ? 'is-error' : 'is-loading');
+      }
+
+      function showWorkflowSubmitError(mode, message) {
+        const safeMessage = String(message || 'Gagal menyimpan data.').trim();
+        setWorkflowSubmitFeedback(mode, safeMessage, false);
+        showTopAlert(safeMessage, false);
+      }
+
       const handleMainFormSubmit = async function(mode) {
         const submitMode = normalizeSidebarWorkspace(mode || 'search');
         const activeFormElement = submitMode === 'input'
@@ -6987,11 +7039,11 @@
                 : btnSubmit;
 
         if (isViewer) {
-          showTopAlert("Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.", false);
+          showWorkflowSubmitError(submitMode, "Role viewer hanya bisa melihat data dan mencetak, tidak bisa menyimpan perubahan.");
           return;
         }
         if (!activeFormElement || !activeSubmitButton) {
-          showTopAlert('Form aktif tidak tersedia.', false);
+          showWorkflowSubmitError(submitMode, 'Form aktif tidak tersedia.');
           return;
         }
         if (activeSubmitButton.getAttribute('aria-busy') === 'true') {
@@ -7008,14 +7060,14 @@
                 ? 'section-status'
                 : (document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
         if (!['input', 'search'].includes(submitMode) && normalizeWorkflowStepId(activeStageOnSubmit) !== "section-pelapor" && !canAccessDeferredWorkflowStages()) {
-          showTopAlert("Tahap lanjutan hanya bisa disimpan setelah input awal tersimpan / data existing dibuka.", false);
+          showWorkflowSubmitError(submitMode, "Tahap lanjutan hanya bisa disimpan setelah input awal tersimpan / data existing dibuka.");
           resetSubmitButtonByMode(submitMode);
           return;
         }
 
         const requiredCheck = validateRequiredVisibleFields(activeFormElement);
         if (!requiredCheck.ok) {
-          showTopAlert(requiredCheck.message || "Masih ada field wajib yang belum lengkap.", false);
+          showWorkflowSubmitError(submitMode, requiredCheck.message || "Masih ada field wajib yang belum lengkap.");
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
           return;
@@ -7026,10 +7078,7 @@
           : { ok: true, invalids: [] };
 
         if (!numericCheck.ok) {
-          showTopAlert(
-            "Field berikut hanya boleh angka: " + numericCheck.invalids.join(", "),
-            false
-          );
+          showWorkflowSubmitError(submitMode, "Field berikut hanya boleh angka: " + numericCheck.invalids.join(", "));
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
           return;
@@ -7044,7 +7093,7 @@
 
         const dxRuleCheck = validateDxBusinessRules(activeFormElement);
         if (!dxRuleCheck.ok) {
-          showTopAlert(dxRuleCheck.errors.join(" "), false);
+          showWorkflowSubmitError(submitMode, dxRuleCheck.errors.join(" "));
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
           return;
@@ -7061,6 +7110,7 @@
         activeSubmitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
         activeSubmitButton.setAttribute('aria-busy', 'true');
         activeSubmitButton.disabled = true;
+        setWorkflowSubmitFeedback(submitMode, 'Menyimpan verifikasi ke server...', null);
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit), __submitMode: submitMode };
         dataObj.__action = getWorkflowSaveActionForMode(submitMode);
@@ -7087,7 +7137,7 @@
         if (activeStageNormalized === 'section-verifikasi') {
           const currentStatus = String(dataObj["Status Verifikasi EPID"] || '').trim();
           if (!currentStatus || currentStatus === 'Pending') {
-            showTopAlert('Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.', false);
+            showWorkflowSubmitError(submitMode, 'Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi.');
             activeSubmitButton.disabled = false;
             resetSubmitButtonByMode(submitMode);
             return;
@@ -7098,7 +7148,7 @@
           if (currentStatus === 'Terverifikasi') {
             dataObj["Nomor EPID Final"] = String(dataObj["Nomor EPID Final"] || dataObj["Nomor EPID Rekomendasi"] || '').trim();
             if (!dataObj["Nomor EPID Final"]) {
-              showTopAlert('Nomor EPID final belum tersedia. Tunggu rekomendasi sistem atau isi manual.', false);
+              showWorkflowSubmitError(submitMode, 'Nomor EPID final belum tersedia. Tunggu rekomendasi sistem atau isi manual.');
               activeSubmitButton.disabled = false;
               resetSubmitButtonByMode(submitMode);
               return;
@@ -7110,7 +7160,7 @@
           }
           if (currentStatus === 'Perlu Revisi') {
             if (!String(dataObj["Catatan Verifikasi EPID"] || '').trim()) {
-              showTopAlert('Catatan verifikasi wajib diisi jika status Perlu Revisi.', false);
+              showWorkflowSubmitError(submitMode, 'Catatan verifikasi wajib diisi jika status Perlu Revisi.');
               activeSubmitButton.disabled = false;
               resetSubmitButtonByMode(submitMode);
               return;
@@ -7123,7 +7173,7 @@
         }
 
         if (!dataObj["Nama unit pelapor"]) {
-          showTopAlert("Nama Unit Pelapor wajib dipilih.", false);
+          showWorkflowSubmitError(submitMode, "Nama Unit Pelapor wajib dipilih.");
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
           return;
@@ -7175,14 +7225,20 @@
           let res = null;
 
           try {
-            res = await saveFormViaGsRun(dataObj);
+            res = await withWorkflowSaveTimeout(saveFormViaGsRun(dataObj), 'Simpan verifikasi EPID');
           } catch (gsErr) {
-            console.warn("google.script.run save gagal, fallback ke POST /exec:", gsErr);
-            res = await postJsonToWebApp(GOOGLE_SCRIPT_URL, dataObj);
+            const gsMessage = String((gsErr && gsErr.message) || gsErr || '');
+            if (!/google\.script\.run tidak tersedia/i.test(gsMessage)) {
+              throw gsErr;
+            }
+            console.warn("google.script.run tidak tersedia, fallback ke POST /exec:", gsErr);
+            res = await withWorkflowSaveTimeout(postJsonToWebApp(GOOGLE_SCRIPT_URL, dataObj), 'Simpan verifikasi EPID');
           }
 
           if (res && res.status === "success") {
-            showTopAlert(res.message || "Data berhasil disimpan.", true);
+            const successMessage = res.message || "Data berhasil disimpan.";
+            showTopAlert(successMessage, true);
+            setWorkflowSubmitFeedback(submitMode, successMessage, true);
 
             let epidSaved = String((res && res.epid) || dataObj["Nomor EPID"] || "").trim();
             let dxSaved = String((res && res.dx) || dataObj.dx || "").trim();
@@ -7245,7 +7301,13 @@
                   { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
                 );
               } else {
-                showTopAlert((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. Daftar verifikasi sudah diperbarui.', true);
+                const verificationDoneMessage = (res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. Daftar verifikasi sudah diperbarui.';
+                showTopAlert(verificationDoneMessage, true);
+                showSuccessModal(
+                  verificationDoneMessage,
+                  '',
+                  { dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN }
+                );
               }
             } else if (activeStageNormalized === 'section-sampel') {
               clearActiveRecordContext();
@@ -7265,13 +7327,14 @@
               );
             }
           } else {
-            showTopAlert("Error: " + (res?.message || "Gagal menyimpan data."), false);
+            showWorkflowSubmitError(submitMode, "Error: " + (res?.message || "Gagal menyimpan data."));
             activeSubmitButton.disabled = false;
             resetSubmitButtonByMode(submitMode);
           }
         } catch (err) {
           console.error("submit failed:", err);
-          showTopAlert("Gagal submit. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.", false);
+          const errMessage = String((err && err.message) || err || "").trim();
+          showWorkflowSubmitError(submitMode, errMessage || "Gagal submit. Pastikan URL Web App /exec benar dan deployment terbaru sudah aktif.");
           activeSubmitButton.disabled = false;
           resetSubmitButtonByMode(submitMode);
         }

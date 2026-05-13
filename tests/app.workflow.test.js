@@ -53,6 +53,21 @@ test('successful workflow save resets submit button before success modal or queu
   assert.match(appHtml, /if \(res && res\.status === "success"\) \{[\s\S]*?clearFormDraft\(\);[\s\S]*?resetSubmitButtonByMode\(submitMode\);[\s\S]*?showSuccessModal\(/);
 });
 
+test('verification save gives local feedback, timeout, and modal confirmation for every outcome', () => {
+  assert.match(workspaceVerifikasiHtml, /id="workflow-submit-status-verifikasi"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(appHtml, /const WORKFLOW_SAVE_TIMEOUT_MS = 45000/);
+  assert.match(appHtml, /function withWorkflowSaveTimeout\(promise, label\)/);
+  assert.match(appHtml, /setWorkflowSubmitFeedback\(submitMode, 'Menyimpan verifikasi ke server\.\.\.', null\)/);
+  assert.match(appHtml, /showWorkflowSubmitError\(submitMode, 'Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi\.'\)/);
+  assert.match(appHtml, /res = await withWorkflowSaveTimeout\(saveFormViaGsRun\(dataObj\), 'Simpan verifikasi EPID'\)/);
+  assert.match(appHtml, /if \(!\/google\\\.script\\\.run tidak tersedia\/i\.test\(gsMessage\)\) \{\s*throw gsErr;\s*\}/);
+  assert.match(appHtml, /const verificationDoneMessage = \(res\.nextWorkflowLabel \|\| res\.message \|\| 'Verifikasi selesai'\) \+ '\. Daftar verifikasi sudah diperbarui\.'/);
+  assert.match(appHtml, /showSuccessModal\(\s*verificationDoneMessage,\s*'',\s*\{ dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN \}\s*\)/);
+  assert.match(styleHtml, /\.pd3i-helper-text\.is-loading[\s\S]*?color: #1d4ed8/);
+  assert.match(styleHtml, /\.pd3i-helper-text\.is-success[\s\S]*?color: #047857/);
+  assert.match(styleHtml, /\.pd3i-helper-text\.is-error[\s\S]*?color: #b91c1c/);
+});
+
 const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'routes.js'), 'utf8');
 const dashboardJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'dashboard.js'), 'utf8');
 const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'data.js'), 'utf8');
@@ -336,7 +351,8 @@ test('workflow marker backfill helpers are admin guarded, preview-first, and bac
 
 
 test('workflow saves prefer current google.script.run deployment before hardcoded POST exec fallback', () => {
-  assert.match(appHtml, /res = await saveFormViaGsRun\(dataObj\);[\s\S]*?catch \(gsErr\) \{[\s\S]*?fallback ke POST \/exec[\s\S]*?res = await postJsonToWebApp\(GOOGLE_SCRIPT_URL, dataObj\);/);
+  assert.match(appHtml, /res = await withWorkflowSaveTimeout\(saveFormViaGsRun\(dataObj\), 'Simpan verifikasi EPID'\);[\s\S]*?catch \(gsErr\) \{[\s\S]*?google\.script\.run tidak tersedia[\s\S]*?fallback ke POST \/exec[\s\S]*?res = await withWorkflowSaveTimeout\(postJsonToWebApp\(GOOGLE_SCRIPT_URL, dataObj\), 'Simpan verifikasi EPID'\);/);
+  assert.match(appHtml, /if \(!\/google\\\.script\\\.run tidak tersedia\/i\.test\(gsMessage\)\) \{\s*throw gsErr;\s*\}/);
   assert.doesNotMatch(appHtml, /res = await postJsonToWebApp\(GOOGLE_SCRIPT_URL, dataObj\);[\s\S]*?fallback ke google\.script\.run\.saveFormData/);
 });
 
