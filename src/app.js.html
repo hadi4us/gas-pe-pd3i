@@ -815,6 +815,124 @@
   }
 
   // ============================================================
+  // WORKFLOW FILTER MASTER OPTIONS
+  // ============================================================
+  function normalizeWorkflowFilterKey(value) {
+    return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ');
+  }
+
+  function uniqueSortedFilterOptions(values) {
+    const seen = {};
+    (Array.isArray(values) ? values : []).forEach(function(value) {
+      const clean = String(value || '').trim();
+      if (!clean) return;
+      const key = normalizeWorkflowFilterKey(clean);
+      if (!seen[key]) seen[key] = clean;
+    });
+    return Object.keys(seen)
+      .map(function(key) { return seen[key]; })
+      .sort(function(a, b) { return String(a || '').localeCompare(String(b || ''), 'id', { sensitivity: 'base' }); });
+  }
+
+  function appendFilterOptions(selectEl, placeholder, values, preservedValue) {
+    if (!selectEl) return;
+    const keepValue = String(preservedValue != null ? preservedValue : (selectEl.value || '')).trim();
+    selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+    uniqueSortedFilterOptions(values).forEach(function(value) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      selectEl.appendChild(option);
+    });
+    if (keepValue) {
+      ensureSelectOptionValue(selectEl, keepValue);
+      selectEl.value = keepValue;
+    }
+  }
+
+  function getCaseStatusFilterOptionsForDiagnosis(dx) {
+    const selectedDx = String(dx || document.getElementById('search-diagnosis')?.value || 'ALL').trim().toUpperCase();
+    if (selectedDx && selectedDx !== 'ALL' && typeof getCaseStatusOptions === 'function') {
+      return getCaseStatusOptions(selectedDx);
+    }
+    if (typeof CASE_STATUS_OPTIONS_BY_DX === 'object' && CASE_STATUS_OPTIONS_BY_DX) {
+      return uniqueSortedFilterOptions(Object.keys(CASE_STATUS_OPTIONS_BY_DX).reduce(function(list, key) {
+        return list.concat(CASE_STATUS_OPTIONS_BY_DX[key] || []);
+      }, []));
+    }
+    const statusFields = (typeof COMMON_STATUS_FIELDS !== 'undefined' && Array.isArray(COMMON_STATUS_FIELDS)) ? COMMON_STATUS_FIELDS : [];
+    const statusField = statusFields.find(function(field) {
+      return field && field.id === 'Status Pasien/Kasus';
+    });
+    return uniqueSortedFilterOptions(statusField && statusField.options);
+  }
+
+  function populateWorkflowStatusKasusFilterOptions(preservedValue) {
+    const selectEl = document.getElementById('search-status-kasus');
+    if (!selectEl) return;
+    const backendOptions = MASTER_WORKFLOW_FILTERS && Array.isArray(MASTER_WORKFLOW_FILTERS.statusKasus)
+      ? MASTER_WORKFLOW_FILTERS.statusKasus
+      : [];
+    const options = backendOptions.length ? backendOptions : getCaseStatusFilterOptionsForDiagnosis();
+    appendFilterOptions(selectEl, 'Semua status kasus/pasien', options, preservedValue != null ? preservedValue : selectEl.value);
+  }
+
+  function populateWorkflowKelurahanFilterOptions(preservedValue) {
+    const selectEl = document.getElementById('search-kelurahan');
+    if (!selectEl) return;
+    const kecamatan = String(document.getElementById('search-kecamatan')?.value || '').trim();
+    const byKecamatan = (MASTER_WORKFLOW_FILTERS && MASTER_WORKFLOW_FILTERS.kelurahanByKecamatan) || {};
+    let options = [];
+    if (kecamatan && Array.isArray(byKecamatan[kecamatan])) {
+      options = byKecamatan[kecamatan];
+    } else {
+      Object.keys(byKecamatan).forEach(function(key) {
+        options = options.concat(byKecamatan[key] || []);
+      });
+    }
+    appendFilterOptions(selectEl, kecamatan ? 'Semua kelurahan di ' + kecamatan : 'Semua kelurahan', options, preservedValue != null ? preservedValue : selectEl.value);
+  }
+
+  function populateWorkflowFilterDropdowns(preservedValues) {
+    const keep = preservedValues || collectWorkflowSearchFilters();
+    appendFilterOptions(document.getElementById('search-kecamatan'), 'Semua kecamatan', MASTER_WORKFLOW_FILTERS && MASTER_WORKFLOW_FILTERS.kecamatan, keep.kecamatan);
+    populateWorkflowKelurahanFilterOptions(keep.kelurahan);
+    populateWorkflowStatusKasusFilterOptions(keep.statusKasus);
+  }
+
+  window.loadWorkflowFilterOptions = function(forceReload) {
+    const preserved = collectWorkflowSearchFilters();
+    populateWorkflowStatusKasusFilterOptions(preserved.statusKasus);
+    if (!safeGsRun() || !SESSION_TOKEN) {
+      populateWorkflowFilterDropdowns(preserved);
+      return Promise.resolve(MASTER_WORKFLOW_FILTERS || {});
+    }
+    const hasCache = MASTER_WORKFLOW_FILTERS && Array.isArray(MASTER_WORKFLOW_FILTERS.kecamatan) && MASTER_WORKFLOW_FILTERS.kecamatan.length > 0;
+    if (hasCache && !forceReload) {
+      populateWorkflowFilterDropdowns(preserved);
+      return Promise.resolve(MASTER_WORKFLOW_FILTERS);
+    }
+    return new Promise(function(resolve) {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          MASTER_WORKFLOW_FILTERS = {
+            kecamatan: uniqueSortedFilterOptions(data && data.kecamatan),
+            kelurahanByKecamatan: (data && data.kelurahanByKecamatan) || {},
+            statusKasus: uniqueSortedFilterOptions(data && data.statusKasus)
+          };
+          populateWorkflowFilterDropdowns(preserved);
+          resolve(MASTER_WORKFLOW_FILTERS);
+        })
+        .withFailureHandler(function(err) {
+          console.error('getWorkflowFilterOptions failed:', err);
+          populateWorkflowFilterDropdowns(preserved);
+          resolve(MASTER_WORKFLOW_FILTERS || {});
+        })
+        .getWorkflowFilterOptions(SESSION_TOKEN);
+    });
+  };
+
+  // ============================================================
   // REF FASKES
   // ============================================================
   window.loadFaskesRealtime = function(selectedUnitName, forceReload) {
@@ -3112,6 +3230,9 @@
       const key = map[id];
       const fallbackValue = key === 'keyword' && values.epid != null ? values.epid : '';
       const nextValue = values[key] != null ? String(values[key]) : (id === 'search-sort' ? 'updated_desc' : (id === 'search-diagnosis' ? 'ALL' : String(fallbackValue || '')));
+      if (nextValue && ['search-kecamatan', 'search-kelurahan', 'search-status-kasus'].includes(id)) {
+        ensureSelectOptionValue(el, nextValue);
+      }
       el.value = nextValue;
     });
   }
@@ -5406,6 +5527,8 @@
         return;
       }
 
+      if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(false);
+
       const searchFormRefs = {
         mode: 'search',
         formElement,
@@ -6288,6 +6411,12 @@
         el.dataset.boundFilter = '1';
         const eventName = el.tagName === 'SELECT' ? 'change' : 'input';
         el.addEventListener(eventName, function() {
+          if (id === 'search-kecamatan') {
+            populateWorkflowKelurahanFilterOptions('');
+          }
+          if (id === 'search-diagnosis') {
+            populateWorkflowStatusKasusFilterOptions('');
+          }
           saveWorkflowSearchFiltersForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
           if (!['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) return;
           if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);

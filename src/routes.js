@@ -502,6 +502,67 @@ function _normalizeVerificationStatus_(value) {
   return raw;
 }
 
+
+function getWorkflowFilterOptions(token) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok) throw new Error(sess.message || 'Sesi tidak valid.');
+
+  const kecamatanMap = {};
+  const kelurahanByKecamatan = {};
+  const addPair = function(kecamatan, kelurahan) {
+    const kec = String(kecamatan || '').trim();
+    const kel = String(kelurahan || '').trim();
+    if (!kec) return;
+    const kecKey = _searchNormalizeText_(kec);
+    if (!kecamatanMap[kecKey]) kecamatanMap[kecKey] = kec;
+    if (!kelurahanByKecamatan[kecKey]) kelurahanByKecamatan[kecKey] = {};
+    if (kel) {
+      const kelKey = _searchNormalizeText_(kel);
+      if (!kelurahanByKecamatan[kecKey][kelKey]) kelurahanByKecamatan[kecKey][kelKey] = kel;
+    }
+  };
+
+  let data = null;
+  if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.getSheetData === 'function') {
+    try { data = Cache_Manager.getSheetData('REF_PENGAMPU'); } catch (e) { data = null; }
+  }
+  if (!data || data.length < 2) {
+    const sheet = getSheetOrNull_('REF_PENGAMPU');
+    if (sheet) {
+      data = sheet.getDataRange().getValues();
+      if (data && data.length && typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.setSheetData === 'function') {
+        try { Cache_Manager.setSheetData('REF_PENGAMPU', data); } catch (e) {}
+      }
+    }
+  }
+
+  if (data && data.length > 1) {
+    const headers = data[0].map(function(h) { return String(h || '').trim(); });
+    const idxKecamatan = headers.indexOf('Kecamatan');
+    const idxKelurahan = headers.indexOf('Kelurahan');
+    data.slice(1).forEach(function(row) {
+      addPair(idxKecamatan !== -1 ? row[idxKecamatan] : '', idxKelurahan !== -1 ? row[idxKelurahan] : '');
+    });
+  }
+
+  const compareText = function(a, b) {
+    return String(a || '').localeCompare(String(b || ''), 'id', { sensitivity: 'base' });
+  };
+  const kecamatan = Object.keys(kecamatanMap).map(function(key) { return kecamatanMap[key]; }).sort(compareText);
+  const grouped = {};
+  Object.keys(kelurahanByKecamatan).forEach(function(kecKey) {
+    grouped[kecamatanMap[kecKey] || kecKey] = Object.keys(kelurahanByKecamatan[kecKey])
+      .map(function(kelKey) { return kelurahanByKecamatan[kecKey][kelKey]; })
+      .sort(compareText);
+  });
+
+  return {
+    kecamatan: kecamatan,
+    kelurahanByKecamatan: grouped,
+    statusKasus: []
+  };
+}
+
 function _buildSearchProjectionRecord_(headers, row) {
   const candidateGroups = [
     ['ID Registrasi Kasus'],

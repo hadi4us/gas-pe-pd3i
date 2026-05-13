@@ -132,9 +132,15 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(styleHtml, /\.pd3i-search-result-action\.is-edit \{[\s\S]*?#3b82f6[\s\S]*?#1d4ed8/);
   assert.match(styleHtml, /\.pd3i-search-result-action\.is-danger \{[\s\S]*?#ef4444[\s\S]*?#dc2626/);
   assert.match(workspaceSearchHtml, /id="search-diagnosis"/);
-  assert.match(workspaceSearchHtml, /id="search-kecamatan"/);
-  assert.match(workspaceSearchHtml, /id="search-kelurahan"/);
-  assert.match(workspaceSearchHtml, /id="search-status-kasus"/);
+  assert.match(workspaceSearchHtml, /<select id="search-kecamatan"[\s\S]*?Semua kecamatan/);
+  assert.match(workspaceSearchHtml, /<select id="search-kelurahan"[\s\S]*?Semua kelurahan/);
+  assert.match(workspaceSearchHtml, /<select id="search-status-kasus"[\s\S]*?Semua status kasus\/pasien/);
+  assert.doesNotMatch(workspaceSearchHtml, /<input[^>]+id="search-(kecamatan|kelurahan|status-kasus)"/);
+  assert.match(appHtml, /function populateWorkflowFilterDropdowns\(preservedValues\)/);
+  assert.match(appHtml, /\.getWorkflowFilterOptions\(SESSION_TOKEN\)/);
+  assert.match(appHtml, /populateWorkflowKelurahanFilterOptions\(''\)/);
+  assert.match(appHtml, /populateWorkflowStatusKasusFilterOptions\(''\)/);
+  assert.match(authHtml, /window\.loadWorkflowFilterOptions\) window\.loadWorkflowFilterOptions\(true\)/);
   assert.match(appHtml, /diagnosis: \(document\.getElementById\('search-diagnosis'\)/);
   assert.match(appHtml, /kelurahan: \(document\.getElementById\('search-kelurahan'\)/);
   assert.match(appHtml, /function deleteCaseRecordFromList\(recordKey, dx, triggerButton\)/);
@@ -155,6 +161,9 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(routesJs, /["']Deleted At["']/);
   assert.match(routesJs, /const diagnosisNeedle = String\(filters\.diagnosis \|\| filters\.dxFilter \|\| ''\)/);
   assert.match(routesJs, /if \(diagnosisNeedle && diagnosisNeedle !== 'ALL' && String\(item\.dx \|\| ''\)\.toUpperCase\(\) !== diagnosisNeedle\) return;/);
+  assert.match(routesJs, /function getWorkflowFilterOptions\(token\)/);
+  assert.match(routesJs, /getSheetOrNull_\('REF_PENGAMPU'\)/);
+  assert.match(routesJs, /kelurahanByKecamatan/);
   assert.match(routesJs, /const kecamatanNeedle = String\(filters\.kecamatan \|\| ''\)/);
   assert.match(routesJs, /const statusKasusNeedle = String\(filters\.statusKasus \|\| ''\)/);
 });

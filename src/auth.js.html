@@ -135,6 +135,7 @@
         setAuthSessionMeta(null);
         loginAttempt = 0;
         MASTER_FASKES = [];
+        MASTER_WORKFLOW_FILTERS = { kecamatan: [], kelurahanByKecamatan: {}, statusKasus: [] };
         clearSessionFromBrowser();
         stopIdleTimer();
 
@@ -294,6 +295,7 @@
               refreshIdleSession();
 
               if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+              if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
             })
             .withFailureHandler(function (err) {
               console.error("authLogin failed:", err);
@@ -487,6 +489,7 @@
               refreshIdleSession();
 
               if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+              if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
             });
           })
           .withFailureHandler(function () {
