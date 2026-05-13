@@ -599,13 +599,16 @@ function getWorkflowInbox(dx, token, options) {
     const result = _buildWorkflowInboxData_(sess, dx);
     const cachedResult = {
       summary: result.summary,
-      pendingVerification: (result.pendingVerification || []).slice(0, 8),
-      revisionQueue: (result.revisionQueue || []).slice(0, 8),
-      verificationDone: (result.verificationDone || []).slice(0, 8),
-      sampleQueue: (result.sampleQueue || []).slice(0, 8),
-      sampleDone: (result.sampleDone || []).slice(0, 8),
-      statusQueue: (result.statusQueue || []).slice(0, 8),
-      statusDone: (result.statusDone || []).slice(0, 8)
+      // Keep complete workflow queues here. The Verifikasi/Sampel/Status menus apply
+      // client-side filters (kecamatan, kelurahan, status kasus) against this payload;
+      // truncating to the first few newest rows makes valid filtered cases disappear.
+      pendingVerification: result.pendingVerification || [],
+      revisionQueue: result.revisionQueue || [],
+      verificationDone: result.verificationDone || [],
+      sampleQueue: result.sampleQueue || [],
+      sampleDone: result.sampleDone || [],
+      statusQueue: result.statusQueue || [],
+      statusDone: result.statusDone || []
     };
 
     if (cache) {

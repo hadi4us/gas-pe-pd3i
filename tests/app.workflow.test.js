@@ -92,6 +92,17 @@ test('workflow inbox can bypass cache after mutations and uses short operational
   assert.match(appHtml, /\.getWorkflowInbox\(dx, SESSION_TOKEN, \{ forceRefresh: !!options\.forceRefresh \}\)/);
 });
 
+test('workflow inbox returns complete queues so workspace filters can find older kelurahan matches', () => {
+  assert.match(dashboardJs, /truncating to the first few newest rows makes valid filtered cases disappear/);
+  assert.match(dashboardJs, /pendingVerification: result\.pendingVerification \|\| \[\]/);
+  assert.match(dashboardJs, /revisionQueue: result\.revisionQueue \|\| \[\]/);
+  assert.match(dashboardJs, /verificationDone: result\.verificationDone \|\| \[\]/);
+  assert.match(dashboardJs, /sampleQueue: result\.sampleQueue \|\| \[\]/);
+  assert.match(dashboardJs, /statusQueue: result\.statusQueue \|\| \[\]/);
+  assert.doesNotMatch(dashboardJs, /pendingVerification: \(result\.pendingVerification \|\| \[\]\)\.slice\(0, 8\)/);
+  assert.doesNotMatch(dashboardJs, /statusQueue: \(result\.statusQueue \|\| \[\]\)\.slice\(0, 8\)/);
+});
+
 test('deferred workflow saves can target pending records by registration id before final EPID exists', () => {
   assert.match(routesJs, /data\["ID Registrasi Kasus"\]/);
   assert.match(routesJs, /data\.RAW_ROW_NUMBER/);
