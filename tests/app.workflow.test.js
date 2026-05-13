@@ -174,6 +174,13 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(routesJs, /if \(diagnosisNeedle && diagnosisNeedle !== 'ALL' && String\(item\.dx \|\| ''\)\.toUpperCase\(\) !== diagnosisNeedle\) return;/);
   assert.match(routesJs, /function getWorkflowFilterOptions\(token\)/);
   assert.match(routesJs, /getSheetOrNull_\('REF_PENGAMPU'\)/);
+  assert.match(routesJs, /const canSeeAllReferenceWilayah = role === 'admin' \|\| scopeLevel === 'dinkes'/);
+  assert.match(routesJs, /const isRowInUserScope = function\(row\)/);
+  assert.match(routesJs, /if \(!isRowInUserScope\(row\)\) return;/);
+  assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
+  assert.match(routesJs, /userUnitKerja && rowNama && userUnitKerja === rowNama/);
+  assert.match(routesJs, /replace\(\/\\b\(PKM\|PUSKESMAS\)\\b\/g, ''\)/);
+  assert.match(routesJs, /userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias/);
   assert.match(routesJs, /kelurahanByKecamatan/);
   assert.match(routesJs, /const kecamatanNeedle = String\(filters\.kecamatan \|\| ''\)/);
   assert.match(routesJs, /const statusKasusNeedle = String\(filters\.statusKasus \|\| ''\)/);

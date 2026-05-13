@@ -507,6 +507,20 @@ function getWorkflowFilterOptions(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || 'Sesi tidak valid.');
 
+  const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+  const scopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+  const userKodePuskesmas = _normalizeAccessScopeKey_((sess.user && sess.user.kodePuskesmas) || '');
+  const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
+  const normalizePuskesmasScopeName = function(value) {
+    return _normalizeAccessScopeKey_(value)
+      .replace(/^UPTD\s+/, '')
+      .replace(/\b(PKM|PUSKESMAS)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+  const userUnitAlias = normalizePuskesmasScopeName(userUnitKerja);
+  const canSeeAllReferenceWilayah = role === 'admin' || scopeLevel === 'dinkes';
+
   const kecamatanMap = {};
   const kelurahanByKecamatan = {};
   const addPair = function(kecamatan, kelurahan) {
@@ -540,7 +554,25 @@ function getWorkflowFilterOptions(token) {
     const headers = data[0].map(function(h) { return String(h || '').trim(); });
     const idxKecamatan = headers.indexOf('Kecamatan');
     const idxKelurahan = headers.indexOf('Kelurahan');
+    const idxKodePuskesmas = headers.indexOf('KodePuskesmas') !== -1 ? headers.indexOf('KodePuskesmas') : headers.indexOf('KodePuskesmas Pengampu');
+    const idxNamaPuskesmas = headers.indexOf('NamaPuskesmas') !== -1 ? headers.indexOf('NamaPuskesmas') : headers.indexOf('Puskesmas Pengampu');
+    const idxPengampu = headers.indexOf('Pengampu');
+    const isRowInUserScope = function(row) {
+      if (canSeeAllReferenceWilayah) return true;
+      if (!userKodePuskesmas && !userUnitKerja) return false;
+      const rowKode = idxKodePuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxKodePuskesmas]) : '';
+      const rowNama = idxNamaPuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxNamaPuskesmas]) : '';
+      const rowPengampu = idxPengampu !== -1 ? _normalizeAccessScopeKey_(row[idxPengampu]) : '';
+      const rowNamaAlias = normalizePuskesmasScopeName(rowNama);
+      const rowPengampuAlias = normalizePuskesmasScopeName(rowPengampu);
+      return !!((userKodePuskesmas && rowKode && userKodePuskesmas === rowKode)
+        || (userUnitKerja && rowNama && userUnitKerja === rowNama)
+        || (userUnitKerja && rowPengampu && userUnitKerja === rowPengampu)
+        || (userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias)
+        || (userUnitAlias && rowPengampuAlias && userUnitAlias === rowPengampuAlias));
+    };
     data.slice(1).forEach(function(row) {
+      if (!isRowInUserScope(row)) return;
       addPair(idxKecamatan !== -1 ? row[idxKecamatan] : '', idxKelurahan !== -1 ? row[idxKelurahan] : '');
     });
   }
