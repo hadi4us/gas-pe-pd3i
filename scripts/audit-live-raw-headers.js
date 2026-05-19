@@ -98,6 +98,9 @@ async function inspectSheet(spreadsheetId, dx, getCanonical, aliasMap) {
   const sheetName = `${dx}_Raw`;
   const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&range=1:2`;
   const body = await fetch(url);
+  if (/<!DOCTYPE html>/i.test(body) || /document-root\.show-login-page/i.test(body) || /accounts\.google\.com/i.test(body)) {
+    throw new Error(`Akses sheet ${sheetName} tidak publik / butuh autentikasi. gviz CSV mengembalikan halaman login, bukan header sheet.`);
+  }
   const firstLine = body.split(/\r?\n/)[0] || '';
   const headers = parseCsvLine(firstLine);
   const canonicalHeaders = getCanonical(dx);
