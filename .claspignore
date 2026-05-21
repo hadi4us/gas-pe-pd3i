@@ -1,0 +1,35 @@
+# .claspignore - Optimal untuk GAS PE PD3I
+
+# Ignore folder-folder besar yang tidak perlu di-push ke Apps Script
+docs/**
+tests/**
+scripts/**
+.github/**
+assets/**
+node_modules/**
+.vscode/**
+.git/**
+
+# Ignore file-file non-kode
+*.md
+*.txt
+*.log
+*.json.bak
+*.yml
+*.yaml
+README*
+LICENSE
+.claspignore
+.clasprc.json
+.DS_Store
+Thumbs.db
+
+# Hanya izinkan yang benar-benar diperlukan di src/ 
+!src/**
+
+# Di dalam src/, ignore yang tidak perlu
+src/.git/**
+src/.github/**
+src/docs/**
+src/tests/**
+src/node_modules/**
