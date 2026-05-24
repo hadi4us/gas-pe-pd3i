@@ -722,11 +722,19 @@ function searchRecords(dx, filters, token) {
     var rows = [];
 
     if (typeof _readSheetWithCache_ === 'function') {
-      var sheetData = _readSheetWithCache_(dxItem + '_Raw');
-      if (!sheetData || !sheetData.headers || !sheetData.rows || !sheetData.rows.length) return;
-      headers = sheetData.headers;
-      rows = sheetData.rows;
-    } else {
+      try {
+        var sheetData = _readSheetWithCache_(dxItem + '_Raw');
+        if (sheetData && sheetData.headers && sheetData.rows && sheetData.rows.length) {
+          headers = sheetData.headers;
+          rows = sheetData.rows;
+        }
+      } catch (cacheErr) {
+        // Cache read failed, fall through to direct sheet access
+      }
+    }
+    
+    // If cache didn't work or wasn't available, try direct sheet access
+    if (!rows.length) {
       var sheet = getSheetOrNull_(dxItem + '_Raw');
       if (!sheet) return;
       var values = sheet.getDataRange().getValues();
