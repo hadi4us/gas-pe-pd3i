@@ -4466,7 +4466,12 @@
       "follow-up": "Updater Status",
       tindaklanjut: "Updater Status",
       tindak_lanjut: "Updater Status",
-      "tindak-lanjut": "Updater Status"
+      "tindak-lanjut": "Updater Status",
+      puskesmas: "Puskesmas Pengampu",
+      pengampu: "Puskesmas Pengampu",
+      faskes_pelapor: "Faskes Pelapor",
+      "faskes-pelapor": "Faskes Pelapor",
+      pelapor: "Faskes Pelapor"
     };
     return labelMap[normalized] || (role ? String(role) : "Tidak diketahui");
   }
@@ -4476,9 +4481,10 @@
     const allStages = getAllWorkflowStageIds();
 
     if (normalized === "admin") return allStages.slice();
+    if (["puskesmas", "pengampu"].includes(normalized)) return ["section-pelapor", "section-verifikasi", "section-sampel", "section-status"];
     if (["petugas", "surveilans", "editor", "koordinator"].includes(normalized)) return ["section-pelapor", "section-sampel", "section-status"];
     if (["viewer", "readonly", "read_only", "read-only"].includes(normalized)) return [];
-    if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(normalized)) return ["section-pelapor"];
+    if (["inputer", "entry", "registrasi", "operator_input", "operator-input", "faskes_pelapor", "faskes-pelapor", "pelapor"].includes(normalized)) return ["section-pelapor"];
     if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(normalized)) return [];
     if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(normalized)) return ["section-sampel"];
     if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(normalized)) return ["section-status"];
@@ -4499,6 +4505,7 @@
       return allowed;
     }
 
+    if (caps.writeStages.indexOf('section-verifikasi') !== -1) allowed.add('verifikasi');
     if (caps.writeStages.indexOf('section-sampel') !== -1) allowed.add('sampel');
     if (caps.writeStages.indexOf('section-status') !== -1) allowed.add('status');
     return allowed;
@@ -4574,8 +4581,14 @@
     if (["viewer", "readonly", "read_only", "read-only"].includes(role)) {
       return { roleLabel: "Viewer", canView: true, canWrite: false, canAdmin: false, viewStages: nonAdminStages, writeStages: [], summary: "Viewer • hanya lihat data, tanpa ubah / aksi admin" };
     }
+    if (["puskesmas", "pengampu"].includes(role)) {
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: allStages, writeStages: writeStages, summary: "Puskesmas pengampu • dapat input sebagai pelapor dan memproses kasus wilayah ampuan (verifikasi, hasil pemeriksaan, update status)." };
+    }
     if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) {
       return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: nonAdminStages, writeStages: writeStages, summary: "Petugas • input awal + update status; hasil pemeriksaan dibatasi puskesmas pengampu domisili, verifikasi admin-only" };
+    }
+    if (["faskes_pelapor", "faskes-pelapor", "pelapor"].includes(role)) {
+      return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: ["section-pelapor"], writeStages: ["section-pelapor"], summary: "Faskes pelapor • hanya input dan pembaruan data awal kasus yang dilaporkan." };
     }
     if (writeStages.length === 1) {
       return { roleLabel: getRoleDisplayLabel(role), canView: true, canWrite: true, canAdmin: false, viewStages: nonAdminStages, writeStages: writeStages, summary: `${getRoleDisplayLabel(role)} • hanya bisa ubah tahap ${stageSummary}` };
@@ -4592,7 +4605,7 @@
     const role = normalizeUiRole(user && user.role);
 
     if (!caps.canWrite || caps.writeStages.indexOf(normalized) === -1) return false;
-    if (normalized === "section-verifikasi") return role === "admin";
+    if (normalized === "section-verifikasi") return role === "admin" || role === "puskesmas" || role === "pengampu";
     if (normalized === "section-sampel") return canUserWriteSampleStageByScope(user);
     return true;
   }

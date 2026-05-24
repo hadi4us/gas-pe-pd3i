@@ -5,6 +5,17 @@ function doGet(e) {
     return handlePrintRequest_(e);
   }
 
+  if (action === 'role-migration') {
+    var token = String((e && e.parameter && e.parameter.token) || '').trim();
+    var expected = String(PropertiesService.getScriptProperties().getProperty('MIGRATION_TOKEN') || 'MIGRATE_ROLE_20260521_PD3I').trim();
+    if (!token || token !== expected) {
+      return responseJSON({ status: 'error', message: 'Unauthorized migration token.' });
+    }
+    var mode = String((e && e.parameter && e.parameter.mode) || 'dryrun').trim().toLowerCase();
+    var dryRun = mode !== 'apply';
+    return responseJSON(migrateRefUserRoleToPengampuPelaporModel({ dryRun: dryRun }));
+  }
+
   const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "guide"];
   const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
     ? "dashboard"
@@ -1707,9 +1718,10 @@ function _normalizeWorkflowStage_(workflowStage) {
 function _getWritableWorkflowStagesForRole_(role) {
   role = String(role || "").trim().toLowerCase();
   if (role === "admin") return WORKFLOW_STAGE_IDS_.slice();
+  if (["puskesmas", "pengampu"].includes(role)) return ["section-pelapor", "section-verifikasi", "section-sampel", "section-status"];
   if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) return ["section-pelapor", "section-sampel", "section-status"];
   if (["viewer", "readonly", "read_only", "read-only"].includes(role)) return [];
-  if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(role)) return ["section-pelapor"];
+  if (["inputer", "entry", "registrasi", "operator_input", "operator-input", "faskes_pelapor", "faskes-pelapor", "pelapor"].includes(role)) return ["section-pelapor"];
   if (["verifikator", "verifier", "epid", "validator_epid", "validator-epid"].includes(role)) return [];
   if (["lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].includes(role)) return ["section-sampel"];
   if (["status", "updater_status", "updater-status", "followup", "follow_up", "follow-up", "tindaklanjut", "tindak_lanjut", "tindak-lanjut"].includes(role)) return ["section-status"];
@@ -1813,7 +1825,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
 function _canRoleWriteSampleStage_(role) {
   role = String(role || "").trim().toLowerCase();
-  return ["petugas", "surveilans", "editor", "koordinator", "lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].indexOf(role) !== -1;
+  return ["puskesmas", "pengampu", "petugas", "surveilans", "editor", "koordinator", "lab", "laboratorium", "analislab", "analis_lab", "analis-lab"].indexOf(role) !== -1;
 }
 
 function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
@@ -1821,7 +1833,14 @@ function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
   if (role === "admin") return true;
 
   if (normalizedStage === "section-verifikasi") {
-    throw new Error("Proses verifikasi hanya dapat dilakukan oleh admin.");
+    if (!["puskesmas", "pengampu"].includes(role)) {
+      throw new Error("Proses verifikasi hanya dapat dilakukan oleh admin atau puskesmas pengampu.");
+    }
+    const canReadByScope = _canSessionReadRecordByScope_(sess, dx, data || {});
+    if (!canReadByScope) {
+      throw new Error("Akun ini tidak memiliki akses pengampu untuk verifikasi kasus di wilayah tersebut.");
+    }
+    return true;
   }
 
   if (normalizedStage === "section-sampel") {
