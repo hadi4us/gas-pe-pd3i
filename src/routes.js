@@ -685,6 +685,7 @@ function searchRecords(dx, filters, token) {
   const workflowIntent = String(filters.workflowIntent || '').trim().toLowerCase();
   const isLooseSearchWorkspace = workspace === 'search';
   const dxList = isLooseSearchWorkspace ? ALL_DX.slice() : (ALL_DX.indexOf(dx) !== -1 ? [dx] : ALL_DX.slice());
+  const _debugMode = filters.__debug === true;
   const keywordNeedle = String(filters.keyword || filters.q || '').trim();
   const epidNeedle = String(filters.epid || '').trim();
   const namaNeedle = String(filters.nama || '').trim();
