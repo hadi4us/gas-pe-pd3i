@@ -1759,6 +1759,60 @@ function _sendNewCasePengampuNotification_(dx, data, saved, printUrl) {
   }
 }
 
+// ─── Simulasi test notifikasi (untuk debugging) ─────────────────────────────
+function _simulateNotificationTest_(dx, data) {
+  const results = {};
+  try {
+    results.newCaseEmail = _sendNewCasePengampuNotification_(dx, data, { epid: 'TEST-001', recordId: 'test-row', isUpdate: false }, '');
+  } catch (e) {
+    results.newCaseEmail = { sent: false, reason: String(e) };
+  }
+  try {
+    results.newCaseTelegram = _sendNewCaseTelegramNotification_(dx, data, { epid: 'TEST-001', recordId: 'test-row', isUpdate: false }, '');
+  } catch (e) {
+    results.newCaseTelegram = { sent: false, reason: String(e) };
+  }
+  try {
+    results.verifiedEmail = _sendPengampuNotification_(dx, data, { epid: 'TEST-001', recordId: 'test-row', verificationStatus: 'VERIFIED' }, '');
+  } catch (e) {
+    results.verifiedEmail = { sent: false, reason: String(e) };
+  }
+  try {
+    results.verifiedTelegram = _sendTelegramPd3iNotification_(dx, data, { epid: 'TEST-001', recordId: 'test-row', verificationStatus: 'VERIFIED' }, '');
+  } catch (e) {
+    results.verifiedTelegram = { sent: false, reason: String(e) };
+  }
+  return results;
+}
+
+// ─── Test function: jalankan dari Apps Script UI (Run > runNotificationTest) ───
+function runNotificationTest() {
+  // Gunakan data real dari sheet untuk test
+  var dx = 'MR';
+  var sheet = getSheetOrThrow_(dx + '_Raw');
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) {
+    Logger.log('Tidak ada data di sheet ' + dx + '_Raw');
+    return;
+  }
+  var headers = values[0].map(function(h) { return String(h || '').trim(); });
+  // Ambil baris data pertama yang belum di-delete
+  var testRow = null;
+  for (var i = 1; i < values.length; i++) {
+    var rowData = {};
+    headers.forEach(function(h, idx) { rowData[h] = values[i][idx]; });
+    if (!rowData['Deleted At']) { testRow = rowData; break; }
+  }
+  if (!testRow) {
+    Logger.log('Tidak ada data yang valid untuk test');
+    return;
+  }
+  Logger.log('Testing notifikasi untuk kasus: ' + JSON.stringify(testRow));
+  var results = _simulateNotificationTest_(dx, testRow);
+  Logger.log('Hasil notifikasi: ' + JSON.stringify(results));
+  return results;
+}
+
 // ─── Validasi akses tulis ─────────────────────────────────────────────────────
 const WORKFLOW_STAGE_IDS_ = ["section-pelapor", "section-verifikasi", "section-sampel", "section-status"];
 
