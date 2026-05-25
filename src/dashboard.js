@@ -342,6 +342,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
     const idxUpdated = headers.indexOf('Updated At');
     const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
     const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+    const idxNamaUnitPelapor = headers.indexOf('Nama unit pelapor');
     const idxStatusKasus = headers.indexOf('Status Pasien/Kasus');
     const idxSampelDilakukan = headers.indexOf('Pemeriksaan Sampel Dilakukan');
     const idxInterpretasiSampel = headers.indexOf('Interpretasi Hasil Sampel');
@@ -361,10 +362,15 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       const normalizedStatus = String(statusVerifikasi || 'Pending').trim().toUpperCase();
       const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || '').trim() : '';
       const kodePuskesmas = idxKodePuskesmas !== -1 ? String(row[idxKodePuskesmas] || '').trim() : '';
+      const namaUnitPelapor = idxNamaUnitPelapor !== -1 ? String(row[idxNamaUnitPelapor] || '').trim() : '';
       const kabKota = idxKabKota !== -1 ? String(row[idxKabKota] || '').trim() : '';
       const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '';
       const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '';
-      const scopeMatch = _isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmas, kabKota, kecamatan, kelurahan);
+      // Direct match: "Nama unit pelapor" vs user unitKerja (covers all faskes types)
+      const normalizedUnitPelapor = String(namaUnitPelapor || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const normalizedUserUnit = String(userUnit || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const directUnitMatch = normalizedUserUnit && normalizedUnitPelapor && normalizedUserUnit === normalizedUnitPelapor;
+      const scopeMatch = directUnitMatch || _isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmas, kabKota, kecamatan, kelurahan);
       const inputerUsername = idxDiinputOleh !== -1 ? String(row[idxDiinputOleh] || '').trim() : '';
       const inputerName = idxInputAwalOleh !== -1 ? String(row[idxInputAwalOleh] || '').trim() : '';
       const inputerMatch = _isDashboardInputerMatch_(sess, inputerUsername, inputerName);
