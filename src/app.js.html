@@ -2936,6 +2936,11 @@
       applySidebarWorkspaceLayout(normalized);
       applySearchShellCopyForWorkspace(normalized);
       restoreWorkflowSearchFiltersForWorkspace(normalized);
+      // Lazy-load filter options on first open of search workspace only
+      if (!window.__FILTERS_LOADED) {
+        window.__FILTERS_LOADED = true;
+        if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(false);
+      }
       if (opts.scroll !== false) document.getElementById('section-search-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
     }
@@ -5551,7 +5556,9 @@
         return;
       }
 
-      if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(false);
+      // Lazy-load filter options: only fetch on demand when user opens search workspace
+      // Previously called at init (unnecessary server hit on every page load)
+      // Now defered to first search workspace open via restoreWorkflowSearchFiltersForWorkspace()
 
       const searchFormRefs = {
         mode: 'search',
@@ -6409,8 +6416,13 @@
         searchRunner.searchRecords(dx, filters, SESSION_TOKEN);
       }
 
-      if (btnSearchEpid) {
+      if (btnSearchEpid && !btnSearchEpid.dataset.bound) {
+        btnSearchEpid.dataset.bound = '1';
         btnSearchEpid.addEventListener("click", function() {
+          // Debounce: prevent double-click triggering multiple server calls
+          if (btnSearchEpid.disabled) return;
+          btnSearchEpid.disabled = true;
+          setTimeout(function() { btnSearchEpid.disabled = false; }, 2000);
           runWorkflowSearchPage(1);
         });
       }
