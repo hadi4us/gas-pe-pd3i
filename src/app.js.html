@@ -4001,11 +4001,14 @@
     box.classList.remove('hidden');
   }
 
+  console.log('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
+
   function refreshWorkflowInbox(options) {
     options = options || {};
     const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
-    if (!box) return;
+    console.log('[PD3I v2] refreshWorkflowInbox called, workspace:', normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE));
+    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); return; };
     if (!safeGsRun() || !SESSION_TOKEN) {
       ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
         const el = document.getElementById(id);
@@ -4023,11 +4026,12 @@
     }
     google.script.run
       .withSuccessHandler(function(res) {
+        console.log('[PD3I v2] refreshWorkflowInbox SUCCESS, items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
         WORKFLOW_INBOX_CACHE = res || null;
         renderWorkflowInbox(res || null);
       })
       .withFailureHandler(function(err) {
-        console.error('refreshWorkflowInbox failed:', err);
+        console.error('[PD3I v2] refreshWorkflowInbox FAILED:', err);
         WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
         box.innerHTML = '';
