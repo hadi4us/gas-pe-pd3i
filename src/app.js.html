@@ -4004,6 +4004,7 @@
   console.log('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
 
   function refreshWorkflowInbox(options) {
+    console.log("[PD3I v2] refreshWorkflowInbox called");
     options = options || {};
     const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
