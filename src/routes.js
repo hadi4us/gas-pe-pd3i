@@ -1810,6 +1810,10 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   const recordUnitPelapor = _normalizeAccessScopeKey_((data && data['Nama unit pelapor']) || '');
   if (userUnitKerja && recordUnitPelapor && userUnitKerja === recordUnitPelapor) return true;
 
+  // Fallback: match via "Diinput Oleh" or "Input Awal Diisi Oleh" for records without "Nama unit pelapor"
+  const recordDiinputOleh = _normalizeAccessScopeKey_((data && (data['Diinput Oleh'] || data['Input Awal Diisi Oleh'])) || '');
+  if (userUnitKerja && recordDiinputOleh && userUnitKerja === recordDiinputOleh) return true;
+
   const pengampu = getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota);
   if (!pengampu || !pengampu.found) return false;
 
