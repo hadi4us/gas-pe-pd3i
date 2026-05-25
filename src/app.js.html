@@ -3950,7 +3950,7 @@
     html += '</div>';
     html += renderProcessingCard();
 
-    if (visiblePending.length) {
+    if (workspace === 'verifikasi' && visiblePending.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase">Menunggu tinjauan admin</div><div class="mt-2">';
       html += renderQueueTable(visiblePending.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'pending' });
@@ -3958,7 +3958,7 @@
       html += '</div></div>';
     }
 
-    if (visibleRevision.length) {
+    if (['input', 'edit', 'search'].includes(workspace) && visibleRevision.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus ditolak / perlu perbaikan</div><div class="mt-2">';
       html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
@@ -3966,31 +3966,31 @@
       html += '</div></div>';
     }
 
-    if (visibleSample.length) {
+    if (workspace === 'sampel' && visibleSample.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Antrean hasil pemeriksaan</div><div class="mt-2">';
       html += renderQueueTable(visibleSample, { title: 'Antrean hasil pemeriksaan', pageKey: workspace + '-queue', emptyText: 'Belum ada kasus menunggu hasil lab.', actionLabel: 'Input hasil' });
       html += '</div></div>';
     }
 
-    if (visibleSampleVerified.length) {
+    if (workspace === 'sampel' && visibleSampleVerified.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-blue-700">Kasus sudah diverifikasi admin</div><div class="mt-2">';
       html += renderVerifiedSampleCaseTable(visibleSampleVerified);
       html += '</div></div>';
     }
 
-    if (visibleSampleDone.length) {
+    if (workspace === 'sampel' && visibleSampleDone.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-emerald-700">Hasil pemeriksaan selesai</div><div class="mt-2">';
       html += renderQueueTable(visibleSampleDone, { title: 'Hasil pemeriksaan selesai', pageKey: workspace + '-done', emptyText: 'Belum ada hasil pemeriksaan selesai.', actionLabel: 'Lihat hasil' });
       html += '</div></div>';
     }
 
-    if (visibleStatus.length) {
+    if (workspace === 'status' && visibleStatus.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Antrian update status</div><div class="mt-2">';
       html += renderQueueTable(visibleStatus, { title: 'Antrian update status', pageKey: workspace + '-queue', emptyText: 'Belum ada kasus siap update status.', actionLabel: 'Update status' });
       html += '</div></div>';
     }
 
-    if (visibleStatusDone.length) {
+    if (workspace === 'status' && visibleStatusDone.length) {
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-sky-700">Status selesai</div><div class="mt-2">';
       html += renderQueueTable(visibleStatusDone, { title: 'Status selesai', pageKey: workspace + '-done', emptyText: 'Belum ada update status selesai.', actionLabel: 'Lihat status' });
       html += '</div></div>';
