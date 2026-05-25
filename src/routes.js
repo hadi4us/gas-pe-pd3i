@@ -1501,6 +1501,9 @@ function _buildNotificationSubject_(type, dx, data, saved, notifyCtx) {
   if (type === 'revision') {
     return `[${dxLabel}][${shortDx}][REVISI][${recordLabel}] ${kelurahanLabel} - ${puskesmasLabel}`;
   }
+  if (type === 'new_case') {
+    return `[${dxLabel}][${shortDx}][BARU][${recordLabel}] PENDING - ${kelurahanLabel} - ${puskesmasLabel}`;
+  }
   return `[${dxLabel}][${shortDx}][${epidLabel}] Terverifikasi - ${kelurahanLabel} - ${puskesmasLabel}`;
 }
 
@@ -1694,6 +1697,63 @@ function _sendRevisionTelegramNotification_(dx, data, saved) {
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
     if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
     return res;
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+// ─── Notifikasi kasus baru (PENDING) ────────────────────────────────────────
+function _sendNewCaseTelegramNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
+    if (!notifyCtx.telegramChatId) return { sent: false, reason: 'NOT_CONFIGURED' };
+
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
+    const lines = [
+      `🆕 *Kasus baru ${dxLabel} (${dxCode}) masuk — status PENDING*`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      `Status Email Pengampu: ${String(data["Status Notifikasi Pengampu"] || '-').trim() || '-'}`,
+      `Status Sync Pengampu: ${String(data["Status Sinkronisasi Pengampu"] || '-').trim() || '-'}`,
+      '',
+      'Tindak lanjut: buka workspace verifikasi untuk review dan verifikasi kasus ini.'
+    ];
+    const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
+    if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
+    return res;
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+function _sendNewCasePengampuNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    if (notifyCtx.statusRouting !== 'MATCHED') return { sent: false, reason: notifyCtx.statusRouting || 'UNMAPPED' };
+    if (!notifyCtx.emailRecipients.length) return { sent: false, reason: 'NO_RECIPIENT' };
+
+    const subject = _buildNotificationSubject_('new_case', dx, data, saved, notifyCtx);
+    const body = [
+      `Kasus baru ${_getDxNotificationLabel_(dx)} (${String(dx || '').trim().toUpperCase()}) masuk — status PENDING`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      'Mohon review dan verifikasi kasus ini melalui workspace verifikasi.'
+    ].join('\n');
+
+    MailApp.sendEmail({
+      to: notifyCtx.emailRecipients.join(","),
+      subject: subject,
+      body: body,
+      name: "Jarvis Surveilans PD3I"
+    });
+
+    return { sent: true, to: notifyCtx.emailRecipients.join(",") };
   } catch (err) {
     return { sent: false, reason: String(err) };
   }
@@ -2418,6 +2478,29 @@ function saveFormPayload_(data) {
   const verificationStatus = String((saved && saved.verificationStatus) || (savedRecord && savedRecord["Status Verifikasi EPID"]) || '').trim().toUpperCase();
   if (verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') {
     revisionPipelineResult = _runRevisionNotificationPipeline_(dx, savedRecord, saved);
+  }
+
+  // Notifikasi kasus baru (PENDING) — email + Telegram
+  const newCaseNotification = { sent: false, reason: 'SKIPPED_NOT_NEW_CASE' };
+  const newCaseTelegramNotification = { sent: false, reason: 'SKIPPED_NOT_NEW_CASE' };
+  if (!saved.isUpdate && (verificationStatus === 'PENDING' || verificationStatus === '' || !verificationStatus)) {
+    const printUrlNew = hasFinalEpid ? safeGetPdfPrintUrl_(dx, saved.epid, token) : '';
+    newCaseNotification["sent"] = true;
+    try {
+      const res = _sendNewCasePengampuNotification_(dx, savedRecord, saved, printUrlNew);
+      Object.assign(newCaseNotification, res);
+    } catch (e) {
+      newCaseNotification.sent = false;
+      newCaseNotification.reason = String(e);
+    }
+    newCaseTelegramNotification["sent"] = true;
+    try {
+      const res = _sendNewCaseTelegramNotification_(dx, savedRecord, saved, printUrlNew);
+      Object.assign(newCaseTelegramNotification, res);
+    } catch (e) {
+      newCaseTelegramNotification.sent = false;
+      newCaseTelegramNotification.reason = String(e);
+    }
   }
 
   let pipelineResult = {
