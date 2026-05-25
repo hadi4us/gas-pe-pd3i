@@ -4003,13 +4003,22 @@
 
   console.log('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
 
+  var _PD3I_WORKFLOW_INBOX_CALL_ID = 0;
+  var _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
+
   function refreshWorkflowInbox(options) {
-    console.log("[PD3I v2] refreshWorkflowInbox called");
     options = options || {};
+    const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
+    console.log('[PD3I v2] refreshWorkflowInbox called, workspace:', workspace);
+    const callId = ++_PD3I_WORKFLOW_INBOX_CALL_ID;
+    if (_PD3I_WORKFLOW_INBOX_CALL_ACTIVE) {
+      console.log('[PD3I v2] refreshWorkflowInbox call superseded by newer call, skipping');
+      return;
+    }
+    _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = true;
     const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
-    console.log('[PD3I v2] refreshWorkflowInbox called, workspace:', normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE));
-    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); return; };
+    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; };
     if (!safeGsRun() || !SESSION_TOKEN) {
       ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
         const el = document.getElementById(id);
@@ -4017,21 +4026,45 @@
       });
       box.classList.add('hidden');
       box.innerHTML = '';
+      _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
       return;
     }
-    const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
-    const runtimeGuard = createWorkspaceRuntimeGuard(workspace);
     if (['search', 'verifikasi', 'sampel', 'status'].includes(workspace)) {
       box.classList.remove('hidden');
       box.innerHTML = '<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kerja...</span></div></div>';
     }
+    var timeoutMs = 10000;
+    var timedOut = false;
+    var timeoutTimer = setTimeout(function() {
+      if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) return;
+      timedOut = true;
+      _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
+      console.error('[PD3I v2] refreshWorkflowInbox TIMEOUT after 10s for workspace:', workspace);
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      showTopAlert('Memuat daftar kerja terlalu lama. Coba refresh halaman.', false);
+    }, timeoutMs);
     google.script.run
       .withSuccessHandler(function(res) {
-        console.log('[PD3I v2] refreshWorkflowInbox SUCCESS, items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
+        clearTimeout(timeoutTimer);
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; }
+        _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
+        console.log('[PD3I v2] refreshWorkflowInbox SUCCESS, workspace:', workspace, 'items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
         WORKFLOW_INBOX_CACHE = res || null;
-        renderWorkflowInbox(res || null);
+        try {
+          renderWorkflowInbox(res || null);
+          console.log('[PD3I v2] renderWorkflowInbox completed');
+        } catch (renderErr) {
+          console.error('[PD3I v2] renderWorkflowInbox CRASH:', renderErr);
+          box.classList.add('hidden');
+          box.innerHTML = '';
+          showTopAlert('Gagal menampilkan data: ' + (renderErr.message || 'Unknown error'), false);
+        }
       })
       .withFailureHandler(function(err) {
+        clearTimeout(timeoutTimer);
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; }
+        _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
         console.error('[PD3I v2] refreshWorkflowInbox FAILED:', err);
         WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
