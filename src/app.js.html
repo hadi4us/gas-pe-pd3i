@@ -4023,12 +4023,10 @@
     }
     google.script.run
       .withSuccessHandler(function(res) {
-        if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         WORKFLOW_INBOX_CACHE = res || null;
         renderWorkflowInbox(res || null);
       })
       .withFailureHandler(function(err) {
-        if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
         console.error('refreshWorkflowInbox failed:', err);
         WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
@@ -6407,11 +6405,9 @@
         const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
         const searchRunner = google.script.run
           .withSuccessHandler(function(data) {
-            if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
             _renderSearchResultsList(data, dx);
           })
           .withFailureHandler(function(err) {
-            if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
             console.error("searchRecords failed:", err);
             if (searchResultsBox) {
               searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-error">Gagal mencari data. Silakan coba lagi.</div>`;
