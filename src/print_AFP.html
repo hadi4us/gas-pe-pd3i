@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+@page{size:A4;margin:10mm}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.8px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.kop{border:1px solid #111;border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.kop .title{font-size:14px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;color:#1d4ed8}
+.kop .sub{font-size:10px;color:#555;margin-top:2px}
+.hr{height:2px;background:linear-gradient(90deg,#1d4ed8,#60a5fa);border-radius:999px;margin-top:8px}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #111;padding:4px 6px;vertical-align:top}
+th{background:#f8fafc}
+.sec{font-weight:900;text-transform:uppercase;text-align:center;letter-spacing:.2px;background:#dbeafe}
+.small{font-size:9.8px;color:#444}
+</style></head><body>
+<? var data=(typeof DATA!=='undefined'?DATA:{}),meta=(typeof META!=='undefined'?META:{}); function s(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');} function t(v){return String(v==null?'':v).trim();} function pick_(){for(var i=0;i<arguments.length;i++){var k=arguments[i];if(Object.prototype.toString.call(k)==='[object Array]'){for(var j=0;j<k.length;j++){var kk=k[j];if(data[kk]!=null&&data[kk]!=='')return data[kk];if(meta[kk]!=null&&meta[kk]!=='')return meta[kk];}}else{if(data[k]!=null&&data[k]!=='')return data[k];if(meta[k]!=null&&meta[k]!=='')return meta[k];}}return '';} function d(v){v=t(v); if(!v)return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return m[3]+'-'+m[2]+'-'+m[1]; return s(v);} function yn(v){v=t(v).toLowerCase();if(['ya','y','yes','1','true'].indexOf(v)!==-1)return 'Ya';if(['tidak','n','no','0','false'].indexOf(v)!==-1)return 'Tidak';return v||'-';} ?>
+<div class="kop"><div class="title">FORM FP-1 — PENYELIDIKAN EPIDEMIOLOGI KASUS AFP</div><div class="sub">Output PDF otomatis aplikasi PD3I (format ditingkatkan)</div><div class="hr"></div></div>
+<table>
+<tr><td><b>Provinsi</b><br><?!= s(pick_(['Provinsi unit pelapor','Provinsi'])) ?></td><td><b>Kab/Kota</b><br><?!= s(pick_(['Kab/Kota unit pelapor','Kab/Kota'])) ?></td><td><b>Nomor EPID</b><br><?!= s(pick_(['Nomor EPID'])) ?></td></tr>
+<tr><td><b>Sumber laporan</b><br><?!= s(pick_(['Sumber Laporan'])) ?></td><td colspan="2"><b>Nama instansi pelapor</b><br><?!= s(pick_(['Nama unit pelapor'])) ?></td></tr>
+<tr><td><b>Tanggal laporan diterima</b><br><?!= d(pick_(['Tanggal terima laporan'])) ?></td><td colspan="2"><b>Tanggal Penyelidikan</b><br><?!= d(pick_(['Tanggal Pelacakan'])) ?></td></tr>
+<tr><td class="sec" colspan="3">I. Identitas Penderita</td></tr>
+<tr><td><b>Nama penderita</b><br><?!= s(pick_(['Nama','Nama Pasien'])) ?></td><td><b>Jenis kelamin</b><br><?!= s(pick_(['JK'])) ?></td><td><b>Tanggal lahir</b><br><?!= d(pick_(['Tanggal Lahir'])) ?></td></tr>
+<tr><td><b>Umur</b><br><?!= s(pick_(['Umur (auto)','Umur'])) ?></td><td><b>Nama orang tua</b><br><?!= s(pick_(['Nama Orang Tua/Wali','Nama orang tua/wali'])) ?></td><td><b>NIK</b><br><?!= s(pick_(['NIK'])) ?></td></tr>
+<tr><td colspan="3"><b>Alamat</b><br><?!= s(pick_(['Alamat'])) ?></td></tr>
+<tr><td><b>Kelurahan/desa</b><br><?!= s(pick_(['Kelurahan'])) ?></td><td><b>Kecamatan</b><br><?!= s(pick_(['Kecamatan'])) ?></td><td><b>RT/RW</b><br><?!= s(pick_(['RT'])) ?> / <?!= s(pick_(['RW'])) ?></td></tr>
+<tr><td class="sec" colspan="3">II. Riwayat Sakit</td></tr>
+<tr><td><b>Tgl mulai sakit/gejala awal</b><br><?!= d(pick_(['Tanggal mulai sakit/gejala awal'])) ?></td><td><b>Tgl mulai lemah/lumpuh</b><br><?!= d(pick_(['Tgl mulai lumpuh'])) ?></td><td><b>Tgl meninggal</b><br><?!= d(pick_(['Tanggal meninggal AFP'])) ?></td></tr>
+<tr><td><b>Pengobatan tradisional</b><br><?!= yn(pick_(['Pengobatan tradisional AFP'])) ?></td><td><b>Nama tempat</b><br><?!= s(pick_(['Nama tempat pengobatan tradisional AFP'])) ?></td><td><b>Tanggal berkunjung</b><br><?!= d(pick_(['Tanggal berkunjung pengobatan tradisional AFP'])) ?></td></tr>
+<tr><td><b>Berobat ke RS</b><br><?!= yn(pick_(['Berobat ke Rumah Sakit AFP'])) ?></td><td><b>Nama RS</b><br><?!= s(pick_(['Nama Rumah Sakit'])) ?></td><td><b>Tanggal berobat</b><br><?!= d(pick_(['Tanggal berobat AFP'])) ?></td></tr>
+<tr><td><b>Diagnosis</b><br><?!= s(pick_(['Diagnosis AFP'])) ?></td><td><b>No rekam medik</b><br><?!= s(pick_(['Nomor Rekam Medik'])) ?></td><td><b>Akut / Layuh / Rudapaksa</b><br><?!= yn(pick_(['Sifat akut'])) ?> / <?!= yn(pick_(['Lumpuh layuh'])) ?> / <?!= yn(pick_(['Rudapaksa AFP'])) ?></td></tr>
+<tr><td class="sec" colspan="3">III. Gejala / Tanda</td></tr>
+<tr><td><b>Demam sebelum lemah/lumpuh</b><br><?!= yn(pick_(['Demam saat onset'])) ?></td><td><b>Lokasi kelumpuhan</b><br><?!= s(pick_(['Lokasi kelumpuhan'])) ?></td><td><b>Asimetris</b><br><?!= yn(pick_(['Asimetris'])) ?></td></tr>
+<tr><td colspan="3"><b>Kekuatan/Gangguan rasa raba anggota gerak</b><br>
+Tungkai kanan: <?!= yn(pick_(['Tungkai kanan lumpuh'])) ?>, kekuatan <?!= s(pick_(['Tungkai kanan kekuatan'])) ?>, rasa raba <?!= s(pick_(['Tungkai kanan rasa raba'])) ?>; 
+Tungkai kiri: <?!= yn(pick_(['Tungkai kiri lumpuh'])) ?>, kekuatan <?!= s(pick_(['Tungkai kiri kekuatan'])) ?>, rasa raba <?!= s(pick_(['Tungkai kiri rasa raba'])) ?>; 
+Lengan kanan: <?!= yn(pick_(['Lengan kanan lumpuh'])) ?>, kekuatan <?!= s(pick_(['Lengan kanan kekuatan'])) ?>, rasa raba <?!= s(pick_(['Lengan kanan rasa raba'])) ?>; 
+Lengan kiri: <?!= yn(pick_(['Lengan kiri lumpuh'])) ?>, kekuatan <?!= s(pick_(['Lengan kiri kekuatan'])) ?>, rasa raba <?!= s(pick_(['Lengan kiri rasa raba'])) ?>
+</td></tr>
+<tr><td class="sec" colspan="3">IV. Riwayat Kontak</td></tr>
+<tr><td><b>Perjalanan 35 hari sebelum sakit</b><br><?!= yn(pick_(['Perjalanan 35 hari AFP'])) ?> - <?!= s(pick_(['Lokasi perjalanan AFP'])) ?></td><td><b>Tanggal pergi</b><br><?!= d(pick_(['Tanggal pergi AFP'])) ?></td><td><b>Kontak anak baru OPV (75 hari)</b><br><?!= yn(pick_(['Kontak OPV 75 hari AFP'])) ?></td></tr>
+<tr><td class="sec" colspan="3">V. Sanitasi Dasar</td></tr>
+<tr><td><b>Punya jamban sendiri</b><br><?!= yn(pick_(['Punya jamban sendiri'])) ?></td><td><b>Jenis jamban</b><br><?!= s(pick_(['Jenis jamban','Jenis jamban lainnya'])) ?></td><td><b>Selalu pakai jamban</b><br><?!= s(pick_(['Selalu pakai jamban'])) ?></td></tr>
+<tr><td><b>Jamban aman</b><br><?!= yn(pick_(['Jamban aman'])) ?></td><td colspan="2"><b>Pembuangan diapers</b><br><?!= s(pick_(['Pembuangan diapers','Pembuangan diapers lainnya'])) ?></td></tr>
+<tr><td class="sec" colspan="3">VI. Status Imunisasi Polio</td></tr>
+<tr><td><b>Dosis OPV/IPV/Hexavalen rutin</b><br><?!= s(pick_(['Dosis OPV rutin'])) ?> / <?!= s(pick_(['Dosis IPV rutin'])) ?> / <?!= s(pick_(['Dosis Hexavalen rutin'])) ?></td><td><b>Sumber info imunisasi rutin</b><br><?!= s(pick_(['Sumber info imunisasi rutin AFP'])) ?></td><td><b>Program imunisasi tambahan</b><br><?!= s(pick_(['Program imunisasi tambahan AFP'])) ?></td></tr>
+<tr><td><b>Dosis OPV/IPV tambahan</b><br><?!= s(pick_(['Dosis OPV tambahan AFP'])) ?> / <?!= s(pick_(['Dosis IPV tambahan AFP'])) ?></td><td><b>Tgl OPV/IPV/Hexa terakhir</b><br><?!= d(pick_(['Tanggal OPV terakhir AFP'])) ?> / <?!= d(pick_(['Tanggal IPV terakhir AFP'])) ?> / <?!= d(pick_(['Tanggal Hexavalen terakhir AFP'])) ?></td><td><b>Sumber info tambahan</b><br><?!= s(pick_(['Sumber info imunisasi tambahan AFP'])) ?></td></tr>
+<tr><td class="sec" colspan="3">VII. Pengumpulan Spesimen</td></tr>
+<tr><td><b>Spesimen tinja 1</b><br><?!= yn(pick_(['Spesimen tinja 1 diambil?'])) ?> | Ambil <?!= d(pick_(['Tanggal tinja 1'])) ?></td><td><b>Kirim kab-prov</b><br><?!= d(pick_(['Tanggal kirim tinja 1 kab-prov'])) ?></td><td><b>Kirim prov-lab</b><br><?!= d(pick_(['Tanggal kirim tinja 1 prov-lab'])) ?></td></tr>
+<tr><td><b>Spesimen tinja 2</b><br><?!= yn(pick_(['Spesimen tinja 2 diambil?'])) ?> | Ambil <?!= d(pick_(['Tanggal tinja 2'])) ?></td><td><b>Kirim kab-prov</b><br><?!= d(pick_(['Tanggal kirim tinja 2 kab-prov'])) ?></td><td><b>Kirim prov-lab</b><br><?!= d(pick_(['Tanggal kirim tinja 2 prov-lab'])) ?></td></tr>
+<tr><td><b>Alasan tidak diambil spesimen</b><br><?!= s(pick_(['Alasan tidak diambil spesimen AFP'])) ?></td><td><b>Kondisi spesimen baik</b><br><?!= yn(pick_(['Kondisi spesimen baik'])) ?></td><td><b>Hasil pemeriksaan AFP</b><br><?!= s(pick_(['Hasil pemeriksaan AFP'])) ?></td></tr>
+<tr><td><b>Nama dokter</b><br><?!= s(pick_(['Nama dokter AFP'])) ?></td><td><b>No Telp dokter</b><br><?!= s(pick_(['No. Telp dokter AFP'])) ?></td><td><b>Tgl follow up 60 hari / masih lumpuh</b><br><?!= d(pick_(['Tanggal follow up 60 hari'])) ?> / <?!= yn(pick_(['Masih ada kelumpuhan'])) ?></td></tr>
+<tr><td colspan="3"><b>Petugas investigasi</b><br><?!= s(pick_(['Petugas','Pelaksana investigasi'])) ?> &nbsp;&nbsp; <b>ID Registrasi:</b> <?!= s(pick_(['ID Registrasi Kasus'])) ?> &nbsp;&nbsp; <b>Status Verifikasi:</b> <?!= s(pick_(['Status Verifikasi EPID'])) ?></td></tr>
+</table>
+</body></html>

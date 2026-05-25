@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><base target="_top">
+<style>
+@page{size:A4;margin:10mm}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.8px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.kop{border:1px solid #111;border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.kop .title{font-size:14px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;color:#7c3aed}
+.kop .sub{font-size:10px;color:#555;margin-top:2px}
+.hr{height:2px;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:999px;margin-top:8px}
+table{width:100%;border-collapse:collapse}td,th{border:1px solid #111;padding:4px 6px;vertical-align:top}
+th{background:#f8fafc}
+.section{font-weight:900;text-transform:uppercase;text-align:center;letter-spacing:.2px;background:#ede9fe}
+.small{font-size:9.8px;color:#444}
+</style></head><body>
+<?
+var data=(typeof DATA!=='undefined'?DATA:{}), meta=(typeof META!=='undefined'?META:{});
+function s(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function t(v){return String(v==null?'':v).trim();}
+function pick_(){for(var i=0;i<arguments.length;i++){var k=arguments[i]; if(Object.prototype.toString.call(k)==='[object Array]'){for(var j=0;j<k.length;j++){var kk=k[j]; if(data[kk]!=null&&data[kk]!=='') return data[kk]; if(meta[kk]!=null&&meta[kk]!=='') return meta[kk];}} else {if(data[k]!=null&&data[k]!=='') return data[k]; if(meta[k]!=null&&meta[k]!=='') return meta[k];}} return '';}
+function yn(v){v=t(v).toLowerCase(); if(['ya','y','yes','true','1'].indexOf(v)!==-1)return 'Ya'; if(['tidak','n','no','false','0'].indexOf(v)!==-1)return 'Tidak'; return v||'-';}
+function d(v){v=t(v); if(!v) return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return m[3]+'-'+m[2]+'-'+m[1]; return s(v);} 
+?>
+<div class="kop"><div class="title">FORM PERT-01 — INVESTIGASI KASUS SUSPEK PERTUSIS</div><div class="sub">Output PDF otomatis aplikasi PD3I (format ditingkatkan)</div><div class="hr"></div></div>
+<table>
+<tr><td><b>Provinsi</b><br><?!= s(pick_(['Provinsi unit pelapor','Provinsi'])) ?></td><td><b>Kabupaten/Kota</b><br><?!= s(pick_(['Kab/Kota unit pelapor','Kab/Kota'])) ?></td><td><b>Nomor EPID</b><br><?!= s(pick_(['Nomor EPID'])) ?></td></tr>
+<tr><td><b>Sumber Laporan</b><br><?!= s(pick_(['Sumber Laporan'])) ?></td><td colspan="2"><b>Nama Unit Pelapor</b><br><?!= s(pick_(['Nama unit pelapor'])) ?></td></tr>
+<tr><td><b>Tanggal Terima Laporan</b><br><?!= d(pick_(['Tanggal terima laporan'])) ?></td><td colspan="2"><b>Tanggal Pelacakan</b><br><?!= d(pick_(['Tanggal Pelacakan'])) ?></td></tr>
+<tr><td class="section" colspan="3">Informasi Kasus</td></tr>
+<tr><td colspan="2"><b>Nama Kasus</b><br><?!= s(pick_(['Nama','Nama Pasien'])) ?></td><td><b>Jenis Kelamin</b><br><?!= s(pick_(['JK'])) ?></td></tr>
+<tr><td><b>Tanggal Lahir</b><br><?!= d(pick_(['Tanggal Lahir'])) ?></td><td><b>Umur</b><br><?!= s(pick_(['Umur (auto)','Umur'])) ?></td><td><b>NIK</b><br><?!= s(pick_(['NIK'])) ?></td></tr>
+<tr><td colspan="3"><b>Alamat</b><br><?!= s(pick_(['Alamat'])) ?></td></tr>
+<tr><td><b>Kelurahan</b><br><?!= s(pick_(['Kelurahan'])) ?></td><td><b>Kecamatan</b><br><?!= s(pick_(['Kecamatan'])) ?></td><td><b>RT/RW</b><br><?!= s(pick_(['RT'])) ?> / <?!= s(pick_(['RW'])) ?></td></tr>
+<tr><td><b>Nama Orangtua/Wali</b><br><?!= s(pick_(['Nama Orang Tua/Wali','Nama orang tua/wali'])) ?></td><td colspan="2"><b>No. Kontak Orangtua/Wali</b><br><?!= s(pick_(['No Telp/WA Orang Tua/Wali','No. kontak orang tua/wali'])) ?></td></tr>
+<tr><td class="section" colspan="3">Informasi Klinis</td></tr>
+<tr><td><b>Batuk terus menerus</b><br><?!= yn(pick_(['Batuk terus menerus?','Batuk terus menerus'])) ?></td><td colspan="2"><b>Tanggal Mulai Batuk</b><br><?!= d(pick_(['Tanggal Mulai Batuk'])) ?></td></tr>
+<tr><td><b>Apnea</b><br><?!= yn(pick_(['Apnea?','Apnea'])) ?></td><td colspan="2"><b>Tanggal Mulai Apnea</b><br><?!= d(pick_(['Tanggal Mulai Apnea'])) ?></td></tr>
+<tr><td colspan="3"><b>Gejala lain</b><br>Batuk rejan: <?!= yn(pick_(['Batuk rejan'])) ?>; Muntah setelah batuk: <?!= yn(pick_(['Muntah setelah batuk'])) ?>; Lainnya: <?!= s(pick_(['Gejala lain PERT','Lainnya gejala'])) ?></td></tr>
+<tr><td class="section" colspan="3">Riwayat Pengobatan</td></tr>
+<tr><td><b>Dirawat di RS?</b><br><?!= yn(pick_(['Rawat inap?'])) ?></td><td><b>Nama Rumah Sakit</b><br><?!= s(pick_(['Nama Rumah Sakit'])) ?></td><td><b>Nomor Rekam Medik</b><br><?!= s(pick_(['Nomor Rekam Medik'])) ?></td></tr>
+<tr><td><b>Tanggal Masuk Rawat Inap</b><br><?!= d(pick_(['Tanggal Masuk Rawat Inap'])) ?></td><td colspan="2"><b>Tanggal Keluar</b><br><?!= d(pick_(['Tanggal Pulang','Tanggal Keluar'])) ?></td></tr>
+<tr><td class="section" colspan="3">Riwayat Vaksinasi</td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 2 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 2 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 2 bulan'])) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 3 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 3 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 3 bulan'])) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 4 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 4 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 4 bulan'])) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 18 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 18 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 18 bulan'])) ?></td></tr>
+<tr><td colspan="2"><b>Pernah imunisasi saat ORI?</b><br><?!= yn(pick_(['Pernah menerima DPT-HB-HiB saat ORI?'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber ORI'])) ?></td></tr>
+<tr><td colspan="3"><b>Tanggal Vaksinasi DPT-HB-HiB terakhir</b><br><?!= d(pick_(['Tanggal vaksinasi DPT terakhir'])) ?></td></tr>
+<tr><td class="section" colspan="3">Informasi Epidemiologis</td></tr>
+<tr><td colspan="2"><b>Ada kasus serupa di keluarga/sekitar?</b><br><?!= yn(pick_(['Ada kasus serupa?','Ada kasus sekitar?'])) ?></td><td><b>Jumlah</b><br><?!= s(pick_(['Jumlah kasus sekitar'])) ?></td></tr>
+<tr><td><b>Bepergian 1 bulan terakhir?</b><br><?!= yn(pick_(['Bepergian 1 bulan terakhir?'])) ?></td><td><b>Lokasi</b><br><?!= s(pick_(['Lokasi perjalanan PERT','Tujuan perjalanan'])) ?></td><td><b>Tanggal pergi / kembali</b><br><?!= d(pick_(['Tanggal pergi PERT','Tanggal pergi'])) ?> / <?!= d(pick_(['Tanggal kembali PERT','Tanggal kembali'])) ?></td></tr>
+<tr><td class="section" colspan="3">Informasi Spesimen</td></tr>
+<tr><td><b>Spesimen diambil?</b><br><?!= yn(pick_(['Spesimen pertusis diambil?','Spesimen diambil?'])) ?></td><td><b>Jenis Spesimen</b><br><?!= s(pick_(['Jenis spesimen pertusis','Jenis Spesimen'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil spesimen pertusis','Tanggal ambil spesimen'])) ?> / <?!= d(pick_(['Tanggal kirim spesimen pertusis','Tanggal pengiriman spesimen'])) ?></td></tr>
+<tr><td><b>Spesimen lain diambil?</b><br><?!= yn(pick_(['Spesimen lain pertusis diambil?'])) ?></td><td><b>Jenis Sampel Lain</b><br><?!= s(pick_(['Jenis spesimen lain pertusis','Jenis Sampel Lain'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil spesimen lain pertusis','Tanggal ambil spesimen lain'])) ?> / <?!= d(pick_(['Tanggal kirim spesimen lain pertusis','Tanggal pengiriman spesimen lain ke lab'])) ?></td></tr>
+<tr><td colspan="3"><b>Keadaan saat ini</b><br><?!= s(pick_(['Status akhir PERT','Keadaan saat ini'])) ?></td></tr>
+<tr><td colspan="3"><b>Pelaksana investigasi</b><br><?!= s(pick_(['Petugas','Pelaksana investigasi'])) ?> &nbsp;&nbsp; <b>No Kontak:</b> <?!= s(pick_(['No Whatsapp Petugas','No. Kontak'])) ?></td></tr>
+</table>
+<div class="small" style="margin-top:8px">Tambahan sistem: ID Registrasi Kasus <?!= s(pick_(['ID Registrasi Kasus'])) ?> | Status Verifikasi EPID <?!= s(pick_(['Status Verifikasi EPID'])) ?></div>
+</body></html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+@page{size:A4;margin:10mm}
+body{font-family:Arial,Helvetica,sans-serif;font-size:10.8px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.kop{border:1px solid #111;border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.kop .title{font-size:14px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;color:#7c2d12}
+.kop .sub{font-size:10px;color:#555;margin-top:2px}
+.hr{height:2px;background:linear-gradient(90deg,#7c2d12,#f97316);border-radius:999px;margin-top:8px}
+table{width:100%;border-collapse:collapse}
+td,th{border:1px solid #111;padding:4px 6px;vertical-align:top}
+th{background:#f8fafc}
+.sec{font-weight:900;text-transform:uppercase;text-align:center;letter-spacing:.2px;background:#fed7aa}
+.small{font-size:9.8px;color:#444}
+</style></head><body>
+<? var data=(typeof DATA!=='undefined'?DATA:{}),meta=(typeof META!=='undefined'?META:{}),contacts=(typeof CONTACTS!=='undefined'&&CONTACTS)?CONTACTS:[]; function s(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');} function t(v){return String(v==null?'':v).trim();} function pick_(){for(var i=0;i<arguments.length;i++){var k=arguments[i];if(Object.prototype.toString.call(k)==='[object Array]'){for(var j=0;j<k.length;j++){var kk=k[j];if(data[kk]!=null&&data[kk]!=='')return data[kk];if(meta[kk]!=null&&meta[kk]!=='')return meta[kk];}}else{if(data[k]!=null&&data[k]!=='')return data[k];if(meta[k]!=null&&meta[k]!=='')return meta[k];}}return '';} function d(v){v=t(v); if(!v)return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return m[3]+'-'+m[2]+'-'+m[1]; return s(v);} function yn(v){v=t(v).toLowerCase();if(['ya','y','yes','1','true'].indexOf(v)!==-1)return 'Ya';if(['tidak','n','no','0','false'].indexOf(v)!==-1)return 'Tidak';return v||'-';} ?>
+<div class="kop"><div class="title">FORM DIF-1 — PENYELIDIKAN EPIDEMIOLOGI SUSPEK DIFTERI</div><div class="sub">Output PDF otomatis aplikasi PD3I (format ditingkatkan)</div><div class="hr"></div></div>
+<table>
+<tr><td><b>Provinsi</b><br><?!= s(pick_(['Provinsi unit pelapor','Provinsi'])) ?></td><td><b>Kab/Kota</b><br><?!= s(pick_(['Kab/Kota unit pelapor','Kab/Kota'])) ?></td><td><b>No EPID</b><br><?!= s(pick_(['Nomor EPID'])) ?></td></tr>
+<tr><td colspan="3"><b>Puskesmas/Nama Unit Pelapor</b><br><?!= s(pick_(['Nama unit pelapor'])) ?></td></tr>
+<tr><td class="sec" colspan="3">I. Identitas Pelapor</td></tr>
+<tr><td><b>Nama</b><br><?!= s(pick_(['Nama Petugas','Petugas'])) ?></td><td><b>Nama Kantor & Jabatan</b><br><?!= s(pick_(['Nama Kantor & Jabatan'])) ?></td><td><b>Tanggal Terima / Pelacakan</b><br><?!= d(pick_(['Tanggal terima laporan'])) ?> / <?!= d(pick_(['Tanggal Pelacakan'])) ?></td></tr>
+<tr><td class="sec" colspan="3">II. Identitas Penderita</td></tr>
+<tr><td colspan="2"><b>Nama</b><br><?!= s(pick_(['Nama','Nama Penderita'])) ?></td><td><b>Nama Orang Tua/KK</b><br><?!= s(pick_(['Nama Orang Tua/Wali','Nama orang tua/wali'])) ?></td></tr>
+<tr><td><b>JK</b><br><?!= s(pick_(['JK'])) ?></td><td><b>Tanggal Lahir</b><br><?!= d(pick_(['Tanggal Lahir'])) ?></td><td><b>Umur</b><br><?!= s(pick_(['Umur (auto)','Umur'])) ?></td></tr>
+<tr><td><b>Berat/Tinggi Badan</b><br><?!= s(pick_(['Berat Badan (kg)'])) ?> kg / <?!= s(pick_(['Tinggi Badan (cm)'])) ?> cm</td><td><b>Pekerjaan</b><br><?!= s(pick_(['Pekerjaan'])) ?></td><td><b>Tel/HP</b><br><?!= s(pick_(['No. kontak pasien','No Telp/WA Orang Tua/Wali'])) ?></td></tr>
+<tr><td colspan="3"><b>Alamat Lengkap</b><br><?!= s(pick_(['Alamat'])) ?></td></tr>
+<tr><td><b>Kelurahan</b><br><?!= s(pick_(['Kelurahan'])) ?></td><td><b>Kecamatan</b><br><?!= s(pick_(['Kecamatan'])) ?></td><td><b>Kab/Kota - Provinsi</b><br><?!= s(pick_(['Kab/Kota Pasien','Kab/Kota'])) ?> - <?!= s(pick_(['Provinsi Pasien','Provinsi'])) ?></td></tr>
+<tr><td colspan="3"><b>Orang tua/Wali/Saudara dekat + alamat + kontak</b><br><?!= s(pick_(['Orang tua/Wali/Saudara dekat'])) ?> | <?!= s(pick_(['Alamat Lengkap Wali'])) ?> | <?!= s(pick_(['No. Telepon Wali'])) ?></td></tr>
+<tr><td class="sec" colspan="3">III. Riwayat Sakit</td></tr>
+<tr><td><b>Tanggal mulai sakit</b><br><?!= d(pick_(['Tanggal mulai sakit'])) ?></td><td colspan="2"><b>Keluhan Utama</b><br><?!= s(pick_(['Keluhan Utama'])) ?></td></tr>
+<tr><td><b>Demam</b><br><?!= yn(pick_(['Demam'])) ?> (<?!= d(pick_(['Tanggal mulai demam'])) ?>)</td><td><b>Sakit tenggorokan</b><br><?!= yn(pick_(['Sakit tenggorokan?'])) ?> (<?!= d(pick_(['Tanggal sakit tenggorokan'])) ?>)</td><td><b>Bull neck</b><br><?!= yn(pick_(['Bull neck'])) ?> (<?!= d(pick_(['Tanggal leher bengkak'])) ?>)</td></tr>
+<tr><td><b>Sesak nafas</b><br><?!= yn(pick_(['Sesak nafas?'])) ?> (<?!= d(pick_(['Tanggal sesak nafas'])) ?>)</td><td><b>Pseudomembran</b><br><?!= yn(pick_(['Pseudomembran?'])) ?> (<?!= d(pick_(['Tanggal pseudomembran'])) ?>)</td><td><b>Lokasi pseudomembran</b><br><?!= s(pick_(['Lokasi pseudomembran'])) ?></td></tr>
+<tr><td colspan="3"><b>Gejala lain</b><br><?!= s(pick_(['Gejala lain DIF'])) ?></td></tr>
+<tr><td><b>Status imunisasi difteri</b><br><?!= s(pick_(['Status imunisasi difteri'])) ?></td><td><b>Sumber informasi</b><br><?!= s(pick_(['Sumber info imunisasi'])) ?></td><td><b>Status Gizi</b><br><?!= s(pick_(['Status Gizi'])) ?></td></tr>
+<tr><td><b>Jenis spesimen diambil</b><br><?!= s(pick_(['Lokasi ambil swab'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil swab'])) ?> / <?!= d(pick_(['Tanggal kirim swab'])) ?></td><td><b>No Kode Spesimen</b><br><?!= s(pick_(['No Kode Spesimen'])) ?></td></tr>
+<tr><td class="sec" colspan="3">IV. Riwayat Pengobatan</td></tr>
+<tr><td colspan="3"><b>Penderita berobat ke</b><br>RS: <?!= d(pick_(['Tanggal berobat RS'])) ?> | Puskesmas: <?!= d(pick_(['Tanggal berobat Puskesmas'])) ?> | Dokter: <?!= d(pick_(['Tanggal berobat Dokter Swasta'])) ?> | Perawat/Bidan: <?!= d(pick_(['Tanggal berobat Perawat/Bidan'])) ?> | Tidak berobat: <?!= yn(pick_(['Tidak berobat'])) ?></td></tr>
+<tr><td><b>Diagnosis suspek difteri</b><br><?!= yn(pick_(['Diagnosis suspek difteri'])) ?> (<?!= d(pick_(['Tanggal diagnosis suspek'])) ?>)</td><td><b>Antibiotik</b><br><?!= yn(pick_(['Antibiotik diberikan?'])) ?> <?!= s(pick_(['Jenis antibiotik'])) ?> (<?!= d(pick_(['Tanggal antibiotik'])) ?>)</td><td><b>ADS</b><br><?!= yn(pick_(['ADS diberikan?'])) ?> Dosis <?!= s(pick_(['Dosis ADS (IU)'])) ?> (<?!= d(pick_(['Tanggal ADS'])) ?>)</td></tr>
+<tr><td colspan="2"><b>Alasan tidak ADS / Obat lain</b><br><?!= s(pick_(['Alasan tidak ADS'])) ?> | <?!= s(pick_(['Obat lain DIF'])) ?></td><td><b>Kondisi saat ini</b><br><?!= s(pick_(['Kondisi kasus saat ini'])) ?> (Sembuh: <?!= d(pick_(['Tanggal sembuh DIF'])) ?>, Meninggal: <?!= d(pick_(['Tanggal meninggal DIF'])) ?>)</td></tr>
+<tr><td class="sec" colspan="3">IV. Riwayat Kontak</td></tr>
+<tr><td><b>Perjalanan 10 hari</b><br><?!= yn(pick_(['Riwayat perjalanan 10 hari'])) ?> - <?!= s(pick_(['Daerah perjalanan DIF'])) ?></td><td colspan="2"><b>Kontak suspek/konfirmasi</b><br><?!= yn(pick_(['Riwayat kontak suspek/konfirmasi difteri'])) ?> - <?!= s(pick_(['Nama alamat kontak DIF'])) ?></td></tr>
+<tr><td class="sec" colspan="3">V. Kontak Kasus</td></tr>
+<tr><th>No</th><th>Nama/Umur/Alamat/Hubungan</th><th>Imunisasi Difteri (DPT/DT/Td)</th></tr>
+<? for(var i=0;i<14;i++){ var r=contacts[i]||{}; ?>
+<tr><td><?!= i+1 ?></td><td><?!= s(r['Nama']||'') ?> | <?!= s(r['Umur (thn)']||'') ?> | <?!= s(r['Alamat']||'') ?> | <?!= s(r['Hub dgn Kasus']||'') ?></td><td><?!= s(r['Berapa kali pernah imunisasi Difteri (DPT-HB-HiB/DT/Td)']||r['Imunisasi']||'') ?></td></tr>
+<? } ?>
+</table>
+<div class="small" style="margin-top:8px">Tambahan sistem: ID Registrasi Kasus <?!= s(pick_(['ID Registrasi Kasus'])) ?> | Status Verifikasi EPID <?!= s(pick_(['Status Verifikasi EPID'])) ?></div>
+</body></html>
