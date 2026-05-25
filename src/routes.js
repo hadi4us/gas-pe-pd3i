@@ -559,17 +559,28 @@ function getWorkflowFilterOptions(token) {
     const idxPengampu = headers.indexOf('Pengampu');
     const isRowInUserScope = function(row) {
       if (canSeeAllReferenceWilayah) return true;
-      if (!userKodePuskesmas && !userUnitKerja) return false;
       const rowKode = idxKodePuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxKodePuskesmas]) : '';
       const rowNama = idxNamaPuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxNamaPuskesmas]) : '';
       const rowPengampu = idxPengampu !== -1 ? _normalizeAccessScopeKey_(row[idxPengampu]) : '';
       const rowNamaAlias = normalizePuskesmasScopeName(rowNama);
       const rowPengampuAlias = normalizePuskesmasScopeName(rowPengampu);
-      return !!((userKodePuskesmas && rowKode && userKodePuskesmas === rowKode)
+      const puskesmasMatch = (userKodePuskesmas && rowKode && userKodePuskesmas === rowKode)
         || (userUnitKerja && rowNama && userUnitKerja === rowNama)
         || (userUnitKerja && rowPengampu && userUnitKerja === rowPengampu)
         || (userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias)
-        || (userUnitAlias && rowPengampuAlias && userUnitAlias === rowPengampuAlias));
+        || (userUnitAlias && rowPengampuAlias && userUnitAlias === rowPengampuAlias);
+      if (puskesmasMatch) return true;
+      // Fallback: faskes non-puskesmas with scopeLevel can access records in their territory
+      if (!userKodePuskesmas && !userUnitKerja && userScopeLevel) {
+        const rowKecamatan = _normalizeAccessScopeKey_(idxKecamatan !== -1 ? row[idxKecamatan] : '');
+        const userKecamatan = _normalizeAccessScopeKey_((sess.user && sess.user.kecamatan) || '');
+        const userKabKota = _normalizeAccessScopeKey_((sess.user && sess.user.kabKota) || '');
+        const rowKabKotaRaw = idxKabKota !== -1 ? row[idxKabKota] : '';
+        const rowKabKota = _normalizeAccessScopeKey_(rowKabKotaRaw);
+        if (userScopeLevel === 'kecamatan' && userKecamatan && rowKecamatan && userKecamatan === rowKecamatan) return true;
+        if (userScopeLevel === 'kabkota' && userKabKota && rowKabKota && userKabKota === rowKabKota) return true;
+      }
+      return false;
     };
     data.slice(1).forEach(function(row) {
       if (!isRowInUserScope(row)) return;
@@ -1796,19 +1807,43 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
-  if (!userKodePuskesmas && !userUnitKerja) return false;
+  if (!userKodePuskesmas && !userUnitKerja && !userScopeLevel) return false;
 
   const domisili = _getRecordDomisiliForAccess_(dx, data || {});
   if (!domisili.kecamatan || !domisili.kelurahan) return false;
 
+  const recordKecamatan = _normalizeAccessScopeKey_(domisili.kecamatan || '');
+  const recordKabKota = _normalizeAccessScopeKey_(domisili.kabKota || '');
+  const userKecamatan = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kecamatan) || '');
+  const userKabKota = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kabKota) || '');
+
+  // Scope-level access: faskes non-puskesmas (RS, klinik, lab) can access records
+  // within their territorial scope (kecamatan/kabkota) without REF_PENGAMPU mapping
+  if (!userKodePuskesmas && !userUnitKerja) {
+    if (userScopeLevel === 'kecamatan' && userKecamatan && recordKecamatan && userKecamatan === recordKecamatan) return true;
+    if (userScopeLevel === 'kabkota' && userKabKota && recordKabKota && userKabKota === recordKabKota) return true;
+    return false;
+  }
+
   const pengampu = getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota);
-  if (!pengampu || !pengampu.found) return false;
+  if (!pengampu || !pengampu.found) {
+    // Fallback: if puskesmas mapping not found, fall back to territorial scope check
+    if (userScopeLevel === 'kecamatan' && userKecamatan && recordKecamatan && userKecamatan === recordKecamatan) return true;
+    if (userScopeLevel === 'kabkota' && userKabKota && recordKabKota && userKabKota === recordKabKota) return true;
+    return false;
+  }
 
   const mappedKodePuskesmas = _normalizeAccessScopeKey_(pengampu.kodePuskesmas || '');
   const mappedNamaPuskesmas = _normalizeAccessScopeKey_(pengampu.namaPuskesmas || '');
   const kodeMatch = userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas;
   const unitMatch = userUnitKerja && mappedNamaPuskesmas && userUnitKerja === mappedNamaPuskesmas;
-  return !!(kodeMatch || unitMatch);
+  if (kodeMatch || unitMatch) return true;
+
+  // Fallback: even if puskesmas mapping doesn't match, allow access if territorial scope matches
+  // (for faskes non-puskesmas that serve multiple puskesmas in their area)
+  if (userScopeLevel === 'kecamatan' && userKecamatan && recordKecamatan && userKecamatan === recordKecamatan) return true;
+  if (userScopeLevel === 'kabkota' && userKabKota && recordKabKota && userKabKota === recordKabKota) return true;
+  return false;
 }
 
 function _canRoleWriteSampleStage_(role) {

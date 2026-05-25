@@ -244,14 +244,37 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
   const normKecamatan = _normalizeWilayahKey_(kecamatan || '');
   const normKelurahan = _normalizeWilayahKey_(kelurahan || '');
   const normKabKota = _normalizeWilayahKey_(kabKota || '');
-  if (!normKecamatan || !normKelurahan) return false;
+  if (!normKecamatan || !normKelurahan) {
+    // Fallback for faskes non-puskesmas with scope-level access
+    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+    const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
+    const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
+    if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
+    if (userScopeLevel === 'kabkota' && userKabKota && normKabKota && userKabKota === normKabKota) return true;
+    return false;
+  }
 
   try {
     const pengampu = _getPengampuByWilayahCachedForDashboard_(normKecamatan, normKelurahan, normKabKota);
-    if (!pengampu || !pengampu.found) return false;
+    if (!pengampu || !pengampu.found) {
+      // Fallback: faskes non-puskesmas with scope-level access
+      const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+      const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
+      const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
+      if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
+      if (userScopeLevel === 'kabkota' && userKabKota && normKabKota && userKabKota === normKabKota) return true;
+      return false;
+    }
     const mappedKode = _normalizeWilayahKey_(pengampu.kodePuskesmas || '');
     const mappedUnit = _normalizeWilayahKey_(pengampu.namaPuskesmas || '');
-    return !!((userKode && mappedKode && userKode === mappedKode) || (userUnit && mappedUnit && userUnit === mappedUnit));
+    if ((userKode && mappedKode && userKode === mappedKode) || (userUnit && mappedUnit && userUnit === mappedUnit)) return true;
+    // Fallback: even if puskesmas mapping doesn't match, check territorial scope
+    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+    const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
+    const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
+    if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
+    if (userScopeLevel === 'kabkota' && userKabKota && normKabKota && userKabKota === normKabKota) return true;
+    return false;
   } catch (e) {
     return false;
   }
