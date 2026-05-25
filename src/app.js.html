@@ -2936,7 +2936,6 @@
       applySidebarWorkspaceLayout(normalized);
       applySearchShellCopyForWorkspace(normalized);
       restoreWorkflowSearchFiltersForWorkspace(normalized);
-      refreshWorkflowInbox();
       if (opts.scroll !== false) document.getElementById('section-search-shell')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
     }
