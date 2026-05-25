@@ -4027,10 +4027,14 @@
         WORKFLOW_INBOX_CACHE = res || null;
         renderWorkflowInbox(res || null);
       })
-      .withFailureHandler(function() {
+      .withFailureHandler(function(err) {
         if (!isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+        console.error('refreshWorkflowInbox failed:', err);
+        WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
         box.innerHTML = '';
+        const errorMsg = (err && err.message) ? String(err.message) : 'Gagal memuat daftar kerja. Silakan coba lagi.';
+        showTopAlert(errorMsg, false);
       })
       .getWorkflowInbox(dx, SESSION_TOKEN, { forceRefresh: !!options.forceRefresh });
   }
