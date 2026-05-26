@@ -107,6 +107,14 @@ test('workflow inbox can bypass cache after mutations and uses short operational
   assert.match(appHtml, /\.getWorkflowInbox\(dx, SESSION_TOKEN, \{ forceRefresh: !!options\.forceRefresh \}\)/);
 });
 
+test('workflow inbox refresh never skips a newer menu request while loading', () => {
+  assert.match(appHtml, /var _PD3I_WORKFLOW_INBOX_CALL_ID = 0/);
+  assert.match(appHtml, /const callId = \+\+_PD3I_WORKFLOW_INBOX_CALL_ID/);
+  assert.match(appHtml, /if \(callId !== _PD3I_WORKFLOW_INBOX_CALL_ID\) \{ console\.log\('\[PD3I v2\] superseded call, ignoring'\); return; \}/);
+  assert.doesNotMatch(appHtml, /WORKFLOW_INBOX_CALL_ACTIVE/);
+  assert.doesNotMatch(appHtml, /refreshWorkflowInbox call superseded by newer call, skipping/);
+});
+
 test('workflow inbox returns complete queues so workspace filters can find older kelurahan matches', () => {
   assert.match(dashboardJs, /truncating to the first few newest rows makes valid filtered cases disappear/);
   assert.match(dashboardJs, /pendingVerification: result\.pendingVerification \|\| \[\]/);

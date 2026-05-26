@@ -4004,21 +4004,15 @@
   console.log('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
 
   var _PD3I_WORKFLOW_INBOX_CALL_ID = 0;
-  var _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
 
   function refreshWorkflowInbox(options) {
     options = options || {};
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     console.log('[PD3I v2] refreshWorkflowInbox called, workspace:', workspace);
     const callId = ++_PD3I_WORKFLOW_INBOX_CALL_ID;
-    if (_PD3I_WORKFLOW_INBOX_CALL_ACTIVE) {
-      console.log('[PD3I v2] refreshWorkflowInbox call superseded by newer call, skipping');
-      return;
-    }
-    _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = true;
     const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
-    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; };
+    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); return; };
     if (!safeGsRun() || !SESSION_TOKEN) {
       ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
         const el = document.getElementById(id);
@@ -4026,7 +4020,6 @@
       });
       box.classList.add('hidden');
       box.innerHTML = '';
-      _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
       return;
     }
     if (['search', 'verifikasi', 'sampel', 'status'].includes(workspace)) {
@@ -4038,7 +4031,6 @@
     var timeoutTimer = setTimeout(function() {
       if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) return;
       timedOut = true;
-      _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
       console.error('[PD3I v2] refreshWorkflowInbox TIMEOUT after 10s for workspace:', workspace);
       box.classList.add('hidden');
       box.innerHTML = '';
@@ -4047,8 +4039,7 @@
     google.script.run
       .withSuccessHandler(function(res) {
         clearTimeout(timeoutTimer);
-        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; }
-        _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); return; }
         console.log('[PD3I v2] refreshWorkflowInbox SUCCESS, workspace:', workspace, 'items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
         WORKFLOW_INBOX_CACHE = res || null;
         try {
@@ -4063,8 +4054,7 @@
       })
       .withFailureHandler(function(err) {
         clearTimeout(timeoutTimer);
-        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false; return; }
-        _PD3I_WORKFLOW_INBOX_CALL_ACTIVE = false;
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); return; }
         console.error('[PD3I v2] refreshWorkflowInbox FAILED:', err);
         WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
