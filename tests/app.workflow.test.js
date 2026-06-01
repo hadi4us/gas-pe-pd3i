@@ -71,6 +71,7 @@ test('verification save gives local feedback, timeout, and modal confirmation fo
 const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'routes.js'), 'utf8');
 const dashboardJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'dashboard.js'), 'utf8');
 const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'data.js'), 'utf8');
+const printJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'print.js'), 'utf8');
 const appDashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.dashboard.js.html'), 'utf8');
 
 test('record serialization hardens free-text values before writing to Sheets', () => {
@@ -80,6 +81,14 @@ test('record serialization hardens free-text values before writing to Sheets', (
   assert.match(dataJs, /if \(FORMULA_INJECTION_PREFIX_RE_\.test\(text\)\) \{\s*text = "'" \+ text;/);
   assert.match(dataJs, /if \(text\.length > maxLength\) \{\s*text = text\.slice\(0, maxLength\);\s*\}/);
   assert.match(dataJs, /result\[h\] = sanitizeSerializedValueForSheet_\(val, h\);/);
+});
+
+test('print endpoint routes each diagnosis to its own PDF template', () => {
+  assert.match(printJs, /const templateByDx = \{/);
+  ['MR', 'DIF', 'PERT', 'TN', 'AFP'].forEach((dx) => {
+    assert.match(printJs, new RegExp(dx + ': "print_' + dx + '"'));
+  });
+  assert.match(printJs, /return templateByDx\[dx\] \|\| "print_MR"/);
 });
 
 test('dynamic table serialization sanitizes nested string cells before JSON storage', () => {

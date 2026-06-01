@@ -71,8 +71,14 @@ function handlePrintRequest_(e) {
 
 function getPrintTemplateName_(dx) {
   dx = String(dx || "").trim().toUpperCase();
-  if (dx === "MR") return "print_MR";
-  return "print_MR";
+  const templateByDx = {
+    MR: "print_MR",
+    DIF: "print_DIF",
+    PERT: "print_PERT",
+    TN: "print_TN",
+    AFP: "print_AFP"
+  };
+  return templateByDx[dx] || "print_MR";
 }
 
 function safeGetPdfPrintUrl_(dx, epid, token) {
