@@ -688,13 +688,15 @@ function saveDxRecord_(dx, data) {
     }
   }
 
+  let existingRowValues = null;
   let existingRowObject = null;
   if (rowIndex !== -1) {
     try {
-      const existingValues = sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0];
+      existingRowValues = sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0];
       existingRowObject = {};
-      headers.forEach(function(h, j) { existingRowObject[h] = existingValues[j]; });
+      headers.forEach(function(h, j) { existingRowObject[h] = existingRowValues[j]; });
     } catch (e) {
+      existingRowValues = null;
       existingRowObject = null;
     }
   }
@@ -796,14 +798,13 @@ function saveDxRecord_(dx, data) {
   const serialized = serializeRecord_(data, headers);
 
   const now = new Date();
-  let oldTimestamp = "";
-  if (rowIndex !== -1 && idxTimestamp !== -1) {
-    oldTimestamp = sheet.getRange(rowIndex, idxTimestamp + 1).getValue();
-  }
+  let oldTimestamp = rowIndex !== -1 && idxTimestamp !== -1 && existingRowValues
+    ? existingRowValues[idxTimestamp]
+    : "";
 
   // Simpan existingRow untuk diff (Req 10.2)
-  const existingRow = rowIndex !== -1
-    ? sheet.getRange(rowIndex, 1, 1, headers.length).getValues()[0]
+  const existingRow = rowIndex !== -1 && existingRowValues
+    ? existingRowValues
     : new Array(headers.length).fill("");
 
   const rowData = headers.map((header, idx) => {

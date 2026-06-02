@@ -599,33 +599,49 @@ function getWorkflowFilterOptions(token) {
   };
 }
 
-function _buildSearchProjectionRecord_(headers, row) {
-  const candidateGroups = [
-    ['ID Registrasi Kasus'],
-    ['Nomor EPID'],
-    ['Nama Pasien', 'Nama'],
-    ['Tanggal Lahir'],
-    ['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu'],
-    ['Alamat', 'Alamat Domisili', 'Alamat Lengkap'],
-    ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota'],
-    ['Kecamatan'],
-    ['Kelurahan', 'Kelurahan domisili', 'Kelurahan/Desa'],
-    ['Status Pasien/Kasus', 'Keadaan saat ini'],
-    ['Status Verifikasi EPID'],
-    ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
-    ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
-    ['Deleted At'],
-    ['Diinput Oleh'],
-    ['Input Awal Diisi Oleh'],
-    ['Timestamp'],
-    ['Updated At'],
-    ['Nama unit pelapor']
-  ];
-  const record = {};
+const SEARCH_PROJECTION_CANDIDATE_GROUPS_ = [
+  ['ID Registrasi Kasus'],
+  ['Nomor EPID'],
+  ['Nama Pasien', 'Nama'],
+  ['Tanggal Lahir'],
+  ['Nama Orang Tua/Wali', 'Nama orang tua/wali', 'Nama Orang Tua', 'Nama Ibu'],
+  ['Alamat', 'Alamat Domisili', 'Alamat Lengkap'],
+  ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota'],
+  ['Kecamatan'],
+  ['Kelurahan', 'Kelurahan domisili', 'Kelurahan/Desa'],
+  ['Status Pasien/Kasus', 'Keadaan saat ini'],
+  ['Status Verifikasi EPID'],
+  ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
+  ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
+  ['Deleted At'],
+  ['Diinput Oleh'],
+  ['Input Awal Diisi Oleh'],
+  ['Timestamp'],
+  ['Updated At'],
+  ['Nama unit pelapor']
+];
+
+function _getSearchProjectionIndexMap_(headers) {
+  const cacheKey = (headers || []).join('\u0001');
+  if (!_getSearchProjectionIndexMap_._cache) _getSearchProjectionIndexMap_._cache = {};
+  const cached = _getSearchProjectionIndexMap_._cache[cacheKey];
+  if (cached) return cached;
+
   const idxMemo = {};
-  candidateGroups.forEach(function(group) {
+  SEARCH_PROJECTION_CANDIDATE_GROUPS_.forEach(function(group) {
     group.forEach(function(key) {
-      if (idxMemo[key] === undefined) idxMemo[key] = headers.indexOf(key);
+      if (idxMemo[key] === undefined) idxMemo[key] = (headers || []).indexOf(key);
+    });
+  });
+  _getSearchProjectionIndexMap_._cache[cacheKey] = idxMemo;
+  return idxMemo;
+}
+
+function _buildSearchProjectionRecord_(headers, row) {
+  const record = {};
+  const idxMemo = _getSearchProjectionIndexMap_(headers);
+  SEARCH_PROJECTION_CANDIDATE_GROUPS_.forEach(function(group) {
+    group.forEach(function(key) {
       var idx = idxMemo[key];
       if (idx !== -1) record[key] = row[idx];
     });

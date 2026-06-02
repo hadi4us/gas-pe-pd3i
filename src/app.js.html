@@ -4001,18 +4001,24 @@
     box.classList.remove('hidden');
   }
 
-  console.log('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
+  function pd3iDebugLog_() {
+    if (typeof window !== 'undefined' && window.PD3I_DEBUG === true && typeof console !== 'undefined' && console.log) {
+      console.log.apply(console, arguments);
+    }
+  }
+
+  pd3iDebugLog_('[PD3I v2] HTML loaded - runtime guard fix applied @560+');
 
   var _PD3I_WORKFLOW_INBOX_CALL_ID = 0;
 
   function refreshWorkflowInbox(options) {
     options = options || {};
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
-    console.log('[PD3I v2] refreshWorkflowInbox called, workspace:', workspace);
+    pd3iDebugLog_('[PD3I v2] refreshWorkflowInbox called, workspace:', workspace);
     const callId = ++_PD3I_WORKFLOW_INBOX_CALL_ID;
     const dx = getEffectiveDxScopeForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
     const box = document.getElementById('workflow-inbox');
-    if (!box) { console.log('[PD3I v2] workflow-inbox box not found'); return; };
+    if (!box) { pd3iDebugLog_('[PD3I v2] workflow-inbox box not found'); return; };
     if (!safeGsRun() || !SESSION_TOKEN) {
       ['intent-count-section-pelapor','intent-count-section-verifikasi','intent-count-section-sampel','intent-count-section-status'].forEach(function(id) {
         const el = document.getElementById(id);
@@ -4039,12 +4045,12 @@
     google.script.run
       .withSuccessHandler(function(res) {
         clearTimeout(timeoutTimer);
-        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); return; }
-        console.log('[PD3I v2] refreshWorkflowInbox SUCCESS, workspace:', workspace, 'items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { pd3iDebugLog_('[PD3I v2] superseded call, ignoring'); return; }
+        pd3iDebugLog_('[PD3I v2] refreshWorkflowInbox SUCCESS, workspace:', workspace, 'items:', res ? (res.summary ? JSON.stringify(res.summary) : 'no summary') : 'null');
         WORKFLOW_INBOX_CACHE = res || null;
         try {
           renderWorkflowInbox(res || null);
-          console.log('[PD3I v2] renderWorkflowInbox completed');
+          pd3iDebugLog_('[PD3I v2] renderWorkflowInbox completed');
         } catch (renderErr) {
           console.error('[PD3I v2] renderWorkflowInbox CRASH:', renderErr);
           box.classList.add('hidden');
@@ -4054,7 +4060,7 @@
       })
       .withFailureHandler(function(err) {
         clearTimeout(timeoutTimer);
-        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { console.log('[PD3I v2] superseded call, ignoring'); return; }
+        if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) { pd3iDebugLog_('[PD3I v2] superseded call, ignoring'); return; }
         console.error('[PD3I v2] refreshWorkflowInbox FAILED:', err);
         WORKFLOW_INBOX_CACHE = null;
         box.classList.add('hidden');
@@ -7304,8 +7310,8 @@
               window.__PD3I_ACTIVE_RECORD_META = Object.assign({}, window.__PD3I_ACTIVE_RECORD_META || {}, dataObj || {}, { "Nomor EPID": epidSaved || dataObj["Nomor EPID"] || '' });
             }
 
-            console.log("Save response:", res);
-            console.log("Resolved print params:", { epidSaved, dxSaved, printUrl });
+            pd3iDebugLog_("Save response:", res);
+            pd3iDebugLog_("Resolved print params:", { epidSaved, dxSaved, printUrl });
 
             clearFormDraft();
             if (epidSaved && submitMode !== 'input') {

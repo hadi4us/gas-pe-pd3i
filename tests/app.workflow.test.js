@@ -119,7 +119,7 @@ test('workflow inbox can bypass cache after mutations and uses short operational
 test('workflow inbox refresh never skips a newer menu request while loading', () => {
   assert.match(appHtml, /var _PD3I_WORKFLOW_INBOX_CALL_ID = 0/);
   assert.match(appHtml, /const callId = \+\+_PD3I_WORKFLOW_INBOX_CALL_ID/);
-  assert.match(appHtml, /if \(callId !== _PD3I_WORKFLOW_INBOX_CALL_ID\) \{ console\.log\('\[PD3I v2\] superseded call, ignoring'\); return; \}/);
+  assert.match(appHtml, /if \(callId !== _PD3I_WORKFLOW_INBOX_CALL_ID\) \{ pd3iDebugLog_\('\[PD3I v2\] superseded call, ignoring'\); return; \}/);
   assert.doesNotMatch(appHtml, /WORKFLOW_INBOX_CALL_ACTIVE/);
   assert.doesNotMatch(appHtml, /refreshWorkflowInbox call superseded by newer call, skipping/);
 });
@@ -478,6 +478,8 @@ test('performance tuning avoids repeated DOM reparsing and full row deserializat
   assert.match(appHtml, /refs\.pelaporContainer\.innerHTML = \(COMMON\.pelapor \|\| \[\]\)\.map\(generateHTML\)\.join\(''\)/);
   assert.match(appHtml, /refs\.sampelContainer\.innerHTML = sampleFields\.map\(generateHTML\)\.join\(''\)/);
   assert.match(routesJs, /function _buildSearchProjectionRecord_\(headers, row\)/);
+  assert.match(routesJs, /function _getSearchProjectionIndexMap_\(headers\)/);
+  assert.match(routesJs, /_getSearchProjectionIndexMap_\._cache/);
   assert.match(routesJs, /const record = _buildSearchProjectionRecord_\(headers, row\);\s*record\.RAW_ROW_NUMBER = rowIdx \+ 2;[\s\S]*?_canSessionReadRecordByScope_\(sess, dxItem, record\)/);
   assert.match(dashboardJs, /function _getPengampuByWilayahCachedForDashboard_\(kecamatan, kelurahan, kabKota\)/);
   assert.match(dashboardJs, /_getPengampuByWilayahCachedForDashboard_\(normKecamatan, normKelurahan, normKabKota\)/);
@@ -486,6 +488,15 @@ test('performance tuning avoids repeated DOM reparsing and full row deserializat
   assert.match(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?pendingVerificationCount \+= 1;[\s\S]*?return;[\s\S]*?\}/);
   assert.match(dashboardJs, /_buildWorkflowInboxData_\(sess, '', \{ summaryOnly: true \}\)/);
   assert.doesNotMatch(dashboardJs, /getOverviewSummary[\s\S]*?pendingVerification: \(result\.pendingVerification \|\| \[\]\)\.slice\(0, 6\)/);
+});
+
+test('production client logs do not leak captcha answers or noisy workflow debug data', () => {
+  const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'utils.js.html'), 'utf8');
+  assert.doesNotMatch(utilsHtml, /console\.log\(["'](?:Login|PIN) captcha:/);
+  assert.match(appHtml, /function pd3iDebugLog_\(\)/);
+  assert.match(appHtml, /window\.PD3I_DEBUG === true/);
+  assert.doesNotMatch(appHtml, /console\.log\(["']Save response:/);
+  assert.doesNotMatch(appHtml, /console\.log\('\[PD3I v2\] refreshWorkflowInbox/);
 });
 
 test('session restore does not leave auth boot overlay loading indefinitely', () => {
