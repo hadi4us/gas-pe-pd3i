@@ -333,6 +333,10 @@
               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
               <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
             </button>
+            <button type="button" id="btn-pilih-titik-peta"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
+              <i class="fas fa-map-location-dot"></i> Pilih Titik di Peta
+            </button>
           </div>
           <input type="text" id="geo-search-query"
             class="flex-1 min-w-[220px] border border-slate-300 bg-white text-slate-700 text-sm rounded-lg px-4 py-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
@@ -632,6 +636,249 @@
     return Array.isArray(rows) ? rows[0] : null;
   }
 
+  const PD3I_DEFAULT_MAP_CENTER = [-6.194449, 106.822919];
+
+  function ensureCoordinatePickerModal() {
+    let modal = document.getElementById("coordinate-picker-modal");
+    if (modal) return modal;
+
+    modal = document.createElement("div");
+    modal.id = "coordinate-picker-modal";
+    modal.className = "fixed inset-0 z-[9999] hidden items-center justify-center p-3 sm:p-4 modal-backdrop";
+    modal.innerHTML = `
+      <div class="modal-card coordinate-picker-card w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-200 flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-black text-slate-900">Pilih Titik Koordinat</h2>
+            <p class="text-xs sm:text-sm font-semibold text-slate-500 mt-1">Cari alamat atau klik titik di peta. Koordinat akan masuk ke Latitude/Longitude.</p>
+          </div>
+          <button type="button" id="btn-close-coordinate-picker" class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-600 shrink-0" aria-label="Tutup popup">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+          <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-3">
+            <div>
+              <label for="coordinate-picker-address" class="block text-xs font-extrabold uppercase tracking-wide text-slate-600 mb-2">Alamat estimasi / kata kunci lokasi</label>
+              <input id="coordinate-picker-address" type="text" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Jl. Medan Merdeka Selatan, Jakarta atau -6.194449,106.822919" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+            </div>
+            <button type="button" id="btn-coordinate-picker-search" class="lg:mt-7 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2">
+              <i class="fas fa-magnifying-glass-location"></i> Cari
+            </button>
+          </div>
+          <div id="coordinate-picker-map" class="coordinate-picker-map rounded-2xl border border-slate-200 bg-slate-100"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr] gap-3">
+            <div>
+              <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-600 mb-2">Latitude</label>
+              <input id="coordinate-picker-lat" type="text" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm font-bold bg-slate-50" placeholder="-6.194449">
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-600 mb-2">Longitude</label>
+              <input id="coordinate-picker-lon" type="text" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm font-bold bg-slate-50" placeholder="106.822919">
+            </div>
+            <div>
+              <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-600 mb-2">Estimasi alamat terpilih</label>
+              <textarea id="coordinate-picker-estimated-address" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm font-semibold min-h-[48px] bg-slate-50" placeholder="Akan terisi dari pencarian / reverse geocode"></textarea>
+            </div>
+          </div>
+          <div id="coordinate-picker-status" class="px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">Klik peta atau cari alamat untuk memilih titik.</div>
+        </div>
+        <div class="px-4 sm:px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row justify-end gap-3 bg-white">
+          <button type="button" id="btn-coordinate-picker-cancel" class="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold">Batal</button>
+          <button type="button" id="btn-coordinate-picker-use" class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-md">
+            <i class="fas fa-check mr-2"></i> Gunakan Titik Ini
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function coordinatePickerStatus(message, color) {
+    const statusEl = document.getElementById("coordinate-picker-status");
+    if (!statusEl) return;
+    const palette = {
+      blue: "border-blue-200 bg-blue-50 text-blue-700",
+      green: "border-green-200 bg-green-50 text-green-700",
+      red: "border-red-200 bg-red-50 text-red-700",
+      slate: "border-slate-200 bg-slate-50 text-slate-600"
+    };
+    statusEl.className = "px-4 py-3 rounded-xl border " + (palette[color] || palette.slate) + " text-sm font-semibold";
+    statusEl.textContent = message;
+  }
+
+  function setCoordinatePickerPoint(lat, lon, estimatedAddress) {
+    const latNum = Number(lat);
+    const lonNum = Number(lon);
+    if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return false;
+    if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) return false;
+
+    const latText = latNum.toFixed(6);
+    const lonText = lonNum.toFixed(6);
+    const latInput = document.getElementById("coordinate-picker-lat");
+    const lonInput = document.getElementById("coordinate-picker-lon");
+    const addressInput = document.getElementById("coordinate-picker-estimated-address");
+    if (latInput) latInput.value = latText;
+    if (lonInput) lonInput.value = lonText;
+    if (addressInput && estimatedAddress !== undefined) addressInput.value = String(estimatedAddress || "");
+
+    const map = window.__PD3I_COORDINATE_PICKER_MAP__;
+    if (map && window.L) {
+      const ll = [latNum, lonNum];
+      if (!window.__PD3I_COORDINATE_PICKER_MARKER__) {
+        window.__PD3I_COORDINATE_PICKER_MARKER__ = window.L.marker(ll, { draggable: true }).addTo(map);
+        window.__PD3I_COORDINATE_PICKER_MARKER__.on("dragend", function(ev) {
+          const pos = ev.target.getLatLng();
+          setCoordinatePickerPoint(pos.lat, pos.lng);
+          reverseGeocodeCoordinatePickerPoint(pos.lat, pos.lng);
+        });
+      } else {
+        window.__PD3I_COORDINATE_PICKER_MARKER__.setLatLng(ll);
+      }
+      map.setView(ll, Math.max(map.getZoom() || 15, 15));
+    }
+    coordinatePickerStatus(`Titik dipilih. Lat: ${latText}, Lon: ${lonText}`, "green");
+    return true;
+  }
+
+  async function reverseGeocodeCoordinatePickerPoint(lat, lon) {
+    const addressInput = document.getElementById("coordinate-picker-estimated-address");
+    if (!addressInput) return;
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
+      const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
+      if (!res.ok) return;
+      const row = await res.json();
+      if (row && row.display_name) addressInput.value = row.display_name;
+    } catch (err) {
+      // Reverse geocode hanya bantuan; jangan ganggu pemilihan titik kalau gagal.
+    }
+  }
+
+  function initCoordinatePickerMap() {
+    const mapEl = document.getElementById("coordinate-picker-map");
+    if (!mapEl || !window.L) return null;
+    if (window.__PD3I_COORDINATE_PICKER_MAP__) {
+      setTimeout(function() { window.__PD3I_COORDINATE_PICKER_MAP__.invalidateSize(); }, 80);
+      return window.__PD3I_COORDINATE_PICKER_MAP__;
+    }
+
+    const currentLat = Number(document.getElementById("Latitude")?.value || "");
+    const currentLon = Number(document.getElementById("Longitude")?.value || "");
+    const hasCurrent = Number.isFinite(currentLat) && Number.isFinite(currentLon);
+    const center = hasCurrent ? [currentLat, currentLon] : PD3I_DEFAULT_MAP_CENTER;
+    const map = window.L.map(mapEl, { scrollWheelZoom: true }).setView(center, hasCurrent ? 16 : 11);
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    map.on("click", function(ev) {
+      setCoordinatePickerPoint(ev.latlng.lat, ev.latlng.lng);
+      reverseGeocodeCoordinatePickerPoint(ev.latlng.lat, ev.latlng.lng);
+    });
+    window.__PD3I_COORDINATE_PICKER_MAP__ = map;
+    setTimeout(function() { map.invalidateSize(); }, 120);
+    if (hasCurrent) setCoordinatePickerPoint(currentLat, currentLon);
+    return map;
+  }
+
+  function closeCoordinatePickerModal() {
+    const modal = document.getElementById("coordinate-picker-modal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.body.classList.remove("modal-open");
+  }
+
+  async function searchCoordinatePickerAddress() {
+    const queryInput = document.getElementById("coordinate-picker-address");
+    const btn = document.getElementById("btn-coordinate-picker-search");
+    const query = String(queryInput && queryInput.value || "").trim();
+    const parsed = parseCoordinateSearchQuery(query);
+    if (parsed) {
+      setCoordinatePickerPoint(parsed.lat, parsed.lon, "");
+      reverseGeocodeCoordinatePickerPoint(parsed.lat, parsed.lon);
+      return;
+    }
+    if (!query) {
+      coordinatePickerStatus("Masukkan alamat/kata kunci lokasi dulu, atau klik langsung di peta.", "red");
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+    }
+    coordinatePickerStatus(`Mencari titik dari alamat: ${query}`, "blue");
+    try {
+      const match = await geocodeDomisiliAddress(query);
+      if (!match || !match.lat || !match.lon) throw new Error("Alamat tidak ditemukan. Coba kata kunci yang lebih spesifik atau klik peta manual.");
+      setCoordinatePickerPoint(Number(match.lat), Number(match.lon), match.display_name || query);
+    } catch (err) {
+      coordinatePickerStatus((err && err.message) || "Gagal mencari alamat.", "red");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-magnifying-glass-location"></i> Cari';
+      }
+    }
+  }
+
+  function openCoordinatePickerModal() {
+    const modal = ensureCoordinatePickerModal();
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    document.body.classList.add("modal-open");
+
+    const addressInput = document.getElementById("coordinate-picker-address");
+    const estimatedAddressInput = document.getElementById("coordinate-picker-estimated-address");
+    const currentSearch = document.getElementById("geo-search-query")?.value || "";
+    const domisiliQuery = buildDomisiliAddressQuery();
+    if (addressInput && !addressInput.value) addressInput.value = currentSearch || domisiliQuery;
+    if (estimatedAddressInput && !estimatedAddressInput.value) estimatedAddressInput.value = currentSearch || domisiliQuery;
+
+    initCoordinatePickerMap();
+
+    if (modal.dataset.bound !== "1") {
+      modal.dataset.bound = "1";
+      document.getElementById("btn-close-coordinate-picker")?.addEventListener("click", closeCoordinatePickerModal);
+      document.getElementById("btn-coordinate-picker-cancel")?.addEventListener("click", closeCoordinatePickerModal);
+      document.getElementById("btn-coordinate-picker-search")?.addEventListener("click", searchCoordinatePickerAddress);
+      document.getElementById("coordinate-picker-address")?.addEventListener("keydown", function(ev) {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          searchCoordinatePickerAddress();
+        }
+      });
+      document.getElementById("btn-coordinate-picker-use")?.addEventListener("click", function() {
+        const lat = Number(String(document.getElementById("coordinate-picker-lat")?.value || "").replace(",", "."));
+        const lon = Number(String(document.getElementById("coordinate-picker-lon")?.value || "").replace(",", "."));
+        if (!setCoordinatePickerPoint(lat, lon)) {
+          coordinatePickerStatus("Latitude/Longitude belum valid. Pilih titik di peta dulu ya.", "red");
+          return;
+        }
+        const latEl = document.getElementById("Latitude");
+        const lonEl = document.getElementById("Longitude");
+        const geoSearch = document.getElementById("geo-search-query");
+        const addressEl = document.getElementById("Alamat");
+        const estimatedAddress = String(document.getElementById("coordinate-picker-estimated-address")?.value || "").trim();
+        const latText = lat.toFixed(6);
+        const lonText = lon.toFixed(6);
+        if (latEl) latEl.value = latText;
+        if (lonEl) lonEl.value = lonText;
+        if (geoSearch && estimatedAddress) geoSearch.value = estimatedAddress;
+        if (addressEl && !String(addressEl.value || "").trim() && estimatedAddress) addressEl.value = estimatedAddress;
+        setCoordinateManualMode(false);
+        const statusEl = document.getElementById("geo-status");
+        if (statusEl) {
+          statusEl.textContent = `Titik dari peta digunakan. Lat: ${latText}, Lon: ${lonText}${estimatedAddress ? ' • Estimasi alamat: ' + estimatedAddress : ''}`;
+          statusEl.className = "lg:w-[32rem] px-4 py-3 rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold";
+        }
+        closeCoordinatePickerModal();
+      });
+    }
+  }
+
   function setCoordinateManualMode(enabled) {
     const latEl = document.getElementById("Latitude");
     const lonEl = document.getElementById("Longitude");
@@ -657,6 +904,7 @@
   function initGeoButton() {
     const btn = document.getElementById("btn-ambil-lokasi");
     const btnCariAlamat = document.getElementById("btn-cari-lokasi-alamat");
+    const btnPilihTitikPeta = document.getElementById("btn-pilih-titik-peta");
     const latEl = document.getElementById("Latitude");
     const lonEl = document.getElementById("Longitude");
     const statusEl = document.getElementById("geo-status");
@@ -676,6 +924,7 @@
     if (btn.dataset.bound === "1") return;
     btn.dataset.bound = "1";
     if (btnCariAlamat) btnCariAlamat.dataset.bound = "1";
+    if (btnPilihTitikPeta) btnPilihTitikPeta.dataset.bound = "1";
 
     btn.addEventListener("click", function() {
       if (!navigator.geolocation) {
@@ -765,6 +1014,9 @@
 
     if (btnCariAlamat) {
       btnCariAlamat.addEventListener("click", runGeoAddressSearch);
+    }
+    if (btnPilihTitikPeta) {
+      btnPilihTitikPeta.addEventListener("click", openCoordinatePickerModal);
     }
     if (searchInput) {
       searchInput.addEventListener("keydown", function(ev) {
@@ -3449,7 +3701,7 @@
     return { label: 'Menunggu tinjauan', className: 'is-warning' };
   }
 
-  
+
   function renderOverviewWorkspace() {
     const quickWrap = document.getElementById('overview-quick-actions');
     const roleWrap = document.getElementById('overview-role-summary');

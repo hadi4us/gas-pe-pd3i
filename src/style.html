@@ -1668,6 +1668,24 @@ textarea {
   align-items: center;
 }
 
+.coordinate-picker-card {
+  width: min(1100px, calc(100vw - 1.5rem));
+}
+
+.coordinate-picker-map {
+  height: min(52vh, 460px);
+  min-height: 320px;
+  width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .coordinate-picker-map {
+    height: 360px;
+    min-height: 300px;
+  }
+}
+
 @keyframes shakeX {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-6px); }
