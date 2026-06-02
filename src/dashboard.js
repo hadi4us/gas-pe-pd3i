@@ -297,6 +297,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
   const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
   const dxNorm = String(dx || '').trim().toUpperCase();
   const dxList = (SUPPORTED_DX_ || []).indexOf(dxNorm) !== -1 ? [dxNorm] : (SUPPORTED_DX_ || []).slice();
+  const QUEUE_LIMIT = 200;
   const pendingVerification = [];
   const revisionQueue = [];
   const verificationDone = [];
@@ -352,7 +353,11 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       return list;
     }, []);
 
-    rows.forEach(function(row) {
+    for (let ri = rows.length - 1; ri >= 0; ri--) {
+      let row = rows[ri];
+      const totalQueued = (summaryOnly ? 0 : (pendingVerification.length + revisionQueue.length + verificationDone.length + sampleQueue.length + sampleDoneQueue.length + statusQueue.length + statusDoneQueue.length));
+      const allQueuesFull = !summaryOnly && pendingVerification.length >= QUEUE_LIMIT && revisionQueue.length >= QUEUE_LIMIT && verificationDone.length >= QUEUE_LIMIT && sampleQueue.length >= QUEUE_LIMIT && sampleDoneQueue.length >= QUEUE_LIMIT && statusQueue.length >= QUEUE_LIMIT && statusDoneQueue.length >= QUEUE_LIMIT;
+      if (allQueuesFull) { break; }
       const recordId = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '';
       const epid = idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '';
       const recordKey = recordId || epid;
@@ -450,28 +455,35 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       }
 
       if (role === 'admin' && normalizedStatus === 'PENDING') {
+        if (pendingVerification.length < QUEUE_LIMIT) {
         pendingVerification.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian verifikasi'
         }));
+        }
       }
       if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (role === 'admin' || scopeMatch || inputerMatch)) {
+        if (revisionQueue.length < QUEUE_LIMIT) {
         revisionQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: inputerMatch && !scopeMatch && role !== 'admin' ? 'Kasus ditolak - perbaiki input' : 'Antrian revisi puskesmas pengampu',
           __queueStatusLabel: workflowLabel || (normalizedStatus === 'DITOLAK' ? 'Ditolak' : 'Perlu revisi'),
           __queueStatusClass: 'is-danger'
         }));
+        }
       }
       if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch)) {
+        if (verificationDone.length < QUEUE_LIMIT) {
         verificationDone.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Verifikasi selesai',
           __queueStatusLabel: 'Terverifikasi',
           __queueStatusClass: 'is-success'
         }));
+        }
       }
       if (sampleStagePending) {
+        if (sampleQueue.length < QUEUE_LIMIT) {
         sampleQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian hasil sampel',
@@ -480,30 +492,37 @@ function _buildWorkflowInboxData_(sess, dx, options) {
             : 'Menunggu hasil lab',
           __queueStatusClass: 'is-warning'
         }));
+        }
       } else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && sampleDone) {
+        if (sampleDoneQueue.length < QUEUE_LIMIT) {
         sampleDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Hasil sampel selesai',
           __queueStatusLabel: normalizedSampelDilakukan === 'TIDAK' ? 'Sampel tidak dilakukan' : (interpretasiSampel || 'Hasil sampel tersimpan'),
           __queueStatusClass: 'is-success'
         }));
+        }
       }
       if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && (role === 'admin' || scopeMatch)) {
+        if (statusQueue.length < QUEUE_LIMIT) {
         statusQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian update status',
           __queueStatusLabel: statusKasus || 'Siap update status',
           __queueStatusClass: normalizedStatusKasus === 'KONFIRMASI' ? 'is-success' : 'is-warning'
         }));
+        }
       } else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && (role === 'admin' || scopeMatch)) {
+        if (statusDoneQueue.length < QUEUE_LIMIT) {
         statusDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Status selesai',
           __queueStatusLabel: statusKasus || 'Selesai',
           __queueStatusClass: 'is-success'
         }));
+        }
       }
-    });
+    }
   });
 
   if (summaryOnly) {

@@ -4284,7 +4284,7 @@
       box.classList.remove('hidden');
       box.innerHTML = '<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kerja...</span></div></div>';
     }
-    var timeoutMs = 10000;
+    var timeoutMs = 30000;
     var timedOut = false;
     var timeoutTimer = setTimeout(function() {
       if (callId !== _PD3I_WORKFLOW_INBOX_CALL_ID) return;
