@@ -2,3 +2,4 @@
 # Apps Script does not provide CommonJS `require`, so Node-only test files break production.
 *.test.js
 *.node.test.js
+node_modules/**

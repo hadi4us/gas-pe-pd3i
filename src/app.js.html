@@ -638,6 +638,16 @@
 
   const PD3I_DEFAULT_MAP_CENTER = [-6.194449, 106.822919];
 
+  function getElementValueById(id) {
+    const el = document.getElementById(id);
+    return el ? el.value : "";
+  }
+
+  function addCoordinatePickerListener(id, eventName, handler) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(eventName, handler);
+  }
+
   function ensureCoordinatePickerModal() {
     let modal = document.getElementById("coordinate-picker-modal");
     if (modal) return modal;
@@ -763,8 +773,8 @@
       return window.__PD3I_COORDINATE_PICKER_MAP__;
     }
 
-    const currentLat = Number(document.getElementById("Latitude")?.value || "");
-    const currentLon = Number(document.getElementById("Longitude")?.value || "");
+    const currentLat = Number(getElementValueById("Latitude") || "");
+    const currentLon = Number(getElementValueById("Longitude") || "");
     const hasCurrent = Number.isFinite(currentLat) && Number.isFinite(currentLon);
     const center = hasCurrent ? [currentLat, currentLon] : PD3I_DEFAULT_MAP_CENTER;
     const map = window.L.map(mapEl, { scrollWheelZoom: true }).setView(center, hasCurrent ? 16 : 11);
@@ -832,7 +842,7 @@
 
     const addressInput = document.getElementById("coordinate-picker-address");
     const estimatedAddressInput = document.getElementById("coordinate-picker-estimated-address");
-    const currentSearch = document.getElementById("geo-search-query")?.value || "";
+    const currentSearch = getElementValueById("geo-search-query") || "";
     const domisiliQuery = buildDomisiliAddressQuery();
     if (addressInput && !addressInput.value) addressInput.value = currentSearch || domisiliQuery;
     if (estimatedAddressInput && !estimatedAddressInput.value) estimatedAddressInput.value = currentSearch || domisiliQuery;
@@ -841,18 +851,18 @@
 
     if (modal.dataset.bound !== "1") {
       modal.dataset.bound = "1";
-      document.getElementById("btn-close-coordinate-picker")?.addEventListener("click", closeCoordinatePickerModal);
-      document.getElementById("btn-coordinate-picker-cancel")?.addEventListener("click", closeCoordinatePickerModal);
-      document.getElementById("btn-coordinate-picker-search")?.addEventListener("click", searchCoordinatePickerAddress);
-      document.getElementById("coordinate-picker-address")?.addEventListener("keydown", function(ev) {
+      addCoordinatePickerListener("btn-close-coordinate-picker", "click", closeCoordinatePickerModal);
+      addCoordinatePickerListener("btn-coordinate-picker-cancel", "click", closeCoordinatePickerModal);
+      addCoordinatePickerListener("btn-coordinate-picker-search", "click", searchCoordinatePickerAddress);
+      addCoordinatePickerListener("coordinate-picker-address", "keydown", function(ev) {
         if (ev.key === "Enter") {
           ev.preventDefault();
           searchCoordinatePickerAddress();
         }
       });
-      document.getElementById("btn-coordinate-picker-use")?.addEventListener("click", function() {
-        const lat = Number(String(document.getElementById("coordinate-picker-lat")?.value || "").replace(",", "."));
-        const lon = Number(String(document.getElementById("coordinate-picker-lon")?.value || "").replace(",", "."));
+      addCoordinatePickerListener("btn-coordinate-picker-use", "click", function() {
+        const lat = Number(String(getElementValueById("coordinate-picker-lat") || "").replace(",", "."));
+        const lon = Number(String(getElementValueById("coordinate-picker-lon") || "").replace(",", "."));
         if (!setCoordinatePickerPoint(lat, lon)) {
           coordinatePickerStatus("Latitude/Longitude belum valid. Pilih titik di peta dulu ya.", "red");
           return;
@@ -861,7 +871,7 @@
         const lonEl = document.getElementById("Longitude");
         const geoSearch = document.getElementById("geo-search-query");
         const addressEl = document.getElementById("Alamat");
-        const estimatedAddress = String(document.getElementById("coordinate-picker-estimated-address")?.value || "").trim();
+        const estimatedAddress = String(getElementValueById("coordinate-picker-estimated-address") || "").trim();
         const latText = lat.toFixed(6);
         const lonText = lon.toFixed(6);
         if (latEl) latEl.value = latText;
