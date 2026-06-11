@@ -202,8 +202,9 @@
         toggleLoginPin.addEventListener("click", function () {
           const masked = String(loginPin.dataset.masked || '1') !== '0';
           loginPin.dataset.masked = masked ? '0' : '1';
-          loginPin.type = masked ? 'text' : 'password';
-          loginPin.style.webkitTextSecurity = masked ? 'none' : '';
+          loginPin.type = 'text';
+          loginPin.style.webkitTextSecurity = masked ? 'none' : 'disc';
+          loginPin.style.textSecurity = masked ? 'none' : 'disc';
           this.innerHTML = masked
             ? '<i class="fas fa-eye-slash"></i>'
             : '<i class="fas fa-eye"></i>';

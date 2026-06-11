@@ -1,3 +1,25 @@
+function _publicAuthError_(err, fallbackMessage) {
+  const fallback = String(fallbackMessage || "Login belum bisa diproses. Silakan coba lagi atau hubungi admin.").trim();
+  const raw = String((err && err.message) || err || "").trim();
+  const allowedPatterns = [
+    /^Username/i,
+    /^Password/i,
+    /^Token/i,
+    /^Sesi/i,
+    /^Akun tidak aktif/i,
+    /^Terlalu banyak/i,
+    /^REF_USER/i,
+    /^Sheet REF_USER/i,
+    /^Kolom Username\/PIN/i,
+    /^Username atau password salah/i,
+    /^Password baru/i,
+    /^Password lama/i
+  ];
+  const message = allowedPatterns.some(function(pattern) { return pattern.test(raw); }) ? raw : fallback;
+  try { console.error("Public auth endpoint error:", err); } catch (logErr) {}
+  return { status: "error", message: message };
+}
+
 function _authAttemptCacheKey_(username) {
   return "LOGIN_ATTEMPT_" + String(username || "").trim().toLowerCase();
 }
@@ -170,7 +192,7 @@ function authLogin(username, pin) {
 
     return { status: "success", token: token, user: found, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
-    return { status: "error", message: String(e) };
+    return _publicAuthError_(e);
   }
 }
 
@@ -200,7 +222,7 @@ function authCheck(token) {
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify(obj), ttl);
     return { status: "success", user: obj.user, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
-    return { status: "error", message: String(e) };
+    return _publicAuthError_(e, "Sesi belum bisa diperiksa. Silakan login ulang.");
   }
 }
 
@@ -223,7 +245,7 @@ function authLogout(token) {
     }
     return { status: "success" };
   } catch (e) {
-    return { status: "error", message: String(e) };
+    return _publicAuthError_(e, "Logout belum bisa diproses. Silakan coba lagi.");
   }
 }
 
@@ -289,6 +311,6 @@ function authChangePin(token, oldPin, newPin) {
 
     return { status: "error", message: "User tidak ditemukan." };
   } catch (e) {
-    return { status: "error", message: String(e) };
+    return _publicAuthError_(e, "Ubah password belum bisa diproses. Silakan coba lagi atau hubungi admin.");
   }
 }

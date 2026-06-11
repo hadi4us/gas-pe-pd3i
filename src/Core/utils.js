@@ -59,8 +59,34 @@ const Session_Manager = {
   }
 };
 
+function resolveHtmlFileName_(filename) {
+  const name = String(filename || "").trim();
+  const candidates = name.indexOf("/") !== -1
+    ? [name]
+    : [
+        "Views/" + name,
+        "Auth/" + name,
+        name
+      ];
+
+  let lastError = null;
+  for (let i = 0; i < candidates.length; i++) {
+    try {
+      HtmlService.createHtmlOutputFromFile(candidates[i]);
+      return candidates[i];
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("HTML file tidak ditemukan: " + name);
+}
+
 function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+  return HtmlService.createHtmlOutputFromFile(resolveHtmlFileName_(filename)).getContent();
+}
+
+function createTemplateFromFile_(filename) {
+  return HtmlService.createTemplateFromFile(resolveHtmlFileName_(filename));
 }
 
 function getSpreadsheet_() {

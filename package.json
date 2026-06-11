@@ -1,0 +1,16 @@
+{
+  "name": "gas-pe-pd3i",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Quality gate and local regression harness for GAS PE PD3I.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "npm run test:node && npm run check:hygiene && npm run check:endpoints",
+    "test:node": "node --test tests/*.test.js",
+    "check:hygiene": "node scripts/check-project-hygiene.js",
+    "check:endpoints": "node scripts/check-endpoint-security.js > docs/ENDPOINT_SECURITY_MATRIX.generated.json"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -2,21 +2,25 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 
-const appHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js.html'), 'utf8');
-const authHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'auth.js.html'), 'utf8');
-const loginHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'login.html'), 'utf8');
-const pinHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'pin.html'), 'utf8');
-const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'index.html'), 'utf8');
-const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_sampel_form.html'), 'utf8');
-const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_verifikasi_form.html'), 'utf8');
-const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'workspace_search.html'), 'utf8');
-const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'style.html'), 'utf8');
+const appHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.js.html'), 'utf8');
+const authHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'auth.js.html'), 'utf8');
+const loginHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'login.html'), 'utf8');
+const pinHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'pin.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'index.html'), 'utf8');
+const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_sampel_form.html'), 'utf8');
+const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_verifikasi_form.html'), 'utf8');
+const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_search.html'), 'utf8');
+const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+const endpointSecurityScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-endpoint-security.js'), 'utf8');
 
 test('credential UI uses password wording and accepts non-numeric passwords', () => {
   assert.match(loginHtml, /Login petugas \(Password\) \+ Captcha/);
   assert.match(loginHtml, />Password Akses</);
-  assert.match(loginHtml, /id="login-pin" type="password"/);
+  assert.match(loginHtml, /id="login-pin" type="text"/);
+  assert.match(loginHtml, /id="login-pin"[^>]*-webkit-text-security: disc/);
   assert.doesNotMatch(loginHtml, /id="login-pin"[^>]*inputmode="numeric"/);
   assert.match(pinHtml, /Ubah Password Akses/);
   assert.match(pinHtml, />Password Lama</);
@@ -29,7 +33,8 @@ test('credential UI uses password wording and accepts non-numeric passwords', ()
   assert.match(indexHtml, /Ubah Password/);
   assert.match(authHtml, /Username dan password wajib diisi\./);
   assert.match(authHtml, /Password baru minimal 6 karakter\./);
-  assert.match(authHtml, /loginPin\.type = masked \? 'text' : 'password'/);
+  assert.match(authHtml, /loginPin\.type = 'text'/);
+  assert.match(authHtml, /loginPin\.style\.webkitTextSecurity = masked \? 'none' : 'disc'/);
 });
 
 test('verification success modal replaces original action buttons to avoid resetForNewEntry listener', () => {
@@ -68,11 +73,12 @@ test('verification save gives local feedback, timeout, and modal confirmation fo
   assert.match(styleHtml, /\.pd3i-helper-text\.is-error[\s\S]*?color: #b91c1c/);
 });
 
-const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'routes.js'), 'utf8');
-const dashboardJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'dashboard.js'), 'utf8');
-const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'data.js'), 'utf8');
-const printJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'print.js'), 'utf8');
-const appDashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.dashboard.js.html'), 'utf8');
+const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'routes.js'), 'utf8');
+const authJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'auth.js'), 'utf8');
+const dashboardJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'dashboard.js'), 'utf8');
+const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'DataWarehouse', 'data.js'), 'utf8');
+const printJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'print.js'), 'utf8');
+const appDashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.dashboard.js.html'), 'utf8');
 
 test('record serialization hardens free-text values before writing to Sheets', () => {
   assert.match(dataJs, /function sanitizeSheetTextValue_\(value, header\)/);
@@ -144,8 +150,8 @@ test('deferred workflow saves can target pending records by registration id befo
 
 
 test('Edit Inputan has its own workspace and safe initial-report save marker', () => {
-  const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'index.html'), 'utf8');
-  const rawSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'raw_schema.js'), 'utf8');
+  const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'index.html'), 'utf8');
+  const rawSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'raw_schema.js'), 'utf8');
   assert.match(indexHtml, /data-sidebar-workspace="search"[\s\S]*?>List Kasus</);
   assert.doesNotMatch(indexHtml, /data-sidebar-workspace="edit"[\s\S]*?>Koreksi Data Awal</);
   assert.match(appHtml, /search:\s*'saveInitialReportEdit'/);
@@ -264,7 +270,8 @@ test('each sidebar menu has a dedicated spreadsheet-backed backend API', () => {
   ].forEach((fn) => assert.match(routesJs, new RegExp('function\\s+' + fn + '\\s*\\('), fn + ' should exist'));
   assert.match(routesJs, /function _searchRecordsDirectFromSheet_\(dx, filters, token\)/);
   assert.match(routesJs, /getSheetOrThrow_\(dxItem \+ '_Raw'\)[\s\S]*?getDataRange\(\)\.getValues\(\)/);
-  assert.match(routesJs, /default: throw new Error\('Aksi workflow tidak dikenal: ' \+ action\);/);
+  assert.match(routesJs, /default: throw new Error\('Aksi workflow tidak dikenal\.'\);/);
+  assert.doesNotMatch(routesJs, /default: throw new Error\('Aksi workflow tidak dikenal: ' \+ action\);/);
   assert.doesNotMatch(routesJs, /default: return saveFormPayload_\(payload\);/);
   assert.doesNotMatch(routesJs, /function _searchRecordsDirectFromSheet_[\s\S]*?_readSheetWithCache_/);
 });
@@ -284,8 +291,8 @@ test('workflow form submit dispatches to menu-specific save actions instead of g
 
 
 test('workflow process markers make every queue transition explicit and persisted in Raw schema', () => {
-  const rawSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'raw_schema.js'), 'utf8');
-  const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'data.js'), 'utf8');
+  const rawSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'raw_schema.js'), 'utf8');
+  const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'DataWarehouse', 'data.js'), 'utf8');
   [
     'Workflow Current Queue',
     'Workflow Current Label',
@@ -355,7 +362,7 @@ test('rejected and revision cases are not rendered in verification workspace', (
 
 
 test('workflow marker backfill helpers are admin guarded, preview-first, and backup by default', () => {
-  const migrationJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'migration.js'), 'utf8');
+  const migrationJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'migration.js'), 'utf8');
   assert.match(migrationJs, /function previewWorkflowMarkerBackfill\(token, dxList, options\)/);
   assert.match(migrationJs, /function backfillWorkflowMarkers\(token, dxList, options\)/);
   assert.match(migrationJs, /previewWorkflowMarkerBackfill[\s\S]*?_requireAdminFromToken_\(token\)/);
@@ -451,7 +458,7 @@ test('dashboard keeps epidemiologic age group and adds surveillance age distribu
 });
 
 test('sample result fields adapt labels and specimen options to the active diagnosis', () => {
-  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'config_common.html'), 'utf8');
+  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
   assert.match(commonConfigHtml, /const SAMPLE_FIELDS_BY_DX = \{/);
   ['MR', 'DIF', 'PERT', 'AFP', 'TN'].forEach((dx) => assert.match(commonConfigHtml, new RegExp(dx + ': \\{')));
   assert.match(commonConfigHtml, /MR:[\s\S]*?Swab tenggorok[\s\S]*?Urine/);
@@ -466,7 +473,7 @@ test('sample result fields adapt labels and specimen options to the active diagn
 });
 
 test('initial input workspace does not render Nomor EPID because EPID is assigned during verification', () => {
-  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'config_common.html'), 'utf8');
+  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
   assert.match(commonConfigHtml, /id: "Nomor EPID"[\s\S]*?hideInWorkspaces: \["input"\]/);
   assert.match(appHtml, /COMMON\.pasien \|\| \[\]\)\.filter\(function\(f\) \{\s*return !f\.hideInWorkspaces \|\| f\.hideInWorkspaces\.indexOf\(normalizedMode\) === -1;\s*\}\)\.map\(generateHTML\)\.join\(''\)/);
   assert.match(appHtml, /findScopedFieldControl\('Nomor EPID Final'/);
@@ -491,7 +498,7 @@ test('performance tuning avoids repeated DOM reparsing and full row deserializat
 });
 
 test('production client logs do not leak captcha answers or noisy workflow debug data', () => {
-  const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'utils.js.html'), 'utf8');
+  const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   assert.doesNotMatch(utilsHtml, /console\.log\(["'](?:Login|PIN) captcha:/);
   assert.match(appHtml, /function pd3iDebugLog_\(\)/);
   assert.match(appHtml, /window\.PD3I_DEBUG === true/);
@@ -508,7 +515,7 @@ test('session restore does not leave auth boot overlay loading indefinitely', ()
 });
 
 test('dynamic tables remain horizontally scrollable on mobile forms', () => {
-  const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'style.html'), 'utf8');
+  const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
   assert.match(appHtml, /class="table-container pd3i-dynamic-table-container overflow-x-auto/);
   assert.match(appHtml, /aria-label="Geser tabel \$\{field\.label\} ke kanan\/kiri"/);
   assert.match(appHtml, /class="pd3i-table-scroll-hint md:hidden"/);
@@ -518,8 +525,61 @@ test('dynamic tables remain horizontally scrollable on mobile forms', () => {
   assert.match(styleHtml, /@media \(max-width: 768px\) \{[\s\S]*?\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{\s*min-width: 56rem;\s*\}/);
 });
 
+test('quality gate includes endpoint security inventory with no review-needed callable functions', () => {
+  assert.equal(packageJson.scripts.test, 'npm run test:node && npm run check:hygiene && npm run check:endpoints');
+  assert.equal(packageJson.scripts['check:endpoints'], 'node scripts/check-endpoint-security.js > docs/ENDPOINT_SECURITY_MATRIX.generated.json');
+  assert.match(endpointSecurityScript, /const publicFunctions = \[/);
+  assert.match(endpointSecurityScript, /'saveFormData'/);
+  assert.match(endpointSecurityScript, /'getPdfPrintUrl'/);
+  assert.match(endpointSecurityScript, /'setupConfig'/);
+  const endpointSecurityMatrix = JSON.parse(execFileSync(process.execPath, ['scripts/check-endpoint-security.js'], {
+    cwd: path.join(__dirname, '..'),
+    encoding: 'utf8'
+  }));
+  assert.equal(endpointSecurityMatrix.reviewNeeded.length, 0);
+  assert.ok(endpointSecurityMatrix.rows.length >= 50);
+  const byName = Object.fromEntries(endpointSecurityMatrix.rows.map((row) => [row.name, row]));
+  assert.equal(byName.authLogin.guard, 'public-login');
+  assert.equal(byName.saveFormData.guard, 'token-or-save-payload');
+  assert.equal(byName.getPdfPrintUrl.guard, 'token-scope');
+  assert.equal(byName.setupConfig.guard, 'admin');
+});
+
+test('public write entry validates session token before sheet writes', () => {
+  assert.match(routesJs, /function saveFormPayload_\(data\) \{\s*const token = String\(data\.__token \|\| ""\)\.trim\(\);\s*const sess = _getSessionFromToken_\(token\);\s*if \(!sess\.ok\) \{\s*return \{ status: "error", message: sess\.message \|\| "Sesi habis\. Silakan login ulang\." \};\s*\}\s*_requireWriteAccessFromSession_\(sess, data\.__workflowStage, data\);[\s\S]*?const saved = saveDxRecord_\(dx, data\);/);
+});
+
+test('public write entry caches identical successful submissions to reduce double-submit duplicates', () => {
+  assert.match(routesJs, /function _buildSubmissionIdempotencyKey_\(dx, data, sess\)/);
+  assert.match(routesJs, /actor: String\(\(sess && sess\.user && sess\.user\.username\) \|\| ''\)\.trim\(\)\.toLowerCase\(\)/);
+  assert.match(routesJs, /payload\[key\] = _normalizeSubmissionFingerprintValue_\(data\[key\]\);/);
+  assert.match(routesJs, /const submissionCacheKey = _buildSubmissionIdempotencyKey_\(dx, data, sess\);\s*const cachedSubmission = _getCachedSubmissionResult_\(submissionCacheKey\);\s*if \(cachedSubmission\) return cachedSubmission;\s*\n\s*data = _applyWorkflowStageAuditFields_/);
+  assert.match(routesJs, /function _getCachedSubmissionResult_\(cacheKey\)[\s\S]*?cached\.submissionIdempotent = true;[\s\S]*?cached\.duplicateSubmission = true;/);
+  assert.match(routesJs, /function _cacheSubmissionResult_\(cacheKey, result\)[\s\S]*?CacheService\.getScriptCache\(\)\.put\(cacheKey, JSON\.stringify\(toCache\), 600\);/);
+  assert.match(routesJs, /submissionIdempotent: false,\s*duplicateSubmission: false\s*\};\s*_cacheSubmissionResult_\(submissionCacheKey, result\);\s*return result;/);
+});
+
+test('public endpoints sanitize unexpected exception messages before returning to clients', () => {
+  assert.match(routesJs, /function _publicWorkflowError_\(err, fallbackMessage\)/);
+  assert.match(routesJs, /\{ pattern: \/\^Petugas hanya boleh\/i, message: "Petugas hanya boleh memproses data sesuai kewenangan wilayahnya\." \}/);
+  assert.match(routesJs, /\{ pattern: \/\^Mapping REF_PENGAMPU\/i, message: "Mapping pengampu untuk domisili pasien belum ditemukan\." \}/);
+  assert.match(routesJs, /const matched = safeMessages\.filter\(function\(item\) \{ return item\.pattern\.test\(raw\); \}\)\[0\];/);
+  assert.match(routesJs, /console\.error\("Public workflow endpoint error:", err\)/);
+  assert.match(routesJs, /function doPost\(e\) \{[\s\S]*?catch \(err\) \{\s*return responseJSON\(_publicWorkflowError_\(err\)\);\s*\}[\s\S]*?function saveFormData\(data\)/);
+  assert.match(routesJs, /function saveFormData\(data\) \{[\s\S]*?catch \(err\) \{\s*return _publicWorkflowError_\(err\);\s*\}[\s\S]*?function _routeDedicatedWorkflowAction_/);
+  assert.doesNotMatch(routesJs, /Aksi workflow tidak dikenal: ' \+ action/);
+
+  assert.match(authJs, /function _publicAuthError_\(err, fallbackMessage\)/);
+  assert.match(authJs, /console\.error\("Public auth endpoint error:", err\)/);
+  assert.match(authJs, /return _publicAuthError_\(e\);/);
+  assert.match(authJs, /return _publicAuthError_\(e, "Sesi belum bisa diperiksa\. Silakan login ulang\."\);/);
+  assert.match(authJs, /return _publicAuthError_\(e, "Logout belum bisa diproses\. Silakan coba lagi\."\);/);
+  assert.match(authJs, /return _publicAuthError_\(e, "Ubah password belum bisa diproses\. Silakan coba lagi atau hubungi admin\."\);/);
+  assert.doesNotMatch(authJs, /message: String\(e\)/);
+});
+
 test('sample result specimen field supports more than one examination type in one save', () => {
-  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'config_common.html'), 'utf8');
+  const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
   assert.match(commonConfigHtml, /id: "Rincian Hasil Sampel"[\s\S]*?type: "dynamic_table"/);
   assert.match(commonConfigHtml, /name: "Jenis Spesimen"[\s\S]*?name: "Nomor Spesimen"[\s\S]*?name: "Tanggal Hasil"[\s\S]*?name: "Hasil"/);
   assert.match(appHtml, /tableId === "Rincian Hasil Sampel"[\s\S]*?getSampleFieldsForDx\(dx\)/);

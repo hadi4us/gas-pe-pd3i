@@ -20,12 +20,12 @@
 
     <div id="login-alert" class="hidden mt-3 p-2.5 rounded-lg text-[12px] sm:text-[13px] font-semibold border"></div>
 
-    <form id="login-form" class="mt-4 space-y-3" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" novalidate>
+    <form id="login-form" class="mt-4 space-y-3" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" novalidate>
       <div>
         <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Username</label>
         <div class="relative">
           <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-username" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"
+          <input id="login-username" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
             class="w-full pl-8 sm:pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
             placeholder="username" />
         </div>
@@ -35,7 +35,7 @@
         <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Password Akses</label>
         <div class="relative">
           <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-pin" type="password" autocomplete="current-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-masked="1"
+          <input id="login-pin" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-masked="1" style="-webkit-text-security: disc; text-security: disc;"
             class="w-full pl-8 sm:pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
             placeholder="Password akses" />
           <button type="button" id="toggle-login-pin"

@@ -19,3 +19,26 @@ clasp login --no-localhost
 cd src
 clasp clone 1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu
 ```
+
+## Quality Gate Lokal
+
+Repository ini memakai Node.js test runner bawaan untuk regression test lokal dan hygiene check ringan sebelum deploy.
+
+```bash
+# Jalankan semua gate lokal
+npm test
+
+# Hanya regression test Node
+npm run test:node
+
+# Hanya cek struktur/clasp hygiene
+npm run check:hygiene
+```
+
+Gate saat ini memverifikasi:
+
+- regression workflow di `tests/*.test.js`;
+- struktur modular `src/Core`, `src/Auth`, `src/DataWarehouse`, `src/Controllers`, `src/Views`, dan folder domain cadangan;
+- `.clasp.json` tetap menunjuk `rootDir: "src"`;
+- `.claspignore` tetap mengecualikan dokumen, test, script, dan `src/node_modules/**`;
+- file runtime JS/HTML tidak kembali menumpuk di root `src/`.

@@ -15,7 +15,7 @@ function doGet(e) {
     : (allowedWorkspaces.indexOf(requestedWorkspace) !== -1 ? requestedWorkspace : "overview");
 
   const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
-  const template = HtmlService.createTemplateFromFile("index");
+  const template = createTemplateFromFile_("index");
   template.initialView = view;
   template.initialWorkspace = initialWorkspace;
   template.appUrl = serviceUrl || "";
@@ -26,6 +26,37 @@ function doGet(e) {
     .setTitle(view === "dashboard" ? "Dashboard Statistik PD3I" : "Form PE Surveilans PD3I")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function _publicWorkflowError_(err, fallbackMessage) {
+  const fallback = String(fallbackMessage || "Terjadi kendala sistem. Silakan coba lagi atau hubungi admin.").trim();
+  const raw = String((err && err.message) || err || "").trim();
+  const safeMessages = [
+    { pattern: /^Payload/i, message: raw },
+    { pattern: /^Token/i, message: raw },
+    { pattern: /^Sesi/i, message: raw },
+    { pattern: /^dx wajib/i, message: raw },
+    { pattern: /^Diagnosis tidak valid/i, message: raw },
+    { pattern: /^Aksi workflow tidak dikenal/i, message: "Aksi workflow tidak dikenal." },
+    { pattern: /^Role aktif/i, message: raw },
+    { pattern: /^Role viewer/i, message: raw },
+    { pattern: /^Tahap verifikasi/i, message: raw },
+    { pattern: /^Proses verifikasi/i, message: raw },
+    { pattern: /^Tahap hasil pemeriksaan/i, message: raw },
+    { pattern: /^Kecamatan \/ kelurahan/i, message: raw },
+    { pattern: /^Mapping REF_PENGAMPU/i, message: "Mapping pengampu untuk domisili pasien belum ditemukan." },
+    { pattern: /^Kode\/unit puskesmas/i, message: "Kode/unit puskesmas akun ini belum diatur." },
+    { pattern: /^Petugas hanya boleh/i, message: "Petugas hanya boleh memproses data sesuai kewenangan wilayahnya." },
+    { pattern: /^Hapus data hanya/i, message: raw },
+    { pattern: /^Data kasus tidak ditemukan/i, message: raw },
+    { pattern: /^Data kasus sudah/i, message: raw },
+    { pattern: /^recordKey wajib/i, message: raw },
+    { pattern: /^Aksi ini hanya untuk admin/i, message: raw }
+  ];
+  const matched = safeMessages.filter(function(item) { return item.pattern.test(raw); })[0];
+  const message = matched ? matched.message : fallback;
+  try { console.error("Public workflow endpoint error:", err); } catch (logErr) {}
+  return { status: "error", message: message };
 }
 
 function doPost(e) {
@@ -50,7 +81,7 @@ function doPost(e) {
     const result = action ? _routeDedicatedWorkflowAction_(action, data) : saveFormPayload_(data);
     return responseJSON(result);
   } catch (err) {
-    return responseJSON({ status: "error", message: String(err) });
+    return responseJSON(_publicWorkflowError_(err));
   } finally {
     try { lock.releaseLock(); } catch (e2) {}
   }
@@ -63,7 +94,7 @@ function saveFormData(data) {
     lock.waitLock(30000);
     return saveFormPayload_(data || {});
   } catch (err) {
-    return { status: "error", message: String(err) };
+    return _publicWorkflowError_(err);
   } finally {
     try { lock.releaseLock(); } catch (e2) {}
   }
@@ -91,7 +122,7 @@ function _routeDedicatedWorkflowAction_(action, payload) {
     case 'getStatusQueue': return getStatusQueue(dx, token, filters);
     case 'getStatusRecord': return getStatusRecord(dx, recordKey, token);
     case 'saveCaseStatusUpdate': return saveCaseStatusUpdate(token, payload);
-    default: throw new Error('Aksi workflow tidak dikenal: ' + action);
+    default: throw new Error('Aksi workflow tidak dikenal.');
   }
 }
 
@@ -2473,6 +2504,69 @@ function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
   };
 }
 
+function _normalizeSubmissionFingerprintValue_(value) {
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map(function(item) { return _normalizeSubmissionFingerprintValue_(item); });
+  if (value && typeof value === 'object') {
+    const normalized = {};
+    Object.keys(value).sort().forEach(function(key) {
+      normalized[key] = _normalizeSubmissionFingerprintValue_(value[key]);
+    });
+    return normalized;
+  }
+  return value;
+}
+
+function _buildSubmissionIdempotencyKey_(dx, data, sess) {
+  const ignoredFields = {
+    __alreadyLocked: true,
+    __existingRecordForWorkflow: true,
+    __user: true,
+    __auditMeta: true
+  };
+  const payload = {};
+  Object.keys(data || {}).sort().forEach(function(key) {
+    if (ignoredFields[key]) return;
+    payload[key] = _normalizeSubmissionFingerprintValue_(data[key]);
+  });
+  const fingerprintPayload = {
+    dx: String(dx || '').trim().toUpperCase(),
+    actor: String((sess && sess.user && sess.user.username) || '').trim().toLowerCase(),
+    role: String((sess && sess.user && sess.user.role) || '').trim().toLowerCase(),
+    payload: payload
+  };
+  return 'SUBMIT_IDEMPOTENCY_' + _computeJsonFingerprint_(fingerprintPayload);
+}
+
+function _getCachedSubmissionResult_(cacheKey) {
+  if (!cacheKey) return null;
+  try {
+    const raw = CacheService.getScriptCache().get(cacheKey);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (!cached || cached.status !== 'success') return null;
+    cached.submissionIdempotent = true;
+    cached.duplicateSubmission = true;
+    cached.message = cached.message || 'Submit sebelumnya sudah diproses.';
+    return cached;
+  } catch (e) {
+    return null;
+  }
+}
+
+function _cacheSubmissionResult_(cacheKey, result) {
+  if (!cacheKey || !result || result.status !== 'success') return;
+  try {
+    const toCache = Object.assign({}, result, {
+      submissionIdempotent: false,
+      duplicateSubmission: false
+    });
+    CacheService.getScriptCache().put(cacheKey, JSON.stringify(toCache), 600);
+  } catch (e) {
+    // Idempotency cache is best-effort; never fail the write after data is saved.
+  }
+}
+
 // ─── saveFormPayload_ ─────────────────────────────────────────────────────────
 function saveFormPayload_(data) {
   const token = String(data.__token || "").trim();
@@ -2489,6 +2583,10 @@ function saveFormPayload_(data) {
 
   data = _sanitizeInitialReportEditPayload_(dx, data, sess);
   data = _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess);
+  const submissionCacheKey = _buildSubmissionIdempotencyKey_(dx, data, sess);
+  const cachedSubmission = _getCachedSubmissionResult_(submissionCacheKey);
+  if (cachedSubmission) return cachedSubmission;
+
   data = _applyWorkflowStageAuditFields_(data, sess, data.__workflowStage);
 
   const workflowMarkerSource = Object.assign({}, data.__existingRecordForWorkflow || {}, data);
@@ -2626,7 +2724,7 @@ function saveFormPayload_(data) {
       ? 'Verifikasi selesai dan nomor EPID final berhasil ditetapkan.'
       : (saved.isUpdate ? 'Data kasus berhasil diperbarui.' : 'Input awal kasus berhasil disimpan dengan status Pending.'));
 
-  return {
+  const result = {
     status: "success",
     message: successMessage,
     epid: saved.epid,
@@ -2644,6 +2742,10 @@ function saveFormPayload_(data) {
     revisionTelegramNotification: revisionPipelineResult.revisionTelegramNotification,
     nextWorkflowStage: nextWorkflow.stage,
     nextWorkflowWorkspace: nextWorkflow.workspace,
-    nextWorkflowLabel: nextWorkflow.label
+    nextWorkflowLabel: nextWorkflow.label,
+    submissionIdempotent: false,
+    duplicateSubmission: false
   };
+  _cacheSubmissionResult_(submissionCacheKey, result);
+  return result;
 }

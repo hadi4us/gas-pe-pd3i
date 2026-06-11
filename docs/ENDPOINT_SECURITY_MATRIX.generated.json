@@ -1,0 +1,359 @@
+{
+  "rows": [
+    {
+      "name": "doGet",
+      "file": "src/Controllers/routes.js",
+      "line": 1,
+      "guard": "mixed-public-entry"
+    },
+    {
+      "name": "doPost",
+      "file": "src/Controllers/routes.js",
+      "line": 62,
+      "guard": "token-or-save-payload"
+    },
+    {
+      "name": "authLogin",
+      "file": "src/Auth/auth.js",
+      "line": 93,
+      "guard": "public-login"
+    },
+    {
+      "name": "authCheck",
+      "file": "src/Auth/auth.js",
+      "line": 199,
+      "guard": "token"
+    },
+    {
+      "name": "authLogout",
+      "file": "src/Auth/auth.js",
+      "line": 229,
+      "guard": "token"
+    },
+    {
+      "name": "authChangePin",
+      "file": "src/Auth/auth.js",
+      "line": 262,
+      "guard": "token"
+    },
+    {
+      "name": "saveFormData",
+      "file": "src/Controllers/routes.js",
+      "line": 90,
+      "guard": "token-or-save-payload"
+    },
+    {
+      "name": "createInitialCase",
+      "file": "src/Controllers/routes.js",
+      "line": 137,
+      "guard": "token"
+    },
+    {
+      "name": "getEditableRecords",
+      "file": "src/Controllers/routes.js",
+      "line": 141,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getEditableRecord",
+      "file": "src/Controllers/routes.js",
+      "line": 146,
+      "guard": "token-scope"
+    },
+    {
+      "name": "saveInitialReportEdit",
+      "file": "src/Controllers/routes.js",
+      "line": 150,
+      "guard": "token"
+    },
+    {
+      "name": "searchEditableRecords",
+      "file": "src/Controllers/routes.js",
+      "line": 154,
+      "guard": "token-scope"
+    },
+    {
+      "name": "updateInitialReport",
+      "file": "src/Controllers/routes.js",
+      "line": 158,
+      "guard": "token"
+    },
+    {
+      "name": "deleteCaseRecord",
+      "file": "src/Controllers/routes.js",
+      "line": 162,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getVerificationQueue",
+      "file": "src/Controllers/routes.js",
+      "line": 224,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getVerificationRecord",
+      "file": "src/Controllers/routes.js",
+      "line": 229,
+      "guard": "token-scope"
+    },
+    {
+      "name": "saveVerificationDecision",
+      "file": "src/Controllers/routes.js",
+      "line": 233,
+      "guard": "token"
+    },
+    {
+      "name": "getSampleQueue",
+      "file": "src/Controllers/routes.js",
+      "line": 237,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getSampleRecord",
+      "file": "src/Controllers/routes.js",
+      "line": 242,
+      "guard": "token-scope"
+    },
+    {
+      "name": "saveSampleResult",
+      "file": "src/Controllers/routes.js",
+      "line": 246,
+      "guard": "token"
+    },
+    {
+      "name": "getStatusQueue",
+      "file": "src/Controllers/routes.js",
+      "line": 250,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getStatusRecord",
+      "file": "src/Controllers/routes.js",
+      "line": 255,
+      "guard": "token-scope"
+    },
+    {
+      "name": "saveCaseStatusUpdate",
+      "file": "src/Controllers/routes.js",
+      "line": 259,
+      "guard": "token"
+    },
+    {
+      "name": "getRecordByKey",
+      "file": "src/Controllers/routes.js",
+      "line": 318,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getRecordByEpid",
+      "file": "src/Controllers/routes.js",
+      "line": 375,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getRefImunisasi",
+      "file": "src/Controllers/routes.js",
+      "line": 379,
+      "guard": "token"
+    },
+    {
+      "name": "fetchRefImunData",
+      "file": "src/Controllers/routes.js",
+      "line": 423,
+      "guard": "token"
+    },
+    {
+      "name": "getFaskesFromSheet",
+      "file": "src/Controllers/routes.js",
+      "line": 427,
+      "guard": "token"
+    },
+    {
+      "name": "getWorkflowFilterOptions",
+      "file": "src/Controllers/routes.js",
+      "line": 537,
+      "guard": "token-scope"
+    },
+    {
+      "name": "searchRecords",
+      "file": "src/Controllers/routes.js",
+      "line": 719,
+      "guard": "token-scope"
+    },
+    {
+      "name": "resolveLatestSavedMeta",
+      "file": "src/Controllers/routes.js",
+      "line": 1193,
+      "guard": "token"
+    },
+    {
+      "name": "previewRecommendedEpid",
+      "file": "src/DataWarehouse/data.js",
+      "line": 616,
+      "guard": "token"
+    },
+    {
+      "name": "getWorkflowInbox",
+      "file": "src/Controllers/dashboard.js",
+      "line": 618,
+      "guard": "token"
+    },
+    {
+      "name": "getOverviewSummary",
+      "file": "src/Controllers/dashboard.js",
+      "line": 685,
+      "guard": "token"
+    },
+    {
+      "name": "getDashboardStats",
+      "file": "src/Controllers/dashboard.js",
+      "line": 810,
+      "guard": "token"
+    },
+    {
+      "name": "getDashboardDrilldown",
+      "file": "src/Controllers/dashboard.js",
+      "line": 1259,
+      "guard": "token"
+    },
+    {
+      "name": "exportToCsv",
+      "file": "src/Controllers/dashboard.js",
+      "line": 1358,
+      "guard": "token"
+    },
+    {
+      "name": "getPdfPrintUrl",
+      "file": "src/Controllers/print.js",
+      "line": 15,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getRecordForPrint",
+      "file": "src/Controllers/print.js",
+      "line": 5,
+      "guard": "token-scope"
+    },
+    {
+      "name": "handlePrintRequest_",
+      "file": "src/Controllers/print.js",
+      "line": 33,
+      "guard": "token-scope"
+    },
+    {
+      "name": "getAuditLog",
+      "file": "src/Core/audit.js",
+      "line": 172,
+      "guard": "token"
+    },
+    {
+      "name": "setupConfig",
+      "file": "src/Core/config.js",
+      "line": 126,
+      "guard": "admin"
+    },
+    {
+      "name": "retryPengampuSync",
+      "file": "src/Controllers/routes.js",
+      "line": 1247,
+      "guard": "admin"
+    },
+    {
+      "name": "retryTelegramPd3iNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1273,
+      "guard": "admin"
+    },
+    {
+      "name": "retryPengampuNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1301,
+      "guard": "admin"
+    },
+    {
+      "name": "retryRevisionPengampuNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1322,
+      "guard": "admin"
+    },
+    {
+      "name": "retryRevisionTelegramNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1349,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllPendingPengampuSync",
+      "file": "src/Controllers/routes.js",
+      "line": 1385,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllFailedTelegramPd3iNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1397,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllPendingPengampuNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1409,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllPendingRevisionPengampuNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1413,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllFailedRevisionTelegramNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1417,
+      "guard": "admin"
+    },
+    {
+      "name": "previewPertRawBlankHeaderRepair",
+      "file": "src/Core/migration.js",
+      "line": 775,
+      "guard": "admin"
+    },
+    {
+      "name": "repairPertRawBlankHeader",
+      "file": "src/Core/migration.js",
+      "line": 784,
+      "guard": "admin"
+    },
+    {
+      "name": "previewRawSheetHeaderReorder",
+      "file": "src/Core/migration.js",
+      "line": 376,
+      "guard": "admin"
+    },
+    {
+      "name": "previewRawSheetHeaderAppend",
+      "file": "src/Core/migration.js",
+      "line": 380,
+      "guard": "admin"
+    },
+    {
+      "name": "previewRawSheetAliasBackfill",
+      "file": "src/Core/migration.js",
+      "line": 837,
+      "guard": "admin"
+    },
+    {
+      "name": "previewWorkflowMarkerBackfill",
+      "file": "src/Core/migration.js",
+      "line": 1004,
+      "guard": "admin"
+    },
+    {
+      "name": "repairReferenceSheetsToScopedAccessModel",
+      "file": "src/Core/migration.js",
+      "line": 296,
+      "guard": "admin"
+    }
+  ],
+  "reviewNeeded": []
+}

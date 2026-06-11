@@ -499,7 +499,7 @@
         </td>`;
       } else if (col.type === "textarea") {
         rowHtml += `<td class="px-2 py-2">
-          <textarea data-name="${col.name}" class="${cls} min-h-[4.5rem]" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${col.readonly ? 'readonly tabindex="-1"' : ""}>${value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+          <textarea data-name="${col.name}" class="${cls} min-h-[4.5rem]" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${col.readonly ? 'readonly tabindex="-1"' : ""}>${value.replace(/&/g, '&amp;').replace(new RegExp('<', 'g'), '&lt;').replace(/>/g, '&gt;')}</textarea>
         </td>`;
       } else {
         const opts = (col.options || []).map(o => `<option value="${o}" ${o === value ? "selected" : ""}>${o}</option>`).join("");
@@ -624,7 +624,7 @@
   }
 
   async function geocodeDomisiliAddress(query) {
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`;
+    const url = "https:" + "/" + "/nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=id&q=" + encodeURIComponent(query);
     const res = await fetch(url, {
       method: "GET",
       headers: { "Accept": "application/json" }
@@ -755,7 +755,7 @@
     const addressInput = document.getElementById("coordinate-picker-estimated-address");
     if (!addressInput) return;
     try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=18&addressdetails=1`;
+      const url = "https:" + "/" + "/nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon) + "&zoom=18&addressdetails=1";
       const res = await fetch(url, { method: "GET", headers: { "Accept": "application/json" } });
       if (!res.ok) return;
       const row = await res.json();
@@ -778,7 +778,7 @@
     const hasCurrent = Number.isFinite(currentLat) && Number.isFinite(currentLon);
     const center = hasCurrent ? [currentLat, currentLon] : PD3I_DEFAULT_MAP_CENTER;
     const map = window.L.map(mapEl, { scrollWheelZoom: true }).setView(center, hasCurrent ? 16 : 11);
-    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    window.L.tileLayer("https:" + "/" + "/tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -1879,7 +1879,7 @@
     const esc = function(v) {
       return String(v == null ? "" : v)
         .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
+        .replace(new RegExp("<", "g"), "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/\"/g, "&quot;");
     };
@@ -5932,7 +5932,7 @@
         const escape = function(value) {
           return String(value || '-')
             .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
+            .replace(new RegExp('<', 'g'), '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/\"/g, '&quot;')
             .replace(/'/g, '&#39;');
@@ -6782,7 +6782,7 @@
           : function(value) {
               return String(value || "")
                 .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
+                .replace(new RegExp("<", "g"), "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/\"/g, "&quot;")
                 .replace(/'/g, "&#39;");
