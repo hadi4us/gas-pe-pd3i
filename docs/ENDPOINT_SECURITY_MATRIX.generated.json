@@ -225,7 +225,7 @@
     {
       "name": "getPdfPrintUrl",
       "file": "src/Controllers/print.js",
-      "line": 15,
+      "line": 66,
       "guard": "token-scope"
     },
     {
@@ -237,7 +237,7 @@
     {
       "name": "handlePrintRequest_",
       "file": "src/Controllers/print.js",
-      "line": 33,
+      "line": 85,
       "guard": "token-scope"
     },
     {
