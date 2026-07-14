@@ -10456,3 +10456,66 @@ body[data-active-workspace="zero-reporting-form"] #section-zero-reporting-form .
 body[data-active-workspace="sars-form"] #section-zero-reporting-form .pd3i-form-grid {
   display: grid !important;
 }
+
+/* ============================================================
+   UI VISUAL GLOW UP — PROFESSIONAL & ELEGANT POLISH
+   Standardizes tactile feel, micro-interactions, and spinner elegance.
+   ============================================================ */
+
+/* 1. Tactile Active States on Buttons */
+.pd3i-body :where(.btn,
+.pd3i-btn,
+.pd3i-action-btn,
+.pd3i-confirm-btn,
+.pd3i-overview-action-btn,
+.pd3i-choice-btn,
+button[type="button"],
+button[type="submit"]):active:not(:disabled) {
+  transform: translateY(1px) scale(0.982) !important;
+}
+
+/* 2. Hover states for secondary/outline buttons: subtle background tint */
+.pd3i-body :where(.btn-outline-primary,
+.btn-outline-secondary,
+.btn-light,
+.btn-outline-info,
+.btn-outline-warning,
+.btn-outline-success,
+.pd3i-btn.is-secondary,
+.pd3i-action-btn.is-secondary,
+.pd3i-confirm-btn.is-secondary,
+.btn:not(.btn-primary):not(.btn-success):not(.btn-danger)):hover:not(:disabled) {
+  background: var(--ui-surface-muted) !important;
+  border-color: var(--ui-border-strong) !important;
+  color: var(--ui-primary) !important;
+}
+
+/* 3. Smooth Card Hover Transitions */
+.pd3i-body :where(.pd3i-shell-card,
+.pd3i-card,
+.pd3i-form-section,
+.pd3i-data-list,
+.pd3i-mobile-list-card,
+.pd3i-zero-reporting-card,
+.card) {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.pd3i-body :where(.pd3i-shell-card,
+.pd3i-card,
+.pd3i-form-section,
+.pd3i-data-list,
+.pd3i-mobile-list-card,
+.pd3i-zero-reporting-card,
+.card):hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.055), 0 1px 4px rgba(15, 23, 42, 0.015) !important;
+}
+
+/* 4. Elegant 3/4 Circle Rotating Spinner */
+.pd3i-body .fas.fa-spinner {
+  --pd3i-icon-mask: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath d=%22M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12h3c0 3.866 3.134 7 7 7s7-3.134 7-7-3.134-7-7-7V2z%22/%3E%3C/svg%3E') !important;
+}
+.pd3i-body :where(.fa-spin,
+.fa-spinner) {
+  animation-duration: 0.75s !important;
+}
