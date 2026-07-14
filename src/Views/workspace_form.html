@@ -27,7 +27,7 @@
 
               <div id="alert-box" class="pd3i-alert-card" hidden></div>
 
-              <section id="formulir-stepper-card" class="pd3i-shell-card pd3i-stepper-card">
+              <section id="formulir-stepper-card" class="hidden pd3i-shell-card pd3i-stepper-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
                     <div class="pd3i-card-eyebrow">Progress input</div>
@@ -64,6 +64,10 @@
                       <small>Suspek / discarded / klinis / konfirmasi / dll</small>
                     </span>
                   </a>
+                </div>
+                <div id="pd3i-diagnosis-step-guide" class="pd3i-dx-step-guide" aria-live="polite">
+                  <div class="pd3i-dx-step-guide-title">Pilih diagnosis untuk melihat fokus field.</div>
+                  <div class="pd3i-dx-step-guide-list" id="pd3i-dx-step-guide-list"></div>
                 </div>
               </section>
 
@@ -206,6 +210,15 @@
                     <span class="pd3i-summary-value" id="summary-warning-count">0 peringatan</span>
                   </div>
                 </div>
+                <div id="pd3i-validation-summary" class="pd3i-validation-summary is-clear" role="status" aria-live="polite">
+                  <div class="pd3i-validation-summary-head">
+                    <span class="pd3i-validation-summary-title">Validasi cepat</span>
+                    <span id="pd3i-validation-summary-badge" class="pd3i-status-chip is-success">Aman</span>
+                  </div>
+                  <ul id="pd3i-validation-summary-list" class="pd3i-validation-summary-list">
+                    <li>Belum ada peringatan aktif.</li>
+                  </ul>
+                </div>
               </div>
 
               <div id="wizard-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-wizard-panel-card">
@@ -278,6 +291,13 @@
               <i class="fas fa-shield-heart"></i>
               <span>Simpan data setelah lolos validasi wajib, pemeriksaan angka, dan aturan epidemiologis awal.</span>
             </div>
+            <div id="pd3i-submit-review-panel" class="pd3i-submit-review-panel" aria-live="polite" data-collapsed="false">
+              <div class="pd3i-submit-review-head">
+                <div class="pd3i-submit-review-title">Review sebelum simpan</div>
+                <button type="button" id="pd3i-submit-review-toggle" class="pd3i-submit-review-toggle" aria-expanded="true" aria-controls="pd3i-submit-review-list">Sembunyikan detail</button>
+              </div>
+              <div id="pd3i-submit-review-list" class="pd3i-submit-review-list"></div>
+            </div>
             <div class="pd3i-submit-stack">
               <button type="button" id="btn-submit" class="pd3i-submit-button">
                 <i class="fas fa-save"></i> Simpan Data ke Database
@@ -287,5 +307,12 @@
               </button>
             </div>
             <div id="action-panel-helper" class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke formulir/input bersih.</div>
+          </div>
+          <div id="pd3i-mobile-submit-bar" class="pd3i-mobile-submit-bar" aria-live="polite">
+            <div>
+              <strong id="pd3i-mobile-submit-state">Review submit</strong>
+              <span id="pd3i-mobile-submit-detail">Cek kelengkapan sebelum simpan.</span>
+            </div>
+            <button type="button" id="pd3i-mobile-submit-jump" class="pd3i-mobile-submit-jump">Review</button>
           </div>
         </div>
