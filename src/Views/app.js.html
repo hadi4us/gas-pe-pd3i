@@ -414,6 +414,27 @@
     </div>`;
   }
 
+
+  function ensureSumberLaporanOptions(root) {
+    const scope = root || document;
+    const selectEl = scope.querySelector ? scope.querySelector('#Sumber\\ Laporan') : document.getElementById('Sumber Laporan');
+    const target = selectEl || document.getElementById('Sumber Laporan');
+    if (!target) return;
+    const canonical = ["RUMAH SAKIT", "PUSKESMAS", "KLINIK", "TPMB", "TPMD", "MASYARAKAT", "LAINNYA"];
+    const existing = Array.from(target.options || []).map(function(opt) { return String(opt.value || opt.textContent || '').trim(); }).filter(Boolean);
+    const hasRealOption = existing.some(function(value) { return canonical.indexOf(value.toUpperCase()) !== -1; });
+    if (hasRealOption) return;
+    const keepValue = String(target.value || '').trim();
+    target.innerHTML = '<option value="">-- Pilih --</option>' + canonical.map(function(value) {
+      return '<option value="' + value + '">' + value + '</option>';
+    }).join('');
+    if (keepValue) {
+      ensureSelectOptionValue(target, keepValue);
+      target.value = keepValue;
+      stabilizeUserSelectedValue(target, keepValue);
+    }
+  }
+
   function renderSectionTitle(title) {
     return `<div class="col-span-1 md:col-span-2 lg:col-span-3 pd3i-section-banner"><div class="pd3i-section-banner-eyebrow">Sub-section diagnosis</div><div class="pd3i-section-banner-title">${title}</div></div>`;
   }
@@ -2151,7 +2172,7 @@
           updateImunisasiSummary();
         }
 
-        showTopAlert("Draft sebelumnya berhasil dipulihkan.", true);
+        showPd3iToast("Draft sebelumnya berhasil dipulihkan.", { type: "success" });
       }, 350);
 
       return true;
@@ -2702,6 +2723,147 @@
   // ============================================================
   // CONFIG HELPERS
   // ============================================================
+  function pd3iQaSleep_(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms || 0); });
+  }
+
+  function pd3iQaDispatch_(el) {
+    if (!el) return;
+    ['input', 'change', 'blur'].forEach(function(type) {
+      try { el.dispatchEvent(new Event(type, { bubbles: true })); } catch (e) {}
+    });
+  }
+
+  function pd3iQaSetField_(fieldId, value, scope) {
+    const root = scope && scope.querySelectorAll ? scope : document;
+    const el = findScopedFieldControl(fieldId, root) || document.getElementById(fieldId);
+    if (!el) return false;
+    const nextValue = String(value == null ? '' : value).trim();
+    if (el.disabled) el.disabled = false;
+    if (el.readOnly) {
+      try { el.readOnly = false; } catch (e) {}
+      try { el.removeAttribute('readonly'); } catch (e) {}
+    }
+    if (el.tagName === 'SELECT') {
+      ensureSelectOptionValue(el, nextValue);
+      el.value = nextValue;
+      stabilizeUserSelectedValue(el, nextValue);
+    } else {
+      el.value = nextValue;
+    }
+    if (el.dataset && el.dataset.choiceGroup === '1') syncChoiceButtons(el);
+    pd3iQaDispatch_(el);
+    return String(el.value || '').trim() === nextValue;
+  }
+
+  function pd3iQaVisibleInvalidFields_(scope) {
+    const root = scope && scope.querySelectorAll ? scope : document;
+    return Array.from(root.querySelectorAll('input, select, textarea')).filter(function(el) {
+      if (!el || el.disabled || el.type === 'hidden') return false;
+      const wrapper = el.closest('.field-wrapper');
+      if (wrapper && wrapper.classList.contains('hidden')) return false;
+      const hiddenStage = el.closest('.pd3i-stage-hidden');
+      if (hiddenStage) return false;
+      return typeof el.checkValidity === 'function' && !el.checkValidity();
+    }).map(function(el) {
+      return { id: (el.dataset && el.dataset.fieldId) || el.id || el.name || '', value: String(el.value || ''), required: !!el.required, type: el.type || el.tagName };
+    });
+  }
+
+  function pd3iQaInstallHelpers_() {
+    if (typeof window === 'undefined' || window.__PD3I_QA_HELPERS_READY__) return;
+    window.__PD3I_QA_HELPERS_READY__ = true;
+
+    window.__PD3I_QA_FILL_INPUT_CASE__ = async function(dx) {
+      const form = document.getElementById('dynamic-form-input') || document.getElementById('dynamic-form');
+      const selectorEl = document.getElementById('form-selector');
+      const diagnosis = String(dx || selectorEl?.value || 'MR').trim().toUpperCase();
+      if (selectorEl && selectorEl.value !== diagnosis) {
+        selectorEl.value = diagnosis;
+        pd3iQaDispatch_(selectorEl);
+        await pd3iQaSleep_(350);
+      }
+      if (!form) return { ok: false, error: 'dynamic-form-input tidak tersedia' };
+
+      const today = getTodayInputValue();
+      const dob = '2018-02-03';
+      const values = {
+        'Sumber Laporan': 'PUSKESMAS',
+        'Nama unit pelapor': 'PUSKESMAS QA DEVELOPMENT',
+        'Provinsi': 'JAWA BARAT',
+        'Kab/Kota': 'KOTA DEPOK',
+        'Nama Petugas': 'QA Browser PD3I',
+        'No Whatsapp Petugas': '081234567890',
+        'Email Petugas': 'qa.pd3i@example.test',
+        'Tanggal terima laporan': today,
+        'Tanggal Pelacakan': today,
+        'NIK': '3276000203180001',
+        'Nama': 'QA PD3I MR ' + Date.now(),
+        'JK': 'Laki-laki',
+        'Tanggal Lahir': dob,
+        'Nama orang tua/wali': 'Orang Tua QA',
+        'No. kontak orang tua/wali': '081234567891',
+        'Apakah sekolah/bekerja?': 'Belum sekolah',
+        'Alamat': 'Alamat QA Development',
+        'RT': '001',
+        'RW': '002',
+        'Provinsi Pasien': 'JAWA BARAT',
+        'Kab/Kota Pasien': 'KOTA DEPOK',
+        'Kecamatan': 'CIMANGGIS',
+        'Kelurahan': 'CURUG',
+        'Kasus KLB': 'Tidak',
+        'Demam?': 'Ya',
+        'Tanggal mulai demam': today,
+        'Ruam Makulopapular?': 'Ya',
+        'Tanggal mulai ruam': today,
+        'Batuk': 'Tidak',
+        'Pilek': 'Tidak',
+        'Mata merah': 'Tidak',
+        'Arthralgia': 'Tidak',
+        'Adenopathy': 'Tidak',
+        'Kehamilan': 'Tidak',
+        'Gejala lain': 'Tidak',
+        'Diare': 'Tidak',
+        'Bronchopneumonia': 'Tidak',
+        'Kebutaan': 'Tidak',
+        'Otitis media': 'Tidak',
+        'Pneumonia': 'Tidak',
+        'Encephalitis': 'Tidak',
+        'Malnutrisi': 'Tidak',
+        'Ulkus mukosa mulut': 'Tidak',
+        'Lainnya komplikasi': 'Tidak',
+        'Apakah dirawat inap?': 'Tidak',
+        'Pemberian Vitamin A': 'Ya',
+        'Ada kasus serupa di lingkungan': 'Tidak',
+        'Riwayat perjalanan 7-21 hari': 'Tidak',
+        'Riwayat kontak kasus serupa': 'Tidak',
+        'Riwayat kunjungan fasilitas kesehatan': 'Tidak',
+        'Cluster/kejadian luar biasa': 'Tidak',
+        'Apakah spesimen darah diambil': 'Ya',
+        'Jenis Sampel Darah': 'Serum',
+        'Tanggal ambil spesimen darah': today,
+        'Tanggal pengiriman spesimen darah ke lab': today,
+        'Apakah spesimen lain diambil': 'Tidak',
+        'Status akhir kasus': 'Hidup'
+      };
+
+      ['pelapor', 'pasien', 'specific'].forEach(function(block) { try { updateInputWizardBlock(block); } catch (e) {} });
+      Object.keys(values).forEach(function(fieldId) {
+        pd3iQaSetField_(fieldId, values[fieldId], form);
+        try { applyAllShowIf(); } catch (e) {}
+      });
+      try { applyAllShowIf(); } catch (e) {}
+      try { validateAndApplyBirthUI({ silent: true, hard: false, scope: form }); } catch (e) {}
+      try { updateImunisasiSummary(); } catch (e) {}
+      ['pelapor', 'pasien', 'specific'].forEach(function(block) { try { updateInputWizardBlock(block); } catch (e) {} });
+      await pd3iQaSleep_(250);
+      try { updateInputWizardBlock('pelapor'); } catch (e) {}
+      const invalids = pd3iQaVisibleInvalidFields_(form);
+      return { ok: invalids.length === 0, dx: diagnosis, invalids: invalids, payload: collectCurrentFormPayload(form) };
+    };
+  }
+  pd3iQaInstallHelpers_();
+
   function getCommonConfigSafe() {
     if (typeof getCommonFields === "function") return getCommonFields();
     return {
@@ -2724,19 +2886,169 @@
     if (el) el.textContent = String(value || "");
   }
 
+  // Legacy regression anchor: search: 'Daftar Kasus'
   function getWorkspaceDisplayLabel(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
     const map = {
       overview: 'Beranda',
-      search: 'List Kasus',
-      input: 'Input kasus',
+      search: 'Daftar Kasus',
+      input: 'Input Kasus',
       verifikasi: 'Verifikasi EPID',
-      sampel: 'Hasil pemeriksaan',
-      status: 'Status pasien/kasus',
-      dashboard: 'Dasbor statistik'
+      sampel: 'Pemeriksaan Laboratorium',
+      status: 'Status dan Klasifikasi',
+      dashboard: 'Dasbor statistik',
+      'zero-reporting-form': 'Form Zero Reporting',
+      'zero-reporting-dashboard': 'Dashboard Zero Reporting',
+      'sars-form': 'Form Zero Reporting',
+      'sars-dashboard': 'Dashboard Zero Reporting',
+      pie: 'SARING-PIE',
+      settings: 'Pengaturan',
+      guide: 'Panduan aplikasi'
     };
     return map[normalized] || 'Beranda';
   }
+
+  function getWorkspaceHeaderMeta(workspace) {
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const map = {
+      overview: ['BERANDA', 'Surveilans PD3I Terintegrasi', 'Ringkasan akses, status pekerjaan, dan pintasan menu sesuai role akun aktif.'],
+      search: ['DAFTAR KASUS', 'Daftar & pencarian kasus PD3I', 'Temukan, tinjau, koreksi, atau hapus data kasus sesuai kewenangan.'],
+      input: ['FORM PE', 'Input kasus baru', 'Mulai entri formulir penyelidikan epidemiologi berdasarkan diagnosis.'],
+      verifikasi: ['WORKFLOW ADMIN', 'Verifikasi EPID', 'Validasi data, koreksi isian, dan tetapkan status verifikasi kasus.'],
+      sampel: ['LABORATORIUM', 'Pemeriksaan Laboratorium', 'Input dan tinjau hasil pemeriksaan sampel kasus PD3I.'],
+      status: ['FOLLOW UP', 'Status dan Klasifikasi', 'Perbarui status akhir, pemantauan, klasifikasi, dan tindak lanjut kasus.'],
+      dashboard: ['ANALITIK', 'Dasbor statistik PD3I', 'Pantau tren, distribusi kasus, indikator operasional, dan kualitas data.'],
+      'zero-reporting-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
+      'zero-reporting-dashboard': ['ZERO REPORTING', 'Dashboard Zero Reporting', 'Ringkasan dan pemantauan laporan nihil mingguan.'],
+      'sars-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
+      'sars-dashboard': ['ZERO REPORTING', 'Dashboard Zero Reporting', 'Ringkasan dan pemantauan laporan nihil mingguan.'],
+      pie: ['SARING-PIE', 'Skrining PIE/Zoonosis', 'Skrining cepat penyakit infeksi emerging/zoonosis, alert risiko, dan tindak lanjut PE.'],
+      settings: ['SUPER-ADMIN', 'Pengaturan PD3I / SARING-PIE', 'Kelola konfigurasi notifikasi, integrasi, dan setup sistem.'],
+      guide: ['PANDUAN', 'Panduan aplikasi', 'Petunjuk penggunaan menu, role, workflow, dan standar operasional.']
+    };
+    return map[normalized] || map.overview;
+  }
+
+  function updateWorkspaceHeader(workspace) {
+    const meta = getWorkspaceHeaderMeta(workspace);
+    setSummaryText('pd3i-page-eyebrow', meta[0]);
+    setSummaryText('pd3i-page-title', meta[1]);
+    setSummaryText('pd3i-page-subtitle', meta[2]);
+    setSummaryText('pd3i-breadcrumb-current', getWorkspaceDisplayLabel(workspace));
+  }
+
+
+
+  const PD3I_VALIDATION_TARGET_HINTS = [
+    { match: 'tanggal terima laporan', field: 'Tanggal terima laporan' },
+    { match: 'tanggal pelacakan', field: 'Tanggal pelacakan' },
+    { match: 'tanggal lahir', field: 'Tanggal lahir' },
+    { match: 'status verifikasi epid', field: 'Status Verifikasi EPID' },
+    { match: 'tanggal verifikasi epid', field: 'Tanggal Verifikasi EPID' },
+    { match: 'petugas verifikator', field: 'Petugas Verifikator' },
+    { match: 'catatan verifikasi', field: 'Catatan Verifikasi' },
+    { match: 'tanggal hasil pemeriksaan', field: 'Tanggal Hasil Pemeriksaan' },
+    { match: 'interpretasi hasil pemeriksaan', field: 'Interpretasi Hasil Sampel' },
+    { match: 'dasar penetapan status', field: 'Dasar Penetapan Status' },
+    { match: 'status sekolah/kegiatan', field: 'Status Sekolah/Kegiatan' },
+    { match: 'tanggal kembali perjalanan', field: 'Tanggal Kembali Perjalanan' },
+    { match: 'tanggal kirim spesimen darah', field: 'Tanggal Kirim Spesimen Darah' },
+    { match: 'tanggal kirim spesimen lain', field: 'Tanggal Kirim Spesimen Lain' },
+    { match: 'penyebab kematian', field: 'Penyebab Kematian' },
+    { match: 'jenis antibiotik', field: 'Jenis Antibiotik' },
+    { match: 'dosis ads', field: 'Dosis ADS' },
+    { match: 'tanggal meninggal', field: 'Tanggal Meninggal' },
+    { match: 'tanggal keluar rawat inap', field: 'Tanggal Keluar Rawat Inap' },
+    { match: 'tempat perawatan tn', field: 'Tempat Perawatan TN' },
+    { match: 'tanggal mulai dirawat tn', field: 'Tanggal Mulai Dirawat TN' },
+    { match: 'kelemahan/kelumpuhan akut', field: 'Kelemahan/Kelumpuhan Akut' },
+    { match: 'kelumpuhan layuh', field: 'Kelumpuhan Layuh' },
+    { match: 'rudapaksa', field: 'Riwayat Rudapaksa' },
+    { match: 'tanggal kirim spesimen i afp ke provinsi', field: 'Tanggal Kirim Spesimen I AFP ke Provinsi' },
+    { match: 'tanggal kirim spesimen i afp ke lab', field: 'Tanggal Kirim Spesimen I AFP ke Lab' },
+    { match: 'tanggal kirim spesimen ii afp ke provinsi', field: 'Tanggal Kirim Spesimen II AFP ke Provinsi' },
+    { match: 'tanggal kirim spesimen ii afp ke lab', field: 'Tanggal Kirim Spesimen II AFP ke Lab' },
+    { match: 'hasil follow up', field: 'Hasil Follow Up 60 Hari' }
+  ];
+
+  function findPd3iControlByLabelText(labelText) {
+    const wanted = String(labelText || '').toLowerCase().trim();
+    if (!wanted) return null;
+    const controls = Array.from(document.querySelectorAll('#dynamic-form input, #dynamic-form select, #dynamic-form textarea'));
+    return controls.find(function(el) {
+      const id = el.id || '';
+      const name = String(el.name || '').toLowerCase().trim();
+      const label = id ? Array.from(document.querySelectorAll('label')).find(function(candidate) { return candidate.getAttribute('for') === id; }) : null;
+      const text = String(label ? label.textContent : name || id).toLowerCase();
+      return text.indexOf(wanted) >= 0 || wanted.indexOf(text.split('(')[0].trim()) >= 0 || name === wanted;
+    }) || null;
+  }
+
+
+  function highlightPd3iFieldTarget(target) {
+    if (!target) return;
+    const wrapper = target.closest('.field-wrapper') || target.closest('.pd3i-form-field') || target;
+    wrapper.classList.add('pd3i-field-jump-highlight');
+    clearTimeout(wrapper.__pd3iFieldJumpHighlightTimer);
+    wrapper.__pd3iFieldJumpHighlightTimer = setTimeout(function() {
+      wrapper.classList.remove('pd3i-field-jump-highlight');
+    }, 2200);
+  }
+
+  function findPd3iValidationIssueTarget(issue) {
+    const text = String(issue || '').toLowerCase();
+    const hinted = PD3I_VALIDATION_TARGET_HINTS.find(function(hint) { return text.indexOf(hint.match) >= 0; });
+    if (hinted) {
+      const hintedTarget = findPd3iControlByLabelText(hinted.field);
+      if (hintedTarget) return hintedTarget;
+    }
+    const controls = Array.from(document.querySelectorAll('#dynamic-form input, #dynamic-form select, #dynamic-form textarea'));
+    const matched = controls.find(function(el) {
+      const id = el.id || '';
+      const name = el.name || '';
+      const label = id ? Array.from(document.querySelectorAll('label')).find(function(candidate) { return candidate.getAttribute('for') === id; }) : null;
+      const labelText = String(label ? label.textContent : name || id).toLowerCase();
+      return labelText && text.indexOf(labelText.split('(')[0].trim()) >= 0;
+    });
+    return matched || null;
+  }
+
+  function jumpToPd3iValidationIssue(issue) {
+    const target = findPd3iValidationIssueTarget(issue);
+    if (!target) return false;
+    const stepRoot = target.closest('[id^="section-"]');
+    if (stepRoot && typeof goToWorkflowStep === 'function') goToWorkflowStep(stepRoot.id);
+    setTimeout(function() {
+      try { target.focus({ preventScroll: true }); } catch (err) { try { target.focus(); } catch (e2) {} }
+      try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) {}
+      highlightPd3iFieldTarget(target);
+    }, 80);
+    return true;
+  }
+
+  function renderPd3iValidationSummary(issues, options) {
+    const cfg = options || {};
+    const wrap = document.getElementById('pd3i-validation-summary');
+    const badge = document.getElementById('pd3i-validation-summary-badge');
+    const list = document.getElementById('pd3i-validation-summary-list');
+    if (!wrap || !badge || !list) return;
+    const items = (issues || []).map(function(item) { return String(item || '').trim(); }).filter(Boolean).slice(0, 5);
+    const hasError = cfg.hasError === true;
+    wrap.classList.toggle('is-clear', items.length === 0);
+    wrap.classList.toggle('is-error', hasError);
+    badge.className = 'pd3i-status-chip ' + (items.length === 0 ? 'is-success' : hasError ? 'is-danger' : 'is-warning');
+    badge.textContent = items.length === 0 ? 'Aman' : (hasError ? 'Perlu diperbaiki' : items.length + ' catatan');
+    list.innerHTML = items.length
+      ? items.map(function(item) { return '<li><button type="button" class="pd3i-validation-summary-action" data-validation-issue="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button></li>'; }).join('')
+      : '<li>Belum ada peringatan aktif.</li>';
+  }
+
+  document.addEventListener('click', function(e) {
+    const btn = e.target && e.target.closest && e.target.closest('[data-validation-issue]');
+    if (!btn) return;
+    const issue = btn.getAttribute('data-validation-issue') || '';
+    if (jumpToPd3iValidationIssue(issue)) e.preventDefault();
+  });
 
   function updateUiShellSummary() {
     const dx = String(document.getElementById("form-selector")?.value || "").trim().toUpperCase();
@@ -2771,12 +3083,17 @@
     const lastWorkflowSummary = [lastWorkflowStageLabel, lastWorkflowActor ? `oleh ${lastWorkflowActor}` : "", lastWorkflowRole ? `(${getRoleDisplayLabel(lastWorkflowRole)})` : ""].filter(Boolean).join(" ");
 
     let issueCount = isOverview ? Number(window.__OVERVIEW_PENDING_COUNT || 0) : 0;
+    let validationIssues = [];
+    let validationHasError = false;
     if (!isOverview) {
       try {
-        issueCount += (checkConsistencyWarnings() || []).length;
+        const consistencyWarnings = checkConsistencyWarnings() || [];
         const ruleCheck = validateDxBusinessRules();
-        issueCount += ((ruleCheck && ruleCheck.warnings) || []).length;
-        issueCount += ((ruleCheck && ruleCheck.errors) || []).length;
+        const ruleWarnings = (ruleCheck && ruleCheck.warnings) || [];
+        const ruleErrors = (ruleCheck && ruleCheck.errors) || [];
+        validationIssues = consistencyWarnings.concat(ruleErrors).concat(ruleWarnings);
+        validationHasError = ruleErrors.length > 0;
+        issueCount += validationIssues.length;
       } catch (e) {}
     }
 
@@ -2803,6 +3120,7 @@
     setSummaryText("summary-mode-pill", modeText);
     setSummaryText("summary-warning-count", issueCount > 0 ? `${issueCount} hal perlu diperiksa` : "0 peringatan");
     setSummaryText("summary-warning-pill", String(issueCount));
+    renderPd3iValidationSummary(validationIssues, { hasError: validationHasError });
     setSummaryText("workflow-input-state", viewerMode ? "Data dibuka dalam mode lihat" : (isEditMode ? "Data tersimpan sedang dibuka" : "Input baru/draf kerja"));
     setSummaryText("workflow-verifikasi-state", statusVerifikasi);
     setSummaryText("workflow-sampel-state", sampelState);
@@ -2843,6 +3161,19 @@
       'section-status': 'status',
       dashboard: 'dashboard',
       'section-dashboard': 'dashboard',
+      sars: 'zero-reporting-form',
+      'sars-form': 'zero-reporting-form',
+      'section-sars-form': 'zero-reporting-form',
+      'zero-reporting-form': 'zero-reporting-form',
+      'section-zero-reporting-form': 'zero-reporting-form',
+      'sars-dashboard': 'zero-reporting-dashboard',
+      'section-sars-dashboard': 'zero-reporting-dashboard',
+      'zero-reporting-dashboard': 'zero-reporting-dashboard',
+      'section-zero-reporting-dashboard': 'zero-reporting-dashboard',
+      pie: 'pie',
+      'section-pie': 'pie',
+      settings: 'settings',
+      'section-settings': 'settings',
       guide: 'guide',
       'section-guide': 'guide'
     };
@@ -2850,7 +3181,7 @@
   }
 
   function isWorkspaceRestorable(workspace) {
-    return ['overview', 'search', 'edit', 'input', 'verifikasi', 'sampel', 'status', 'dashboard', 'guide'].includes(normalizeSidebarWorkspace(workspace));
+    return ['overview', 'search', 'edit', 'input', 'verifikasi', 'sampel', 'status', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'settings', 'guide'].includes(normalizeSidebarWorkspace(workspace));
   }
 
   function saveLastWorkspace(workspace) {
@@ -2879,6 +3210,8 @@
       const view = String(url.searchParams.get('view') || '').trim().toLowerCase();
       if (view === 'dashboard') return 'dashboard';
       const workspace = String(url.searchParams.get('workspace') || '').trim();
+      const pieTab = String(url.searchParams.get('pieTab') || url.searchParams.get('pie_tab') || '').trim().toLowerCase();
+      if (pieTab) window.__PIE_ACTIVE_TAB = pieTab;
       if (workspace) return normalizeSidebarWorkspace(workspace);
     } catch (e) {}
     return '';
@@ -2949,7 +3282,7 @@
 
   function getEffectiveDxScopeForWorkspace(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
-    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard', 'guide'].includes(normalized)) return '';
+    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'settings', 'guide'].includes(normalized)) return '';
     return String(document.getElementById('form-selector')?.value || '').trim();
   }
 
@@ -2961,6 +3294,10 @@
       return boot.dashboardUrl || (appUrl ? appUrl + '?view=dashboard' : '');
     }
     if (normalized === 'overview') return appUrl;
+    if (normalized === 'pie') {
+      const pieTab = String(window.__PIE_ACTIVE_TAB || '').trim();
+      return appUrl ? appUrl + '?workspace=pie' + (pieTab ? '&pieTab=' + encodeURIComponent(pieTab) : '') : '';
+    }
     return appUrl ? appUrl + '?workspace=' + encodeURIComponent(normalized) : '';
   }
 
@@ -3038,12 +3375,52 @@
     return map[normalized] || 'section-pelapor';
   }
 
+  function syncSidebarNavGroupExpanded(parentId, childrenId, expanded) {
+    const parent = document.getElementById(parentId);
+    const children = document.getElementById(childrenId);
+    if (!parent || !children) return;
+    parent.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    parent.classList.toggle('is-expanded', !!expanded);
+    children.classList.toggle('is-collapsed', !expanded);
+  }
+
+  function syncPd3iCasesNavExpanded(expanded) {
+    syncSidebarNavGroupExpanded('pd3i-cases-nav-toggle', 'pd3i-cases-nav-children', expanded);
+  }
+
+  function syncPd3iReportingNavExpanded(expanded) {
+    syncSidebarNavGroupExpanded('pd3i-reporting-nav-toggle', 'pd3i-reporting-nav-children', expanded);
+  }
+
+  function syncPd3iPieNavExpanded(expanded) {
+    syncSidebarNavGroupExpanded('pd3i-pie-nav-toggle', 'pd3i-pie-nav-children', expanded);
+  }
+
+  function syncPd3iToolsNavExpanded(expanded) {
+    syncSidebarNavGroupExpanded('pd3i-tools-nav-toggle', 'pd3i-tools-nav-children', expanded);
+  }
+
   function updateSidebarActiveState(activeId) {
     const workspace = normalizeSidebarWorkspace(activeId);
+    const pieTab = String(window.__PIE_ACTIVE_TAB || 'screening').toLowerCase();
+    let hasActivePd3iCase = false;
+    let hasActiveReporting = false;
+    let hasActivePie = false;
+    let hasActiveTools = false;
     document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
       const targetWorkspace = normalizeSidebarWorkspace(link.getAttribute('data-sidebar-workspace'));
-      link.classList.toggle('is-active', targetWorkspace === workspace);
+      const linkPieTab = String(link.getAttribute('data-pie-tab') || '').toLowerCase();
+      const active = targetWorkspace === workspace && (workspace !== 'pie' || !linkPieTab || linkPieTab === pieTab);
+      link.classList.toggle('is-active', active);
+      if (active && link.closest('#pd3i-cases-nav-children')) hasActivePd3iCase = true;
+      if (active && link.closest('#pd3i-reporting-nav-children')) hasActiveReporting = true;
+      if (active && link.closest('#pd3i-pie-nav-children')) hasActivePie = true;
+      if (active && link.closest('#pd3i-tools-nav-children')) hasActiveTools = true;
     });
+    if (hasActivePd3iCase) syncPd3iCasesNavExpanded(true);
+    if (hasActiveReporting) syncPd3iReportingNavExpanded(true);
+    if (hasActivePie) syncPd3iPieNavExpanded(true);
+    if (hasActiveTools) syncPd3iToolsNavExpanded(true);
   }
 
   function applyWorkspaceFormChrome(workspace) {
@@ -3089,11 +3466,19 @@
     const sampelForm = document.getElementById('dynamic-form-sampel');
     const statusForm = document.getElementById('dynamic-form-status');
     const dashboardSection = document.getElementById('section-dashboard');
+    const sarsFormSection = document.getElementById('section-zero-reporting-form');
+    const sarsDashboardSection = document.getElementById('section-zero-reporting-dashboard');
+    const pieSection = document.getElementById('section-pie');
+    const settingsSection = document.getElementById('section-settings');
     const guideSection = document.getElementById('section-guide');
     const isDeferredWorkspace = ['verifikasi', 'sampel', 'status'].includes(normalized);
     const isInputWorkspace = normalized === 'input';
     const isSearchWorkspace = ['search', 'edit'].includes(normalized);
     const isDashboardWorkspace = normalized === 'dashboard';
+    const isSarsFormWorkspace = normalized === 'zero-reporting-form';
+    const isSarsDashboardWorkspace = normalized === 'zero-reporting-dashboard';
+    const isPieWorkspace = normalized === 'pie';
+    const isSettingsWorkspace = normalized === 'settings';
     const isGuideWorkspace = normalized === 'guide';
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
@@ -3105,6 +3490,33 @@
       sectionEl.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
     }
 
+    function revealZeroReportingFormWorkspace() {
+      if (!sarsFormSection) return;
+      [
+        sarsFormSection,
+        sarsFormSection.querySelector('.pd3i-zero-reporting-native'),
+        sarsFormSection.querySelector('.pd3i-zero-reporting-host'),
+        sarsFormSection.querySelector('.pd3i-zero-reporting-form-host'),
+        sarsFormSection.querySelector('.container'),
+        sarsFormSection.querySelector('.card'),
+        sarsFormSection.querySelector('#sarsForm')
+      ].forEach(function(el) {
+        if (!el) return;
+        el.classList.remove('hidden');
+        el.hidden = false;
+        el.style.removeProperty('visibility');
+        el.style.removeProperty('opacity');
+        el.style.display = '';
+      });
+      sarsFormSection.querySelectorAll('.disease-section,.case-row,.row,.row-3,.nihil-row').forEach(function(el) {
+        el.classList.remove('hidden');
+        el.hidden = false;
+        el.style.removeProperty('visibility');
+        el.style.removeProperty('opacity');
+        el.style.display = '';
+      });
+    }
+
     setWorkspaceSectionVisibility(overviewSection, normalized === 'overview');
     setWorkspaceSectionVisibility(inputLauncherSection, isInputWorkspace);
     setWorkspaceSectionVisibility(inputFormSection, isInputWorkspace && hasDx && !hasOpenRecord);
@@ -3113,6 +3525,11 @@
     setWorkspaceSectionVisibility(sampelFormSection, normalized === 'sampel' && hasOpenRecord);
     setWorkspaceSectionVisibility(statusFormSection, normalized === 'status' && hasOpenRecord);
     setWorkspaceSectionVisibility(dashboardSection, isDashboardWorkspace);
+    setWorkspaceSectionVisibility(sarsFormSection, isSarsFormWorkspace);
+    if (isSarsFormWorkspace) revealZeroReportingFormWorkspace();
+    setWorkspaceSectionVisibility(sarsDashboardSection, isSarsDashboardWorkspace);
+    setWorkspaceSectionVisibility(pieSection, isPieWorkspace);
+    setWorkspaceSectionVisibility(settingsSection, isSettingsWorkspace);
     setWorkspaceSectionVisibility(guideSection, isGuideWorkspace);
     applySearchDefaultsForWorkspace(normalized);
 
@@ -3129,6 +3546,7 @@
 
     applyWorkspaceFormChrome(normalized);
     updateSidebarActiveState(normalized);
+    updateWorkspaceHeader(normalized);
   }
 
   function shouldClearActiveRecordOnWorkspaceChange(previousWorkspace, nextWorkspace, options) {
@@ -3171,6 +3589,46 @@
         openDashboardSection({ autoLoad: opts.autoLoad, scroll: opts.scroll !== false });
       }
       return normalized;
+    }
+
+    if (normalized === 'zero-reporting-form' || normalized === 'zero-reporting-dashboard') {
+      setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: false, skipStageSync: true });
+      updateFormStepperState('section-pelapor');
+      applySidebarWorkspaceLayout(normalized);
+      applySearchShellCopyForWorkspace(normalized);
+      if (normalized === 'zero-reporting-form' && typeof window.initSarsNativeForm === 'function') {
+        window.initSarsNativeForm();
+      }
+      if (normalized === 'zero-reporting-dashboard') {
+        try {
+          if (typeof window.initSarsDashboard === 'function') window.initSarsDashboard();
+          else if (typeof window.init === 'function') window.init();
+          else if (typeof window.loadData === 'function') window.loadData(true);
+        } catch (e) {
+          console.error('Gagal memuat dashboard Zero Reporting:', e);
+        }
+      }
+      if (opts.scroll !== false) document.getElementById(normalized === 'zero-reporting-form' ? 'section-zero-reporting-form' : 'section-zero-reporting-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return normalized;
+    }
+
+    if (normalized === 'pie') {
+      setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: false, skipStageSync: true });
+      updateFormStepperState('section-pelapor');
+      applySidebarWorkspaceLayout('pie');
+      applySearchShellCopyForWorkspace('pie');
+      if (typeof window.initPieWorkspace === 'function') window.initPieWorkspace();
+      if (opts.scroll !== false) document.getElementById('section-pie')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return normalized;
+    }
+
+    if (normalized === 'settings') {
+      applySidebarWorkspaceLayout('settings');
+      applySearchShellCopyForWorkspace('settings');
+      if (typeof window.initSettingsWorkspace === 'function') window.initSettingsWorkspace();
+      if (opts.scroll !== false) document.getElementById('section-settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (opts.persist !== false) saveLastWorkspace('settings');
+      return 'settings';
     }
 
     if (normalized === 'guide') {
@@ -3257,6 +3715,231 @@
     ];
   }
 
+
+  function getActiveDiagnosisCode() {
+    const selectorDx = String(document.getElementById('form-selector')?.value || '').trim().toUpperCase();
+    if (selectorDx) return selectorDx;
+    const badgeDx = String(document.getElementById('edit-badge-dx')?.textContent || document.getElementById('viewer-badge-dx')?.textContent || '').replace(/^DX\s*/i, '').trim().toUpperCase();
+    return badgeDx && badgeDx !== '-' ? badgeDx : '';
+  }
+
+  function summarizeDiagnosisSections(cfg) {
+    const sections = cfg && Array.isArray(cfg.sections) ? cfg.sections : [];
+    return sections.map(function(section) {
+      return String(section && section.title || '').trim();
+    }).filter(Boolean).slice(0, 4);
+  }
+
+  function countDiagnosisSpecificFields(cfg) {
+    if (!cfg) return 0;
+    if (Array.isArray(cfg.fields)) return cfg.fields.length;
+    if (Array.isArray(cfg.sections)) {
+      return cfg.sections.reduce(function(total, section) {
+        return total + (Array.isArray(section && section.fields) ? section.fields.length : 0);
+      }, 0);
+    }
+    return 0;
+  }
+
+  function getDiagnosisStatusOptionCount(dx) {
+    const code = String(dx || '').trim().toUpperCase();
+    if (!code || typeof getCaseStatusOptions !== 'function') return 0;
+    const options = getCaseStatusOptions(code) || [];
+    return Array.isArray(options) ? options.length : 0;
+  }
+
+  function getDiagnosisStepGuide(dx) {
+    const code = String(dx || '').trim().toUpperCase();
+    const cfg = getDxConfigSafe(code);
+    const specificCount = countDiagnosisSpecificFields(cfg);
+    const sectionNames = summarizeDiagnosisSections(cfg);
+    const statusCount = getDiagnosisStatusOptionCount(code);
+    const name = (cfg && (cfg.name || cfg.label || cfg.title)) || code || 'diagnosis belum dipilih';
+    const sectionHint = sectionNames.length ? ` Fokus: ${sectionNames.join(', ')}.` : '';
+    return [
+      { id: 'section-pelapor', label: 'Input', hint: code ? `Isi identitas, pelapor, dan ${specificCount} field spesifik ${name}.${sectionHint}` : 'Pilih diagnosis dulu agar field spesifik tampil.' },
+      { id: 'section-verifikasi', label: 'Verifikasi EPID', hint: 'Admin cek kelengkapan, konsistensi diagnosis, dan tetapkan nomor EPID final.' },
+      { id: 'section-sampel', label: 'Hasil Pemeriksaan', hint: code ? `Isi pemeriksaan/lab yang relevan untuk ${name}; boleh dilewati jika belum tersedia.` : 'Isi bila ada pemeriksaan/lab; boleh dilewati jika belum tersedia.' },
+      { id: 'section-status', label: 'Status Pasien/Kasus', hint: code && statusCount ? `Pilih dari ${statusCount} opsi status ${name} sesuai alur kasus.` : 'Opsi status mengikuti diagnosis yang dipilih.' }
+    ];
+  }
+
+  function renderDiagnosisStepGuide(activeStepId) {
+    const root = document.getElementById('pd3i-diagnosis-step-guide');
+    const list = document.getElementById('pd3i-dx-step-guide-list');
+    if (!root || !list) return;
+    const dx = getActiveDiagnosisCode();
+    const active = normalizeWorkflowStepId(activeStepId || document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
+    root.setAttribute('data-dx', dx || 'NONE');
+    list.innerHTML = getDiagnosisStepGuide(dx).map(function(item) {
+      const cls = item.id === active ? 'pd3i-dx-step-guide-item is-active' : 'pd3i-dx-step-guide-item';
+      return `<button type="button" class="${cls}" data-guide-step="${escapeHtml(item.id)}" aria-current="${item.id === active ? 'step' : 'false'}"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.hint)}</span></button>`;
+    }).join('');
+  }
+
+
+
+  const PD3I_INPUT_WIZARD_BLOCKS = [
+    { id: 'pelapor', label: '1A Pelapor', selector: '.pd3i-form-card-pelapor', containerId: 'pelapor-fields-container-input' },
+    { id: 'pasien', label: '1B Pasien & lokasi', selector: '.pd3i-form-card-pasien', containerId: 'pasien-fields-container-input' },
+    { id: 'specific', label: '1C Klinis & epidemiologi', selector: '.pd3i-form-card-specific', containerId: 'specific-fields-container-input' }
+  ];
+  let PD3I_INPUT_WIZARD_ACTIVE = 'pelapor';
+  let PD3I_SUBMIT_REVIEW_REFRESH_TIMER = null;
+
+  function schedulePd3iSubmitReviewRefresh(reason) {
+    if (PD3I_SUBMIT_REVIEW_REFRESH_TIMER) clearTimeout(PD3I_SUBMIT_REVIEW_REFRESH_TIMER);
+    PD3I_SUBMIT_REVIEW_REFRESH_TIMER = setTimeout(function() {
+      PD3I_SUBMIT_REVIEW_REFRESH_TIMER = null;
+      if (typeof renderPd3iSubmitReviewPanel !== 'function') return;
+      const activeStep = document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor';
+      renderPd3iSubmitReviewPanel(ACTIVE_SIDEBAR_WORKSPACE, activeStep);
+    }, reason === 'immediate' ? 0 : 120);
+  }
+
+  function countRequiredCompletionForRoot(root) {
+    const summary = { total: 0, filled: 0, invalid: 0, firstInvalidId: '' };
+    if (!root || !root.querySelectorAll) return summary;
+    root.querySelectorAll('input, select, textarea').forEach(function(el) {
+      if (!el || el.disabled || !el.required || el.type === 'hidden') return;
+      const wrapper = el.closest('.field-wrapper');
+      if (wrapper && wrapper.classList.contains('hidden')) return;
+      summary.total++;
+      if (String(el.value || '').trim()) summary.filled++;
+      if (typeof el.checkValidity === 'function' && !el.checkValidity()) {
+        summary.invalid++;
+        if (!summary.firstInvalidId) summary.firstInvalidId = el.id || '';
+      }
+    });
+    return summary;
+  }
+
+  function ensureInputWizardNav() {
+    const form = document.getElementById('dynamic-form-input');
+    if (!form) return null;
+    let nav = document.getElementById('pd3i-input-wizard-nav');
+    if (nav) return nav;
+    const intro = form.querySelector('.pd3i-form-card-highlight');
+    nav = document.createElement('section');
+    nav.id = 'pd3i-input-wizard-nav';
+    nav.className = 'pd3i-shell-card pd3i-input-wizard-card';
+    nav.innerHTML = '<div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Panduan input bertahap</div><h3 class="pd3i-card-title">Isi form per blok, lalu cek Review sebelum simpan</h3></div><span class="pd3i-badge-soft">Wizard input</span></div><div class="pd3i-input-wizard-tabs" role="tablist" aria-label="Tahap input kasus"></div><div id="pd3i-input-wizard-hint" class="pd3i-helper-text mt-3"></div>';
+    if (intro && intro.parentNode) intro.parentNode.insertBefore(nav, intro.nextSibling);
+    return nav;
+  }
+
+  function updateInputWizardBlock(activeId) {
+    const form = document.getElementById('dynamic-form-input');
+    if (!form || form.classList.contains('hidden')) return;
+    const requested = String(activeId || PD3I_INPUT_WIZARD_ACTIVE || 'pelapor').trim();
+    const active = PD3I_INPUT_WIZARD_BLOCKS.some(function(item) { return item.id === requested; }) ? requested : 'pelapor';
+    PD3I_INPUT_WIZARD_ACTIVE = active;
+    const nav = ensureInputWizardNav();
+    const tabs = nav ? nav.querySelector('.pd3i-input-wizard-tabs') : null;
+    const hint = document.getElementById('pd3i-input-wizard-hint');
+
+    if (tabs) {
+      tabs.innerHTML = PD3I_INPUT_WIZARD_BLOCKS.map(function(item, idx) {
+        const root = form.querySelector(item.selector);
+        const c = countRequiredCompletionForRoot(root);
+        const cls = 'pd3i-input-wizard-tab' + (item.id === active ? ' is-active' : '') + (c.invalid ? ' has-error' : c.total && c.filled >= c.total ? ' is-complete' : '');
+        const meta = c.total ? c.filled + '/' + c.total + ' wajib' : 'opsional';
+        return '<button type="button" class="' + cls + '" data-input-wizard-block="' + escapeHtml(item.id) + '" role="tab" aria-selected="' + (item.id === active ? 'true' : 'false') + '"><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(meta) + '</span></button>';
+      }).join('');
+    }
+
+    PD3I_INPUT_WIZARD_BLOCKS.forEach(function(item, idx) {
+      const card = form.querySelector(item.selector);
+      if (!card) return;
+      const isActive = item.id === active;
+      card.classList.toggle('pd3i-input-wizard-hidden', !isActive);
+      card.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+      if (!card.querySelector('.pd3i-input-wizard-actions')) {
+        const actions = document.createElement('div');
+        actions.className = 'pd3i-input-wizard-actions';
+        const prev = idx > 0 ? '<button type="button" class="pd3i-cancel-button" data-input-wizard-block="' + escapeHtml(PD3I_INPUT_WIZARD_BLOCKS[idx - 1].id) + '">Kembali</button>' : '';
+        const next = idx < PD3I_INPUT_WIZARD_BLOCKS.length - 1 ? '<button type="button" class="pd3i-submit-button" data-input-wizard-next="' + escapeHtml(PD3I_INPUT_WIZARD_BLOCKS[idx + 1].id) + '">Lanjut blok berikutnya</button>' : '<button type="button" class="pd3i-submit-button" data-input-wizard-review="1">Cek Review sebelum simpan</button>';
+        actions.innerHTML = prev + next;
+        card.appendChild(actions);
+      }
+    });
+
+    const activeDef = PD3I_INPUT_WIZARD_BLOCKS.find(function(item) { return item.id === active; }) || PD3I_INPUT_WIZARD_BLOCKS[0];
+    const activeRoot = form.querySelector(activeDef.selector);
+    const activeCount = countRequiredCompletionForRoot(activeRoot);
+    if (hint) {
+      hint.textContent = activeCount.invalid
+        ? 'Blok ini masih punya ' + activeCount.invalid + ' field wajib/format yang perlu diperbaiki. Pakai tombol Perbaiki field pertama jika bingung mulai dari mana.'
+        : 'Blok ini tidak punya blocker wajib aktif. Lanjutkan blok berikutnya atau cek review sebelum simpan.';
+    }
+    schedulePd3iSubmitReviewRefresh('immediate');
+  }
+
+  document.addEventListener('click', function(e) {
+    const tab = e.target && e.target.closest && e.target.closest('[data-input-wizard-block]');
+    if (!tab) return;
+    e.preventDefault();
+    updateInputWizardBlock(tab.getAttribute('data-input-wizard-block'));
+  });
+
+  document.addEventListener('click', function(e) {
+    const next = e.target && e.target.closest && e.target.closest('[data-input-wizard-next]');
+    if (!next) return;
+    e.preventDefault();
+    updateInputWizardBlock(next.getAttribute('data-input-wizard-next'));
+    const nav = document.getElementById('pd3i-input-wizard-nav');
+    if (nav) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.addEventListener('click', function(e) {
+    const review = e.target && e.target.closest && e.target.closest('[data-input-wizard-review]');
+    if (!review) return;
+    e.preventDefault();
+    const panel = document.getElementById('pd3i-submit-review-panel') || document.getElementById('action-panel-input');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    schedulePd3iSubmitReviewRefresh('immediate');
+  });
+
+  function enhanceLongSelectsWithFilter(root) {
+    const scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('select.pd3i-generated-control').forEach(function(select) {
+      if (!select || select.multiple || select.dataset.searchFilterReady === '1') return;
+      const options = Array.from(select.options || []).filter(function(opt) { return String(opt.value || opt.textContent || '').trim(); });
+      if (options.length < 12) return;
+      select.dataset.searchFilterReady = '1';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'pd3i-select-filter-wrap';
+      const input = document.createElement('input');
+      input.type = 'search';
+      input.className = 'pd3i-select-filter-input';
+      input.placeholder = 'Ketik untuk saring pilihan ' + String(select.id || '').toLowerCase();
+      input.setAttribute('aria-label', 'Saring pilihan ' + String(select.id || 'dropdown'));
+      input.setAttribute('autocomplete', 'off');
+      select.parentNode.insertBefore(wrapper, select);
+      wrapper.appendChild(input);
+      wrapper.appendChild(select);
+      input.addEventListener('input', function() {
+        const q = String(input.value || '').trim().toLowerCase();
+        Array.from(select.options || []).forEach(function(opt, idx) {
+          if (idx === 0 || !q) { opt.hidden = false; return; }
+          opt.hidden = String(opt.textContent || opt.value || '').toLowerCase().indexOf(q) === -1;
+        });
+        const visible = Array.from(select.options || []).find(function(opt, idx) { return idx > 0 && !opt.hidden; });
+        if (visible && !select.value && q.length >= 2) visible.selected = true;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    const target = e.target && e.target.closest && e.target.closest('[data-guide-step]');
+    if (!target) return;
+    const stepId = target.getAttribute('data-guide-step');
+    if (!stepId || typeof goToWorkflowStep !== 'function') return;
+    e.preventDefault();
+    goToWorkflowStep(stepId);
+  });
+
   function normalizeWorkflowStepId(activeId) {
     if (["section-pelapor", "section-pasien", "section-specific"].includes(activeId)) return "section-pelapor";
     if (["section-verifikasi", "section-sampel", "section-status"].includes(activeId)) return activeId;
@@ -3273,11 +3956,11 @@
     const map = {
       "section-pelapor": {
         title: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Cari laporan untuk koreksi data awal" : "Mulai input kasus baru",
-        badge: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "List Kasus" : "Ruang entri",
-        helper: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Data awal dibuka dari List Kasus. Kolom verifikasi, hasil pemeriksaan, dan status pemantauan tetap dikunci di tahap masing-masing." : "Mode ini dipakai untuk input kasus baru. Fokus pada formulir entri awal tanpa perlu mencari data lama.",
-        searchHelper: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Cari data yang sudah ada di List Kasus. Setelah dibuka, simpan sebagai edit data awal dengan jejak audit." : "Pencarian tetap tersedia jika perlu memeriksa data yang sudah ada, tetapi alur utama saat ini adalah entri kasus baru.",
+        badge: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Daftar Kasus" : "Ruang entri",
+        helper: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Data awal dibuka dari Daftar Kasus. Kolom verifikasi, hasil pemeriksaan, dan status pemantauan tetap dikunci di tahap masing-masing." : "Mode ini dipakai untuk input kasus baru. Fokus pada formulir entri awal tanpa perlu mencari data lama.",
+        searchHelper: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Cari data yang sudah ada di Daftar Kasus. Setelah dibuka, simpan sebagai edit data awal dengan jejak audit." : "Pencarian tetap tersedia jika perlu memeriksa data yang sudah ada, tetapi alur utama saat ini adalah entri kasus baru.",
         actionLabel: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Edit" : "Buka untuk Koreksi",
-        successMessage: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Data dibuka dari List Kasus." : "Mode kerja diarahkan ke entri kasus baru."
+        successMessage: normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' ? "Data dibuka dari Daftar Kasus." : "Mode kerja diarahkan ke entri kasus baru."
       },
       "section-verifikasi": {
         title: "Cari data tersimpan untuk verifikasi",
@@ -3454,6 +4137,8 @@
   }
 
   function getWorkflowSearchActionLabel() {
+    const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'search');
+    if (workspace === 'search') return 'Buka aksi kasus';
     return getWorkflowIntentConfig(WORKFLOW_SEARCH_INTENT).actionLabel || "Buka / Edit";
   }
 
@@ -3579,13 +4264,34 @@
     }
 
     if (toolbarEyebrow) toolbarEyebrow.textContent = 'Filter data';
-    if (toolbarTitle) toolbarTitle.textContent = 'Filter List Kasus';
-    if (toolbarBadge) toolbarBadge.textContent = 'List Kasus';
+    if (toolbarTitle) toolbarTitle.textContent = 'Saring data tersimpan';
+    if (toolbarBadge) toolbarBadge.textContent = 'Data tersimpan';
     if (btnSearch) btnSearch.innerHTML = '<i class="fas fa-filter"></i> Terapkan Filter';
     if (btnReset) btnReset.classList.remove('hidden');
     if (searchHelper && !searchHelper.textContent) {
       searchHelper.textContent = 'Ketik satu kata kunci: EPID, ID registrasi, nama, alamat, kelurahan, atau orang tua/wali.';
     }
+  }
+
+
+  function updatePd3iCoreWorkflowGuide(workspace) {
+    const guide = document.getElementById('pd3i-core-workflow-guide');
+    if (!guide) return;
+    const normalized = normalizeSidebarWorkspace(workspace);
+    const copy = {
+      search: ['Cari kasus', 'Buka kartu kasus', 'Pilih aksi: edit, verifikasi, lab, status, atau hapus sesuai kewenangan'],
+      edit: ['Cari kasus', 'Buka kartu kasus', 'Edit data awal tanpa mengubah verifikasi/lab/status'],
+      input: ['Pilih diagnosis', 'Isi blok wizard 1A–1C', 'Cek Review sebelum simpan lalu simpan input awal'],
+      verifikasi: ['Saring antrian pending', 'Buka kasus yang akan ditinjau', 'Isi keputusan verifikasi EPID dan catatan revisi bila perlu'],
+      sampel: ['Saring kasus terverifikasi', 'Buka kasus pasien yang tepat', 'Isi hasil pemeriksaan dan status spesimen/lab'],
+      status: ['Saring kasus aktif', 'Buka kasus yang siap ditindaklanjuti', 'Perbarui status pasien, klasifikasi, dan tindak lanjut akhir']
+    }[normalized] || ['Cari kasus', 'Buka kartu kasus', 'Kerjakan tahap sesuai menu aktif'];
+    guide.querySelectorAll('.pd3i-core-workflow-step').forEach(function(step, idx) {
+      const strong = step.querySelector('strong');
+      const span = step.querySelector('span');
+      if (strong) strong.textContent = (idx + 1) + ' ' + copy[idx];
+      if (span) span.textContent = idx === 0 ? 'Mulai dari filter/kata kunci yang paling mudah ditemukan petugas.' : idx === 1 ? 'Pastikan identitas pasien/kasus cocok sebelum melanjutkan.' : 'Simpan hanya setelah tahap aktif sudah lengkap dan review tidak menunjukkan blocker.';
+    });
   }
 
   function applySearchShellCopyForWorkspace(workspace) {
@@ -3598,16 +4304,16 @@
     const config = {
       overview: {
         eyebrow: 'Data yang sudah ada',
-        title: 'List Kasus',
-        badge: 'List Kasus',
+        title: 'Daftar Kasus',
+        badge: 'Daftar Kasus',
         helper: 'Gunakan ruang kerja ini untuk mencari data lama yang perlu diperiksa, dikoreksi, atau dilanjutkan ke tahap berikutnya.',
         searchHelper: 'Gunakan kata kunci atau filter diagnosis, kecamatan, kelurahan, status kasus, dan status verifikasi untuk mempersempit list kasus.'
       },
       search: {
         eyebrow: 'Data yang sudah ada',
-        title: 'List Kasus',
-        badge: 'List Kasus',
-        helper: 'Menu ini menampilkan daftar kasus yang sudah ada, dilengkapi filter operasional serta tombol edit dan hapus sesuai kewenangan pengguna.',
+        title: 'Daftar Kasus',
+        badge: 'Data tersimpan',
+        helper: 'Command center kasus: cari data, buka kartu kasus, lalu pilih aksi edit, verifikasi, hasil pemeriksaan, status, atau hapus sesuai kewenangan.',
         searchHelper: 'Gunakan kata kunci atau filter diagnosis, kecamatan, kelurahan, status kasus, dan status verifikasi untuk mempersempit list kasus.'
       },
       input: {
@@ -3646,6 +4352,7 @@
     if (badgeEl) badgeEl.textContent = cfg.badge;
     if (helperEl) helperEl.textContent = cfg.helper;
     if (searchHelperEl) searchHelperEl.textContent = cfg.searchHelper;
+    updatePd3iCoreWorkflowGuide(normalized);
     applyWorkflowSearchUiMode(normalized);
   }
 
@@ -3732,12 +4439,13 @@
     const allowedWorkspaces = getAllowedSidebarWorkspacesForUser(SESSION_USER);
     const quickActions = [
       { workspace: 'input', icon: 'fa-plus-circle', title: 'Input kasus baru', copy: 'Mulai entri formulir PE baru berdasarkan diagnosis.', show: caps.canWrite },
-      { workspace: 'search', icon: 'fa-list-ul', title: 'List Kasus', copy: 'Temukan data yang sudah ada untuk diedit, ditinjau, atau dihapus sesuai kewenangan.', show: caps.canView },
+      { workspace: 'search', icon: 'fa-list-ul', title: 'Daftar Kasus', copy: 'Temukan data yang sudah ada untuk diedit, ditinjau, atau dihapus sesuai kewenangan.', show: caps.canView },
 
       { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Tinjau data yang sudah ada untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
       { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil pemeriksaan', copy: 'Lanjutkan data yang sudah ada saat hasil pemeriksaan tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
       { workspace: 'status', icon: 'fa-list-check', title: 'Pembaruan status', copy: 'Perbarui status pasien / kasus dari data yang sudah ada.', show: caps.viewStages.indexOf('section-status') !== -1 },
       { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dasbor statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView },
+      { workspace: 'settings', icon: 'fa-gear', title: 'Pengaturan', copy: 'Kelola konfigurasi PD3I/SARING-PIE sesuai role.', show: isSuperAdminUiRole(SESSION_USER && SESSION_USER.role) },
       { workspace: 'guide', icon: 'fa-book-open', title: 'Panduan aplikasi', copy: 'Baca petunjuk penggunaan detail per menu dan per peran.', show: caps.canView }
     ].filter(function(item) { return item.show && allowedWorkspaces.has(item.workspace); });
 
@@ -3752,9 +4460,9 @@
     }).join('');
 
     roleWrap.textContent = caps.summary || 'Belum ada sesi aktif.';
-    kpiWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat KPI operasional...</div>';
+    kpiWrap.innerHTML = renderPd3iSkeleton({ title: 'Memuat KPI operasional…', rows: 4 });
     focusWrap.innerHTML = '';
-    summaryWrap.innerHTML = '<div class="pd3i-dashboard-state is-loading">Memuat prioritas kerja...</div>';
+    summaryWrap.innerHTML = renderPd3iSkeleton({ title: 'Memuat prioritas kerja…', rows: 5 });
     inboxWrap.innerHTML = '';
 
     quickWrap.querySelectorAll('[data-overview-workspace]').forEach(function(btn) {
@@ -3767,8 +4475,8 @@
 
     const sessionToken = getSafeSessionTokenLocal();
     if (!safeGsRun() || !sessionToken) {
-      kpiWrap.innerHTML = '<div class="pd3i-helper-text">KPI beranda belum tersedia karena sesi belum siap.</div>';
-      summaryWrap.innerHTML = '<div class="pd3i-helper-text">Ringkasan prioritas kerja belum tersedia karena sesi belum siap.</div>';
+      kpiWrap.innerHTML = renderPd3iUiState({ type: 'empty', title: 'KPI beranda belum tersedia', message: 'Sesi belum siap. Login ulang bila data tidak muncul setelah halaman dimuat.' });
+      summaryWrap.innerHTML = renderPd3iUiState({ type: 'empty', title: 'Prioritas kerja belum tersedia', message: 'Ringkasan akan muncul setelah sesi dan token berhasil dimuat.' });
       return;
     }
 
@@ -3778,7 +4486,7 @@
     setTimeout(function() {
       if (window.__OVERVIEW_REQUEST_ID !== requestId || !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
       if (String(kpiWrap.textContent || '').indexOf('Memuat KPI operasional') !== -1) {
-        kpiWrap.innerHTML = '<div class="pd3i-empty-state">KPI beranda terlalu lama dimuat. Coba buka menu lain lalu kembali ke Beranda.</div>';
+        kpiWrap.innerHTML = renderPd3iUiState({ type: 'error', title: 'KPI beranda terlalu lama dimuat', message: 'Coba buka menu lain lalu kembali ke Beranda. Jika masih gagal, refresh halaman.' });
       }
     }, 8000);
 
@@ -3834,12 +4542,94 @@
             `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus tindak lanjut</div><div class="pd3i-overview-focus-title">Antrian kerja aktif</div><div class="pd3i-overview-focus-copy">Saat ini ada <strong>${actionable}</strong> item kerja aktif yang perlu ditindaklanjuti di workspace operasional.</div></div>`
           ].join('');
 
-          summaryWrap.innerHTML = [
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Pending verifikasi</div><span class="count">${pending}</span></div>`,
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Perlu revisi</div><span class="count">${revisi}</span></div>`,
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
-            `<div class="pd3i-overview-summary-card"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`
-          ].join('');
+          const taskCards = [
+            { workspace: 'verifikasi', label: 'Pending verifikasi', count: pending, copy: 'Kasus masuk yang perlu keputusan EPID/admin.', action: 'Buka verifikasi' },
+            { workspace: 'search', label: 'Perlu revisi', count: revisi, copy: 'Kasus dikembalikan untuk koreksi data awal.', action: 'Buka Daftar Kasus' },
+            { workspace: 'sampel', label: 'Menunggu hasil lab', count: sample, copy: 'Kasus terverifikasi yang menunggu hasil pemeriksaan.', action: 'Buka lab' },
+            { workspace: 'status', label: 'Siap update status', count: status, copy: 'Kasus siap klasifikasi/status akhir dan tindak lanjut.', action: 'Buka status' }
+          ];
+          const crossModuleCards = [
+            { key: 'zero-reporting', workspace: 'zero-reporting-dashboard', label: 'Zero Reporting belum lapor', count: '…', copy: 'Faskes yang belum mengirim laporan minggu epidemiologi berjalan.', action: 'Buka Zero Reporting' },
+            { key: 'pie-risk', workspace: 'pie', label: 'SARING-PIE E3/EX', count: '…', copy: 'Kasus risiko tinggi atau alert aktif yang perlu tindak lanjut surveilans.', action: 'Buka SARING-PIE' },
+            { key: 'pie-lab', workspace: 'pie', label: 'PIE PE/lab pending', count: '…', copy: 'Form PE draft, risiko tinggi tanpa spesimen, atau spesimen tanpa hasil lab.', action: 'Buka Lab PIE' }
+          ];
+          summaryWrap.innerHTML = taskCards.map(function(card) {
+            const count = Number(card.count || 0);
+            const stateClass = count > 0 ? 'is-active' : 'is-clear';
+            return `<div class="pd3i-overview-task-card ${stateClass}" data-overview-task="${escapeHtml(card.workspace)}">
+              <div class="pd3i-overview-task-main">
+                <div class="pd3i-mini-stat-label">${escapeHtml(card.label)}</div>
+                <div class="pd3i-overview-task-copy">${escapeHtml(card.copy)}</div>
+              </div>
+              <div class="pd3i-overview-task-side">
+                <span class="count">${count}</span>
+                <button type="button" class="pd3i-overview-task-action" data-overview-task-workspace="${escapeHtml(card.workspace)}">${escapeHtml(card.action)}</button>
+              </div>
+            </div>`;
+          }).join('') + crossModuleCards.map(function(card) {
+            return `<div class="pd3i-overview-task-card is-cross-module" data-overview-cross-module="${escapeHtml(card.key)}">
+              <div class="pd3i-overview-task-main">
+                <div class="pd3i-mini-stat-label">${escapeHtml(card.label)}</div>
+                <div class="pd3i-overview-task-copy">${escapeHtml(card.copy)}</div>
+              </div>
+              <div class="pd3i-overview-task-side">
+                <span class="count" data-overview-cross-count="${escapeHtml(card.key)}">${escapeHtml(card.count)}</span>
+                <button type="button" class="pd3i-overview-task-action" data-overview-task-workspace="${escapeHtml(card.workspace)}" data-overview-task-tab="${card.key === 'pie-lab' ? 'lab' : (card.key === 'pie-risk' ? 'operations' : '')}">${escapeHtml(card.action)}</button>
+              </div>
+            </div>`;
+          }).join('');
+          summaryWrap.querySelectorAll('[data-overview-task-workspace]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              const workspace = String(btn.getAttribute('data-overview-task-workspace') || '').trim();
+              const tab = String(btn.getAttribute('data-overview-task-tab') || '').trim();
+              if (!workspace) return;
+              if (workspace === 'pie' && tab) window.__PIE_ACTIVE_TAB = tab;
+              openSidebarWorkspace(workspace, { scroll: true, useRoute: true });
+            });
+          });
+
+          const setCrossModuleCount = function(key, value, failed) {
+            const countEl = summaryWrap.querySelector('[data-overview-cross-count="' + key + '"]');
+            const cardEl = summaryWrap.querySelector('[data-overview-cross-module="' + key + '"]');
+            if (countEl) countEl.textContent = failed ? '!' : String(Number(value || 0));
+            if (cardEl) {
+              const n = Number(value || 0);
+              cardEl.classList.toggle('is-active', !failed && n > 0);
+              cardEl.classList.toggle('is-clear', !failed && n <= 0);
+              cardEl.classList.toggle('is-warning', !!failed);
+            }
+          };
+          const now = new Date();
+          const start = new Date(Date.UTC(now.getFullYear(), 0, 1));
+          const epiWeek = Math.max(1, Math.ceil((((now - start) / 86400000) + start.getUTCDay() + 1) / 7));
+          if (safeGsRun()) {
+            google.script.run
+              .withSuccessHandler(function(zeroRes) {
+                const belum = Number(zeroRes && zeroRes.kpi && zeroRes.kpi.belum || 0);
+                setCrossModuleCount('zero-reporting', belum, false);
+              })
+              .withFailureHandler(function() { setCrossModuleCount('zero-reporting', 0, true); })
+              .getDashboardData(now.getFullYear(), epiWeek, 'all', 'all');
+          } else {
+            setCrossModuleCount('zero-reporting', 0, true);
+          }
+          if (safeGsRun()) {
+            google.script.run
+              .withSuccessHandler(function(pieRes) {
+                const pieSummary = pieRes && pieRes.data && pieRes.data.summary ? pieRes.data.summary : {};
+                const dq = pieSummary.data_quality || {};
+                const highRisk = Number(pieSummary.high_risk_cases || 0);
+                const openAlerts = Number(pieSummary.open_alerts || 0);
+                const pendingPeLab = Number(dq.pe_forms_draft || 0) + Number(dq.high_risk_without_specimen || 0) + Number(dq.specimens_without_lab_result || 0);
+                setCrossModuleCount('pie-risk', highRisk + openAlerts, false);
+                setCrossModuleCount('pie-lab', pendingPeLab, false);
+              })
+              .withFailureHandler(function() { setCrossModuleCount('pie-risk', 0, true); setCrossModuleCount('pie-lab', 0, true); })
+              .pieGetOperationalDashboard(sessionToken);
+          } else {
+            setCrossModuleCount('pie-risk', 0, true);
+            setCrossModuleCount('pie-lab', 0, true);
+          }
 
           inboxWrap.innerHTML = '';
         } catch (err) {
@@ -4015,8 +4805,8 @@
     html += `<div class="pd3i-queue-toolbar-title">${escapeHtml(title)}</div>`;
     html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${visibleRows.length}</strong> dari <strong>${rows.length}</strong> entri</div>`;
     html += '</div>';
-    html += '<div class="pd3i-queue-table-wrap">';
-    html += '<table class="pd3i-queue-table">';
+    html += '<div class="pd3i-queue-table-wrap pd3i-data-table-wrap" data-component="DataTable" data-mobile-mode="scroll">';
+    html += '<table class="pd3i-queue-table pd3i-data-table">';
     html += '<thead><tr>';
     html += '<th class="is-no">No.</th>';
     html += '<th>Nama kasus</th>';
@@ -4078,8 +4868,8 @@
     html += '<div class="pd3i-queue-toolbar-title">Kasus sudah diverifikasi admin</div>';
     html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${rows.length}</strong> kasus terverifikasi</div>`;
     html += '</div>';
-    html += '<div class="pd3i-queue-table-wrap">';
-    html += '<table class="pd3i-queue-table">';
+    html += '<div class="pd3i-queue-table-wrap pd3i-data-table-wrap" data-component="DataTable" data-mobile-mode="scroll">';
+    html += '<table class="pd3i-queue-table pd3i-data-table">';
     html += '<thead><tr><th class="is-no">No.</th><th>Nama kasus</th><th>Wilayah / DX</th><th>Nomor EPID</th><th>Status</th><th class="is-action">Aksi</th></tr></thead><tbody>';
     rows.forEach(function(item, idx) {
       const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
@@ -4292,7 +5082,7 @@
     }
     if (['search', 'verifikasi', 'sampel', 'status'].includes(workspace)) {
       box.classList.remove('hidden');
-      box.innerHTML = '<div class="pd3i-shell-card border border-slate-200 bg-white"><div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kerja...</span></div></div>';
+      box.innerHTML = '<div class="pd3i-shell-card border border-slate-200 bg-white">'+renderPd3iSkeleton({ title: 'Memuat daftar kerja…', rows: 5 })+'</div>'; 
     }
     var timeoutMs = 30000;
     var timedOut = false;
@@ -4302,7 +5092,7 @@
       console.error('[PD3I v2] refreshWorkflowInbox TIMEOUT after 10s for workspace:', workspace);
       box.classList.add('hidden');
       box.innerHTML = '';
-      showTopAlert('Memuat daftar kerja terlalu lama. Coba refresh halaman.', false);
+      showPd3iBanner('Daftar kerja belum berhasil dimuat. Refresh halaman, lalu coba kembali.', { type: 'error' });
     }, timeoutMs);
     google.script.run
       .withSuccessHandler(function(res) {
@@ -4317,7 +5107,7 @@
           console.error('[PD3I v2] renderWorkflowInbox CRASH:', renderErr);
           box.classList.add('hidden');
           box.innerHTML = '';
-          showTopAlert('Gagal menampilkan data: ' + (renderErr.message || 'Unknown error'), false);
+          showPd3iBanner('Data belum berhasil ditampilkan: ' + (renderErr.message || 'Unknown error'), { type: 'error' });
         }
       })
       .withFailureHandler(function(err) {
@@ -4493,8 +5283,7 @@
     let total = 0;
     let filled = 0;
 
-    ids.forEach(function(id) {
-      const root = document.getElementById(id);
+    function countRootRequired(root) {
       if (!root) return;
       root.querySelectorAll("input, select, textarea").forEach(function(el) {
         if (!el || el.disabled || !el.required) return;
@@ -4505,7 +5294,15 @@
         const value = String(el.value || "").trim();
         if (value !== "") filled++;
       });
+    }
+
+    ids.forEach(function(id) {
+      countRootRequired(document.getElementById(id));
     });
+
+    if (total === 0 && ids.some(function(id) { return ["section-pelapor", "section-pasien", "section-specific"].includes(id); })) {
+      countRootRequired(document.getElementById("dynamic-form-input") || document.getElementById("dynamic-form"));
+    }
 
     return { total, filled, percent: total > 0 ? Math.round((filled / total) * 100) : 100 };
   }
@@ -4565,6 +5362,8 @@
     if (progressFill) progressFill.style.width = `${Math.max(0, Math.min(100, overallPercent))}%`;
     if (btnPrev) btnPrev.disabled = currentIndex === 0;
     if (btnNext) btnNext.disabled = currentIndex === totalSteps - 1 || (!canAccessLater && currentId === "section-pelapor");
+    renderDiagnosisStepGuide(currentId);
+    if (typeof renderPd3iSubmitReviewPanel === "function") renderPd3iSubmitReviewPanel(ACTIVE_SIDEBAR_WORKSPACE, currentId);
 
     document.querySelectorAll(".pd3i-stepper-item[data-step-target]").forEach(function(item) {
       const target = normalizeWorkflowStepId(String(item.getAttribute("data-step-target") || "").trim());
@@ -4726,7 +5525,23 @@
   }
 
   function normalizeUiRole(role) {
-    return String(role || "").trim().toLowerCase();
+    const raw = String(role || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
+    const map = {
+      "system-admin": "super-admin", "kb-approver": "super-admin", auditor: "super-admin",
+      "surveilans-dinkes": "surveilans", "epidemiolog-verifikator": "surveilans", "one-health": "surveilans",
+      triage: "petugas", clinician: "petugas", "surveilans-faskes": "petugas", ppi: "petugas", "lab-faskes": "petugas", "kb-editor": "admin"
+    };
+    return map[raw] || raw;
+  }
+
+  function isAdminUiRole(role) {
+    const normalized = normalizeUiRole(role);
+    return normalized === "admin" || normalized === "super-admin" || normalized === "superadmin";
+  }
+
+  function isSuperAdminUiRole(role) {
+    const normalized = normalizeUiRole(role);
+    return normalized === "super-admin" || normalized === "superadmin";
   }
 
   function getAllWorkflowStageIds() {
@@ -4791,9 +5606,10 @@
   function getAllowedSidebarWorkspacesForUser(user) {
     const role = normalizeUiRole(user && user.role);
     const caps = getRoleCapabilities(user);
-    const allowed = new Set(['overview', 'search', 'input', 'guide']);
+    const allowed = new Set(['overview', 'search', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide']);
+    if (isSuperAdminUiRole(role)) allowed.add('settings');
 
-    if (role === "admin") {
+    if (isAdminUiRole(role)) {
       allowed.add('verifikasi');
       allowed.add('sampel');
       allowed.add('status');
@@ -4840,7 +5656,7 @@
 
   function canUserWriteSampleStageByScope(user) {
     const role = normalizeUiRole(user && user.role);
-    if (role === "admin") return true;
+    if (isAdminUiRole(role)) return true;
     const recordScope = getCurrentRecordPengampuPuskesmasMeta();
     const userKode = normalizeUiKelurahanKey(user && user.kodePuskesmas);
     const userUnit = normalizeUiKelurahanKey(user && user.unitKerja);
@@ -4861,7 +5677,7 @@
     const writeStages = getScopedWorkflowWriteStagesForRole(role);
     const canView = !!role && !["", "unknown"].includes(role) ? true : false;
     const canWrite = writeStages.length > 0;
-    const canAdmin = role === "admin";
+    const canAdmin = isAdminUiRole(role);
     const stageLabelMap = {
       "section-pelapor": "Input awal",
       "section-verifikasi": "Verifikasi EPID",
@@ -4870,7 +5686,7 @@
     };
     const stageSummary = writeStages.map(function(id) { return stageLabelMap[id] || id; }).join(", ");
 
-    if (role === "admin") {
+    if (isAdminUiRole(role)) {
       return { roleLabel: "Admin", canView: true, canWrite: true, canAdmin: true, viewStages: allStages, writeStages: writeStages, summary: "Admin • akses penuh (lihat, ubah, aksi admin, semua tahap kerja)" };
     }
     if (["viewer", "readonly", "read_only", "read-only"].includes(role)) {
@@ -4894,7 +5710,7 @@
     const role = normalizeUiRole(user && user.role);
 
     if (!caps.canWrite || caps.writeStages.indexOf(normalized) === -1) return false;
-    if (normalized === "section-verifikasi") return role === "admin";
+    if (normalized === "section-verifikasi") return isAdminUiRole(role);
     if (normalized === "section-sampel") return canUserWriteSampleStageByScope(user);
     return true;
   }
@@ -5326,6 +6142,8 @@
         syncCaseStatusOptionsByDx(document.getElementById("form-selector")?.value || "");
       } else {
         syncStatusRulesByContext(document.getElementById("form-selector")?.value || "");
+        renderDiagnosisStepGuide();
+        if (typeof renderPd3iSubmitReviewPanel === "function") renderPd3iSubmitReviewPanel();
       }
     }
     const activeStepTarget = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
@@ -5839,6 +6657,11 @@
       const btnSidebarDashboard = document.getElementById("btn-sidebar-dashboard");
       const btnSidebarToggle = document.getElementById("btn-sidebar-toggle");
       const btnSidebarClose = document.getElementById("btn-sidebar-close");
+      const btnPd3iCasesNavToggle = document.getElementById("pd3i-cases-nav-toggle");
+      const btnPd3iReportingNavToggle = document.getElementById("pd3i-reporting-nav-toggle");
+      const btnPd3iPieNavToggle = document.getElementById("pd3i-pie-nav-toggle");
+      const btnPd3iToolsNavToggle = document.getElementById("pd3i-tools-nav-toggle");
+      const sidebar = document.getElementById("pd3i-sidebar");
       const sidebarOverlay = document.getElementById("pd3i-sidebar-overlay");
       const btnAdminMenu = document.getElementById("btn-admin-menu");
       const btnAdminMenuLabel = document.getElementById("btn-admin-menu-label");
@@ -5852,6 +6675,27 @@
       if (!selector || !formElement || !inputFormElement || !formElementVerifikasi || !formElementSampel || !formElementStatus || !pelaporContainer || !pasienContainer || !verifikasiContainer || !sampelContainer || !statusContainer || !specificContainer || !pelaporContainerInput || !pasienContainerInput || !specificContainerInput || !pelaporContainerVerifikasi || !pasienContainerVerifikasi || !specificContainerVerifikasi || !verifikasiContainerWorkspace || !sampelContainerWorkspace || !pelaporContainerStatus || !pasienContainerStatus || !specificContainerStatus || !statusContainerWorkspace || !btnSubmit || !btnSubmitInput || !btnSubmitVerifikasi || !btnSubmitSampel || !btnSubmitStatus) {
         console.warn("App init dibatalkan: elemen inti belum lengkap.");
         return;
+      }
+
+      if (btnPd3iCasesNavToggle) {
+        btnPd3iCasesNavToggle.addEventListener('click', function() {
+          syncPd3iCasesNavExpanded(btnPd3iCasesNavToggle.getAttribute('aria-expanded') !== 'true');
+        });
+      }
+      if (btnPd3iReportingNavToggle) {
+        btnPd3iReportingNavToggle.addEventListener('click', function() {
+          syncPd3iReportingNavExpanded(btnPd3iReportingNavToggle.getAttribute('aria-expanded') !== 'true');
+        });
+      }
+      if (btnPd3iPieNavToggle) {
+        btnPd3iPieNavToggle.addEventListener('click', function() {
+          syncPd3iPieNavExpanded(btnPd3iPieNavToggle.getAttribute('aria-expanded') !== 'true');
+        });
+      }
+      if (btnPd3iToolsNavToggle) {
+        btnPd3iToolsNavToggle.addEventListener('click', function() {
+          syncPd3iToolsNavExpanded(btnPd3iToolsNavToggle.getAttribute('aria-expanded') !== 'true');
+        });
       }
 
       // Lazy-load filter options: only fetch on demand when user opens search workspace
@@ -5968,6 +6812,8 @@
         return searchFormRefs;
       }
 
+      const COMMON = getCommonConfigSafe();
+
       function renderDxWorkspaceForm(dx, mode) {
         const normalizedMode = normalizeSidebarWorkspace(mode || 'search');
         const cfg = getDxConfigSafe(dx);
@@ -6026,6 +6872,7 @@
         if (viewerBadge) viewerBadge.hidden = !isViewerSession();
         if (editBadge && isViewerSession()) editBadge.hidden = true;
         syncDiagnosisSelectorUi();
+        ensureSumberLaporanOptions(refs.formElement);
         applySidebarWorkspaceLayout(ACTIVE_SIDEBAR_WORKSPACE || normalizedMode);
 
         setTimeout(async function() {
@@ -6033,6 +6880,8 @@
           await initWilayahDropdowns();
           initGeoButton();
           applyAllShowIf();
+          enhanceLongSelectsWithFilter(refs.formElement);
+          if (normalizedMode === 'input') updateInputWizardBlock('pelapor');
 
           const unit = document.getElementById("Nama unit pelapor");
           if (unit) {
@@ -6057,6 +6906,9 @@
           }
 
           updateUiShellSummary();
+          ensureSumberLaporanOptions(refs.formElement);
+          enhanceLongSelectsWithFilter(refs.formElement);
+          if (normalizedMode === 'input') updateInputWizardBlock(PD3I_INPUT_WIZARD_ACTIVE || 'pelapor');
         }, 50);
       }
 
@@ -6070,14 +6922,29 @@
         btnSubmitInput.innerHTML = `<i class="fas fa-save"></i> Simpan Input Awal`;
       }
 
-      function closeSidebarDrawer() {
+      function closeSidebarDrawer(options) {
+        const opts = options || {};
         document.body.classList.remove('pd3i-sidebar-open');
-        if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+        if (sidebarOverlay) {
+          sidebarOverlay.classList.add('hidden');
+          sidebarOverlay.setAttribute('aria-hidden', 'true');
+        }
+        if (btnSidebarToggle) btnSidebarToggle.setAttribute('aria-expanded', 'false');
+        if (opts.restoreFocus !== false && btnSidebarToggle && window.innerWidth <= 1100) {
+          try { btnSidebarToggle.focus(); } catch (e) {}
+        }
       }
 
       function openSidebarDrawer() {
         document.body.classList.add('pd3i-sidebar-open');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('hidden');
+        if (sidebarOverlay) {
+          sidebarOverlay.classList.remove('hidden');
+          sidebarOverlay.setAttribute('aria-hidden', 'false');
+        }
+        if (btnSidebarToggle) btnSidebarToggle.setAttribute('aria-expanded', 'true');
+        if (sidebar && window.innerWidth <= 1100) {
+          try { sidebar.focus(); } catch (e) {}
+        }
       }
 
       window.applyRoleUIState = function applyRoleUIState() {
@@ -6119,7 +6986,7 @@
           btnAdminMenu.classList.remove("hidden");
         }
         if (btnAdminMenuLabel) {
-          btnAdminMenuLabel.textContent = isAdmin ? "Admin" : "Akun";
+          btnAdminMenuLabel.textContent = "Keluar";
         }
 
         function summarizeBatchResult(res) {
@@ -6183,8 +7050,10 @@
         link.addEventListener('click', function(e) {
           e.preventDefault();
           const workspace = String(link.getAttribute('data-sidebar-workspace') || '').trim();
+          const pieTab = String(link.getAttribute('data-pie-tab') || '').trim();
+          if (pieTab) { window.__PIE_ACTIVE_TAB = pieTab; if (typeof window.applyPieTab === 'function') window.applyPieTab(pieTab); }
           if (!workspace) return;
-          closeSidebarDrawer();
+          closeSidebarDrawer({ restoreFocus: false });
           openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
         });
       });
@@ -6196,9 +7065,14 @@
         });
       }
       if (btnSidebarClose) btnSidebarClose.addEventListener('click', closeSidebarDrawer);
-      if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebarDrawer);
+      if (sidebarOverlay) sidebarOverlay.addEventListener('click', function() { closeSidebarDrawer(); });
+      document.addEventListener('keydown', function(e) {
+        if (e && e.key === 'Escape' && document.body.classList.contains('pd3i-sidebar-open')) {
+          closeSidebarDrawer();
+        }
+      });
       window.addEventListener('resize', function() {
-        if (window.innerWidth > 1100) closeSidebarDrawer();
+        if (window.innerWidth > 1100) closeSidebarDrawer({ restoreFocus: false });
       });
 
       window.addEventListener('popstate', function() {
@@ -6280,7 +7154,7 @@
             btnRepairPertRaw.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Previewing...';
 
             google.script.run
-              .withSuccessHandler(function(previewRes) {
+              .withSuccessHandler(async function(previewRes) {
                 const plan = previewRes && previewRes.plan ? previewRes.plan : null;
                 if (!plan || !plan.canRepair) {
                   btnRepairPertRaw.disabled = false;
@@ -6302,7 +7176,8 @@
                   'Lanjut eksekusi dengan backup dan hapus blank column jika sudah kosong?'
                 ].join('\n');
 
-                if (!confirm(confirmMsg)) {
+                const repairConfirmed = await pd3iConfirmDialog({ title: 'Jalankan repair PERT Raw?', message: confirmMsg, confirmLabel: 'Jalankan repair', cancelLabel: 'Batal', variant: 'danger' });
+                if (!repairConfirmed) {
                   btnRepairPertRaw.disabled = false;
                   btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
                   showTopAlert('Repair PERT Raw dibatalkan setelah preview.', false);
@@ -6315,9 +7190,9 @@
                     btnRepairPertRaw.disabled = false;
                     btnRepairPertRaw.innerHTML = '<i class="fas fa-screwdriver-wrench mr-2 text-purple-600"></i>Repair PERT Raw Blank Header';
                     if (repairRes && repairRes.status === 'success') {
-                      showTopAlert(`Repair PERT Raw selesai. Dipindahkan: ${repairRes.movedCellCount || 0}, kolom dihapus: ${repairRes.deletedBlankColumnIndex || '-'}, backup: ${repairRes.backupSheetName || '-'}`, true);
+                      showPd3iToast(`Repair PERT Raw selesai. Dipindahkan: ${repairRes.movedCellCount || 0}, kolom dihapus: ${repairRes.deletedBlankColumnIndex || '-'}, backup: ${repairRes.backupSheetName || '-'}`, { type: 'success' });
                     } else if (repairRes && repairRes.status === 'noop') {
-                      showTopAlert(repairRes.message || 'Repair PERT Raw tidak membuat perubahan.', true);
+                      showPd3iToast(repairRes.message || 'Repair PERT Raw tidak membuat perubahan.', { type: 'success' });
                     } else {
                       showTopAlert((repairRes && repairRes.message) || 'Repair PERT Raw gagal.', false);
                     }
@@ -6344,13 +7219,14 @@
           btnRetrySync.classList.add("hidden");
         } else {
           btnRetrySync.classList.remove("hidden");
-          btnRetrySync.addEventListener("click", function() {
+          btnRetrySync.addEventListener("click", async function() {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
             if (!safeGsRun()) {
               showTopAlert("Retry sync hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry sinkronisasi pengampu untuk semua kasus MR yang belum SYNCED?")) return;
+            const retrySyncConfirmed = await pd3iConfirmDialog({ title: 'Retry sinkronisasi pengampu?', message: 'Jalankan retry untuk semua kasus MR yang belum SYNCED.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
+            if (!retrySyncConfirmed) return;
 
             btnRetrySync.disabled = true;
             btnRetrySync.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -6362,7 +7238,7 @@
 
                 const summary = summarizeBatchResult(res);
                 if (res && (res.status === "success" || res.status === "PARTIAL")) {
-                  showTopAlert(`Retry sync selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                  showPd3iToast(`Retry sync selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, { type: 'success' });
                 } else {
                   showTopAlert((res && res.message) || "Retry sync gagal.", false);
                 }
@@ -6382,13 +7258,14 @@
           btnRetryNotify.classList.add("hidden");
         } else {
           btnRetryNotify.classList.remove("hidden");
-          btnRetryNotify.addEventListener("click", function() {
+          btnRetryNotify.addEventListener("click", async function() {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
             if (!safeGsRun()) {
               showTopAlert("Retry notifikasi hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry notifikasi kasus baru untuk semua kasus yang status email pengampunya belum SENT?")) return;
+            const retryNotifyConfirmed = await pd3iConfirmDialog({ title: 'Retry notifikasi kasus baru?', message: 'Jalankan retry untuk semua kasus yang status email pengampunya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
+            if (!retryNotifyConfirmed) return;
 
             btnRetryNotify.disabled = true;
             btnRetryNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -6400,7 +7277,7 @@
 
                 const summary = summarizeBatchResult(res);
                 if (res && (res.status === "success" || res.status === "PARTIAL")) {
-                  showTopAlert(`Retry notifikasi kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                  showPd3iToast(`Retry notifikasi kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, { type: 'success' });
                 } else {
                   showTopAlert((res && res.message) || "Retry notifikasi gagal.", false);
                 }
@@ -6420,13 +7297,14 @@
           btnRetryTelegram.classList.add("hidden");
         } else {
           btnRetryTelegram.classList.remove("hidden");
-          btnRetryTelegram.addEventListener("click", function() {
+          btnRetryTelegram.addEventListener("click", async function() {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
             if (!safeGsRun()) {
               showTopAlert("Retry Telegram hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry Telegram kasus baru untuk semua kasus yang status Telegram-nya belum SENT?")) return;
+            const retryTelegramConfirmed = await pd3iConfirmDialog({ title: 'Retry Telegram kasus baru?', message: 'Jalankan retry untuk semua kasus yang status Telegram-nya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
+            if (!retryTelegramConfirmed) return;
 
             btnRetryTelegram.disabled = true;
             btnRetryTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -6438,7 +7316,7 @@
 
                 const summary = summarizeBatchResult(res);
                 if (res && (res.status === "success" || res.status === "PARTIAL")) {
-                  showTopAlert(`Retry Telegram kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                  showPd3iToast(`Retry Telegram kasus baru selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, { type: 'success' });
                 } else {
                   showTopAlert((res && res.message) || "Retry Telegram gagal.", false);
                 }
@@ -6458,13 +7336,14 @@
           btnRetryRevisionNotify.classList.add("hidden");
         } else {
           btnRetryRevisionNotify.classList.remove("hidden");
-          btnRetryRevisionNotify.addEventListener("click", function() {
+          btnRetryRevisionNotify.addEventListener("click", async function() {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
             if (!safeGsRun()) {
               showTopAlert("Retry notifikasi revisi hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry notifikasi revisi untuk semua kasus yang status email revisinya belum SENT?")) return;
+            const retryRevisionNotifyConfirmed = await pd3iConfirmDialog({ title: 'Retry notifikasi revisi?', message: 'Jalankan retry untuk semua kasus yang status email revisinya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
+            if (!retryRevisionNotifyConfirmed) return;
 
             btnRetryRevisionNotify.disabled = true;
             btnRetryRevisionNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -6476,7 +7355,7 @@
 
                 const summary = summarizeBatchResult(res);
                 if (res && (res.status === "success" || res.status === "PARTIAL")) {
-                  showTopAlert(`Retry notifikasi revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                  showPd3iToast(`Retry notifikasi revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, { type: 'success' });
                 } else {
                   showTopAlert((res && res.message) || "Retry notifikasi revisi gagal.", false);
                 }
@@ -6496,13 +7375,14 @@
           btnRetryRevisionTelegram.classList.add("hidden");
         } else {
           btnRetryRevisionTelegram.classList.remove("hidden");
-          btnRetryRevisionTelegram.addEventListener("click", function() {
+          btnRetryRevisionTelegram.addEventListener("click", async function() {
             if (adminMenuDropdown) adminMenuDropdown.classList.add("hidden");
             if (!safeGsRun()) {
               showTopAlert("Retry Telegram revisi hanya berfungsi di lingkungan WebApp (/exec).", false);
               return;
             }
-            if (!confirm("Jalankan retry Telegram revisi untuk semua kasus yang status Telegram revisinya belum SENT?")) return;
+            const retryRevisionTelegramConfirmed = await pd3iConfirmDialog({ title: 'Retry Telegram revisi?', message: 'Jalankan retry untuk semua kasus yang status Telegram revisinya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
+            if (!retryRevisionTelegramConfirmed) return;
 
             btnRetryRevisionTelegram.disabled = true;
             btnRetryRevisionTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
@@ -6514,7 +7394,7 @@
 
                 const summary = summarizeBatchResult(res);
                 if (res && (res.status === "success" || res.status === "PARTIAL")) {
-                  showTopAlert(`Retry Telegram revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, true);
+                  showPd3iToast(`Retry Telegram revisi selesai. Total: ${summary.total}, Dicoba: ${summary.retried}, Berhasil: ${summary.success}, Gagal: ${summary.failed}${res.status === "PARTIAL" ? " (parsial)" : ""}`, { type: 'success' });
                 } else {
                   showTopAlert((res && res.message) || "Retry Telegram revisi gagal.", false);
                 }
@@ -6570,7 +7450,6 @@
         }
       }
 
-      const COMMON = getCommonConfigSafe();
 
       document.addEventListener("input", function(e) {
         if (e.target && e.target.closest && (e.target.closest("#dynamic-form") || e.target.closest("#dynamic-form-input") || e.target.closest("#dynamic-form-verifikasi") || e.target.closest("#dynamic-form-sampel") || e.target.closest("#dynamic-form-status"))) {
@@ -6583,6 +7462,7 @@
           const activeStepTarget = document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor";
           updateWorkflowProgressUI(activeStepTarget);
           updateUiShellSummary();
+          schedulePd3iSubmitReviewRefresh();
         }
       });
 
@@ -6594,6 +7474,9 @@
 
         if (e.target && ((e.target.closest && e.target.closest("#dynamic-form-input")) || e.target.id === "form-selector" || e.target.id === "search-epid")) {
           saveFormDraft();
+        }
+        if (e.target && e.target.closest && (e.target.closest("#dynamic-form") || e.target.closest("#dynamic-form-input") || e.target.closest("#dynamic-form-verifikasi") || e.target.closest("#dynamic-form-sampel") || e.target.closest("#dynamic-form-status") || e.target.id === "form-selector")) {
+          schedulePd3iSubmitReviewRefresh(e.target.id === "form-selector" ? "immediate" : "change");
         }
       });
 
@@ -6684,18 +7567,18 @@
                           filters.kelurahan || filters.statusKasus || filters.statusVerifikasi;
 
         if (workspace !== 'search' && !hasFilter) {
-          showTopAlert("Isi minimal satu kriteria pencarian.", false);
+          showPd3iBanner('Isi minimal satu kriteria pencarian sebelum mencari data.', { type: 'error' });
           return;
         }
         if (!safeGsRun()) {
-          showTopAlert("Fitur Cari/Edit hanya berfungsi di lingkungan WebApp (/exec).", false);
+          showPd3iBanner('Fitur Cari/Edit hanya tersedia di WebApp. Buka melalui URL /exec atau /dev.', { type: 'error' });
           return;
         }
 
         const searchResultsBox = document.getElementById("search-results");
         if (searchResultsBox) {
           searchResultsBox.classList.remove("hidden");
-          searchResultsBox.innerHTML = `<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>${workspace === 'search' && !hasFilter ? 'Memuat data halaman ' + filters.page + '...' : 'Mencari data halaman ' + filters.page + '...'}</span></div>`;
+          searchResultsBox.innerHTML = renderPd3iSkeleton({ title: workspace === 'search' && !hasFilter ? 'Memuat data halaman ' + filters.page + '…' : 'Mencari data halaman ' + filters.page + '…', rows: 6 });
         }
 
         const runtimeGuard = createWorkspaceRuntimeGuard(ACTIVE_SIDEBAR_WORKSPACE);
@@ -6736,6 +7619,7 @@
         });
       }
 
+      let searchFilterDebounceTimeout = null;
       ['search-epid', 'search-diagnosis', 'search-kecamatan', 'search-kelurahan', 'search-status-kasus', 'search-status-verifikasi', 'search-sort'].forEach(function(id) {
         const el = document.getElementById(id);
         if (!el || el.dataset.boundFilter === '1') return;
@@ -6749,8 +7633,18 @@
             populateWorkflowStatusKasusFilterOptions('');
           }
           saveWorkflowSearchFiltersForWorkspace(ACTIVE_SIDEBAR_WORKSPACE);
-          if (!['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) return;
-          if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+          if (['verifikasi', 'sampel', 'status'].includes(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE))) {
+            if (WORKFLOW_INBOX_CACHE) renderWorkflowInbox(WORKFLOW_INBOX_CACHE);
+          } else {
+            if (eventName === 'change') {
+              runWorkflowSearchPage(1);
+            } else {
+              if (searchFilterDebounceTimeout) clearTimeout(searchFilterDebounceTimeout);
+              searchFilterDebounceTimeout = setTimeout(function() {
+                runWorkflowSearchPage(1);
+              }, 450);
+            }
+          }
         });
         if (id === 'search-epid') {
           el.addEventListener('keydown', function(ev) {
@@ -6806,7 +7700,7 @@
             </div>
             <span class="pd3i-badge-soft">${safeEscape(workflowActionLabel)}</span>
           </div>`;
-          html += `<div class="pd3i-search-results-wrap">`;
+          html += `<div class="pd3i-search-results-wrap pd3i-data-list" data-component="DataTable" data-mobile-mode="card">`;
 
           results.forEach(function(item, index) {
             const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ""));
@@ -6823,7 +7717,7 @@
               .replace(/\s+/g, ' ');
             const isPendingVerification = !normalizedVerificationStatus || ['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI'].includes(normalizedVerificationStatus);
             const canDeleteRecord = item.canDelete === true || (typeof item.canDelete === 'undefined' && !isViewerMode && (isAdminMode || isPendingVerification));
-            html += `<div class="pd3i-search-result-card">
+            html += `<div class="pd3i-search-result-card pd3i-mobile-list-card" data-row-action="open-case">
               <div class="pd3i-search-result-leading">
                 <span class="pd3i-search-result-index">${startNumber + index}</span>
               </div>
@@ -6848,17 +7742,19 @@
                 </div>
               </div>
               <div class="pd3i-search-result-cta-wrap">
-                <button type="button" class="pd3i-search-result-action is-edit" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>
-                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-pen-to-square'}"></i> ${isViewerMode ? 'Buka / Lihat' : 'Edit'}
+                <div class="pd3i-search-result-action-label">Aksi utama</div>
+                <!-- Legacy regression anchor: class="pd3i-search-result-action is-edit"; pd3i-search-result-action is-edit pd3i-action-btn is-secondary; isViewerMode ? 'Buka / Lihat' : 'Edit' -->
+                <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(workflowActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>
+                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-arrow-up-right-from-square'}"></i> ${safeEscape(isViewerMode ? 'Buka / Lihat' : workflowActionLabel)}
                 </button>
-                ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}
+                ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger pd3i-action-btn" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}
               </div>
             </div>`;
           });
 
           html += `</div>`;
           if (totalPages > 1) {
-            html += `<div class="pd3i-search-pagination" role="navigation" aria-label="Navigasi halaman List Kasus">
+            html += `<div class="pd3i-search-pagination" role="navigation" aria-label="Navigasi halaman Daftar Kasus">
               <button type="button" class="pd3i-search-page-btn" data-search-page-target="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>
                 <i class="fas fa-chevron-left"></i> Sebelumnya
               </button>
@@ -6879,23 +7775,30 @@
           });
         } catch (err) {
           console.error("_renderSearchResultsList failed:", err);
-          box.innerHTML = `<div class="p-4 text-sm text-red-600 font-semibold">List kasus gagal dirender. Silakan refresh lalu coba lagi.</div>`;
+          box.innerHTML = renderPd3iUiState({ type: 'error', title: 'List kasus gagal dirender', message: 'Silakan refresh halaman, lalu coba lagi.' });
         }
       }
 
-      function deleteCaseRecordFromList(recordKey, dx, triggerButton) {
+      async function deleteCaseRecordFromList(recordKey, dx, triggerButton) {
         recordKey = String(recordKey || '').trim();
         dx = String(dx || '').trim().toUpperCase();
         if (!recordKey || !dx) return;
         if (isViewerSession()) {
-          showTopAlert('Mode lihat tidak dapat menghapus data kasus.', false);
+          showPd3iBanner('Mode lihat tidak dapat menghapus data kasus.', { type: 'error' });
           return;
         }
         if (!safeGsRun()) {
-          showTopAlert('Fitur hapus hanya berfungsi di lingkungan WebApp (/exec).', false);
+          showPd3iBanner('Fitur hapus hanya tersedia di WebApp. Buka melalui URL /exec atau /dev.', { type: 'error' });
           return;
         }
-        if (!window.confirm('Hapus data kasus ini? Data akan ditandai terhapus dan tidak tampil lagi pada List Kasus.')) return;
+        const confirmed = await pd3iConfirmDialog({
+          title: 'Hapus data kasus ini?',
+          message: 'Data akan ditandai terhapus dan tidak tampil lagi pada Daftar Kasus.',
+          confirmLabel: 'Hapus kasus',
+          cancelLabel: 'Batal',
+          variant: 'danger'
+        });
+        if (!confirmed) return;
 
         const btn = triggerButton && triggerButton.nodeType === 1 ? triggerButton : null;
         const originalHtml = btn ? btn.innerHTML : '';
@@ -6914,7 +7817,7 @@
               showTopAlert((res && res.message) || 'Data kasus gagal dihapus.', false);
               return;
             }
-            showTopAlert('Data kasus sudah ditandai terhapus.', true);
+            showPd3iToast('Data kasus sudah ditandai terhapus.', { type: 'success' });
             const searchButton = document.getElementById('btn-search-epid');
             if (searchButton && typeof searchButton.click === 'function') searchButton.click();
           })
@@ -6923,7 +7826,7 @@
               btn.disabled = false;
               btn.innerHTML = originalHtml;
             }
-            showTopAlert('Data kasus gagal dihapus. Silakan coba lagi.', false);
+            showPd3iBanner('Data kasus belum berhasil dihapus. Periksa koneksi, lalu coba kembali.', { type: 'error' });
             console.error('deleteCaseRecord failed:', err);
           })
           .deleteCaseRecord(SESSION_TOKEN, { dx: dx, recordKey: recordKey });
@@ -7018,14 +7921,14 @@
           resetOpenTriggerLoading();
           if (loadingButton) loadingButton.disabled = false;
           resetSubmitButtonByMode(requestedWorkspace);
-          showTopAlert('Membuka record terlalu lama. Coba ulangi dari hasil pencarian.', false);
+          showPd3iBanner('Record belum berhasil dibuka. Coba ulangi dari hasil pencarian.', { type: 'error' });
         }, 10000);
 
         const recordRunner = google.script.run
           .withSuccessHandler(async function(record) {
             if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             if (!record) {
-              showTopAlert("Data tidak ditemukan.", false);
+              showPd3iBanner('Data tidak ditemukan. Periksa kriteria pencarian atau nomor kasus.', { type: 'error' });
               resetOpenTriggerLoading();
               if (loadingButton) loadingButton.disabled = false;
               resetSubmitButtonByMode(requestedWorkspace);
@@ -7113,14 +8016,14 @@
             if (['verifikasi', 'sampel', 'status'].includes(openedWorkspace)) {
               hideTopAlert();
             } else {
-              showTopAlert(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, true);
+              showPd3iToast(`Data berhasil dimuat. ${getWorkflowSearchOpenSuccessMessage(preferredStage)}`, { type: 'success' });
             }
             window.scrollTo({ top: formElement.offsetTop - 20, behavior: "smooth" });
           })
           .withFailureHandler(function(err) {
             if (window.__RECORD_LOAD_REQUEST_ID !== recordLoadRequestId) return;
             console.error("getRecordByKey failed:", err);
-            showTopAlert("Gagal memuat data.", false);
+            showPd3iBanner('Data belum berhasil dimuat. Periksa koneksi, lalu coba kembali.', { type: 'error' });
             resetOpenTriggerLoading();
             if (loadingButton) loadingButton.disabled = false;
             resetSubmitButtonByMode(requestedWorkspace);
@@ -7151,7 +8054,7 @@
           const dx = String(selector?.value || '').trim().toUpperCase();
           renderDxWorkspaceForm(dx, 'input');
           resetInputSubmitButton();
-          showTopAlert('Form input baru sudah direset.', true);
+          showPd3iToast('Form input baru sudah direset.', { type: 'success' });
         });
       }
 
@@ -7168,7 +8071,7 @@
         btnDiscardInputDraft.dataset.boundDiscardDraft = '1';
         btnDiscardInputDraft.addEventListener('click', function() {
           clearFormDraft();
-          showTopAlert('Draft input dibuang. Form input dibuka dalam state kosong.', true);
+          showPd3iToast('Draft input dibuang. Form input dibuka dalam state kosong.', { type: 'success' });
         });
       }
 
@@ -7323,6 +8226,201 @@
         showTopAlert(safeMessage, false);
       }
 
+      function getPd3iSubmitReviewItems(submitMode, activeStageOnSubmit, warnings) {
+        const dx = String(selector && selector.value || '').trim().toUpperCase() || '-';
+        const stageLabelMap = {
+          'section-pelapor': 'Input kasus',
+          'section-verifikasi': 'Verifikasi EPID',
+          'section-sampel': 'Pemeriksaan laboratorium',
+          'section-status': 'Status dan klasifikasi'
+        };
+        return [
+          { label: 'Mode simpan', value: getWorkspaceDisplayLabel(submitMode) },
+          { label: 'Tahap workflow', value: stageLabelMap[normalizeWorkflowStepId(activeStageOnSubmit)] || normalizeWorkflowStepId(activeStageOnSubmit) },
+          { label: 'Diagnosis', value: dx },
+          { label: 'Nomor EPID', value: getFieldValueSafe('Nomor EPID') || 'Otomatis saat simpan' },
+          { label: 'Peringatan aktif', value: String((warnings || []).length || 0) }
+        ];
+      }
+
+
+
+
+
+
+
+      function getFirstInvalidRequiredVisibleField(form) {
+        const root = form && form.querySelectorAll ? form : document;
+        return Array.from(root.querySelectorAll('input, select, textarea')).find(function(el) {
+          if (!el || el.disabled) return false;
+          if (el.type === 'hidden') return false;
+          const wrapper = el.closest('.field-wrapper');
+          if (wrapper && wrapper.classList.contains('hidden')) return false;
+          const hiddenStage = el.closest('.pd3i-stage-hidden');
+          if (hiddenStage) return false;
+          return typeof el.checkValidity === 'function' && !el.checkValidity();
+        }) || null;
+      }
+
+      function getPd3iSubmitReadinessState(warnings) {
+        let errors = [];
+        let warn = Array.isArray(warnings) ? warnings.slice() : [];
+        try {
+          const activeForm = document.getElementById('dynamic-form') || document;
+          const rule = validateDxBusinessRules(activeForm) || {};
+          errors = (rule.errors || []).map(function(item) { return String(item || '').trim(); }).filter(Boolean);
+          if (!Array.isArray(warnings)) warn = (rule.warnings || []).map(function(item) { return String(item || '').trim(); }).filter(Boolean);
+        } catch (e) {}
+        const activeWorkspaceForRequired = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'input');
+        const activeRefsForRequired = getWorkspaceFormRefs(activeWorkspaceForRequired);
+        const activeFormForRequired = (activeRefsForRequired && activeRefsForRequired.formElement) || document.getElementById('dynamic-form-input') || document.getElementById('dynamic-form') || document;
+        const firstInvalidRequired = getFirstInvalidRequiredVisibleField(activeFormForRequired);
+        const required = firstInvalidRequired ? { ok: false, message: 'Masih ada field wajib yang belum lengkap atau formatnya belum valid.' } : { ok: true };
+        const firstBlockerId = firstInvalidRequired && firstInvalidRequired.id ? firstInvalidRequired.id : '';
+        if (required && required.ok === false && required.message) errors.unshift(required.message);
+        const state = errors.length ? 'blocked' : warn.length ? 'warning' : 'ready';
+        return {
+          state: state,
+          label: state === 'blocked' ? 'Belum siap simpan' : state === 'warning' ? 'Siap dengan catatan' : 'Siap simpan',
+          message: state === 'blocked' ? 'Perbaiki blocker sebelum submit.' : state === 'warning' ? 'Data bisa disimpan, tapi cek catatan validasi.' : 'Tidak ada blocker atau peringatan aktif dari aturan UI.',
+          errors: errors,
+          warnings: warn,
+          firstBlockerId: firstBlockerId
+        };
+      }
+
+      function renderPd3iSubmitReadinessBadge(readiness) {
+        const state = readiness && readiness.state || 'ready';
+        const jump = readiness && readiness.firstBlockerId ? '<button type="button" class="pd3i-submit-review-jump" data-submit-review-jump="' + escapeHtml(readiness.firstBlockerId) + '">Lompat ke field pertama</button>' : '';
+        return '<div class="pd3i-submit-readiness is-' + escapeHtml(state) + '"><strong>' + escapeHtml(readiness.label) + '</strong><span>' + escapeHtml(readiness.message) + '</span>' + jump + '</div>';
+      }
+
+      function jumpToPd3iSubmitBlocker(id) {
+        const target = id ? document.getElementById(id) : null;
+        if (!target) return false;
+        const inputWizardCard = target.closest('.pd3i-form-card-pelapor, .pd3i-form-card-pasien, .pd3i-form-card-specific');
+        if (inputWizardCard && typeof updateInputWizardBlock === 'function') {
+          const wizardBlock = inputWizardCard.classList.contains('pd3i-form-card-pelapor') ? 'pelapor' : inputWizardCard.classList.contains('pd3i-form-card-pasien') ? 'pasien' : 'specific';
+          updateInputWizardBlock(wizardBlock);
+        }
+        const stepRoot = target.closest('[id^="section-"]');
+        if (stepRoot && typeof goToWorkflowStep === 'function') goToWorkflowStep(stepRoot.id);
+        setTimeout(function() {
+          try { target.focus({ preventScroll: true }); } catch (err) { try { target.focus(); } catch (e2) {} }
+          try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (err) {}
+          highlightPd3iFieldTarget(target);
+        }, 80);
+        return true;
+      }
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target && e.target.closest && e.target.closest('[data-submit-review-jump]');
+        if (!btn) return;
+        e.preventDefault();
+        jumpToPd3iSubmitBlocker(btn.getAttribute('data-submit-review-jump'));
+      });
+
+
+      function updatePd3iMobileSubmitBar(readiness) {
+        const bar = document.getElementById('pd3i-mobile-submit-bar');
+        const stateEl = document.getElementById('pd3i-mobile-submit-state');
+        const detailEl = document.getElementById('pd3i-mobile-submit-detail');
+        const jumpBtn = document.getElementById('pd3i-mobile-submit-jump');
+        if (!bar || !stateEl || !detailEl || !readiness) return;
+        bar.classList.remove('is-ready', 'is-warning', 'is-blocked');
+        bar.classList.add('is-' + (readiness.state || 'ready'));
+        bar.setAttribute('data-first-blocker-id', readiness.firstBlockerId || '');
+        stateEl.textContent = readiness.label || 'Review submit';
+        detailEl.textContent = readiness.message || 'Cek kelengkapan sebelum simpan.';
+        if (jumpBtn) jumpBtn.textContent = readiness.firstBlockerId ? 'Perbaiki' : 'Review';
+      }
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target && e.target.closest && e.target.closest('#pd3i-mobile-submit-jump');
+        if (!btn) return;
+        e.preventDefault();
+        const bar = document.getElementById('pd3i-mobile-submit-bar');
+        const blockerId = bar ? bar.getAttribute('data-first-blocker-id') : '';
+        if (blockerId && jumpToPd3iSubmitBlocker(blockerId)) return;
+        const panel = document.getElementById('pd3i-submit-review-panel') || document.getElementById('btn-submit');
+        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+
+      let PD3I_SUBMIT_REVIEW_USER_COLLAPSED = false;
+
+      function setPd3iSubmitReviewCollapsed(collapsed, options) {
+        const panel = document.getElementById('pd3i-submit-review-panel');
+        const list = document.getElementById('pd3i-submit-review-list');
+        const toggle = document.getElementById('pd3i-submit-review-toggle');
+        if (!panel || !list || !toggle) return;
+        const opts = options || {};
+        const isCollapsed = collapsed === true;
+        if (opts.user === true) PD3I_SUBMIT_REVIEW_USER_COLLAPSED = isCollapsed;
+        panel.setAttribute('data-collapsed', isCollapsed ? 'true' : 'false');
+        list.hidden = isCollapsed;
+        toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+        toggle.textContent = isCollapsed ? 'Tampilkan detail' : 'Sembunyikan detail';
+      }
+
+      document.addEventListener('click', function(e) {
+        const btn = e.target && e.target.closest && e.target.closest('#pd3i-submit-review-toggle');
+        if (!btn) return;
+        e.preventDefault();
+        const panel = document.getElementById('pd3i-submit-review-panel');
+        setPd3iSubmitReviewCollapsed(!(panel && panel.getAttribute('data-collapsed') === 'true'), { user: true });
+      });
+
+      function renderPd3iSubmitCompletionSnapshot(activeStageOnSubmit) {
+        const steps = getWorkflowStepDefinitions();
+        const active = normalizeWorkflowStepId(activeStageOnSubmit || document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
+        return '<div class="pd3i-submit-review-completion" aria-label="Kelengkapan field wajib per tahap">' + steps.map(function(step) {
+          const completion = countRequiredCompletionForSections(step.sections || []);
+          const cls = step.id === active ? 'pd3i-submit-review-step is-active' : 'pd3i-submit-review-step';
+          const pct = Math.max(0, Math.min(100, Number(completion.percent || 0)));
+          return '<div class="' + cls + '"><div><strong>' + escapeHtml(step.label) + '</strong><span>' + escapeHtml(String(completion.filled)) + '/' + escapeHtml(String(completion.total)) + ' wajib</span></div><div class="pd3i-submit-review-meter"><span style="width:' + pct + '%"></span></div></div>';
+        }).join('') + '</div>';
+      }
+
+      function renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings) {
+        const panel = document.getElementById('pd3i-submit-review-panel');
+        const list = document.getElementById('pd3i-submit-review-list');
+        if (!panel || !list) return;
+        const mode = normalizeSidebarWorkspace(submitMode || ACTIVE_SIDEBAR_WORKSPACE || 'input');
+        const stage = normalizeWorkflowStepId(activeStageOnSubmit || document.querySelector('.pd3i-stepper-item.is-active')?.getAttribute('data-step-target') || 'section-pelapor');
+        const readiness = getPd3iSubmitReadinessState(warnings);
+        updatePd3iMobileSubmitBar(readiness);
+        const ruleState = readiness.warnings || [];
+        const items = getPd3iSubmitReviewItems(mode, stage, ruleState);
+        list.innerHTML = renderPd3iSubmitReadinessBadge(readiness) + items.map(function(item) {
+          return '<div class="pd3i-submit-review-item"><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong></div>';
+        }).join('') + renderPd3iSubmitCompletionSnapshot(stage) + (readiness.errors && readiness.errors.length ? '<div class="pd3i-submit-review-warning is-error"><strong>Blocker</strong><ul>' + readiness.errors.slice(0, 3).map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>' : ruleState && ruleState.length ? '<div class="pd3i-submit-review-warning"><strong>Catatan validasi</strong><ul>' + ruleState.slice(0, 3).map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>' : '<div class="pd3i-submit-review-ok">Tidak ada peringatan aktif dari aturan UI.</div>');
+        panel.classList.toggle('has-warning', readiness.state === 'warning');
+        panel.classList.toggle('has-error', readiness.state === 'blocked');
+        if (readiness.state === 'warning' || readiness.state === 'blocked') setPd3iSubmitReviewCollapsed(false);
+        else if (PD3I_SUBMIT_REVIEW_USER_COLLAPSED) setPd3iSubmitReviewCollapsed(true);
+      }
+
+      async function pd3iReviewBeforeSubmit(submitMode, activeStageOnSubmit, warnings) {
+        renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings);
+        const items = getPd3iSubmitReviewItems(submitMode, activeStageOnSubmit, warnings);
+        const warningItems = (warnings || []).slice(0, 3).map(function(item) { return String(item || '').trim(); }).filter(Boolean);
+        const htmlMessage = '<dl class="pd3i-confirm-message-list">' + items.map(function(item) {
+          return '<div class="pd3i-confirm-message-item"><dt class="pd3i-confirm-message-label">' + escapeHtml(item.label) + '</dt><dd class="pd3i-confirm-message-value">' + escapeHtml(item.value) + '</dd></div>';
+        }).join('') + '</dl>' + (warningItems.length ? '<ul class="pd3i-confirm-warning-list">' + warningItems.map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>' : '');
+        const fallbackMessage = items.map(function(item) { return item.label + ': ' + item.value; }).join('\n') + (warningItems.length ? '\n\nCatatan validasi:\n- ' + warningItems.join('\n- ') : '');
+        if (typeof pd3iConfirmDialog === 'function') {
+          return pd3iConfirmDialog({
+            title: 'Tinjau sebelum simpan',
+            htmlMessage: htmlMessage,
+            confirmLabel: 'Ya, simpan data',
+            cancelLabel: 'Cek lagi',
+            variant: (warnings || []).length ? 'warning' : 'primary'
+          });
+        }
+        return window.confirm('Tinjau sebelum simpan\n\n' + fallbackMessage);
+      }
+
       const handleMainFormSubmit = async function(mode) {
         const submitMode = normalizeSidebarWorkspace(mode || 'search');
         const activeFormElement = submitMode === 'input'
@@ -7407,7 +8505,15 @@
 
         const warnings = checkConsistencyWarnings(activeFormElement).concat(dxRuleCheck.warnings || []);
         if (warnings.length > 0) {
-          showTopAlert(warnings.join(" "), false);
+          showPd3iBanner(warnings.join(" "), { type: 'warning' });
+        }
+
+        const reviewOk = await pd3iReviewBeforeSubmit(submitMode, activeStageOnSubmit, warnings);
+        if (!reviewOk) {
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
+          setWorkflowSubmitFeedback(submitMode, 'Penyimpanan dibatalkan. Periksa kembali data bila perlu.', null);
+          return;
         }
 
         updateImunisasiSummary();
@@ -7543,7 +8649,7 @@
 
           if (res && res.status === "success") {
             const successMessage = res.message || "Data berhasil disimpan.";
-            showTopAlert(successMessage, true);
+            showPd3iToast(successMessage, { type: 'success' });
             setWorkflowSubmitFeedback(submitMode, successMessage, true);
 
             let epidSaved = String((res && res.epid) || dataObj["Nomor EPID"] || "").trim();
@@ -7584,11 +8690,11 @@
             updateUiShellSummary();
             refreshWorkflowInbox({ forceRefresh: true });
             if (activeStageNormalized === 'section-verifikasi' && res && res.nextWorkflowLabel) {
-              showTopAlert(res.nextWorkflowLabel + '. Daftar kerja sudah diperbarui.', true);
+              showPd3iToast(res.nextWorkflowLabel + '. Daftar kerja sudah diperbarui.', { type: 'success' });
             }
 
             if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') {
-              showTopAlert('Edit inputan awal berhasil disimpan dengan audit perubahan. Tahap verifikasi/sampel/status tidak ikut diubah.', true);
+              showPd3iToast('Edit inputan awal berhasil disimpan dengan audit perubahan. Tahap verifikasi/sampel/status tidak ikut diubah.', { type: 'success' });
               showSuccessModal(
                 res.message || 'Edit inputan berhasil disimpan.',
                 printUrl,
@@ -7600,7 +8706,7 @@
               openSidebarWorkspace('verifikasi', { scroll: false, skipRecordReload: true });
               refreshWorkflowInbox({ forceRefresh: true });
               if (verificationStatusSaved === 'Terverifikasi' && printUrl) {
-                showTopAlert((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. PDF PE sudah tersedia setelah verifikasi EPID.', true);
+                showPd3iToast((res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. PDF PE sudah tersedia setelah verifikasi EPID.', { type: 'success' });
                 showSuccessModal(
                   res.message || 'Verifikasi EPID selesai. PDF PE sudah dapat dicetak.',
                   printUrl,
@@ -7608,7 +8714,7 @@
                 );
               } else {
                 const verificationDoneMessage = (res.nextWorkflowLabel || res.message || 'Verifikasi selesai') + '. Daftar verifikasi sudah diperbarui.';
-                showTopAlert(verificationDoneMessage, true);
+                showPd3iToast(verificationDoneMessage, { type: 'success' });
                 showSuccessModal(
                   verificationDoneMessage,
                   '',
@@ -7619,12 +8725,12 @@
               clearActiveRecordContext();
               openSidebarWorkspace('sampel', { scroll: true, skipRecordReload: true });
               refreshWorkflowInbox({ forceRefresh: true });
-              showTopAlert('Hasil pemeriksaan berhasil disimpan. Kasus yang sudah selesai keluar dari daftar menunggu hasil laboratorium.', true);
+              showPd3iToast('Hasil pemeriksaan berhasil disimpan. Kasus yang sudah selesai keluar dari daftar menunggu hasil laboratorium.', { type: 'success' });
             } else if (activeStageNormalized === 'section-status') {
               clearActiveRecordContext();
               openSidebarWorkspace('status', { scroll: true, skipRecordReload: true });
               refreshWorkflowInbox({ forceRefresh: true });
-              showTopAlert(res.message || 'Update status berhasil disimpan. Daftar status sudah diperbarui.', true);
+              showPd3iToast(res.message || 'Update status berhasil disimpan. Daftar status sudah diperbarui.', { type: 'success' });
             } else {
               showSuccessModal(
                 res.message || "Data berhasil disimpan.",

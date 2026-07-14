@@ -347,6 +347,16 @@
       btnLoad.addEventListener("click", loadDashboard);
     }
 
+    const dxEl = document.getElementById("dashboard-dx");
+    if (dxEl && !dxEl.dataset.bound) {
+      dxEl.dataset.bound = "1";
+      dxEl.addEventListener("change", loadDashboard);
+    }
+    if (tahunEl && !tahunEl.dataset.bound) {
+      tahunEl.dataset.bound = "1";
+      tahunEl.addEventListener("change", loadDashboard);
+    }
+
     const btnBack = document.getElementById("btn-dashboard-back-to-workspace");
     if (btnBack && !btnBack.dataset.bound) {
       btnBack.dataset.bound = "1";
@@ -425,7 +435,8 @@
     }
 
     const safeUser = getSafeSessionUser();
-    const isAdmin = safeUser && safeUser.role === "admin";
+    const role = String((safeUser && safeUser.role) || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
+    const isAdmin = safeUser && (role === "admin" || role === "super-admin" || role === "superadmin");
     const isViewer = safeUser && safeUser.role === "viewer";
     const qc = stats.qualityCards || {};
     const epi = stats.epidemiology || {};
@@ -595,7 +606,7 @@
 
     const coordinateSummary = stats.coordinateSummary || {};
     const coordinatePoints = Array.isArray(coordinateSummary.points) ? coordinateSummary.points : [];
-    if (coordinatePoints.length > 0) {
+    {
       html += `<div class="pd3i-dashboard-block mb-6">
         <div class="pd3i-dashboard-block-title">Hotspot Koordinat Kasus</div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
@@ -647,7 +658,7 @@
         </tr>`;
       }).join('');
     }
-    if (topKecamatan.length > 0 || topKelurahan.length > 0 || topRw.length > 0 || topRtRw.length > 0) {
+    {
       html += `<div class="pd3i-dashboard-block mb-6">
         <div class="pd3i-dashboard-block-title">Sebaran Wilayah Operasional</div>
         <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
@@ -703,30 +714,38 @@
 
     const perStatus = stats.perStatusKasus || {};
     const statusKeys = Object.keys(perStatus).sort(function(a, b) { return perStatus[b] - perStatus[a]; });
-    if (statusKeys.length > 0) {
+    {
       html += `<div class="pd3i-dashboard-block mb-6">
-        <div class="pd3i-dashboard-block-title">Distribusi Status Kasus</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">`;
-      statusKeys.forEach(function (k) {
-        html += `<div class="pd3i-dashboard-metric-card tone-neutral">
-          <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Status</div>
-          <div class="text-sm font-bold text-slate-700">${escapeHtml(k)}</div>
-          <div class="text-2xl font-black text-blue-700 mt-2">${perStatus[k]}</div>
-        </div>`;
-      });
-      html += `</div></div>`;
+        <div class="pd3i-dashboard-block-title">Distribusi Status Kasus</div>`;
+      if (statusKeys.length > 0) {
+        html += `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">`;
+        statusKeys.forEach(function (k) {
+          html += `<div class="pd3i-dashboard-metric-card tone-neutral">
+            <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Status</div>
+            <div class="text-sm font-bold text-slate-700">${escapeHtml(k)}</div>
+            <div class="text-2xl font-black text-blue-700 mt-2">${perStatus[k]}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      } else {
+        html += `<div class="pd3i-empty-keadaan">Belum ada status kasus pada filter ini.</div>`;
+      }
+      html += `</div>`;
     }
 
     const perUsiaSurveilans = stats.perKelompokUsiaSurveilans || {};
     const usiaSurveilansOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
     const usiaSurveilansKeys = usiaSurveilansOrder.filter(function(k) { return perUsiaSurveilans[k] > 0; });
-    if (usiaSurveilansKeys.length > 0) {
-      const maxUsiaSurveilans = Math.max.apply(null, usiaSurveilansKeys.map(function(k) { return perUsiaSurveilans[k] || 0; }));
+    {
+      const maxUsiaSurveilans = usiaSurveilansKeys.length ? Math.max.apply(null, usiaSurveilansKeys.map(function(k) { return perUsiaSurveilans[k] || 0; })) : 0;
       const totalUsiaSurveilans = usiaSurveilansKeys.reduce(function(sum, k) { return sum + (perUsiaSurveilans[k] || 0); }, 0);
       html += `<div class="pd3i-dashboard-block mb-6">
         <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
         <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table space-y-3">
           <div class="pd3i-helper-text">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Kelompok umur epidemiologis umum tetap dipertahankan terpisah.</div>`;
+      if (!usiaSurveilansKeys.length) {
+        html += `<div class="pd3i-empty-keadaan">Belum ada data usia pada filter ini.</div>`;
+      }
       usiaSurveilansKeys.forEach(function(k) {
         const val = perUsiaSurveilans[k] || 0;
         const pctOfMax = maxUsiaSurveilans > 0 ? Math.round((val / maxUsiaSurveilans) * 100) : 0;
@@ -746,42 +765,47 @@
     const jkKeys = Object.keys(perJK).sort(function(a, b) { return perJK[b] - perJK[a]; });
     const perUmur = stats.perKelompokUmur || {};
     const umurKeys = Object.keys(perUmur).sort(function(a, b) { return perUmur[b] - perUmur[a]; });
-    if (jkKeys.length > 0 || umurKeys.length > 0) {
+    {
       html += `<div class="pd3i-dashboard-block mb-6">
       <div class="pd3i-dashboard-two-column">`;
-      if (jkKeys.length > 0) {
-        html += `<div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
+      html += `<div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
           <div class="pd3i-dashboard-block-title is-sub">Distribusi Jenis Kelamin</div>`;
-        jkKeys.forEach(function(k) {
+      if (!jkKeys.length) {
+        html += `<div class="pd3i-empty-keadaan">Belum ada data jenis kelamin pada filter ini.</div>`;
+      }
+      jkKeys.forEach(function(k) {
           html += `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0">
             <span class="text-sm font-semibold text-slate-700">${escapeHtml(k)}</span>
             <span class="text-base font-black text-blue-700">${perJK[k]}</span>
           </div>`;
         });
-        html += `</div>`;
-      }
-      if (umurKeys.length > 0) {
-        html += `<div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
+      html += `</div>`;
+      html += `<div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
           <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>`;
-        umurKeys.forEach(function(k) {
+      if (!umurKeys.length) {
+        html += `<div class="pd3i-empty-keadaan">Belum ada data kelompok umur pada filter ini.</div>`;
+      }
+      umurKeys.forEach(function(k) {
           html += `<div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 gap-3">
             <span class="text-sm font-semibold text-slate-700">${escapeHtml(k)}</span>
             <span class="text-base font-black text-emerald-700">${perUmur[k]}</span>
           </div>`;
         });
-        html += `</div>`;
-      }
+      html += `</div>`;
       html += `</div></div>`;
     }
 
     // Distribusi per bulan (Req 6.3)
     const perBulan = stats.perBulan || {};
     const bulanKeys = Object.keys(perBulan).sort();
-    if (bulanKeys.length > 0) {
-      const maxVal = Math.max(...bulanKeys.map(k => perBulan[k]));
+    {
+      const maxVal = bulanKeys.length ? Math.max(...bulanKeys.map(k => perBulan[k])) : 0;
       html += `<div class="pd3i-dashboard-block mb-6">
         <div class="pd3i-dashboard-block-title">Distribusi per Bulan</div>
         <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table space-y-2">`;
+      if (!bulanKeys.length) {
+        html += `<div class="pd3i-empty-keadaan">Belum ada distribusi bulan pada filter ini.</div>`;
+      }
       bulanKeys.forEach(function (k) {
         const val = perBulan[k];
         const pct = maxVal > 0 ? Math.round((val / maxVal) * 100) : 0;
@@ -800,7 +824,7 @@
     // Distribusi per kecamatan (Req 6.2)
     const perKec = stats.perKecamatan || {};
     const kecKeys = Object.keys(perKec).sort(function (a, b) { return perKec[b] - perKec[a]; });
-    if (kecKeys.length > 0) {
+    {
       html += `<div class="pd3i-dashboard-block mb-4">
         <div class="pd3i-dashboard-block-title">Distribusi per Kecamatan</div>
         <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table overflow-x-auto"><table class="w-full text-sm">
@@ -809,6 +833,9 @@
             <th class="text-right px-3 py-2 font-extrabold text-slate-600">Jumlah Kasus</th>
           </tr></thead>
           <tbody>`;
+      if (!kecKeys.length) {
+        html += `<tr><td colspan="2" class="px-3 py-4 text-sm text-slate-400">Belum ada data kecamatan pada filter ini.</td></tr>`;
+      }
       kecKeys.forEach(function (k) {
         html += `<tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="px-3 py-2 font-semibold text-slate-700">${escapeHtml(k)}</td>
