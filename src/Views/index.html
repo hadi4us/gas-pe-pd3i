@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Form PE Surveilans PD3I</title>
+  <title>SIMPEL - Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
@@ -15,22 +14,23 @@
     <?!= include('style'); ?>
   </style>
 </head>
-<body class="pd3i-body" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
+<body class="pd3i-body" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
 
   <?!= include('login'); ?>
   <?!= include('pin'); ?>
 
+  <div id="pd3i-toast-stack" class="pd3i-toast-stack" aria-live="polite" aria-atomic="false"></div>
   <div id="app" class="pd3i-app hidden">
-    <div id="pd3i-sidebar-overlay" class="pd3i-sidebar-overlay hidden"></div>
-    <aside id="pd3i-sidebar" class="pd3i-sidebar">
+    <div id="pd3i-sidebar-overlay" class="pd3i-sidebar-overlay hidden" aria-hidden="true"></div>
+    <aside id="pd3i-sidebar" class="pd3i-sidebar" aria-label="Navigasi aplikasi" tabindex="-1">
       <div class="pd3i-sidebar-brand-wrap">
         <div class="pd3i-sidebar-brand">
           <div class="pd3i-brand-icon">
             <i class="fas fa-shield-virus"></i>
           </div>
           <div>
-            <div class="pd3i-brand-title">PE PD3I</div>
-            <div class="pd3i-brand-subtitle">Surveilans & Investigasi Kasus</div>
+            <div class="pd3i-brand-title">SIMPEL</div>
+            <div class="pd3i-brand-subtitle">PD3I, PIE, PE Terintegrasi</div>
           </div>
         </div>
         <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
@@ -39,39 +39,83 @@
       </div>
       <div class="pd3i-sidebar-section">
         <div class="pd3i-sidebar-label">Navigasi Cepat</div>
-        <nav class="pd3i-sidebar-nav">
+        <nav class="pd3i-sidebar-nav" aria-label="Navigasi utama">
           <a href="#section-overview" data-sidebar-workspace="overview" class="pd3i-nav-link is-active">
             <i class="fas fa-house"></i>
             <span>Beranda</span>
           </a>
-          <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link">
-            <i class="fas fa-list-ul"></i>
-            <span>List Kasus</span>
-          </a>
-          <a href="#section-pelapor" data-sidebar-workspace="input" class="pd3i-nav-link">
-            <i class="fas fa-file-pen"></i>
-            <span>Input Kasus</span>
-          </a>
-          <a href="#section-verifikasi" data-sidebar-workspace="verifikasi" class="pd3i-nav-link">
-            <i class="fas fa-id-card-clip"></i>
-            <span>Verifikasi EPID</span>
-          </a>
-          <a href="#section-sampel" data-sidebar-workspace="sampel" class="pd3i-nav-link">
-            <i class="fas fa-vials"></i>
-            <span>Hasil Pemeriksaan</span>
-          </a>
-          <a href="#section-status" data-sidebar-workspace="status" class="pd3i-nav-link">
-            <i class="fas fa-list-check"></i>
-            <span>Status Pasien/Kasus</span>
-          </a>
-          <button id="btn-sidebar-dashboard" data-sidebar-workspace="dashboard" type="button" class="pd3i-nav-link pd3i-nav-button">
-            <i class="fas fa-chart-column"></i>
-            <span>Dasbor Statistik</span>
-          </button>
-          <a href="#section-guide" data-sidebar-workspace="guide" class="pd3i-nav-link">
-            <i class="fas fa-book-open"></i>
-            <span>Panduan Aplikasi</span>
-          </a>
+
+          <div class="pd3i-nav-group-label">Surveilans PD3I</div>
+          <div id="pd3i-cases-nav-children" class="pd3i-nav-children">
+            <button id="btn-sidebar-dashboard" data-sidebar-workspace="dashboard" type="button" class="pd3i-nav-link pd3i-nav-child pd3i-nav-button">
+              <i class="fas fa-chart-column"></i>
+              <span>Dasbor PD3I</span>
+            </button>
+            <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-list-ul"></i>
+              <span>Daftar Kasus</span>
+            </a>
+            <a href="#section-pelapor" data-sidebar-workspace="input" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-file-pen"></i>
+              <span>Input Kasus</span>
+            </a>
+            <a href="#section-verifikasi" data-sidebar-workspace="verifikasi" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-id-card-clip"></i>
+              <span>Verifikasi EPID</span>
+            </a>
+            <a href="#section-sampel" data-sidebar-workspace="sampel" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-vials"></i>
+              <span>Pemeriksaan Laboratorium</span>
+            </a>
+            <a href="#section-status" data-sidebar-workspace="status" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-list-check"></i>
+              <span>Status dan Klasifikasi</span>
+            </a>
+          </div>
+
+          <div class="pd3i-nav-group-label">Pelaporan Rutin</div>
+          <div id="pd3i-reporting-nav-children" class="pd3i-nav-children">
+            <a href="#section-zero-reporting-form" data-sidebar-workspace="zero-reporting-form" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
+              <i class="fas fa-clipboard-list"></i>
+              <span>Input Zero Reporting</span>
+            </a>
+            <a href="#section-zero-reporting-dashboard" data-sidebar-workspace="zero-reporting-dashboard" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
+              <i class="fas fa-chart-line"></i>
+              <span>Dashboard Zero Reporting</span>
+            </a>
+          </div>
+
+          <div class="pd3i-nav-group-label">Kewaspadaan Dini</div>
+          <div id="pd3i-pie-nav-children" class="pd3i-nav-children">
+            <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="screening" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-virus-covid"></i>
+              <span>Skrining PIE</span>
+            </a>
+            <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="dashboard" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-chart-line"></i>
+              <span>Dashboard PIE</span>
+            </a>
+            <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="operations" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-list-check"></i>
+              <span>Operasional & PE</span>
+            </a>
+            <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="lab" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-vials"></i>
+              <span>Lab & One Health</span>
+            </a>
+          </div>
+
+          <div class="pd3i-nav-group-label">Lainnya</div>
+          <div id="pd3i-tools-nav-children" class="pd3i-nav-children">
+            <a href="#section-settings" data-sidebar-workspace="settings" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-gear"></i>
+              <span>Pengaturan</span>
+            </a>
+            <a href="#section-guide" data-sidebar-workspace="guide" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-book-open"></i>
+              <span>Panduan Aplikasi</span>
+            </a>
+          </div>
         </nav>
       </div>
 
@@ -86,13 +130,18 @@
     <div class="pd3i-page">
       <header class="pd3i-topbar">
         <div class="pd3i-topbar-main">
-          <button id="btn-sidebar-toggle" type="button" class="pd3i-mobile-nav-toggle" aria-label="Buka navigasi">
+          <button id="btn-sidebar-toggle" type="button" class="pd3i-mobile-nav-toggle" aria-label="Buka navigasi" aria-controls="pd3i-sidebar" aria-expanded="false">
             <i class="fas fa-bars"></i>
           </button>
           <div>
-            <div class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
-            <h1 class="pd3i-page-title">Surveilans PD3I Terintegrasi</h1>
-            <p class="pd3i-page-subtitle">Entri kasus, pencarian dan koreksi data, validasi epidemiologis, serta pemantauan operasional dalam satu aplikasi.</p>
+            <nav id="pd3i-breadcrumb" class="pd3i-breadcrumb" aria-label="Breadcrumb">
+              <span>Beranda</span>
+              <span aria-hidden="true">/</span>
+              <span id="pd3i-breadcrumb-current">SIMPEL</span>
+            </nav>
+            <div id="pd3i-page-eyebrow" class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
+            <h1 id="pd3i-page-title" class="pd3i-page-title">SIMPEL</h1>
+            <p id="pd3i-page-subtitle" class="pd3i-page-subtitle">Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan (PD3I, PIE, PE Terintegrasi).</p>
           </div>
         </div>
 
@@ -101,42 +150,9 @@
             <i class="fas fa-user"></i><span id="user-badge-text">-</span>
           </div>
           <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
-            <button id="btn-admin-menu" type="button" class="pd3i-admin-button">
-              <i class="fas fa-user-shield"></i> <span id="btn-admin-menu-label">Admin</span>
+            <button id="btn-logout" type="button" class="pd3i-admin-button is-danger" title="Keluar dari sesi aktif">
+              <i class="fas fa-right-from-bracket"></i> <span id="btn-admin-menu-label">Keluar</span>
             </button>
-            <div id="admin-menu-dropdown" class="hidden pd3i-admin-dropdown">
-              <button id="btn-open-pin" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-key text-violet-600"></i> Ubah Password
-              </button>
-              <button id="btn-dashboard" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-chart-bar text-emerald-600"></i> Dasbor Statistik
-              </button>
-              <button id="btn-export-csv" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-file-csv text-green-600"></i> Ekspor CSV
-              </button>
-              <button id="btn-repair-pert-raw" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-screwdriver-wrench text-purple-600"></i> Perbaiki Header Kosong PERT Raw
-              </button>
-              <button id="btn-retry-sync" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-rotate-right text-amber-600"></i> Ulangi Sinkronisasi Pengampu
-              </button>
-              <button id="btn-retry-notify" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-bell text-blue-600"></i> Ulangi Notifikasi Kasus Baru
-              </button>
-              <button id="btn-retry-telegram" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fab fa-telegram-plane text-sky-600"></i> Ulangi Telegram Kasus Baru
-              </button>
-              <button id="btn-retry-revision-notify" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fas fa-envelope-open-text text-orange-600"></i> Ulangi Notifikasi Revisi
-              </button>
-              <button id="btn-retry-revision-telegram" type="button" class="pd3i-admin-dropdown-item">
-                <i class="fab fa-telegram-plane text-cyan-600"></i> Ulangi Telegram Revisi
-              </button>
-              <div class="pd3i-admin-dropdown-divider"></div>
-              <button id="btn-logout" type="button" class="pd3i-admin-dropdown-item is-danger">
-                <i class="fas fa-right-from-bracket text-rose-600"></i> Keluar
-              </button>
-            </div>
           </div>
         </div>
       </header>
@@ -156,6 +172,9 @@
 
         <?!= include('workspace_form'); ?>
         <?!= include('workspace_dashboard'); ?>
+        <?!= include('workspace_sars'); ?>
+        <?!= include('workspace_pie'); ?>
+        <?!= include('workspace_settings'); ?>
         <?!= include('workspace_guide'); ?>
 
       </main>
@@ -163,7 +182,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <?!= include('utils.js'); ?>
