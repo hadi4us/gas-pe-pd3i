@@ -688,13 +688,16 @@
           </button>
         </div>
         <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
-          <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-3">
+          <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto_auto] gap-3">
             <div>
               <label for="coordinate-picker-address" class="block text-xs font-extrabold uppercase tracking-wide text-slate-600 mb-2">Alamat estimasi / kata kunci lokasi</label>
               <input id="coordinate-picker-address" type="text" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Jl. Medan Merdeka Selatan, Jakarta atau -6.194449,106.822919" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
             </div>
             <button type="button" id="btn-coordinate-picker-search" class="lg:mt-7 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2">
               <i class="fas fa-magnifying-glass-location"></i> Cari
+            </button>
+            <button type="button" id="btn-coordinate-picker-gps" class="lg:mt-7 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2">
+              <i class="fas fa-location-crosshairs"></i> Lokasi Saya
             </button>
           </div>
           <div id="coordinate-picker-map" class="coordinate-picker-map rounded-2xl border border-slate-200 bg-slate-100"></div>
@@ -875,6 +878,39 @@
       addCoordinatePickerListener("btn-close-coordinate-picker", "click", closeCoordinatePickerModal);
       addCoordinatePickerListener("btn-coordinate-picker-cancel", "click", closeCoordinatePickerModal);
       addCoordinatePickerListener("btn-coordinate-picker-search", "click", searchCoordinatePickerAddress);
+      addCoordinatePickerListener("btn-coordinate-picker-gps", "click", function() {
+        if (navigator.geolocation) {
+          coordinatePickerStatus("Mencari lokasi GPS Anda...", "blue");
+          const gpsBtn = document.getElementById("btn-coordinate-picker-gps");
+          if (gpsBtn) {
+            gpsBtn.disabled = true;
+            gpsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+          }
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              const lat = position.coords.latitude;
+              const lon = position.coords.longitude;
+              setCoordinatePickerPoint(lat, lon);
+              reverseGeocodeCoordinatePickerPoint(lat, lon);
+              coordinatePickerStatus("Lokasi GPS berhasil ditemukan.", "green");
+              if (gpsBtn) {
+                gpsBtn.disabled = false;
+                gpsBtn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Lokasi Saya';
+              }
+            },
+            function(error) {
+              coordinatePickerStatus("Gagal mendapatkan lokasi GPS: " + error.message, "red");
+              if (gpsBtn) {
+                gpsBtn.disabled = false;
+                gpsBtn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Lokasi Saya';
+              }
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          );
+        } else {
+          coordinatePickerStatus("Browser Anda tidak mendukung deteksi lokasi GPS.", "red");
+        }
+      });
       addCoordinatePickerListener("coordinate-picker-address", "keydown", function(ev) {
         if (ev.key === "Enter") {
           ev.preventDefault();
