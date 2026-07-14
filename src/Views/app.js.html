@@ -3908,8 +3908,8 @@
       input.setAttribute('autocomplete', 'off');
       input.setAttribute('list', datalistId);
 
-      // Hide the original select
-      select.style.display = 'none';
+      // Hide the original select (use important to override CSS display: block !important)
+      select.style.setProperty('display', 'none', 'important');
 
       // Insert wrapper and items
       select.parentNode.insertBefore(wrapper, select);
