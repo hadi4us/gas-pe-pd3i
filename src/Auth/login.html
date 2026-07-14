@@ -1,80 +1,68 @@
-<div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center modal-backdrop px-2 py-3">
-  <div class="w-full bg-white rounded-2xl p-4 sm:p-5 modal-card mx-auto text-center" style="max-width: 20rem;">
-    <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3">
-      <i class="fas fa-shield-halved text-blue-600 text-xl"></i>
+<div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center pd3i-login-backdrop px-2 py-3">
+  <div class="pd3i-login-card pd3i-login-card-compact mx-auto text-center">
+    <div class="pd3i-login-mark mx-auto mb-3">
+      <i class="fas fa-shield-halved"></i>
     </div>
-    <div class="text-base sm:text-lg font-bold text-slate-900">Memeriksa sesi akses…</div>
-    <div class="text-[12px] sm:text-[13px] text-slate-500 mt-1.5 font-medium">Menyiapkan autentikasi aplikasi.</div>
+    <div class="pd3i-login-title pd3i-login-title-small">Memeriksa sesi akses…</div>
+    <div class="pd3i-login-subtitle">Menyiapkan autentikasi aplikasi.</div>
   </div>
 </div>
 
-<div id="login-modal" class="fixed inset-0 z-[100] hidden items-start sm:items-center justify-center modal-backdrop overflow-y-auto px-2 py-2.5 sm:px-4 sm:py-4">
-  <div id="login-card" class="w-full bg-white rounded-2xl p-4 sm:p-5 modal-card mx-auto my-auto" style="max-width: 21.5rem;">
-    <div class="flex flex-col items-center text-center">
-      <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mb-2.5">
-        <i class="fas fa-user-shield text-blue-600 text-xl"></i>
+<div id="login-modal" class="fixed inset-0 z-[100] hidden items-start sm:items-center justify-center pd3i-login-backdrop overflow-y-auto px-2 py-2.5 sm:px-4 sm:py-4">
+  <div id="login-card" class="pd3i-login-card mx-auto my-auto">
+    <div class="pd3i-login-hero">
+      <div class="pd3i-login-mark">
+        <i class="fas fa-shield-virus"></i>
       </div>
-      <h1 class="text-lg sm:text-xl font-bold text-slate-900">Akses Surveilans PD3I</h1>
-      <p class="text-[12px] sm:text-[13px] text-slate-500 mt-0.5 font-medium">Login petugas (Password) + Captcha</p>
+      <div>
+        <div class="pd3i-login-kicker">SIMPEL Depok</div>
+        <h1 class="pd3i-login-title">Akses Aplikasi SIMPEL</h1>
+        <p class="pd3i-login-subtitle">Sistem Surveilans Penyakit yang Dapat Dicegah Dengan Imunisasi (PD3I, PIE, PE Terintegrasi - SIMPEL). Masuk dengan Gmail terdaftar untuk mengelola pelaporan, verifikasi, dan dashboard kasus.</p>
+      </div>
     </div>
 
-    <div id="login-alert" class="hidden mt-3 p-2.5 rounded-lg text-[12px] sm:text-[13px] font-semibold border"></div>
+    <div id="login-alert" class="hidden pd3i-login-alert"></div>
 
-    <form id="login-form" class="mt-4 space-y-3" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" novalidate>
-      <div>
-        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Username</label>
-        <div class="relative">
-          <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-username" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
-            class="w-full pl-8 sm:pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
-            placeholder="username" />
+    <form id="login-form" class="pd3i-login-form" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" novalidate>
+      <div class="pd3i-login-field">
+        <label class="pd3i-login-label">Gmail</label>
+        <div class="pd3i-login-input-wrap">
+          <i class="fas fa-envelope"></i>
+          <input id="login-email" type="email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
+            class="pd3i-login-input"
+            placeholder="Masukkan Gmail Anda" />
         </div>
       </div>
 
-      <div>
-        <label class="block text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.14em] mb-1">Password Akses</label>
-        <div class="relative">
-          <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px] sm:text-[11px]"></i>
-          <input id="login-pin" type="text" autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-masked="1" style="-webkit-text-security: disc; text-security: disc;"
-            class="w-full pl-8 sm:pl-9 pr-9 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[12px] sm:text-[13px] font-medium"
-            placeholder="Password akses" />
-          <button type="button" id="toggle-login-pin"
-            class="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 text-[10px] sm:text-[11px]">
-            <i class="fas fa-eye"></i>
-          </button>
-        </div>
-      </div>
-
-      <div class="border border-slate-200 rounded-lg p-2.5 sm:p-3 bg-slate-50 space-y-1.5">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-[9px] sm:text-[10px] font-bold text-slate-600 uppercase tracking-[0.12em]">Captcha</div>
-          <button type="button" id="btn-refresh-captcha"
-            class="w-6 h-6 shrink-0 rounded-md border border-slate-200 bg-white hover:bg-slate-100 flex items-center justify-center text-[9px] leading-none">
-            <i class="fas fa-rotate-right"></i>
-          </button>
-        </div>
-
-        <div id="captcha-question" class="text-[15px] sm:text-lg font-bold tracking-wide text-slate-900 leading-none min-h-[18px]">...</div>
-
-        <div>
-          <input id="login-captcha-answer" inputmode="numeric" pattern="[0-9]*"
-            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 text-[11px] sm:text-[12px] font-medium"
-            placeholder="Jawaban captcha" />
-        </div>
-
-        <div id="captcha-error" class="hidden p-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-[9px] sm:text-[10px] font-semibold">
-          Captcha salah
-        </div>
-      </div>
-
-      <button id="btn-login" type="submit"
-        class="w-full mt-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[13px] sm:text-sm py-2.5 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-1.5">
-        <span>Masuk</span> <i class="fas fa-arrow-right text-[10px] sm:text-[11px]"></i>
+      <button id="btn-send-otp" type="button" class="pd3i-login-submit">
+        <span>Kirim OTP</span>
       </button>
 
-      <div class="text-center text-[9px] sm:text-[10px] text-slate-400 font-bold tracking-[0.12em] mt-1.5">
+      <div id="otp-section" class="hidden pd3i-login-otp-section">
+        <div class="pd3i-login-field">
+          <label class="pd3i-login-label">OTP</label>
+          <div class="pd3i-login-input-wrap">
+            <i class="fas fa-key"></i>
+            <input id="login-otp" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+              class="pd3i-login-input"
+              placeholder="Masukkan OTP" />
+          </div>
+        </div>
+
+        <button id="btn-login" type="submit" class="pd3i-login-submit">
+          <span>Masuk</span> <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <div class="pd3i-login-footer">
         DINAS KESEHATAN KOTA DEPOK
       </div>
     </form>
+
+    <div class="mt-6 border-t border-slate-100 pt-4 text-left">
+      <p class="text-[11px] leading-relaxed text-slate-500 font-medium">
+        <strong>Disclaimer:</strong> Aplikasi SIMPEL digunakan khusus untuk kebutuhan operasional internal Surveilans Dinas Kesehatan Kota Depok. Seluruh data pasien dan informasi medis bersifat rahasia. Rekomendasi skrining/penyelidikan adalah alat bantu keputusan awal; diagnosis, keputusan klinis, dan tindakan kepidemiologian tetap menjadi tanggung jawab penuh tenaga kesehatan yang berwenang.
+      </p>
+    </div>
   </div>
 </div>
