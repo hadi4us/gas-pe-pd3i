@@ -97,8 +97,21 @@ function _parseDateStr_(str) {
     if (isNaN(str.getTime())) return null;
     return new Date(Date.UTC(str.getFullYear(), str.getMonth(), str.getDate()));
   }
+  if (typeof str === "number") {
+    const date = new Date(Date.UTC(1899, 11, 30));
+    date.setUTCDate(date.getUTCDate() + Math.floor(str));
+    return date;
+  }
   str = String(str || "").trim();
   if (!str) return null;
+  
+  // Jika string berisi angka serial saja (e.g. "46047")
+  if (/^\d+$/.test(str)) {
+    const num = parseInt(str, 10);
+    const date = new Date(Date.UTC(1899, 11, 30));
+    date.setUTCDate(date.getUTCDate() + num);
+    return date;
+  }
   
   // yyyy-MM-dd
   let m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
