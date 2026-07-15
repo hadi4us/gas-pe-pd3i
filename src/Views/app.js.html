@@ -323,17 +323,17 @@
     if (field.type === "geo_button") {
       return `<div class="${widthClass} space-y-3">
         <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${field.label}</label>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="flex flex-wrap gap-2">
           <button type="button" id="btn-ambil-lokasi"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center justify-center gap-2 text-xs w-fit">
             <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
           </button>
           <button type="button" id="btn-cari-lokasi-alamat"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center justify-center gap-2 text-xs w-fit">
             <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
           </button>
           <button type="button" id="btn-pilih-titik-peta"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center justify-center gap-2 text-xs w-fit">
             <i class="fas fa-map-location-dot"></i> Pilih Titik di Peta
           </button>
         </div>
