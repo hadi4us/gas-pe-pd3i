@@ -2932,7 +2932,7 @@
       verifikasi: 'Verifikasi EPID',
       sampel: 'Pemeriksaan Laboratorium',
       status: 'Status dan Klasifikasi',
-      dashboard: 'Dasbor statistik',
+      dashboard: 'Dashboard statistik',
       'zero-reporting-form': 'Form Zero Reporting',
       'zero-reporting-dashboard': 'Dashboard Zero Reporting',
       'sars-form': 'Form Zero Reporting',
@@ -2953,7 +2953,7 @@
       verifikasi: ['WORKFLOW ADMIN', 'Verifikasi EPID', 'Validasi data, koreksi isian, dan tetapkan status verifikasi kasus.'],
       sampel: ['LABORATORIUM', 'Pemeriksaan Laboratorium', 'Input dan tinjau hasil pemeriksaan sampel kasus PD3I.'],
       status: ['FOLLOW UP', 'Status dan Klasifikasi', 'Perbarui status akhir, pemantauan, klasifikasi, dan tindak lanjut kasus.'],
-      dashboard: ['ANALITIK', 'Dasbor statistik PD3I', 'Pantau tren, distribusi kasus, indikator operasional, dan kualitas data.'],
+      dashboard: ['ANALITIK', 'Dashboard statistik PD3I', 'Pantau tren, distribusi kasus, indikator operasional, dan kualitas data.'],
       'zero-reporting-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
       'zero-reporting-dashboard': ['ZERO REPORTING', 'Dashboard Zero Reporting', 'Ringkasan dan pemantauan laporan nihil mingguan.'],
       'sars-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
@@ -4529,7 +4529,7 @@
       { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Tinjau data yang sudah ada untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
       { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil pemeriksaan', copy: 'Lanjutkan data yang sudah ada saat hasil pemeriksaan tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
       { workspace: 'status', icon: 'fa-list-check', title: 'Pembaruan status', copy: 'Perbarui status pasien / kasus dari data yang sudah ada.', show: caps.viewStages.indexOf('section-status') !== -1 },
-      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dasbor statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView },
+      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView },
       { workspace: 'settings', icon: 'fa-gear', title: 'Pengaturan', copy: 'Kelola konfigurasi PD3I/SARING-PIE sesuai role.', show: isSuperAdminUiRole(SESSION_USER && SESSION_USER.role) },
       { workspace: 'guide', icon: 'fa-book-open', title: 'Panduan aplikasi', copy: 'Baca petunjuk penggunaan detail per menu dan per peran.', show: caps.canView }
     ].filter(function(item) { return item.show && allowedWorkspaces.has(item.workspace); });

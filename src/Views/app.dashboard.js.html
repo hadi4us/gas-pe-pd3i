@@ -111,7 +111,7 @@
 
     if (!result || result.status === 'error') {
       wrap.classList.remove('hidden');
-      wrap.innerHTML = `<div class="pd3i-empty-keadaan">${escapeHtml((result && result.message) || 'Gagal memuat detail dasbor.')}</div>`;
+      wrap.innerHTML = `<div class="pd3i-empty-keadaan">${escapeHtml((result && result.message) || 'Gagal memuat detail dashboard.')}</div>`;
       return;
     }
 
@@ -403,7 +403,7 @@
     const runtimeGuard = (typeof createWorkspaceRuntimeGuard === 'function')
       ? createWorkspaceRuntimeGuard('dashboard')
       : null;
-    content.innerHTML = '<div class="pd3i-dashboard-keadaan is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dasbor...</span></div>';
+    content.innerHTML = '<div class="pd3i-dashboard-keadaan is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
 
     if (!safeGsRun() || !getSafeSessionToken()) {
       content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">Tidak dapat terhubung ke server.</div>';
@@ -460,7 +460,7 @@
         <div>
           <div class="pd3i-card-eyebrow">Capaian kinerja</div>
           <div class="pd3i-dashboard-block-title">Ringkasan kinerja petugas dan admin</div>
-          <div class="pd3i-helper-text mt-2">Dasbor ini berfokus pada capaian kerja dan mutu operasional, bukan tabel antrian kasus satu per satu.</div>
+          <div class="pd3i-helper-text mt-2">Dashboard ini berfokus pada capaian kerja dan mutu operasional, bukan tabel antrian kasus satu per satu.</div>
         </div>
         <span class="pd3i-badge-soft">Performance</span>
       </div>
@@ -468,7 +468,7 @@
         <div class="pd3i-dashboard-metric-card tone-emerald is-hero">
           <div class="text-xs font-extrabold uppercase text-emerald-700 mb-1">Total Kasus ${dx} ${tahun}</div>
           <div class="text-4xl font-black text-emerald-900">${totalCases}</div>
-          <div class="pd3i-helper-text mt-2">Cakupan kasus pada filter dasbor aktif.</div>
+          <div class="pd3i-helper-text mt-2">Cakupan kasus pada filter dashboard aktif.</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-blue">
           <div class="text-xs font-extrabold uppercase text-blue-700 mb-1">Pelacakan Hari yang Sama</div>
