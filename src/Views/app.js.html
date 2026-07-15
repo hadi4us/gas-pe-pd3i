@@ -321,29 +321,31 @@
     }
 
     if (field.type === "geo_button") {
-      return `<div class="${widthClass}">
+      return `<div class="${widthClass} space-y-3">
         <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${field.label}</label>
-        <div class="flex flex-col lg:flex-row gap-3">
-          <div class="flex flex-col sm:flex-row gap-3 shrink-0">
-            <button type="button" id="btn-ambil-lokasi"
-              class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
-              <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
-            </button>
-            <button type="button" id="btn-cari-lokasi-alamat"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
-              <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
-            </button>
-            <button type="button" id="btn-pilih-titik-peta"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-extrabold shadow-md transition flex items-center justify-center gap-2">
-              <i class="fas fa-map-location-dot"></i> Pilih Titik di Peta
-            </button>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button type="button" id="btn-ambil-lokasi"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
+          </button>
+          <button type="button" id="btn-cari-lokasi-alamat"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            <i class="fas fa-magnifying-glass-location"></i> Cari dari Alamat
+          </button>
+          <button type="button" id="btn-pilih-titik-peta"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-extrabold shadow-md transition flex items-center justify-center gap-2 text-sm w-full">
+            <i class="fas fa-map-location-dot"></i> Pilih Titik di Peta
+          </button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 items-stretch">
+          <div class="lg:col-span-2">
+            <input type="text" id="geo-search-query"
+              class="w-full border border-slate-300 bg-white text-slate-700 text-sm rounded-xl px-4 py-3 font-semibold focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+              placeholder="Ketik alamat atau koordinat lat,lon untuk dicari"
+              autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
           </div>
-          <input type="text" id="geo-search-query"
-            class="flex-1 min-w-[220px] border border-slate-300 bg-white text-slate-700 text-sm rounded-lg px-4 py-3 font-semibold focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Ketik alamat atau koordinat lat,lon"
-            autocomplete="off" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
           <div id="geo-status"
-            class="lg:w-[32rem] px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold">
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 text-xs sm:text-sm font-semibold flex items-center min-h-[48px]">
             Klik tombol untuk mengambil titik koordinat, atau ketik alamat/koordinat lalu cari.
           </div>
         </div>
@@ -992,7 +994,7 @@
         red: "border-red-200 bg-red-50 text-red-700",
         slate: "border-slate-200 bg-slate-50 text-slate-600"
       };
-      return "lg:w-[32rem] px-4 py-3 rounded-lg border " + (palette[color] || palette.slate) + " text-sm font-semibold";
+      return "w-full px-4 py-3 rounded-xl border " + (palette[color] || palette.slate) + " text-xs sm:text-sm font-semibold flex items-center min-h-[48px]";
     };
     setCoordinateManualMode(false);
     if (btn.dataset.bound === "1") return;
