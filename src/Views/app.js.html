@@ -900,7 +900,13 @@
               }
             },
             function(error) {
-              coordinatePickerStatus("Gagal mendapatkan lokasi GPS: " + error.message, "red");
+              let msg = error.message;
+              if (msg.indexOf("permissions policy") !== -1 || error.code === error.PERMISSION_DENIED) {
+                msg = "Akses GPS diblokir oleh Google Sites/browser. Gunakan kolom pencarian alamat di atas.";
+              } else {
+                msg = "Gagal mendapatkan lokasi GPS: " + msg;
+              }
+              coordinatePickerStatus(msg, "red");
               if (gpsBtn) {
                 gpsBtn.disabled = false;
                 gpsBtn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Lokasi Saya';
