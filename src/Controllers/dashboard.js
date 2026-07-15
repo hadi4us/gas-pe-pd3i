@@ -21,7 +21,7 @@ const SUPPORTED_DX_ = ["MR", "DIF", "PERT", "TN", "AFP"];
  */
 function _readSheetWithCache_(sheetName) {
   // Coba dari cache terlebih dahulu
-  let raw = Cache_Manager.getSheetData(sheetName);
+  let raw = null;
 
   if (!raw) {
     // Cache miss: baca dari sheet langsung (Req 6.8 fallback)
