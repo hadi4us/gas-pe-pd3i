@@ -61,9 +61,18 @@ function _readSheetWithCache_(sheetName) {
 function _formatDateValue_(val) {
   if (!val) return "";
   if (val instanceof Date) {
+    if (isNaN(val.getTime())) return "";
     const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
     return Utilities.formatDate(val, tz, "yyyy-MM-dd");
   }
+  
+  // Jika string, bersihkan & parsing dulu menggunakan _parseDateStr_
+  const parsed = _parseDateStr_(val);
+  if (parsed) {
+    const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    return Utilities.formatDate(parsed, tz, "yyyy-MM-dd");
+  }
+  
   return String(val).trim();
 }
 
