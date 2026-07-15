@@ -675,9 +675,9 @@
 
     modal = document.createElement("div");
     modal.id = "coordinate-picker-modal";
-    modal.className = "fixed inset-0 z-[9999] hidden items-center justify-center p-3 sm:p-4 modal-backdrop";
+    modal.className = "fixed inset-0 z-[9999] hidden items-start justify-center p-3 sm:p-4 overflow-y-auto modal-backdrop pt-6 sm:pt-10";
     modal.innerHTML = `
-      <div class="modal-card coordinate-picker-card w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col">
+      <div class="modal-card coordinate-picker-card w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col mt-4 mb-8">
         <div class="px-4 sm:px-6 py-4 border-b border-slate-200 flex items-start justify-between gap-3">
           <div>
             <h2 class="text-lg sm:text-xl font-black text-slate-900">Pilih Titik Koordinat</h2>
@@ -859,6 +859,7 @@
   }
 
   function openCoordinatePickerModal() {
+    window.scrollTo({ top: 0 });
     const modal = ensureCoordinatePickerModal();
     modal.classList.remove("hidden");
     modal.classList.add("flex");
@@ -7943,17 +7944,18 @@
         const triggerButton = opts.triggerButton && opts.triggerButton.nodeType === 1 ? opts.triggerButton : null;
         const triggerButtonOriginalHtml = triggerButton ? triggerButton.innerHTML : '';
         function showOpenRecordLoadingOverlay(label) {
+          window.scrollTo({ top: 0 });
           let overlay = document.getElementById('pd3i-open-record-loading');
           if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'pd3i-open-record-loading';
             overlay.setAttribute('role', 'status');
             overlay.setAttribute('aria-live', 'polite');
-            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);padding:20px;';
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-start;justify-content:center;background:rgba(15,23,42,.38);backdrop-filter:blur(2px);padding:20px;overflow-y:auto;padding-top:8vh;';
             document.body.appendChild(overlay);
           }
           overlay.innerHTML = `
-            <div style="width:min(92vw,420px);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.24);border:1px solid rgba(226,232,240,.95);padding:24px;text-align:center;color:#0f172a;">
+            <div style="width:min(92vw,420px);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.24);border:1px solid rgba(226,232,240,.95);padding:24px;text-align:center;color:#0f172a;margin-bottom:2rem;">
               <div style="width:54px;height:54px;margin:0 auto 14px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;font-size:24px;">
                 <i class="fas fa-spinner fa-spin"></i>
               </div>
