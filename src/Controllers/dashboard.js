@@ -84,11 +84,43 @@ function _formatDateTimeValue_(val) {
  * @returns {Date|null}
  */
 function _parseDateStr_(str) {
+  if (str instanceof Date) {
+    if (isNaN(str.getTime())) return null;
+    return new Date(Date.UTC(str.getFullYear(), str.getMonth(), str.getDate()));
+  }
   str = String(str || "").trim();
   if (!str) return null;
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return null;
-  return new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)));
+  
+  // yyyy-MM-dd
+  let m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)));
+  }
+  
+  // DD/MM/YYYY
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) {
+    return new Date(Date.UTC(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10)));
+  }
+
+  // YYYY/MM/DD
+  m = str.match(/^(\d{4})\/(\d{2})\/(\d{2})$/);
+  if (m) {
+    return new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)));
+  }
+
+  // DD-MM-YYYY
+  m = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) {
+    return new Date(Date.UTC(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10)));
+  }
+  
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  }
+  
+  return null;
 }
 
 function _findFirstHeaderIndex_(headers, candidates) {
