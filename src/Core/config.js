@@ -7,9 +7,9 @@
  *   TELEGRAM_CHAT_ID    — menggantikan konstanta TELEGRAM_PD3I_CHAT_ID
  *   SPREADSHEET_ID      — menggantikan konstanta SPREADSHEET_ID
  *   CACHE_TTL_SEC       — TTL cache dalam detik (default 60)
- *   SESSION_TTL_ADMIN   — TTL sesi admin dalam detik (default 1800)
- *   SESSION_TTL_PETUGAS — TTL sesi petugas dalam detik (default 3600)
- *   SESSION_TTL_VIEWER  — TTL sesi viewer dalam detik (default 7200)
+ *   SESSION_TTL_ADMIN   — TTL sesi admin dalam detik (default 21600 / 6 jam)
+ *   SESSION_TTL_PETUGAS — TTL sesi petugas dalam detik (default 21600 / 6 jam)
+ *   SESSION_TTL_VIEWER  — TTL sesi viewer dalam detik (default 21600 / 6 jam)
  */
 
 const Config_Manager = (function () {
@@ -20,6 +20,12 @@ const Config_Manager = (function () {
   const MANAGED_KEYS = [
     "TELEGRAM_BOT_TOKEN",
     "TELEGRAM_CHAT_ID",
+    "PIE_TELEGRAM_CHAT_ID",
+    "WAHA_ENABLED",
+    "WAHA_BASE_URL",
+    "WAHA_API_KEY",
+    "WAHA_SESSION",
+    "WAHA_DINKES_CHAT_ID",
     "SPREADSHEET_ID",
     "CACHE_TTL_SEC",
     "SESSION_TTL_ADMIN",

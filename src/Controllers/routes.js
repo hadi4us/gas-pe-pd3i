@@ -1,11 +1,20 @@
 function doGet(e) {
   const action = String((e && e.parameter && e.parameter.action) || "").trim().toLowerCase();
+  const page = String((e && e.parameter && e.parameter.page) || "").trim().toLowerCase();
+  const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
 
   if (action === "print") {
     return handlePrintRequest_(e);
   }
 
-  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "guide"];
+  if (page === "sars" || page === "sars-form" || page === "zero-reporting" || page === "zero-reporting-form") {
+    return renderSarsForm_(e);
+  }
+  if (page === "sars-dashboard" || page === "zero-reporting-dashboard") {
+    return renderSarsDashboard_(e);
+  }
+
+  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "sars-form", "sars-dashboard", "guide", "pie", "settings"];
   const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
     ? "dashboard"
     : "app";
@@ -18,14 +27,80 @@ function doGet(e) {
   const template = createTemplateFromFile_("index");
   template.initialView = view;
   template.initialWorkspace = initialWorkspace;
+  template.embedMode = embedMode === "sites" ? "sites" : "";
   template.appUrl = serviceUrl || "";
   template.dashboardUrl = serviceUrl ? (serviceUrl + "?view=dashboard") : "";
+  template.SPREADSHEET_ID = (typeof getSarsSpreadsheetId === "function") ? getSarsSpreadsheetId() : "";
+  template.APP_URL = serviceUrl || "";
+  template.email = safeActiveUserEmail_();
+  template.defaultWA = "";
+  template.defaultFacilityType = "klinik";
+  template.defaultFacilityName = "";
+  template.epidInfo = getReportingEpidSafe_();
+  template.DEFAULT_DASHBOARD_YEAR = Number(template.epidInfo && template.epidInfo.year) || Number(new Date().getFullYear());
+  template.DEFAULT_DASHBOARD_WEEK = Number(template.epidInfo && template.epidInfo.week) || 1;
+  try { if (typeof getDefaultWA === "function") template.defaultWA = getDefaultWA() || ""; } catch (err) {}
+  try { if (typeof getDefaultFacilityType === "function") template.defaultFacilityType = getDefaultFacilityType() || "klinik"; } catch (err2) {}
+  try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
 
   return template
     .evaluate()
-    .setTitle(view === "dashboard" ? "Dashboard Statistik PD3I" : "Form PE Surveilans PD3I")
+    .setTitle(view === "dashboard" ? "Dashboard Statistik SIMPEL Kota Depok" : "SIMPEL Kota Depok")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function renderSarsForm_(e) {
+  const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
+  const template = createTemplateFromFile_("SARS/index");
+  template.SPREADSHEET_ID = getSarsSpreadsheetId();
+  template.APP_URL = serviceUrl || getSarsAppUrl();
+  template.TZ = getSarsTimezone();
+  template.email = safeActiveUserEmail_();
+  template.defaultWA = "";
+  template.defaultFacilityType = "klinik";
+  template.defaultFacilityName = "";
+  template.epidInfo = getReportingEpidSafe_();
+  try { if (typeof getDefaultWA === "function") template.defaultWA = getDefaultWA() || ""; } catch (err) {}
+  try { if (typeof getDefaultFacilityType === "function") template.defaultFacilityType = getDefaultFacilityType() || "klinik"; } catch (err2) {}
+  try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
+  return template
+    .evaluate()
+    .setTitle("Form SARS PD3I – Depok")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function renderSarsDashboard_(e) {
+  const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
+  const template = createTemplateFromFile_("SARS/index_dashboard");
+  const rep = getReportingEpidSafe_();
+  template.SPREADSHEET_ID = getSarsSpreadsheetId();
+  template.APP_URL = serviceUrl || getSarsAppUrl();
+  template.TZ = getSarsTimezone();
+  template.DEFAULT_DASHBOARD_YEAR = Number(rep.year) || Number(new Date().getFullYear());
+  template.DEFAULT_DASHBOARD_WEEK = Number(rep.week) || 1;
+  try { template.SARS_CONFIG = (typeof getSarsConfig === "function") ? getSarsConfig() : {}; } catch (err) { template.SARS_CONFIG = {}; }
+  return template
+    .evaluate()
+    .setTitle("Dashboard SARS PD3I – Depok")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+}
+
+function safeActiveUserEmail_() {
+  try { return Session.getActiveUser().getEmail() || ""; } catch (err) { return ""; }
+}
+
+function getReportingEpidSafe_() {
+  try {
+    if (typeof getEpidWeekForReporting === "function") {
+      const rep = getEpidWeekForReporting();
+      if (rep && typeof rep === "object") return rep;
+    }
+  } catch (err) {}
+  const now = new Date();
+  return { week: 1, year: now.getFullYear(), rangeLabel: "" };
 }
 
 function _publicWorkflowError_(err, fallbackMessage) {
@@ -278,11 +353,30 @@ function _getRowObjectByEpid_(dx, epid) {
   throw new Error("EPID tidak ditemukan: " + epid);
 }
 
+function _normalizePd3iRole_(role) {
+  var raw = String(role || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
+  var map = {
+    "system-admin": "super-admin", "kb-approver": "super-admin", auditor: "super-admin",
+    "surveilans-dinkes": "surveilans", "epidemiolog-verifikator": "surveilans", "one-health": "surveilans",
+    triage: "petugas", clinician: "petugas", "surveilans-faskes": "petugas", ppi: "petugas", "lab-faskes": "petugas", "kb-editor": "admin"
+  };
+  return map[raw] || raw;
+}
+
+function _isAdminRole_(role) {
+  const normalized = _normalizePd3iRole_(role);
+  return normalized === "admin" || normalized === "super-admin" || normalized === "superadmin";
+}
+
+function _isSuperAdminRole_(role) {
+  const normalized = _normalizePd3iRole_(role);
+  return normalized === "super-admin" || normalized === "superadmin";
+}
+
 function _requireAdminFromToken_(token) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok || !sess.user) throw new Error(sess.message || "Sesi tidak valid.");
-  const role = String(sess.user.role || "").trim().toLowerCase();
-  if (role !== "admin") throw new Error("Aksi ini hanya untuk admin.");
+  if (!_isAdminRole_(sess.user.role)) throw new Error("Aksi ini hanya untuk admin.");
   return sess.user;
 }
 
@@ -550,7 +644,7 @@ function getWorkflowFilterOptions(token) {
       .trim();
   };
   const userUnitAlias = normalizePuskesmasScopeName(userUnitKerja);
-  const canSeeAllReferenceWilayah = role === 'admin' || scopeLevel === 'dinkes';
+  const canSeeAllReferenceWilayah = _isAdminRole_(role) || scopeLevel === 'dinkes';
 
   const kecamatanMap = {};
   const kelurahanByKecamatan = {};
@@ -978,6 +1072,7 @@ const Batch_Processor = (function () {
   const BATCH_CONFIG = {
     sync:              { statusCol: "Status Sinkronisasi Pengampu",        doneValue: "SYNCED", keyCols: ["Nomor EPID"] },
     telegram:          { statusCol: "Status Notifikasi Telegram",          doneValue: "SENT",   keyCols: ["Nomor EPID"] },
+    waha:              { statusCol: "Status Notifikasi WAHA",              doneValue: "SENT",   keyCols: ["Nomor EPID"] },
     notify:            { statusCol: "Status Notifikasi Pengampu",          doneValue: "SENT",   keyCols: ["Nomor EPID"] },
     revision_notify:   { statusCol: "Status Notifikasi Revisi Pengampu",   doneValue: "SENT",   keyCols: ["ID Registrasi Kasus", "Nomor EPID"] },
     revision_telegram: { statusCol: "Status Notifikasi Revisi Telegram",   doneValue: "SENT",   keyCols: ["ID Registrasi Kasus", "Nomor EPID"] }
@@ -1030,6 +1125,18 @@ const Batch_Processor = (function () {
           "Telegram Notified At": new Date(),
           "Telegram Target": res.target || "",
           "Telegram Retry Count": currentRetry + 1
+        });
+        saveDxRecord_(dx, patch);
+        return { ok: !!res.sent };
+      }
+      if (batchType === "waha") {
+        const pUrl = printUrl || (epid ? safeGetPdfPrintUrl_(dx, epid, "") : '');
+        const res = _sendWahaPd3iNotification_(dx, record, { epid: epid, recordId: recordId }, pUrl);
+        const patch = Object.assign({}, identityPatch, {
+          "Status Notifikasi WAHA": res.sent ? "SENT" : (res.reason || "FAILED"),
+          "Reason Notifikasi WAHA": res.sent ? "" : (res.reason || ""),
+          "WAHA Notified At": new Date(),
+          "WAHA Target": res.target || ""
         });
         saveDxRecord_(dx, patch);
         return { ok: !!res.sent };
@@ -1410,6 +1517,10 @@ function retryAllPendingPengampuNotification(token, dxList) {
   return Batch_Processor.runBatch(dxList || ALL_DX, "notify", token);
 }
 
+function retryAllPendingWahaPd3iNotification(token, dxList) {
+  return Batch_Processor.runBatch(dxList || ALL_DX, "waha", token);
+}
+
 function retryAllPendingRevisionPengampuNotification(token, dxList) {
   return Batch_Processor.runBatch(dxList || ALL_DX, "revision_notify", token);
 }
@@ -1493,6 +1604,33 @@ function _resolvePengampuNotificationContext_(dx, data) {
     puskesmasPengampu: puskesmasPengampu,
     kodePuskesmasPengampu: kodePuskesmasPengampu
   };
+}
+
+function _isWahaEnabled_() {
+  return String(Config_Manager.getConfig("WAHA_ENABLED") || '').trim().toLowerCase() === 'true';
+}
+
+function _sendWahaText_(chatId, lines) {
+  if (!_isWahaEnabled_()) return { sent: false, reason: "WAHA_DISABLED", target: String(chatId || '').trim() };
+  const baseUrl = String(Config_Manager.getConfig("WAHA_BASE_URL") || '').trim().replace(/\/$/, '');
+  const apiKey = String(Config_Manager.getConfig("WAHA_API_KEY") || '').trim();
+  const session = String(Config_Manager.getConfig("WAHA_SESSION") || 'default').trim() || 'default';
+  const targetChatId = String(chatId || '').trim();
+  if (!baseUrl || !targetChatId) return { sent: false, reason: "WAHA_NOT_CONFIGURED", target: targetChatId };
+  const payload = { session: session, chatId: targetChatId, text: (lines || []).join("\n") };
+  const headers = { "Content-Type": "application/json" };
+  if (apiKey) headers["X-Api-Key"] = apiKey;
+  const resp = UrlFetchApp.fetch(baseUrl + "/api/sendText", {
+    method: "post",
+    contentType: "application/json",
+    headers: headers,
+    muteHttpExceptions: true,
+    payload: JSON.stringify(payload)
+  });
+  const code = resp.getResponseCode();
+  const body = String(resp.getContentText() || "");
+  if (code >= 200 && code < 300) return { sent: true, target: targetChatId, responseCode: code };
+  return { sent: false, reason: "HTTP_" + code + ": " + body, target: targetChatId };
 }
 
 function _sendTelegramText_(chatId, lines) {
@@ -1654,6 +1792,32 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
 
     const res = _sendTelegramText_(notifyCtx.telegramChatId, lines);
     if (res.sent) res.source = notifyCtx.telegramTargetSource || '';
+    return res;
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+// ─── Notifikasi WhatsApp WAHA per pengampu/Dinkes ────────────────────────────
+function _sendWahaPd3iNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || "").trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    const recordWaha = String(data["WAHA Chat Id Pengampu"] || data["Whatsapp Chat Id Pengampu"] || data["WhatsApp Chat Id Pengampu"] || '').trim();
+    const globalWaha = String(Config_Manager.getConfig("WAHA_DINKES_CHAT_ID") || '').trim();
+    const target = recordWaha || globalWaha;
+    if (!target) return { sent: false, reason: "WAHA_TARGET_NOT_CONFIGURED" };
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
+    const lines = [
+      `📢 Kasus ${dxLabel} (${dxCode}) terverifikasi`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      'Tindak lanjut: buka workspace verifikasi/sampel/status sesuai kebutuhan kasus.'
+    ];
+    const res = _sendWahaText_(target, lines);
+    if (res.sent) res.source = recordWaha ? 'record' : 'global';
     return res;
   } catch (err) {
     return { sent: false, reason: String(err) };
@@ -1872,7 +2036,7 @@ function _normalizeWorkflowStage_(workflowStage) {
 
 function _getWritableWorkflowStagesForRole_(role) {
   role = String(role || "").trim().toLowerCase();
-  if (role === "admin") return WORKFLOW_STAGE_IDS_.slice();
+  if (_isAdminRole_(role)) return WORKFLOW_STAGE_IDS_.slice();
   if (["petugas", "surveilans", "editor", "koordinator"].includes(role)) return ["section-pelapor", "section-sampel", "section-status"];
   if (["viewer", "readonly", "read_only", "read-only"].includes(role)) return [];
   if (["inputer", "entry", "registrasi", "operator_input", "operator-input"].includes(role)) return ["section-pelapor"];
@@ -1943,7 +2107,7 @@ function _canSessionDeleteCaseRecord_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
   const verificationStatus = _normalizeVerificationStatus_((data && data['Status Verifikasi EPID']) || '');
   const isPending = verificationStatus === 'PENDING' || verificationStatus === 'BELUM DIVERIFIKASI' || verificationStatus === 'BELUM VERIFIKASI';
-  if (role === 'admin') return true;
+  if (_isAdminRole_(role)) return true;
   if (["viewer", "readonly", "read_only", "read-only"].indexOf(role) !== -1) return false;
   if (!isPending) return false;
   return _canSessionReadRecordByScope_(sess, dx, data || {});
@@ -1951,7 +2115,7 @@ function _canSessionDeleteCaseRecord_(sess, dx, data) {
 
 function _canSessionReadRecordByScope_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
-  if (role === 'admin') return true;
+  if (_isAdminRole_(role)) return true;
 
   const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
   if (userScopeLevel === 'dinkes') return true;
@@ -1992,7 +2156,7 @@ function _canRoleWriteSampleStage_(role) {
 
 function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || "").trim().toLowerCase();
-  if (role === "admin") return true;
+  if (_isAdminRole_(role)) return true;
 
   if (normalizedStage === "section-verifikasi") {
     throw new Error("Proses verifikasi hanya dapat dilakukan oleh admin.");

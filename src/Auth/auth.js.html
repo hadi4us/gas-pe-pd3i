@@ -6,6 +6,7 @@
   (function () {
     let __authInitialized = false;
     let loginAttempt = 0;
+    let otpCooldownTimer = null;
     const AUTH_RESTORE_TIMEOUT_MS = 8000;
     let AUTH_SESSION_META = null;
 
@@ -24,6 +25,8 @@
       const loginAlert = document.getElementById("login-alert");
       const loginCard = document.getElementById("login-card");
       const btnLogin = document.getElementById("btn-login");
+      const btnSendOtp = document.getElementById("btn-send-otp");
+      const otpSection = document.getElementById("otp-section");
 
       const pinForm = document.getElementById("pin-form");
       const pinAlert = document.getElementById("pin-alert");
@@ -34,9 +37,11 @@
       const btnClosePinModal = document.getElementById("btn-close-pin-modal");
       const btnLogout = document.getElementById("btn-logout");
 
-      const loginUsername = document.getElementById("login-username");
-      const loginPin = document.getElementById("login-pin");
-      const loginCaptchaAnswerInput = document.getElementById("login-captcha-answer");
+      const loginEmail = document.getElementById("login-email");
+      const loginOtp = document.getElementById("login-otp");
+      const loginUsername = loginEmail;
+      const loginPin = loginOtp;
+      const loginCaptchaAnswerInput = null;
 
       const pinOld = document.getElementById("pin-old");
       const pinNew = document.getElementById("pin-new");
@@ -49,7 +54,7 @@
       function setCredentialInputsEnabled(mode) {
         const enableLogin = mode === 'login';
         const enablePin = mode === 'pin';
-        [loginUsername, loginPin, loginCaptchaAnswerInput, btnLogin].forEach(function(el) {
+        [loginEmail, loginOtp, btnLogin, btnSendOtp].forEach(function(el) {
           if (!el) return;
           el.disabled = !enableLogin;
         });
@@ -59,13 +64,25 @@
         });
       }
 
-      function refreshLoginCaptcha() {
-        if (typeof forceRenderLoginCaptcha === "function") {
-          forceRenderLoginCaptcha(0);
-        } else if (typeof makeLocalCaptcha === "function") {
-          makeLocalCaptcha("login");
-        }
-        if (loginCaptchaAnswerInput) loginCaptchaAnswerInput.value = "";
+      function refreshLoginCaptcha() {}
+
+      function startOtpCooldown(seconds) {
+        if (!btnSendOtp) return;
+        let remaining = Number(seconds || 60);
+        if (otpCooldownTimer) clearInterval(otpCooldownTimer);
+        btnSendOtp.disabled = true;
+        btnSendOtp.innerHTML = `<span>Kirim OTP (${remaining}d)</span>`;
+        otpCooldownTimer = setInterval(function () {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(otpCooldownTimer);
+            otpCooldownTimer = null;
+            btnSendOtp.disabled = false;
+            btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+            return;
+          }
+          btnSendOtp.innerHTML = `<span>Kirim OTP (${remaining}d)</span>`;
+        }, 1000);
       }
 
       function refreshPinCaptcha() {
@@ -115,7 +132,7 @@
         }
 
         if (adminMenuWrap) {
-          if (role === "admin") adminMenuWrap.classList.remove("hidden");
+          if (role === "admin" || role === "super-admin") adminMenuWrap.classList.remove("hidden");
           else adminMenuWrap.classList.add("hidden");
         }
 
@@ -198,62 +215,59 @@
 
       bindIdleEvents(refreshIdleSession);
 
-      if (toggleLoginPin && loginPin) {
-        toggleLoginPin.addEventListener("click", function () {
-          const masked = String(loginPin.dataset.masked || '1') !== '0';
-          loginPin.dataset.masked = masked ? '0' : '1';
-          loginPin.type = 'text';
-          loginPin.style.webkitTextSecurity = masked ? 'none' : 'disc';
-          loginPin.style.textSecurity = masked ? 'none' : 'disc';
-          this.innerHTML = masked
-            ? '<i class="fas fa-eye-slash"></i>'
-            : '<i class="fas fa-eye"></i>';
+      if (btnSendOtp) {
+        btnSendOtp.addEventListener("click", function () {
+          hideAlert(loginAlert);
+          const email = ((loginEmail && loginEmail.value) || "").trim();
+          if (!email) {
+            setAlert(loginAlert, "Masukkan alamat Gmail terlebih dahulu.", false);
+            return;
+          }
+          if (!safeGsRun()) {
+            setAlert(loginAlert, "Login hanya bisa digunakan di WebApp (/exec).", false);
+            return;
+          }
+          btnSendOtp.disabled = true;
+          btnSendOtp.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengirim...`;
+          google.script.run
+            .withSuccessHandler(function (res) {
+              if (!res || res.status !== "success") {
+                setAlert(loginAlert, (res && res.message) || "Gagal mengirim OTP.", false);
+                if (res && res.cooldownSec) startOtpCooldown(res.cooldownSec);
+                else {
+                  btnSendOtp.disabled = false;
+                  btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+                }
+                return;
+              }
+              setAlert(loginAlert, res.message || "OTP sudah dikirim ke Gmail Anda.", true);
+              if (otpSection) otpSection.classList.remove("hidden");
+              if (loginOtp) loginOtp.focus();
+              startOtpCooldown(res.cooldownSec || 60);
+            })
+            .withFailureHandler(function (err) {
+              console.error("requestLoginOtp failed:", err);
+              setAlert(loginAlert, "Gagal mengirim OTP. Coba lagi.", false);
+              btnSendOtp.disabled = false;
+              btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+            })
+            .requestLoginOtp(email);
         });
-      }
-
-      if (btnRefreshCaptcha) {
-        btnRefreshCaptcha.addEventListener("click", refreshLoginCaptcha);
-      }
-
-      if (btnRefreshPinCaptcha) {
-        btnRefreshPinCaptcha.addEventListener("click", refreshPinCaptcha);
       }
 
       if (loginForm) {
         loginForm.addEventListener("submit", function (e) {
           e.preventDefault();
           hideAlert(loginAlert);
+          const email = ((loginEmail && loginEmail.value) || "").trim();
+          const otp = ((loginOtp && loginOtp.value) || "").trim();
 
-          const username = ((loginUsername && loginUsername.value) || "").trim();
-          const pin = ((loginPin && loginPin.value) || "").trim();
-          const capAns = Number(((loginCaptchaAnswerInput && loginCaptchaAnswerInput.value) || "").trim());
-
-          if (!username || !pin) {
-            setAlert(loginAlert, "Username dan password wajib diisi.", false);
+          if (!email || !otp) {
+            setAlert(loginAlert, "Email dan OTP wajib diisi.", false);
             if (loginCard) {
               loginCard.classList.add("shake");
               setTimeout(() => loginCard.classList.remove("shake"), 450);
             }
-            return;
-          }
-
-          if (!Number.isFinite(capAns)) {
-            setAlert(loginAlert, "Jawaban captcha harus angka.", false);
-            return;
-          }
-
-          if (loginCaptchaAnswer === null || typeof loginCaptchaAnswer === "undefined") {
-            setAlert(loginAlert, "Captcha belum siap. Silakan refresh captcha.", false);
-            refreshLoginCaptcha();
-            return;
-          }
-
-          if (capAns !== loginCaptchaAnswer) {
-            setAlert(loginAlert, "Captcha salah. Silakan coba lagi.", false);
-            if (typeof showCaptchaError === "function") {
-              showCaptchaError("captcha-error", "Captcha salah. Silakan coba lagi.");
-            }
-            refreshLoginCaptcha();
             return;
           }
 
@@ -273,14 +287,11 @@
                 btnLogin.disabled = false;
                 btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
               }
-
               if (!res || res.status !== "success") {
                 loginAttempt++;
                 setAlert(loginAlert, (res && res.message) || "Login gagal.", false);
-                refreshLoginCaptcha();
                 return;
               }
-
               loginAttempt = 0;
               SESSION_TOKEN = res.token || "";
               SESSION_USER = res.user || null;
@@ -290,24 +301,21 @@
                 issuedAt: Number(res.issuedAt || 0),
                 expiresAt: Number(res.expiresAt || 0)
               });
-
               saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
               setLoggedInUI(SESSION_USER);
               refreshIdleSession();
-
               if (window.loadFaskesRealtime) window.loadFaskesRealtime();
               if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
             })
             .withFailureHandler(function (err) {
-              console.error("authLogin failed:", err);
+              console.error("verifyLoginOtp failed:", err);
               if (btnLogin) {
                 btnLogin.disabled = false;
                 btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
               }
               setAlert(loginAlert, "Login gagal. Coba lagi.", false);
-              refreshLoginCaptcha();
             })
-            .authLogin(username, pin);
+            .verifyLoginOtp(email, otp);
         });
       }
 
@@ -452,10 +460,33 @@
         }
 
         let restoreFinished = false;
+        const optimisticRestoreTimeout = savedUser ? window.setTimeout(function () {
+          if (restoreFinished) return;
+          SESSION_TOKEN = savedToken;
+          SESSION_USER = savedUser;
+          try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
+          setLoggedInUI(SESSION_USER);
+          refreshIdleSession();
+          if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+          if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
+          if (typeof window.initPieWorkspace === 'function') {
+            try { window.initPieWorkspace(); } catch (e) { console.warn('initPieWorkspace after optimistic restore failed:', e); }
+          }
+        }, 3000) : null;
+
         const restoreTimeout = window.setTimeout(function () {
           if (restoreFinished) return;
           restoreFinished = true;
+          if (optimisticRestoreTimeout) window.clearTimeout(optimisticRestoreTimeout);
           console.warn("authCheck timeout after", AUTH_RESTORE_TIMEOUT_MS, "ms");
+          if (savedUser) {
+            SESSION_TOKEN = savedToken;
+            SESSION_USER = savedUser;
+            try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
+            setLoggedInUI(SESSION_USER);
+            refreshIdleSession();
+            return;
+          }
           setLoggedOutUI();
           setAlert(loginAlert, "Pemeriksaan sesi terlalu lama. Silakan login ulang.", false);
         }, AUTH_RESTORE_TIMEOUT_MS);
@@ -463,6 +494,7 @@
         function finishRestoreSession(action) {
           if (restoreFinished) return false;
           restoreFinished = true;
+          if (optimisticRestoreTimeout) window.clearTimeout(optimisticRestoreTimeout);
           window.clearTimeout(restoreTimeout);
           if (typeof action === "function") action();
           return true;
@@ -476,7 +508,7 @@
                 return;
               }
 
-              SESSION_TOKEN = savedToken;
+              SESSION_TOKEN = (res && res.token) || savedToken;
               SESSION_USER = (res && res.user) || savedUser || null;
               try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
               setAuthSessionMeta({
@@ -491,6 +523,9 @@
 
               if (window.loadFaskesRealtime) window.loadFaskesRealtime();
               if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
+              if (typeof window.initPieWorkspace === 'function') {
+                try { window.initPieWorkspace(); } catch (e) { console.warn('initPieWorkspace after auth restore failed:', e); }
+              }
             });
           })
           .withFailureHandler(function () {
@@ -508,6 +543,18 @@
 
       restoreSessionIfAny();
     }
+
+    window.setTimeout(function () {
+      const overlay = document.getElementById("auth-boot-overlay");
+      const app = document.getElementById("app");
+      const loginModal = document.getElementById("login-modal");
+      const appHidden = app && app.classList.contains("hidden");
+      const loginHidden = loginModal && loginModal.classList.contains("hidden");
+      if (overlay && !overlay.classList.contains("hidden") && appHidden && loginHidden) {
+        overlay.classList.add("hidden");
+        if (loginModal && typeof openModal === "function") openModal(loginModal);
+      }
+    }, AUTH_RESTORE_TIMEOUT_MS + 2000);
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initAuthModule);

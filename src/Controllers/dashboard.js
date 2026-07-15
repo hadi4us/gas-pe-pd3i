@@ -233,7 +233,7 @@ function _getPengampuByWilayahCachedForDashboard_(kecamatan, kelurahan, kabKota)
 }
 
 function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPengampu, rawKodePuskesmas, kabKota, kecamatan, kelurahan) {
-  if (role === 'admin') return true;
+  if ((role === 'admin' || role === 'super-admin' || role === 'superadmin')) return true;
 
   const directKode = _normalizeWilayahKey_(rawKodePuskesmas || '');
   const directUnit = _normalizeWilayahKey_(rawPuskesmasPengampu || '');
@@ -246,7 +246,7 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
   const normKabKota = _normalizeWilayahKey_(kabKota || '');
   if (!normKecamatan || !normKelurahan) {
     // Fallback for faskes non-puskesmas with scope-level access
-    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
     const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
     if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
@@ -258,7 +258,7 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
     const pengampu = _getPengampuByWilayahCachedForDashboard_(normKecamatan, normKelurahan, normKabKota);
     if (!pengampu || !pengampu.found) {
       // Fallback: faskes non-puskesmas with scope-level access
-      const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+      const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
       const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
       const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
       if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
@@ -269,7 +269,7 @@ function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPen
     const mappedUnit = _normalizeWilayahKey_(pengampu.namaPuskesmas || '');
     if ((userKode && mappedKode && userKode === mappedKode) || (userUnit && mappedUnit && userUnit === mappedUnit)) return true;
     // Fallback: even if puskesmas mapping doesn't match, check territorial scope
-    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
+    const userScopeLevel = String((sess && sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userKecamatan = _normalizeWilayahKey_((sess && sess.user && sess.user.kecamatan) || '');
     const userKabKota = _normalizeWilayahKey_((sess && sess.user && sess.user.kabKota) || '');
     if (userScopeLevel === 'kecamatan' && userKecamatan && normKecamatan && userKecamatan === normKecamatan) return true;
@@ -292,7 +292,7 @@ function _isDashboardInputerMatch_(sess, inputerUsername, inputerName) {
 function _buildWorkflowInboxData_(sess, dx, options) {
   options = options || {};
   const summaryOnly = !!options.summaryOnly;
-  const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+  const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
   const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
   const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
   const dxNorm = String(dx || '').trim().toUpperCase();
@@ -399,20 +399,20 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       const sampleDone = normalizedSampelDilakukan === 'TIDAK' || (normalizedSampelDilakukan === 'YA' && !!normalizedInterpretasi && normalizedInterpretasi !== 'BELUM KELUAR');
       const isFinalStatus = ['DISCARDED', 'SEMBUH', 'MENINGGAL', 'LOST TO FOLLOW-UP', 'LOST TO FOLLOW UP'].indexOf(normalizedStatusKasus) !== -1;
       const sampleStagePending = normalizedStatus === 'TERVERIFIKASI'
-        && (role === 'admin' || scopeMatch)
+        && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)
         && sampleRelevant
         && !isFinalStatus
         && !sampleDone;
 
       if (summaryOnly) {
-        const scopedForWork = role === 'admin' || scopeMatch;
+        const scopedForWork = (role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch;
         if (scopedForWork) {
           totalScopedRecords += 1;
           if (normalizedStatus === 'TERVERIFIKASI') verifiedRecords += 1;
           if (kelurahan) kelurahanSet[kelurahan] = true;
           dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
         }
-        if (role === 'admin' && normalizedStatus === 'PENDING') pendingVerificationCount += 1;
+        if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && normalizedStatus === 'PENDING') pendingVerificationCount += 1;
         if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (scopedForWork || inputerMatch)) revisionQueueCount += 1;
         if (normalizedStatus === 'TERVERIFIKASI' && scopedForWork) verificationDoneCount += 1;
         if (sampleStagePending) sampleQueueCount += 1;
@@ -447,14 +447,14 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
       };
 
-      if (role === 'admin' || scopeMatch) {
+      if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch) {
         totalScopedRecords += 1;
         if (normalizedStatus === 'TERVERIFIKASI') verifiedRecords += 1;
         if (item.kelurahan) kelurahanSet[item.kelurahan] = true;
         dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
       }
 
-      if (role === 'admin' && normalizedStatus === 'PENDING') {
+      if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && normalizedStatus === 'PENDING') {
         if (pendingVerification.length < QUEUE_LIMIT) {
         pendingVerification.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
@@ -462,17 +462,17 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }));
         }
       }
-      if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (role === 'admin' || scopeMatch || inputerMatch)) {
+      if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch || inputerMatch)) {
         if (revisionQueue.length < QUEUE_LIMIT) {
         revisionQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
-          __workflowStageLabel: inputerMatch && !scopeMatch && role !== 'admin' ? 'Kasus ditolak - perbaiki input' : 'Antrian revisi puskesmas pengampu',
+          __workflowStageLabel: inputerMatch && !scopeMatch && !(role === 'admin' || role === 'super-admin' || role === 'superadmin') ? 'Kasus ditolak - perbaiki input' : 'Antrian revisi puskesmas pengampu',
           __queueStatusLabel: workflowLabel || (normalizedStatus === 'DITOLAK' ? 'Ditolak' : 'Perlu revisi'),
           __queueStatusClass: 'is-danger'
         }));
         }
       }
-      if (normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch)) {
+      if (normalizedStatus === 'TERVERIFIKASI' && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
         if (verificationDone.length < QUEUE_LIMIT) {
         verificationDone.push(Object.assign({}, item, {
           __workflowStageState: 'done',
@@ -493,7 +493,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
           __queueStatusClass: 'is-warning'
         }));
         }
-      } else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && (role === 'admin' || scopeMatch) && sampleDone) {
+      } else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch) && sampleDone) {
         if (sampleDoneQueue.length < QUEUE_LIMIT) {
         sampleDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
@@ -503,7 +503,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }));
         }
       }
-      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && (role === 'admin' || scopeMatch)) {
+      if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
         if (statusQueue.length < QUEUE_LIMIT) {
         statusQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
@@ -512,7 +512,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
           __queueStatusClass: normalizedStatusKasus === 'KONFIRMASI' ? 'is-success' : 'is-warning'
         }));
         }
-      } else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && (role === 'admin' || scopeMatch)) {
+      } else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
         if (statusDoneQueue.length < QUEUE_LIMIT) {
         statusDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
@@ -631,7 +631,7 @@ function getWorkflowInbox(dx, token, options) {
       cache = null;
     }
 
-    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
     const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
     const dxNorm = String(dx || '').trim().toUpperCase() || 'ALL';
@@ -696,7 +696,7 @@ function getOverviewSummary(token) {
       cache = null;
     }
 
-    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
+    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
     const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
     const cacheKey = ['overview-summary', role, userUnit, userKode].join(':');
@@ -744,7 +744,7 @@ function getOverviewSummary(token) {
 }
 
 function _matchesDashboardDrilldown_(record, type, key) {
-  var normalizedType = String(type || '').trim().toLowerCase();
+  var normalizedType = String(type || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
   var rawKey = String(key || '').trim();
   if (!normalizedType || !rawKey) return false;
   if (normalizedType === 'kecamatan') {
@@ -924,7 +924,7 @@ function getDashboardStats(dx, tahun, token) {
     const statusSinkronisasi = idxStatusSync !== -1 ? { synced: 0, failed: 0, pending: 0 } : null;
     const statusNotifikasiRevisi = idxRevisionNotif !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
     const statusTelegramRevisi = idxRevisionTelegram !== -1 ? { sent: 0, failed: 0, pending: 0 } : null;
-    const role = String((sess.user && sess.user.role) || "").trim().toLowerCase();
+    const role = String((sess.user && sess.user.role) || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
     const isAdmin = role === "admin";
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
     const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
@@ -1268,7 +1268,7 @@ function getDashboardDrilldown(dx, tahun, drilldown, token) {
       return { status: 'error', message: 'DX tidak didukung: ' + dx };
     }
 
-    const type = String(drilldown && drilldown.type || '').trim().toLowerCase();
+    const type = String(drilldown && drilldown.type || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const key = String(drilldown && drilldown.key || '').trim();
     const label = String(drilldown && drilldown.label || key || '').trim();
     if (!type || !key) {
@@ -1363,7 +1363,7 @@ function exportToCsv(dx, filters, token) {
   }
 
   // Req 7.2: tolak role viewer
-  const role = String((sess.user && sess.user.role) || "").trim().toLowerCase();
+  const role = String((sess.user && sess.user.role) || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
   if (role === "viewer") {
     return { status: "error", message: "Akses ditolak." };
   }

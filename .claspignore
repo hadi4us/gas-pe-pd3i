@@ -33,3 +33,7 @@ src/.github/**
 src/docs/**
 src/tests/**
 src/node_modules/**
+src/**/*.test.js
+src/**/*.node.test.js
+**/*.test.js
+**/*.node.test.js

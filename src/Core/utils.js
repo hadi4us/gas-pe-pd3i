@@ -7,14 +7,16 @@ const AUTH_CACHE = CacheService.getScriptCache();
 const Session_Manager = {
   /**
    * Baca TTL untuk role tertentu dari Config_Manager.
-   * Default: admin=1800, petugas=3600, viewer=7200
+   * Default: semua role 21600 detik (6 jam)
    * @param {string} role
    * @returns {number} TTL dalam detik
    */
   getTtlForRole: function (role) {
-    const defaults = { admin: 1800, petugas: 3600, viewer: 7200 };
+    const defaults = { admin: 21600, "super-admin": 21600, superadmin: 21600, petugas: 21600, viewer: 21600 };
     const keyMap = {
       admin: "SESSION_TTL_ADMIN",
+      "super-admin": "SESSION_TTL_ADMIN",
+      superadmin: "SESSION_TTL_ADMIN",
       petugas: "SESSION_TTL_PETUGAS",
       surveilans: "SESSION_TTL_PETUGAS",
       editor: "SESSION_TTL_PETUGAS",
@@ -66,6 +68,7 @@ function resolveHtmlFileName_(filename) {
     : [
         "Views/" + name,
         "Auth/" + name,
+        "SARS/" + name,
         name
       ];
 

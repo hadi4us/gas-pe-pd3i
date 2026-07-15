@@ -16,7 +16,7 @@
 
   const SESSION_STORAGE_KEY = "pd3i_session_token";
   const SESSION_USER_KEY = "pd3i_session_user";
-  const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 menit
+  const IDLE_TIMEOUT_MS = 6 * 60 * 60 * 1000; // 6 jam
 
   // ------------------------------------------------------------
   // GLOBAL STATE
@@ -98,6 +98,202 @@
     el.textContent = "";
   }
 
+  function createPd3iModalFocusTrap(modalRoot, options) {
+    const cfg = options || {};
+    const previousFocus = document.activeElement && document.activeElement.focus ? document.activeElement : null;
+    const selector = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const getFocusable = function() {
+      return Array.prototype.slice.call((modalRoot || document).querySelectorAll(selector)).filter(function(el) {
+        return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+      });
+    };
+    const onKeydown = function(e) {
+      if (e.key !== 'Tab') return;
+      const focusable = getFocusable();
+      if (!focusable.length) {
+        e.preventDefault();
+        if (modalRoot && modalRoot.focus) modalRoot.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeydown);
+    return function releasePd3iModalFocusTrap() {
+      document.removeEventListener('keydown', onKeydown);
+      if (cfg.restoreFocus !== false && previousFocus && document.contains(previousFocus)) {
+        try { previousFocus.focus(); } catch (e) {}
+      }
+    };
+  }
+
+  function pd3iConfirmDialog(options) {
+    const cfg = options || {};
+    const title = escapeHtml(cfg.title || 'Konfirmasi tindakan');
+    const message = cfg.htmlMessage ? String(cfg.htmlMessage) : escapeHtml(cfg.message || 'Lanjutkan tindakan ini?');
+    const confirmLabel = escapeHtml(cfg.confirmLabel || 'Lanjutkan');
+    const cancelLabel = escapeHtml(cfg.cancelLabel || 'Batal');
+    const danger = cfg.variant === 'danger';
+    return new Promise(function(resolve) {
+      const existing = document.getElementById('pd3i-confirm-dialog');
+      if (existing) existing.remove();
+      const wrap = document.createElement('div');
+      wrap.id = 'pd3i-confirm-dialog';
+      wrap.className = 'pd3i-confirm-backdrop';
+      wrap.setAttribute('role', 'presentation');
+      wrap.innerHTML = `<div class="pd3i-confirm-card" role="dialog" aria-modal="true" aria-labelledby="pd3i-confirm-title" aria-describedby="pd3i-confirm-message" tabindex="-1">
+        <div class="pd3i-confirm-title" id="pd3i-confirm-title">${title}</div>
+        <div class="pd3i-confirm-message" id="pd3i-confirm-message">${message}</div>
+        <div class="pd3i-confirm-actions">
+          <button type="button" class="pd3i-confirm-btn is-secondary" data-pd3i-confirm="cancel">${cancelLabel}</button>
+          <button type="button" class="pd3i-confirm-btn ${danger ? 'is-danger' : 'is-primary'}" data-pd3i-confirm="ok">${confirmLabel}</button>
+        </div>
+      </div>`;
+      document.body.appendChild(wrap);
+      const card = wrap.querySelector('.pd3i-confirm-card');
+      const releaseFocusTrap = createPd3iModalFocusTrap(card);
+      const cleanup = function(value) {
+        document.removeEventListener('keydown', onKeydown);
+        releaseFocusTrap();
+        wrap.remove();
+        resolve(value);
+      };
+      const onKeydown = function(e) {
+        if (e.key === 'Escape') cleanup(false);
+      };
+      wrap.addEventListener('click', function(e) {
+        if (e.target === wrap) cleanup(false);
+        const action = e.target && e.target.getAttribute && e.target.getAttribute('data-pd3i-confirm');
+        if (action === 'cancel') cleanup(false);
+        if (action === 'ok') cleanup(true);
+      });
+      document.addEventListener('keydown', onKeydown);
+      try { card.focus(); } catch (e) {}
+    });
+  }
+
+  function pd3iPromptDialog(options) {
+    const cfg = options || {};
+    const title = escapeHtml(cfg.title || 'Isi keterangan');
+    const message = escapeHtml(cfg.message || 'Masukkan keterangan untuk melanjutkan.');
+    const confirmLabel = escapeHtml(cfg.confirmLabel || 'Simpan');
+    const cancelLabel = escapeHtml(cfg.cancelLabel || 'Batal');
+    const placeholder = escapeHtml(cfg.placeholder || 'Tulis keterangan...');
+    const defaultValue = escapeHtml(cfg.defaultValue || '');
+    const required = cfg.required !== false;
+    const danger = cfg.variant === 'danger';
+    return new Promise(function(resolve) {
+      const existing = document.getElementById('pd3i-confirm-dialog');
+      if (existing) existing.remove();
+      const wrap = document.createElement('div');
+      wrap.id = 'pd3i-confirm-dialog';
+      wrap.className = 'pd3i-confirm-backdrop';
+      wrap.setAttribute('role', 'presentation');
+      wrap.innerHTML = `<div class="pd3i-confirm-card" role="dialog" aria-modal="true" aria-labelledby="pd3i-confirm-title" aria-describedby="pd3i-confirm-message" tabindex="-1">
+        <div class="pd3i-confirm-title" id="pd3i-confirm-title">${title}</div>
+        <div class="pd3i-confirm-message" id="pd3i-confirm-message">${message}</div>
+        <label class="pd3i-prompt-label" for="pd3i-prompt-input">Keterangan</label>
+        <textarea id="pd3i-prompt-input" class="pd3i-prompt-input" rows="3" placeholder="${placeholder}">${defaultValue}</textarea>
+        <div class="pd3i-prompt-error" hidden>Keterangan wajib diisi.</div>
+        <div class="pd3i-confirm-actions">
+          <button type="button" class="pd3i-confirm-btn is-secondary" data-pd3i-confirm="cancel">${cancelLabel}</button>
+          <button type="button" class="pd3i-confirm-btn ${danger ? 'is-danger' : 'is-primary'}" data-pd3i-confirm="ok">${confirmLabel}</button>
+        </div>
+      </div>`;
+      document.body.appendChild(wrap);
+      const card = wrap.querySelector('.pd3i-confirm-card');
+      const input = wrap.querySelector('#pd3i-prompt-input');
+      const error = wrap.querySelector('.pd3i-prompt-error');
+      const releaseFocusTrap = createPd3iModalFocusTrap(card);
+      const cleanup = function(value) {
+        document.removeEventListener('keydown', onKeydown);
+        releaseFocusTrap();
+        wrap.remove();
+        resolve(value);
+      };
+      const submit = function() {
+        const value = String(input.value || '').trim();
+        if (required && !value) {
+          if (error) error.hidden = false;
+          input.focus();
+          return;
+        }
+        cleanup(value);
+      };
+      const onKeydown = function(e) {
+        if (e.key === 'Escape') cleanup(null);
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') submit();
+      };
+      wrap.addEventListener('click', function(e) {
+        if (e.target === wrap) cleanup(null);
+        const action = e.target && e.target.getAttribute && e.target.getAttribute('data-pd3i-confirm');
+        if (action === 'cancel') cleanup(null);
+        if (action === 'ok') submit();
+      });
+      document.addEventListener('keydown', onKeydown);
+      try { input.focus(); input.select(); } catch (e) { try { card.focus(); } catch (_) {} }
+    });
+  }
+
+  if (typeof window !== 'undefined') {
+    window.createPd3iModalFocusTrap = createPd3iModalFocusTrap;
+    window.pd3iConfirmDialog = pd3iConfirmDialog;
+    window.pd3iPromptDialog = pd3iPromptDialog;
+  }
+
+  function renderPd3iSkeleton(options) {
+    const cfg = options || {};
+    const rows = Math.max(1, Math.min(8, Number(cfg.rows || 3)));
+    const title = cfg.title ? '<div class="pd3i-skeleton-title">'+escapeHtml(cfg.title)+'</div>' : '';
+    let body = '';
+    for (let i = 0; i < rows; i++) {
+      body += '<div class="pd3i-skeleton-row"><span></span><span></span><span></span></div>';
+    }
+    return '<div class="pd3i-skeleton" role="status" aria-live="polite" aria-label="Memuat data">'+title+body+'</div>';
+  }
+
+  if (typeof window !== 'undefined') {
+    window.renderPd3iSkeleton = renderPd3iSkeleton;
+  }
+
+  function renderPd3iUiState(options) {
+    const cfg = options || {};
+    const type = String(cfg.type || 'empty').toLowerCase();
+    const title = escapeHtml(cfg.title || (type === 'loading' ? 'Memuat data…' : type === 'error' ? 'Data belum berhasil dimuat' : 'Belum ada data'));
+    const message = escapeHtml(cfg.message || '');
+    const iconMap = {
+      loading: 'fa-spinner fa-spin',
+      empty: 'fa-circle-info',
+      error: 'fa-triangle-exclamation',
+      success: 'fa-check-circle'
+    };
+    const actionHtml = cfg.actionLabel && cfg.actionAttr
+      ? `<button type="button" class="pd3i-state-action" ${cfg.actionAttr}>${escapeHtml(cfg.actionLabel)}</button>`
+      : '';
+    return `<div class="pd3i-ui-state is-${escapeHtml(type)}" role="status" aria-live="polite">
+      <div class="pd3i-ui-state-icon"><i class="fas ${iconMap[type] || iconMap.empty}"></i></div>
+      <div class="pd3i-ui-state-body"><div class="pd3i-ui-state-title">${title}</div>${message ? `<div class="pd3i-ui-state-message">${message}</div>` : ''}${actionHtml}</div>
+    </div>`;
+  }
+
+  function setPd3iUiState(target, options) {
+    const el = typeof target === 'string' ? byId(target) : target;
+    if (!el) return;
+    el.innerHTML = renderPd3iUiState(options || {});
+  }
+
+  if (typeof window !== 'undefined') {
+    window.renderPd3iUiState = renderPd3iUiState;
+    window.setPd3iUiState = setPd3iUiState;
+  }
+
   function showTopAlert(msg, ok) {
     const alertBox = byId("alert-box");
     if (!alertBox) return;
@@ -126,6 +322,37 @@
     alertBox.hidden = true;
     alertBox.className = "pd3i-alert-card";
     alertBox.innerHTML = "";
+  }
+
+  function showPd3iBanner(message, options) {
+    const cfg = options || {};
+    showTopAlert(message, cfg.type === 'success' || cfg.ok === true);
+  }
+
+  function showPd3iToast(message, options) {
+    const cfg = options || {};
+    const type = String(cfg.type || (cfg.ok === false ? 'error' : 'success')).toLowerCase();
+    const stack = byId('pd3i-toast-stack');
+    const safeMessage = String(message || '').trim();
+    if (!safeMessage) return;
+    if (!stack || !document || !document.createElement) {
+      showTopAlert(safeMessage, type === 'success');
+      return;
+    }
+    const toast = document.createElement('div');
+    toast.className = 'pd3i-toast is-' + (['success','error','warning','info'].includes(type) ? type : 'info');
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.innerHTML = '<div class="pd3i-toast-icon"><i class="fas '+(type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-triangle-exclamation' : type === 'warning' ? 'fa-circle-exclamation' : 'fa-circle-info')+'"></i></div><div class="pd3i-toast-message">'+escapeHtml(safeMessage)+'</div><button type="button" class="pd3i-toast-close" aria-label="Tutup notifikasi">&times;</button>';
+    const close = function(){ toast.classList.add('is-hiding'); setTimeout(function(){ try { toast.remove(); } catch(e){} }, 180); };
+    toast.querySelector('.pd3i-toast-close').addEventListener('click', close);
+    stack.appendChild(toast);
+    const ttl = Number(cfg.durationMs || (type === 'error' ? 7000 : 4200));
+    if (ttl > 0) setTimeout(close, ttl);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.showPd3iBanner = showPd3iBanner;
+    window.showPd3iToast = showPd3iToast;
   }
 
   // ------------------------------------------------------------
@@ -407,10 +634,10 @@
   // ------------------------------------------------------------
   function getBrowserSessionStore() {
     try {
-      if (window && window.sessionStorage) return window.sessionStorage;
+      if (window && window.localStorage) return window.localStorage;
     } catch (e) {}
     try {
-      if (window && window.localStorage) return window.localStorage;
+      if (window && window.sessionStorage) return window.sessionStorage;
     } catch (e) {}
     return null;
   }
@@ -421,12 +648,6 @@
       if (!store) return;
       store.setItem(SESSION_STORAGE_KEY, token || "");
       store.setItem(SESSION_USER_KEY, JSON.stringify(user || null));
-      try {
-        if (window && window.localStorage && window.localStorage !== store) {
-          window.localStorage.removeItem(SESSION_STORAGE_KEY);
-          window.localStorage.removeItem(SESSION_USER_KEY);
-        }
-      } catch (e) {}
     } catch (e) {
       console.warn("Gagal simpan session browser:", e);
     }
@@ -434,8 +655,10 @@
 
   function getSessionTokenFromBrowser() {
     try {
-      const store = getBrowserSessionStore();
-      return store ? (store.getItem(SESSION_STORAGE_KEY) || "") : "";
+      let token = "";
+      if (window && window.localStorage) token = window.localStorage.getItem(SESSION_STORAGE_KEY) || "";
+      if (!token && window && window.sessionStorage) token = window.sessionStorage.getItem(SESSION_STORAGE_KEY) || "";
+      return token;
     } catch (e) {
       return "";
     }
@@ -443,8 +666,9 @@
 
   function getSessionUserFromBrowser() {
     try {
-      const store = getBrowserSessionStore();
-      const raw = store ? store.getItem(SESSION_USER_KEY) : "";
+      let raw = "";
+      if (window && window.localStorage) raw = window.localStorage.getItem(SESSION_USER_KEY) || "";
+      if (!raw && window && window.sessionStorage) raw = window.sessionStorage.getItem(SESSION_USER_KEY) || "";
       return raw ? JSON.parse(raw) : null;
     } catch (e) {
       return null;
@@ -453,15 +677,16 @@
 
   function clearSessionFromBrowser() {
     try {
-      const store = getBrowserSessionStore();
-      if (store) {
-        store.removeItem(SESSION_STORAGE_KEY);
-        store.removeItem(SESSION_USER_KEY);
-      }
       try {
         if (window && window.localStorage) {
           window.localStorage.removeItem(SESSION_STORAGE_KEY);
           window.localStorage.removeItem(SESSION_USER_KEY);
+        }
+      } catch (e) {}
+      try {
+        if (window && window.sessionStorage) {
+          window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+          window.sessionStorage.removeItem(SESSION_USER_KEY);
         }
       } catch (e) {}
     } catch (e) {}

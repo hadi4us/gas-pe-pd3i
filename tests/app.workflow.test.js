@@ -16,12 +16,14 @@ const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'st
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const endpointSecurityScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-endpoint-security.js'), 'utf8');
 
-test('credential UI uses password wording and accepts non-numeric passwords', () => {
-  assert.match(loginHtml, /Login petugas \(Password\) \+ Captcha/);
-  assert.match(loginHtml, />Password Akses</);
-  assert.match(loginHtml, /id="login-pin" type="text"/);
-  assert.match(loginHtml, /id="login-pin"[^>]*-webkit-text-security: disc/);
-  assert.doesNotMatch(loginHtml, /id="login-pin"[^>]*inputmode="numeric"/);
+test('credential UI uses Gmail OTP login like e-PWS Imunisasi', () => {
+  assert.match(loginHtml, /Sistem Surveilans Penyakit yang Dapat Dicegah Dengan Imunisasi/);
+  assert.match(loginHtml, />Gmail</);
+  assert.match(loginHtml, /id="login-email" type="email"/);
+  assert.match(loginHtml, /placeholder="Masukkan Gmail Anda"/);
+  assert.match(loginHtml, /id="btn-send-otp"/);
+  assert.match(loginHtml, />Kirim OTP</);
+  assert.match(loginHtml, /id="login-otp" type="text" inputmode="numeric" maxlength="6"/);
   assert.match(pinHtml, /Ubah Password Akses/);
   assert.match(pinHtml, />Password Lama</);
   assert.match(pinHtml, />Password Baru</);
@@ -30,11 +32,12 @@ test('credential UI uses password wording and accepts non-numeric passwords', ()
   assert.match(pinHtml, /id="pin-new" type="password"/);
   assert.match(pinHtml, /id="pin-new2" type="password"/);
   assert.doesNotMatch(pinHtml, /id="pin-(old|new|new2)"[^>]*inputmode="numeric"/);
-  assert.match(indexHtml, /Ubah Password/);
-  assert.match(authHtml, /Username dan password wajib diisi\./);
+  assert.doesNotMatch(indexHtml, /Ubah Password/);
+  assert.match(indexHtml, /id="btn-logout"[\s\S]*Keluar/);
+  assert.match(authHtml, /Email dan OTP wajib diisi\./);
+  assert.match(authHtml, /requestLoginOtp\(email\)/);
+  assert.match(authHtml, /verifyLoginOtp\(email, otp\)/);
   assert.match(authHtml, /Password baru minimal 6 karakter\./);
-  assert.match(authHtml, /loginPin\.type = 'text'/);
-  assert.match(authHtml, /loginPin\.style\.webkitTextSecurity = masked \? 'none' : 'disc'/);
 });
 
 test('verification success modal replaces original action buttons to avoid resetForNewEntry listener', () => {
@@ -152,7 +155,7 @@ test('deferred workflow saves can target pending records by registration id befo
 test('Edit Inputan has its own workspace and safe initial-report save marker', () => {
   const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'index.html'), 'utf8');
   const rawSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'raw_schema.js'), 'utf8');
-  assert.match(indexHtml, /data-sidebar-workspace="search"[\s\S]*?>List Kasus</);
+  assert.match(indexHtml, /data-sidebar-workspace="search"[\s\S]*?>Daftar Kasus</);
   assert.doesNotMatch(indexHtml, /data-sidebar-workspace="edit"[\s\S]*?>Koreksi Data Awal</);
   assert.match(appHtml, /search:\s*'saveInitialReportEdit'/);
   assert.match(appHtml, /__editMode = 'initial_report'/);
@@ -162,19 +165,20 @@ test('Edit Inputan has its own workspace and safe initial-report save marker', (
   assert.match(rawSchemaJs, /"Edit Inputan Perlu Review Ulang"/);
 });
 
-test('workflow route exposes one List Kasus workspace while preserving internal edit saves and stage-specific queues', () => {
-  assert.match(routesJs, /"overview", "search", "input", "verifikasi", "sampel", "status", "guide"/);
+test('workflow route exposes one Daftar Kasus workspace while preserving internal edit saves and stage-specific queues', () => {
+  assert.match(routesJs, /"overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "sars-form", "sars-dashboard", "guide", "pie"/);
   assert.doesNotMatch(routesJs, /"overview", "search", "input", "edit", "verifikasi", "sampel", "status", "guide"/);
   assert.match(appHtml, /\['search', 'edit', 'verifikasi', 'sampel', 'status'\]\.includes\(normalized\)/);
-  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'input', 'guide'\]\)/);
+  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide'\]\)/);
+  assert.match(appHtml, /if \(isSuperAdminUiRole\(role\)\) allowed\.add\('settings'\)/);
   assert.match(appHtml, /requestedWorkspace === 'edit' \? 'edit' : 'search'/);
 });
 
-test('List Kasus replaces duplicate search/edit menu and supports multi-variable filters plus edit/delete actions', () => {
-  assert.match(indexHtml, /data-sidebar-workspace="search"[\s\S]*?>List Kasus</);
+test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variable filters plus edit/delete actions', () => {
+  assert.match(indexHtml, /data-sidebar-workspace="search"[\s\S]*?>Daftar Kasus</);
   assert.doesNotMatch(indexHtml, /data-sidebar-workspace="edit"[\s\S]*?>Koreksi Data Awal</);
-  assert.match(appHtml, /title: 'List Kasus'/);
-  assert.match(appHtml, /search: 'List Kasus'/);
+  assert.match(appHtml, /title: 'Daftar Kasus'/);
+  assert.match(appHtml, /search: 'Daftar Kasus'/);
   assert.match(appHtml, /isViewerMode \? 'Buka \/ Lihat' : 'Edit'/);
   assert.match(appHtml, /class=\"pd3i-search-result-action is-edit\"/);
   assert.match(styleHtml, /\.pd3i-search-result-cta-wrap \{[\s\S]*?gap: 0\.7rem;[\s\S]*?flex-wrap: wrap;/);
@@ -202,7 +206,7 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(routesJs, /case 'deleteCaseRecord': return deleteCaseRecord\(token, payload\);/);
   assert.match(routesJs, /function deleteCaseRecord\(token, payload\)/);
   assert.match(routesJs, /function _canSessionDeleteCaseRecord_\(sess, dx, data\)/);
-  assert.match(routesJs, /role === 'admin'\) return true/);
+  assert.match(routesJs, /_isAdminRole_\(role\)\) return true/);
   assert.match(routesJs, /viewer", "readonly", "read_only", "read-only"/);
   assert.match(routesJs, /verificationStatus === 'PENDING'/);
   assert.match(routesJs, /_canSessionReadRecordByScope_\(sess, dx, data \|\| \{\}\)/);
@@ -212,7 +216,7 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
   assert.match(routesJs, /if \(diagnosisNeedle && diagnosisNeedle !== 'ALL' && String\(item\.dx \|\| ''\)\.toUpperCase\(\) !== diagnosisNeedle\) return;/);
   assert.match(routesJs, /function getWorkflowFilterOptions\(token\)/);
   assert.match(routesJs, /getSheetOrNull_\('REF_PENGAMPU'\)/);
-  assert.match(routesJs, /const canSeeAllReferenceWilayah = role === 'admin' \|\| scopeLevel === 'dinkes'/);
+  assert.match(routesJs, /const canSeeAllReferenceWilayah = _isAdminRole_\(role\) \|\| scopeLevel === 'dinkes'/);
   assert.match(routesJs, /const isRowInUserScope = function\(row\)/);
   assert.match(routesJs, /if \(!isRowInUserScope\(row\)\) return;/);
   assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
@@ -226,8 +230,8 @@ test('List Kasus replaces duplicate search/edit menu and supports multi-variable
 
 test('sidebar hides admin-only dashboard and verification menus for petugas/puskesmas sessions', () => {
   assert.match(appHtml, /function getAllowedSidebarWorkspacesForUser\(user\)/);
-  assert.match(appHtml, /role === "admin"[\s\S]*?allowed\.add\('dashboard'\)/);
-  assert.match(appHtml, /role === "admin"[\s\S]*?allowed\.add\('verifikasi'\)/);
+  assert.match(appHtml, /isAdminUiRole\(role\)[\s\S]*?allowed\.add\('dashboard'\)/);
+  assert.match(appHtml, /isAdminUiRole\(role\)[\s\S]*?allowed\.add\('verifikasi'\)/);
   assert.match(appHtml, /if \(caps\.writeStages\.indexOf\('section-sampel'\) !== -1\) allowed\.add\('sampel'\)/);
   assert.match(appHtml, /quickActions[\s\S]*?allowedWorkspaces\.has\(item\.workspace\)/);
   assert.match(appHtml, /document\.querySelectorAll\('\.pd3i-nav-link\[data-sidebar-workspace\]'\)[\s\S]*?getAllowedSidebarWorkspacesForUser\(SESSION_USER\)[\s\S]*?link\.classList\.toggle\('hidden', !allowedWorkspaces\.has\(workspace\)\)/);
@@ -316,7 +320,7 @@ test('workflow process markers make every queue transition explicit and persiste
 test('rejected cases stay visible and readable to both original inputer and mapped puskesmas pengampu', () => {
   assert.match(dashboardJs, /function _isDashboardInputerMatch_\(sess, inputerUsername, inputerName\)/);
   assert.match(dashboardJs, /normalizedStatus === 'PERLU REVISI' \|\| normalizedStatus === 'DITOLAK'/);
-  assert.match(dashboardJs, /role === 'admin' \|\| scopeMatch \|\| inputerMatch/);
+  assert.match(dashboardJs, /super-admin[\s\S]*?scopeMatch[\s\S]*?inputerMatch/);
   assert.match(routesJs, /data\["Diinput Oleh"\] = String\(user\.username \|\| actorName/);
   assert.match(routesJs, /function _isSessionOriginalInputer_\(sess, data\)/);
   assert.match(routesJs, /data\['Diinput Oleh'\]/);
@@ -325,7 +329,7 @@ test('rejected cases stay visible and readable to both original inputer and mapp
   assert.match(routesJs, /_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
-test('List Kasus direct search can show pending records created by the logged-in petugas without widening all-status reads', () => {
+test('Daftar Kasus direct search can show pending records created by the logged-in petugas without widening all-status reads', () => {
   assert.match(routesJs, /\['Diinput Oleh'\]/);
   assert.match(routesJs, /\['Input Awal Diisi Oleh'\]/);
   assert.match(routesJs, /function _isSessionOriginalInputerUsername_\(sess, data\)/);
@@ -333,7 +337,7 @@ test('List Kasus direct search can show pending records created by the logged-in
   assert.doesNotMatch(routesJs, /if \(_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
-test('List Kasus search is paginated at 10 records per page with next and previous controls', () => {
+test('Daftar Kasus search is paginated at 10 records per page with next and previous controls', () => {
   assert.match(routesJs, /const pageSize = Math\.min\(100, Math\.max\(1, parseInt\(filters\.pageSize, 10\) \|\| 10\)\);/);
   assert.match(appHtml, /const SEARCH_RESULTS_PAGE_SIZE = 10;/);
   assert.match(appHtml, /filters\.page = Math\.max\(1, parseInt\(page, 10\) \|\| 1\);/);
@@ -346,9 +350,9 @@ test('List Kasus search is paginated at 10 records per page with next and previo
 });
 
 test('verified cases leave verification queue and enter exactly sample or monitoring queue by marker', () => {
-  assert.match(dashboardJs, /role === 'admin' && normalizedStatus === 'PENDING'/);
+  assert.match(dashboardJs, /super-admin[\s\S]*?normalizedStatus === 'PENDING'/);
   assert.match(dashboardJs, /sampleStagePending = normalizedStatus === 'TERVERIFIKASI'[\s\S]*?sampleRelevant[\s\S]*?!sampleDone/);
-  assert.match(dashboardJs, /normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && \(role === 'admin' \|\| scopeMatch\)/);
+  assert.match(dashboardJs, /normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && \(\(role === 'admin' \|\| role === 'super-admin' \|\| role === 'superadmin'\) \|\| scopeMatch\)/);
   assert.match(routesJs, /samplePending[\s\S]*?currentQueue = 'input_pemeriksaan'[\s\S]*?!isFinalStatus[\s\S]*?currentQueue = 'pemantauan'/);
 });
 
@@ -507,11 +511,30 @@ test('production client logs do not leak captcha answers or noisy workflow debug
 });
 
 test('session restore does not leave auth boot overlay loading indefinitely', () => {
+  const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+  assert.ok(styleHtml.indexOf('.hidden { display: none !important; }') > styleHtml.indexOf('.flex { display: flex !important; }'));
   assert.match(authHtml, /const AUTH_RESTORE_TIMEOUT_MS = 8000;/);
   assert.match(authHtml, /const restoreTimeout = window\.setTimeout\(function \(\) \{[\s\S]*?setLoggedOutUI\(\);[\s\S]*?Pemeriksaan sesi terlalu lama\. Silakan login ulang\./);
   assert.match(authHtml, /function finishRestoreSession\(action\) \{[\s\S]*?if \(restoreFinished\) return false;[\s\S]*?window\.clearTimeout\(restoreTimeout\);/);
   assert.match(authHtml, /withSuccessHandler\(function \(res\) \{\s*finishRestoreSession\(function \(\) \{/);
   assert.match(authHtml, /withFailureHandler\(function \(\) \{\s*finishRestoreSession\(function \(\) \{\s*setLoggedOutUI\(\);/);
+});
+
+test('login session lasts 6 hours and is shared across same-browser tabs', () => {
+  const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
+  const coreUtils = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'utils.js'), 'utf8');
+  assert.match(utilsHtml, /const IDLE_TIMEOUT_MS = 6 \* 60 \* 60 \* 1000; \/\/ 6 jam/);
+  assert.match(coreUtils, /const defaults = \{ admin: 21600, "super-admin": 21600, superadmin: 21600, petugas: 21600, viewer: 21600 \};/);
+  assert.match(coreUtils, /"super-admin": "SESSION_TTL_ADMIN"/);
+  assert.match(coreUtils, /superadmin: "SESSION_TTL_ADMIN"/);
+  assert.match(utilsHtml, /function getBrowserSessionStore\(\) \{[\s\S]*?window\.localStorage[\s\S]*?return window\.localStorage;[\s\S]*?window\.sessionStorage/);
+  assert.match(utilsHtml, /function getSessionTokenFromBrowser\(\) \{[\s\S]*?window\.localStorage\.getItem\(SESSION_STORAGE_KEY\)[\s\S]*?window\.sessionStorage\.getItem\(SESSION_STORAGE_KEY\)/);
+  assert.match(utilsHtml, /function clearSessionFromBrowser\(\) \{[\s\S]*?window\.localStorage[\s\S]*?removeItem\(SESSION_STORAGE_KEY\)[\s\S]*?window\.sessionStorage[\s\S]*?removeItem\(SESSION_STORAGE_KEY\)/);
+  assert.match(authHtml, /SESSION_TOKEN = \(res && res\.token\) \|\| savedToken;/);
+  assert.match(authHtml, /if \(savedUser\) \{[\s\S]*?SESSION_TOKEN = savedToken;[\s\S]*?setLoggedInUI\(SESSION_USER\);[\s\S]*?return;/);
+  assert.match(authJs, /AUTH_CACHE\.put\("TOKEN_" \+ token, JSON\.stringify\(obj\), ttl\);[\s\S]*?token: token/);
+  const authCheckBody = authJs.match(/function authCheck\(token\) \{[\s\S]*?\n\}\n\nfunction authLogout/)[0];
+  assert.doesNotMatch(authCheckBody, /AUTH_CACHE\.remove\("TOKEN_" \+ token\)/);
 });
 
 test('dynamic tables remain horizontally scrollable on mobile forms', () => {
@@ -590,4 +613,166 @@ test('sample result specimen field supports more than one examination type in on
   assert.match(appHtml, /dataObj\["Hasil Pemeriksaan Sampel"\] = nonEmptyRows\.map/);
   assert.match(dataJs, /"Rincian Hasil Sampel"/);
   assert.match(routesJs, /'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jenis Sampel Diuji'/);
+});
+
+test('PIE quality data insight card is full-width below dashboard cards', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  assert.match(pieHtml, /pie-insight-card pie-insight-card-full[\s\S]*?<span>Kualitas data<\/span>/);
+  assert.match(pieHtml, /#section-pie \.pie-insight-card-full\{grid-column:1 \/ -1\}/);
+  assert.match(pieHtml, /#section-pie \.pie-quality-wide\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(220px,1fr\)\)/);
+  assert.ok(pieHtml.indexOf('<span>Riwayat validasi</span>') < pieHtml.indexOf('<span>Kualitas data</span>'));
+});
+
+test('mobile sidebar overlay does not reserve desktop grid column', () => {
+  const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-app \{[\s\S]*?display: block;[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-page \{[\s\S]*?width: 100%;[\s\S]*?min-width: 0;/);
+  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-sidebar \{[\s\S]*?position: fixed;[\s\S]*?transform: translateX\(-108%\);/);
+});
+
+test('PIE identity fields have consistent input box height', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  assert.match(pieHtml, /pie-identity-grid/);
+  assert.match(pieHtml, /#section-pie \.pie-identity-grid>\.pd3i-form-field\{display:flex;flex-direction:column;min-height:5\.65rem;margin:0\}/);
+  assert.match(pieHtml, /#section-pie \.pie-identity-grid>\.pd3i-form-field \.form-control,#section-pie \.pie-identity-grid>\.pd3i-form-field \.form-select\{height:2\.75rem;min-height:2\.75rem;margin-top:\.35rem\}/);
+  assert.match(pieHtml, /pie-identity-hint/);
+});
+
+test('PIE clinical detail fields sit directly below clinical signs section', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const clinicalHeader = pieHtml.indexOf('2. Tanda klinis & sindrom');
+  const detailBlock = pieHtml.indexOf('id="pie-clinical-detail"');
+  const exposureHeader = pieHtml.indexOf('3. Riwayat pajanan 0–14 hari');
+  const complicationHeader = pieHtml.indexOf('4. Komplikasi & sinyal epidemiologi');
+  assert.ok(clinicalHeader >= 0 && detailBlock > clinicalHeader);
+  assert.ok(detailBlock < exposureHeader);
+  assert.ok(detailBlock < complicationHeader);
+});
+
+test('PIE clinical detail fields map to their triggering checkboxes', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  assert.match(pieHtml, /data-key="travelRisk"/);
+  assert.match(pieHtml, /data-key="humanContactRisk"/);
+  assert.match(pieHtml, /data-pie-detail-for="symptoms"[\s\S]*?pie-symptom-notes/);
+  assert.match(pieHtml, /data-pie-detail-for="travel"[\s\S]*?pie-travel-location/);
+  assert.match(pieHtml, /data-pie-detail-for="humanContact"[\s\S]*?pie-contact-type/);
+  assert.match(pieHtml, /data-pie-detail-for="cluster"[\s\S]*?pie-cluster-id/);
+  assert.match(pieHtml, /const detailMap=\{ symptoms:symptoms, travel:!!\(facts\.travelRisk\), humanContact:!!\(facts\.humanContactRisk\|\|facts\.sexualCloseContact\|\|facts\.bodyFluidContact\|\|facts\.funeralContact\|\|facts\.contaminatedObject\|\|facts\.crowdDormitory\), cluster:!!facts\.clusterSevere \};/);
+  assert.match(pieHtml, /document\.querySelectorAll\('\[data-pie-detail-for\]'\)\.forEach/);
+});
+
+test('PIE screening covers expanded zoonosis and emerging infection signals', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const ruleEngine = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'rule_engine.js'), 'utf8');
+  const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'service.js'), 'utf8');
+  ['hemorrhage','skinLesion','livestock','carcass','unpasteurizedDairy','mosquitoVector','travelRisk','humanContactRisk'].forEach((fact) => {
+    assert.match(pieHtml, new RegExp('data-key="' + fact + '"'));
+    assert.match(service, new RegExp(fact + ': b\\(\'' + fact + '\'\\)'));
+  });
+  ['MERS_COV_OR_RESP_TRAVEL','ANTHRAX_SUSPECT','PLAGUE_OR_RODENT_FEVER','BRUCELLOSIS_SUSPECT','ARBOVIRUS_HEMORRHAGIC_SIGNAL'].forEach((disease) => {
+    assert.match(ruleEngine, new RegExp("disease_code: '" + disease + "'"));
+  });
+  assert.match(ruleEngine, /facts\.respiratory && \(facts\.travelRisk \|\| facts\.humanContactRisk\)/);
+  assert.match(ruleEngine, /facts\.skinLesion && \(facts\.livestock \|\| facts\.carcass\)/);
+  assert.match(ruleEngine, /facts\.fever && facts\.rodent/);
+  assert.match(ruleEngine, /facts\.fever && \(facts\.hemorrhage \|\| facts\.mosquitoVector\)/);
+});
+
+test('PIE required asterisks stay inline with identity labels', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  assert.match(pieHtml, /<span class="pie-field-label-text">Nama pasien <span class="text-red-500">\*<\/span><\/span><input id="pie-name"/);
+  assert.match(pieHtml, /<span class="pie-field-label-text">Faskes pelapor <span class="text-red-500">\*<\/span><\/span><input id="pie-faskes"/);
+  assert.match(pieHtml, /#section-pie \.pie-field-label-text\{display:inline-flex;align-items:baseline;gap:\.25rem;line-height:1\.2\}/);
+});
+
+test('PIE screening includes Hantavirus and Mpox signals', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const ruleEngine = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'rule_engine.js'), 'utf8');
+  const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'service.js'), 'utf8');
+  ['vesicularRash','lymphadenopathy','sexualCloseContact'].forEach((fact) => {
+    assert.match(pieHtml, new RegExp('data-key="' + fact + '"'));
+    assert.match(service, new RegExp(fact + ': b\\(\'' + fact + '\'\\)'));
+  });
+  assert.match(ruleEngine, /disease_code: 'HANTAVIRUS_SUSPECT'/);
+  assert.match(ruleEngine, /facts\.fever && facts\.rodent && \(facts\.respiratory \|\| facts\.aki \|\| facts\.hemorrhage\)/);
+  assert.match(ruleEngine, /disease_code: 'MPOX_SUSPECT'/);
+  assert.match(ruleEngine, /facts\.vesicularRash && \(facts\.fever \|\| facts\.lymphadenopathy \|\| facts\.humanContactRisk \|\| facts\.sexualCloseContact \|\| facts\.travelRisk\)/);
+});
+
+test('PIE result and follow-up cards use full-width stack without technical JSON panel', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  assert.match(pieHtml, /pie-screening-output-stack/);
+  assert.match(pieHtml, /pie-eval-card/);
+  assert.match(pieHtml, /pie-followup-card/);
+  assert.match(pieHtml, /pie-followup-grid/);
+  assert.doesNotMatch(pieHtml, /Data teknis JSON/);
+  assert.doesNotMatch(pieHtml, /id="pie-debug-json"/);
+  assert.doesNotMatch(pieHtml, /id="pie-result" class="mt-2 p-3 bg-slate-900/);
+  assert.match(pieHtml, /#section-pie \.pie-screening-output-stack\{display:grid;grid-template-columns:minmax\(0,1fr\);gap:var\(--space-4\);width:100%;min-width:0;margin-top:var\(--space-4\)\}/);
+});
+
+test('PIE screening includes INFEM priority disease signals from PDF review', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const ruleEngine = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'rule_engine.js'), 'utf8');
+  const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'service.js'), 'utf8');
+  const diseaseCodes = [
+    'EBOLA_MARBURG_VHF_SUSPECT',
+    'MENINGOCOCCAL_DISEASE_SUSPECT',
+    'POLIO_AFP_SUSPECT',
+    'CCHF_OR_VHF_TICK_LIVESTOCK',
+    'YELLOW_FEVER_SUSPECT',
+    'LASSA_FEVER_SUSPECT',
+    'RIFT_VALLEY_FEVER_SUSPECT',
+    'ZIKA_SUSPECT',
+    'RICKETTSIOSIS_SUSPECT',
+    'HFMD_EV71_SEVERE_SIGNAL',
+    'LEGIONELLOSIS_CLUSTER_SIGNAL',
+    'DISEASE_X_SEVERE_UNKNOWN_SIGNAL'
+  ];
+  diseaseCodes.forEach((code) => assert.match(ruleEngine, new RegExp("disease_code: '" + code + "'")));
+  [
+    'bodyFluidContact','funeralContact','contaminatedObject','severeVomitingDiarrhea','hepaticRenalImpairment',
+    'neckStiffness','purpuraPetechiae','acuteFlaccidParalysis','tickBite','animalBloodContact','yellowFeverUnvaccinated',
+    'maculopapularRash','conjunctivitis','arthralgia','handFootMouthVesicles','persistentVomiting','waterAerosolExposure',
+    'crowdDormitory','lowPolioImmunization','pregnant','bushForestExposure'
+  ].forEach((fact) => {
+    assert.match(pieHtml, new RegExp('data-key="' + fact + '"'));
+    assert.ok(service.includes(fact + ": b('" + fact + "')"));
+  });
+  assert.match(ruleEngine, /R-INFZOO-024/);
+  assert.match(ruleEngine, /rule ini bukan diagnosis/);
+});
+
+test('PIE checkbox cards keep equal responsive dimensions', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const grids = (pieHtml.match(/pie-choice-grid/g) || []).length;
+  assert.ok(grids >= 3, 'clinical, exposure, and epidemiology checkbox groups use equal card grid');
+  assert.match(pieHtml, /#section-pie \.pie-choice-grid\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(220px,1fr\)\);align-items:stretch;grid-auto-rows:minmax\(4\.1rem,auto\)\}/);
+  assert.match(pieHtml, /#section-pie \.pie-choice\{display:grid;grid-template-columns:1\.1rem minmax\(0,1fr\);gap:\.45rem;align-items:flex-start;padding:\.5rem \.55rem;border:1px solid #e2e8f0;border-radius:\.7rem;background:#fff;transition:\.15s ease;cursor:pointer;min-height:4\.1rem;height:100%;width:100%;min-width:0\}/);
+  assert.match(pieHtml, /#section-pie \.pie-choice small\{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;color:#64748b;line-height:1\.18;margin-top:\.08rem;font-size:\.74rem\}/);
+});
+
+test('PIE facts stay canonical without duplicate UI variables', () => {
+  const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const service = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'service.js'), 'utf8');
+  const ruleEngine = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'rule_engine.js'), 'utf8');
+  const uiFacts = [...pieHtml.matchAll(/data-key="([^"]+)"/g)].map((m) => m[1]);
+  const duplicateUiFacts = Object.entries(uiFacts.reduce((acc, k) => { acc[k] = (acc[k] || 0) + 1; return acc; }, {})).filter(([, n]) => n > 1);
+  assert.deepEqual(duplicateUiFacts, []);
+  assert.doesNotMatch(pieHtml, /data-key="travelRisk21"/);
+  assert.doesNotMatch(pieHtml, /data-key="healthcareExposure"/);
+  assert.match(pieHtml, /data-key="travelRisk"/);
+  assert.match(pieHtml, /data-key="humanContactRisk"/);
+  assert.match(service, /travelRisk: b\('travelRisk'\) \|\| b\('travelRisk21'\)/);
+  assert.match(service, /humanContactRisk: b\('humanContactRisk'\) \|\| b\('healthcareExposure'\)/);
+  assert.doesNotMatch(ruleEngine, /travelRisk21|healthcareExposure/);
+});
+
+test('Zero Reporting workspace runtime reveals native form internals', () => {
+  const appJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.js.html'), 'utf8');
+  assert.match(appJs, /function revealZeroReportingFormWorkspace\(\)/);
+  assert.match(appJs, /sarsFormSection\.querySelector\('\.pd3i-zero-reporting-form-host'\)/);
+  assert.match(appJs, /sarsFormSection\.querySelector\('#sarsForm'\)/);
+  assert.match(appJs, /querySelectorAll\('\.disease-section,\.case-row,\.row,\.row-3,\.nihil-row'\)/);
+  assert.match(appJs, /if \(isSarsFormWorkspace\) revealZeroReportingFormWorkspace\(\);/);
 });

@@ -9,181 +9,181 @@
     {
       "name": "doPost",
       "file": "src/Controllers/routes.js",
-      "line": 62,
+      "line": 137,
       "guard": "token-or-save-payload"
     },
     {
       "name": "authLogin",
       "file": "src/Auth/auth.js",
-      "line": 93,
+      "line": 234,
       "guard": "public-login"
     },
     {
       "name": "authCheck",
       "file": "src/Auth/auth.js",
-      "line": 199,
+      "line": 340,
       "guard": "token"
     },
     {
       "name": "authLogout",
       "file": "src/Auth/auth.js",
-      "line": 229,
+      "line": 370,
       "guard": "token"
     },
     {
       "name": "authChangePin",
       "file": "src/Auth/auth.js",
-      "line": 262,
+      "line": 403,
       "guard": "token"
     },
     {
       "name": "saveFormData",
       "file": "src/Controllers/routes.js",
-      "line": 90,
+      "line": 165,
       "guard": "token-or-save-payload"
     },
     {
       "name": "createInitialCase",
       "file": "src/Controllers/routes.js",
-      "line": 137,
+      "line": 212,
       "guard": "token"
     },
     {
       "name": "getEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 141,
+      "line": 216,
       "guard": "token-scope"
     },
     {
       "name": "getEditableRecord",
       "file": "src/Controllers/routes.js",
-      "line": 146,
+      "line": 221,
       "guard": "token-scope"
     },
     {
       "name": "saveInitialReportEdit",
       "file": "src/Controllers/routes.js",
-      "line": 150,
+      "line": 225,
       "guard": "token"
     },
     {
       "name": "searchEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 154,
+      "line": 229,
       "guard": "token-scope"
     },
     {
       "name": "updateInitialReport",
       "file": "src/Controllers/routes.js",
-      "line": 158,
+      "line": 233,
       "guard": "token"
     },
     {
       "name": "deleteCaseRecord",
       "file": "src/Controllers/routes.js",
-      "line": 162,
+      "line": 237,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationQueue",
       "file": "src/Controllers/routes.js",
-      "line": 224,
+      "line": 299,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationRecord",
       "file": "src/Controllers/routes.js",
-      "line": 229,
+      "line": 304,
       "guard": "token-scope"
     },
     {
       "name": "saveVerificationDecision",
       "file": "src/Controllers/routes.js",
-      "line": 233,
+      "line": 308,
       "guard": "token"
     },
     {
       "name": "getSampleQueue",
       "file": "src/Controllers/routes.js",
-      "line": 237,
+      "line": 312,
       "guard": "token-scope"
     },
     {
       "name": "getSampleRecord",
       "file": "src/Controllers/routes.js",
-      "line": 242,
+      "line": 317,
       "guard": "token-scope"
     },
     {
       "name": "saveSampleResult",
       "file": "src/Controllers/routes.js",
-      "line": 246,
+      "line": 321,
       "guard": "token"
     },
     {
       "name": "getStatusQueue",
       "file": "src/Controllers/routes.js",
-      "line": 250,
+      "line": 325,
       "guard": "token-scope"
     },
     {
       "name": "getStatusRecord",
       "file": "src/Controllers/routes.js",
-      "line": 255,
+      "line": 330,
       "guard": "token-scope"
     },
     {
       "name": "saveCaseStatusUpdate",
       "file": "src/Controllers/routes.js",
-      "line": 259,
+      "line": 334,
       "guard": "token"
     },
     {
       "name": "getRecordByKey",
       "file": "src/Controllers/routes.js",
-      "line": 318,
+      "line": 412,
       "guard": "token-scope"
     },
     {
       "name": "getRecordByEpid",
       "file": "src/Controllers/routes.js",
-      "line": 375,
+      "line": 469,
       "guard": "token-scope"
     },
     {
       "name": "getRefImunisasi",
       "file": "src/Controllers/routes.js",
-      "line": 379,
+      "line": 473,
       "guard": "token"
     },
     {
       "name": "fetchRefImunData",
       "file": "src/Controllers/routes.js",
-      "line": 423,
+      "line": 517,
       "guard": "token"
     },
     {
       "name": "getFaskesFromSheet",
       "file": "src/Controllers/routes.js",
-      "line": 427,
+      "line": 521,
       "guard": "token"
     },
     {
       "name": "getWorkflowFilterOptions",
       "file": "src/Controllers/routes.js",
-      "line": 537,
+      "line": 631,
       "guard": "token-scope"
     },
     {
       "name": "searchRecords",
       "file": "src/Controllers/routes.js",
-      "line": 719,
+      "line": 813,
       "guard": "token-scope"
     },
     {
       "name": "resolveLatestSavedMeta",
       "file": "src/Controllers/routes.js",
-      "line": 1193,
+      "line": 1300,
       "guard": "token"
     },
     {
@@ -249,67 +249,73 @@
     {
       "name": "setupConfig",
       "file": "src/Core/config.js",
-      "line": 126,
+      "line": 132,
       "guard": "admin"
     },
     {
       "name": "retryPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1247,
+      "line": 1354,
       "guard": "admin"
     },
     {
       "name": "retryTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1273,
+      "line": 1380,
       "guard": "admin"
     },
     {
       "name": "retryPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1301,
+      "line": 1408,
       "guard": "admin"
     },
     {
       "name": "retryRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1322,
+      "line": 1429,
       "guard": "admin"
     },
     {
       "name": "retryRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1349,
+      "line": 1456,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1385,
+      "line": 1492,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1397,
+      "line": 1504,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1409,
+      "line": 1516,
+      "guard": "admin"
+    },
+    {
+      "name": "retryAllPendingWahaPd3iNotification",
+      "file": "src/Controllers/routes.js",
+      "line": 1520,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1413,
+      "line": 1524,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1417,
+      "line": 1528,
       "guard": "admin"
     },
     {
@@ -352,6 +358,150 @@
       "name": "repairReferenceSheetsToScopedAccessModel",
       "file": "src/Core/migration.js",
       "line": 296,
+      "guard": "admin"
+    },
+    {
+      "name": "setupPieSheets",
+      "file": "src/PIE/schema.js",
+      "line": 37,
+      "guard": "admin"
+    },
+    {
+      "name": "pieEvaluateScreeningPayload",
+      "file": "src/PIE/service.js",
+      "line": 665,
+      "guard": "token"
+    },
+    {
+      "name": "pieCreateEncounter",
+      "file": "src/PIE/service.js",
+      "line": 373,
+      "guard": "token"
+    },
+    {
+      "name": "pieGetOperationalDashboard",
+      "file": "src/PIE/service.js",
+      "line": 417,
+      "guard": "token"
+    },
+    {
+      "name": "pieCompleteActionTask",
+      "file": "src/PIE/service.js",
+      "line": 514,
+      "guard": "token"
+    },
+    {
+      "name": "pieSetCaseClassification",
+      "file": "src/PIE/service.js",
+      "line": 539,
+      "guard": "token"
+    },
+    {
+      "name": "pieCreatePeFollowUp",
+      "file": "src/PIE/service.js",
+      "line": 172,
+      "guard": "token"
+    },
+    {
+      "name": "pieGetPeForm",
+      "file": "src/PIE/service.js",
+      "line": 195,
+      "guard": "token"
+    },
+    {
+      "name": "pieSavePeInvestigation",
+      "file": "src/PIE/service.js",
+      "line": 206,
+      "guard": "token"
+    },
+    {
+      "name": "pieCreateSpecimen",
+      "file": "src/PIE/service.js",
+      "line": 239,
+      "guard": "token"
+    },
+    {
+      "name": "pieSaveLabResult",
+      "file": "src/PIE/service.js",
+      "line": 250,
+      "guard": "token"
+    },
+    {
+      "name": "pieAddOneHealthSignal",
+      "file": "src/PIE/service.js",
+      "line": 261,
+      "guard": "token"
+    },
+    {
+      "name": "pieAddClusterLink",
+      "file": "src/PIE/service.js",
+      "line": 271,
+      "guard": "token"
+    },
+    {
+      "name": "pieArchiveCase",
+      "file": "src/PIE/service.js",
+      "line": 281,
+      "guard": "token"
+    },
+    {
+      "name": "pieAddKbRuleDraft",
+      "file": "src/PIE/service.js",
+      "line": 296,
+      "guard": "token"
+    },
+    {
+      "name": "pieApproveKbRule",
+      "file": "src/PIE/service.js",
+      "line": 308,
+      "guard": "token"
+    },
+    {
+      "name": "pieCalculateValidationMetrics",
+      "file": "src/PIE/service.js",
+      "line": 318,
+      "guard": "token"
+    },
+    {
+      "name": "pieTestKbRule",
+      "file": "src/PIE/service.js",
+      "line": 356,
+      "guard": "token"
+    },
+    {
+      "name": "pieAcknowledgeAlert",
+      "file": "src/PIE/service.js",
+      "line": 554,
+      "guard": "token"
+    },
+    {
+      "name": "pieResolveAlert",
+      "file": "src/PIE/service.js",
+      "line": 564,
+      "guard": "token"
+    },
+    {
+      "name": "pieGetNotificationConfigStatus",
+      "file": "src/PIE/service.js",
+      "line": 656,
+      "guard": "admin"
+    },
+    {
+      "name": "pieSetupTelegramConfig",
+      "file": "src/PIE/service.js",
+      "line": 574,
+      "guard": "admin"
+    },
+    {
+      "name": "pieSendTestNotification",
+      "file": "src/PIE/service.js",
+      "line": 598,
+      "guard": "admin"
+    },
+    {
+      "name": "pieGetPd3iNotificationConfigStatus",
+      "file": "src/PIE/service.js",
+      "line": 607,
       "guard": "admin"
     }
   ],

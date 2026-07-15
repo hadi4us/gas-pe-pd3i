@@ -176,7 +176,8 @@ function getAuditLog(dx, epid, token) {
       return { status: "error", message: sess.message || "Sesi tidak valid." };
     }
 
-    if (!sess.user || sess.user.role !== "admin") {
+    const role = String((sess.user && sess.user.role) || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
+  if (!sess.user || (role !== "admin" && role !== "super-admin" && role !== "superadmin")) {
       return { status: "error", message: "Akses ditolak. Hanya admin yang dapat melihat audit log." };
     }
 

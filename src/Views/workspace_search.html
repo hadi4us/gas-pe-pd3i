@@ -2,7 +2,7 @@
           <div class="pd3i-card-header-row">
             <div>
               <div id="workflow-search-eyebrow" class="pd3i-card-eyebrow">Ruang kerja data yang sudah ada</div>
-              <h3 id="workflow-search-title" class="pd3i-card-title">List Kasus</h3>
+              <h3 id="workflow-search-title" class="pd3i-card-title">Daftar Kasus</h3>
             </div>
             <span id="workflow-search-badge" class="pd3i-badge-soft">Ruang pencarian</span>
           </div>
@@ -42,20 +42,25 @@
             </button>
           </div>
           <div id="workflow-search-helper" class="pd3i-helper-text mt-3">Pilih jalur kerja terlebih dahulu. Entri baru dimulai dari formulir, sedangkan verifikasi, hasil pemeriksaan, dan pembaruan status dimulai dari pencarian data yang sudah ada.</div>
+          <div id="pd3i-core-workflow-guide" class="pd3i-core-workflow-guide mt-3" aria-label="Panduan cepat workflow PD3I">
+            <div class="pd3i-core-workflow-step"><strong>1 Cari</strong><span>Gunakan nama, EPID, alamat, kelurahan, atau orang tua/wali.</span></div>
+            <div class="pd3i-core-workflow-step"><strong>2 Pilih kasus</strong><span>Buka kartu kasus yang benar. Hindari input ulang bila data sudah ada.</span></div>
+            <div class="pd3i-core-workflow-step"><strong>3 Kerjakan tahap</strong><span>Edit data awal, verifikasi EPID, hasil lab, atau status sesuai menu aktif.</span></div>
+          </div>
           <div id="workflow-presearch-banner" class="hidden mt-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900"></div>
 
           <div id="search-container" class="hidden mt-4">
-            <div class="pd3i-search-toolbar">
+            <div class="pd3i-search-toolbar pd3i-filter-toolbar" data-component="FilterToolbar">
               <div class="pd3i-search-toolbar-head">
                 <div>
                   <div class="pd3i-card-eyebrow">Filter data</div>
                   <h4 class="pd3i-search-toolbar-title">Cari data yang sudah ada dengan cepat</h4>
                 </div>
-                <span class="pd3i-badge-soft">List Kasus</span>
+                <span class="pd3i-badge-soft">Daftar Kasus</span>
               </div>
               <div class="pd3i-search-filter-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 <div id="search-filter-epid-wrap">
-                  <input type="text" id="search-epid" class="pd3i-shell-input" placeholder="Ketik EPID / ID registrasi / nama pasien / alamat / kelurahan / orang tua" autocomplete="off" enterkeyhint="search">
+                  <input type="text" id="search-epid" class="pd3i-shell-input" aria-label="Cari EPID, ID registrasi, nama pasien, alamat, kelurahan, atau orang tua" placeholder="Ketik EPID / ID registrasi / nama pasien / alamat / kelurahan / orang tua" autocomplete="off" enterkeyhint="search">
                 </div>
                 <div id="search-filter-diagnosis-wrap">
                   <select id="search-diagnosis" class="pd3i-shell-input pd3i-shell-select" aria-label="Filter diagnosis">
@@ -99,7 +104,7 @@
                 <button type="button" id="btn-search-reset" class="pd3i-ghost-button pd3i-inline-button hidden">
                   <i class="fas fa-filter-circle-xmark"></i> Reset Filter
                 </button>
-                <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact pd3i-search-sort-select">
+                <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact pd3i-search-sort-select" aria-label="Urutkan Daftar Kasus">
                   <option value="updated_desc">Urutkan: Terbaru dulu</option>
                   <option value="name_asc">Urutkan: Nama A-Z</option>
                   <option value="name_desc">Urutkan: Nama Z-A</option>
