@@ -1,6 +1,8 @@
 <div id="auth-boot-overlay" class="fixed inset-0 z-[99] flex items-center justify-center pd3i-login-backdrop px-2 py-3">
-  <div class="pd3i-login-card pd3i-login-card-compact mx-auto text-center">
-    <div class="pd3i-login-mark mx-auto mb-3">
+  <div class="pd3i-login-card pd3i-login-card-compact mx-auto text-center relative overflow-hidden">
+    <!-- Top accent bar -->
+    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-sky-500 to-orange-500"></div>
+    <div class="pd3i-login-mark mx-auto mb-3 mt-2">
       <i class="fas fa-shield-halved"></i>
     </div>
     <div class="pd3i-login-title pd3i-login-title-small">Memeriksa sesi akses…</div>
@@ -9,8 +11,10 @@
 </div>
 
 <div id="login-modal" class="fixed inset-0 z-[100] hidden items-start justify-center pd3i-login-backdrop overflow-y-auto px-2 py-2.5 sm:px-4 sm:py-4">
-  <div id="login-card" class="pd3i-login-card mx-auto mt-4 mb-8">
-    <div class="pd3i-login-hero">
+  <div id="login-card" class="pd3i-login-card mx-auto mt-4 mb-8 relative overflow-hidden">
+    <!-- Top accent bar -->
+    <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-sky-500 to-orange-500"></div>
+    <div class="pd3i-login-hero mt-2">
       <div class="pd3i-login-mark">
         <i class="fas fa-shield-virus"></i>
       </div>
