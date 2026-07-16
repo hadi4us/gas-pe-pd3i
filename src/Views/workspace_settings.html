@@ -51,7 +51,9 @@
         <!-- Form Add/Edit User -->
         <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
           <div class="font-semibold text-xs text-slate-700 mb-2 uppercase tracking-wide" id="user-form-title">Tambah / Edit User</div>
-          <div class="grid md:grid-cols-4 gap-2">
+          
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Identitas Pengguna</div>
+          <div class="grid md:grid-cols-4 gap-2 mb-3">
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Username</label>
               <input id="user-username" class="form-control form-control-sm" placeholder="Contoh: Budi">
@@ -61,9 +63,17 @@
               <input id="user-gmail" type="email" class="form-control form-control-sm" placeholder="user@gmail.com">
             </div>
             <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase">Nama</label>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap</label>
               <input id="user-nama" class="form-control form-control-sm" placeholder="Nama Lengkap">
             </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Unit Kerja</label>
+              <input id="user-unit" class="form-control form-control-sm" placeholder="Nama Faskes/Puskesmas">
+            </div>
+          </div>
+
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Otorisasi & Wilayah</div>
+          <div class="grid md:grid-cols-4 gap-2 mb-3">
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Role</label>
               <select id="user-role" class="form-select form-select-sm">
@@ -72,10 +82,6 @@
                 <option value="admin">Admin (KB Editor)</option>
                 <option value="super-admin">Super Admin</option>
               </select>
-            </div>
-            <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase">Unit Kerja</label>
-              <input id="user-unit" class="form-control form-control-sm" placeholder="Nama Faskes/Puskesmas">
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Kode Puskesmas</label>
@@ -97,10 +103,39 @@
               </select>
             </div>
           </div>
-          <div class="mt-2">
+
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Metode Login & Keamanan (OTP)</div>
+          <div class="grid md:grid-cols-4 gap-2 mb-3">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Login Method</label>
+              <select id="user-login-method" class="form-select form-select-sm">
+                <option value="OTP_GMAIL">OTP_GMAIL</option>
+                <option value="PIN">PIN</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">OTP Enabled</label>
+              <select id="user-otp-enabled" class="form-select form-select-sm">
+                <option value="YA">YA</option>
+                <option value="TIDAK">TIDAK</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">OTP TTL (Menit)</label>
+              <input id="user-otp-ttl" type="number" class="form-control form-control-sm" placeholder="5" min="1" max="60">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">OTP Cooldown (Detik)</label>
+              <input id="user-otp-cooldown" type="number" class="form-control form-control-sm" placeholder="60" min="10" max="300">
+            </div>
+          </div>
+
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Informasi Tambahan</div>
+          <div>
             <label class="text-[10px] font-bold text-slate-500 uppercase">Catatan</label>
             <input id="user-catatan" class="form-control form-control-sm" placeholder="Keterangan tambahan">
           </div>
+
           <div class="flex gap-2 justify-end mt-3">
             <button id="btn-user-clear" type="button" class="btn btn-sm btn-outline-secondary">Reset Form</button>
             <button id="btn-user-save" type="button" class="btn btn-sm btn-primary">Simpan User</button>
@@ -120,12 +155,17 @@
                 <th class="p-2 border-b">Kode PKM</th>
                 <th class="p-2 border-b">Scope</th>
                 <th class="p-2 border-b">Status</th>
+                <th class="p-2 border-b">Method</th>
+                <th class="p-2 border-b">OTP</th>
+                <th class="p-2 border-b">TTL/Cooldown</th>
+                <th class="p-2 border-b">Last Login</th>
+                <th class="p-2 border-b">Catatan</th>
                 <th class="p-2 border-b text-center" style="width:110px">Aksi</th>
               </tr>
             </thead>
             <tbody id="user-table-body">
               <tr>
-                <td colspan="9" class="p-3 text-center text-slate-400">Sedang memuat data pengguna...</td>
+                <td colspan="14" class="p-3 text-center text-slate-400">Sedang memuat data pengguna...</td>
               </tr>
             </tbody>
           </table>
@@ -142,30 +182,47 @@ window.initSettingsWorkspace = function(){
   if(window.__SETTINGS_WORKSPACE_BOUND) return;
   window.__SETTINGS_WORKSPACE_BOUND=true;
   
+  // Robust session token resolver
+  const getSessionToken = function() {
+    try {
+      if (typeof window !== 'undefined' && window.__PD3I_SESSION_TOKEN) return window.__PD3I_SESSION_TOKEN;
+      if (typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) return SESSION_TOKEN;
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const tok = window.localStorage.getItem("pd3i_session_token");
+        if (tok) return tok;
+      }
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const tok = window.sessionStorage.getItem("pd3i_session_token");
+        if (tok) return tok;
+      }
+    } catch(e) {}
+    return "";
+  };
+  
   const fail=function(e){ window.showSettingsResult({ok:false,error:String((e&&e.message)||e)}); };
   
-  document.getElementById('btn-pie-config')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetNotificationConfigStatus(window.getPieSessionToken()); });
-  document.getElementById('btn-pie-setup')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).setupPieSheets(window.getPieSessionToken()); });
-  document.getElementById('btn-pie-validation-metrics')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieCalculateValidationMetrics(window.getPieSessionToken()); });
-  document.getElementById('btn-pie-save-config')?.addEventListener('click', function(){ const bot=document.getElementById('pie-config-bot-token')?.value||''; const chat=document.getElementById('pie-config-chat-id')?.value||''; google.script.run.withSuccessHandler(function(x){ window.showSettingsResult(x); const b=document.getElementById('pie-config-bot-token'); if(b) b.value=''; const w=document.getElementById('pie-config-waha-api-key'); if(w) w.value=''; }).withFailureHandler(fail).pieSetupTelegramConfig(window.getPieSessionToken(), {telegram_bot_token:bot, pie_telegram_chat_id:chat, telegram_chat_id:(document.getElementById('pie-config-global-chat-id')?.value||''), waha_enabled:(document.getElementById('pie-config-waha-enabled')?.value||''), waha_base_url:(document.getElementById('pie-config-waha-base-url')?.value||''), waha_session:(document.getElementById('pie-config-waha-session')?.value||''), waha_api_key:(document.getElementById('pie-config-waha-api-key')?.value||''), waha_dinkes_chat_id:(document.getElementById('pie-config-waha-dinkes')?.value||'')}); });
-  document.getElementById('btn-pie-test-telegram')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieSendTestNotification(window.getPieSessionToken()); });
-  document.getElementById('btn-pie-check-pd3i-notif')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetPd3iNotificationConfigStatus(window.getPieSessionToken()); });
-  document.getElementById('btn-pie-add-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', specimen_guidance:document.getElementById('pie-kb-specimen')?.value||'', explanation_template:document.getElementById('pie-kb-explain')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieAddKbRuleDraft(window.getPieSessionToken(), payload); });
-  document.getElementById('btn-pie-test-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', optional_facts:'', exclusion_facts:'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', explanation_template:document.getElementById('pie-kb-explain')?.value||'', facts:document.getElementById('pie-kb-test-facts')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieTestKbRule(window.getPieSessionToken(), payload); });
-  document.getElementById('btn-pie-approve-kb-rule')?.addEventListener('click', function(){ const id=document.getElementById('pie-kb-approve-id')?.value||''; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieApproveKbRule(window.getPieSessionToken(), id, 'Approved from Settings workspace'); });
+  document.getElementById('btn-pie-config')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetNotificationConfigStatus(getSessionToken()); });
+  document.getElementById('btn-pie-setup')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).setupPieSheets(getSessionToken()); });
+  document.getElementById('btn-pie-validation-metrics')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieCalculateValidationMetrics(getSessionToken()); });
+  document.getElementById('btn-pie-save-config')?.addEventListener('click', function(){ const bot=document.getElementById('pie-config-bot-token')?.value||''; const chat=document.getElementById('pie-config-chat-id')?.value||''; google.script.run.withSuccessHandler(function(x){ window.showSettingsResult(x); const b=document.getElementById('pie-config-bot-token'); if(b) b.value=''; const w=document.getElementById('pie-config-waha-api-key'); if(w) w.value=''; }).withFailureHandler(fail).pieSetupTelegramConfig(getSessionToken(), {telegram_bot_token:bot, pie_telegram_chat_id:chat, telegram_chat_id:(document.getElementById('pie-config-global-chat-id')?.value||''), waha_enabled:(document.getElementById('pie-config-waha-enabled')?.value||''), waha_base_url:(document.getElementById('pie-config-waha-base-url')?.value||''), waha_session:(document.getElementById('pie-config-waha-session')?.value||''), waha_api_key:(document.getElementById('pie-config-waha-api-key')?.value||''), waha_dinkes_chat_id:(document.getElementById('pie-config-waha-dinkes')?.value||'')}); });
+  document.getElementById('btn-pie-test-telegram')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieSendTestNotification(getSessionToken()); });
+  document.getElementById('btn-pie-check-pd3i-notif')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetPd3iNotificationConfigStatus(getSessionToken()); });
+  document.getElementById('btn-pie-add-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', specimen_guidance:document.getElementById('pie-kb-specimen')?.value||'', explanation_template:document.getElementById('pie-kb-explain')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieAddKbRuleDraft(getSessionToken(), payload); });
+  document.getElementById('btn-pie-test-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', optional_facts:'', exclusion_facts:'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', explanation_template:document.getElementById('pie-kb-explain')?.value||'', facts:document.getElementById('pie-kb-test-facts')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieTestKbRule(getSessionToken(), payload); });
+  document.getElementById('btn-pie-approve-kb-rule')?.addEventListener('click', function(){ const id=document.getElementById('pie-kb-approve-id')?.value||''; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieApproveKbRule(getSessionToken(), id, 'Approved from Settings workspace'); });
 
   // User Management functions
   const loadUserList = function() {
     const tableBody = document.getElementById('user-table-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat data pengguna...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat data pengguna...</td></tr>';
     google.script.run.withSuccessHandler(function(res) {
       if (!res.ok) {
-        tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
         return;
       }
       if (!res.users || res.users.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
         return;
       }
       
@@ -179,6 +236,10 @@ window.initSettingsWorkspace = function(){
         const kEsc = String(u.kodePuskesmas || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const sEsc = String(u.scopeLevel || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const aEsc = String(u.statusAktif || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const lEsc = String(u.loginMethod || 'OTP_GMAIL').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const oEsc = String(u.otpEnabled || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const ttlEsc = String(u.otpTtlMinutes || '5').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const cdEsc = String(u.otpCooldownSeconds || '60').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const cEsc = String(u.catatan || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         html += '<tr>' +
@@ -194,9 +255,18 @@ window.initSettingsWorkspace = function(){
               ? '<span class="text-green-600 font-bold">AKTIF</span>' 
               : '<span class="text-red-500 font-bold">NONAKTIF</span>') +
           '</td>' +
+          '<td class="p-2 border-b">' + String(u.loginMethod || 'OTP_GMAIL') + '</td>' +
+          '<td class="p-2 border-b">' +
+            (String(u.otpEnabled || '').toUpperCase() === 'YA' 
+              ? '<span class="text-blue-600 font-bold">YA</span>' 
+              : '<span class="text-slate-400">TIDAK</span>') +
+          '</td>' +
+          '<td class="p-2 border-b">' + String(u.otpTtlMinutes || '5') + 'm / ' + String(u.otpCooldownSeconds || '60') + 's</td>' +
+          '<td class="p-2 border-b text-slate-500 font-mono text-[10px]">' + String(u.lastLoginAt || '-') + '</td>' +
+          '<td class="p-2 border-b max-w-[150px] truncate" title="' + cEsc + '">' + String(u.catatan || '') + '</td>' +
           '<td class="p-2 border-b text-center">' +
             '<div class="flex gap-1 justify-center">' +
-              '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
+              '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + lEsc + '\',\'' + oEsc + '\',\'' + ttlEsc + '\',\'' + cdEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
               '<button type="button" class="btn btn-xs btn-outline-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
           '</td>' +
@@ -204,11 +274,11 @@ window.initSettingsWorkspace = function(){
       });
       tableBody.innerHTML = html;
     }).withFailureHandler(function(e) {
-      tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
-    }).manageGetUsers(window.getPieSessionToken());
+      tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
+    }).manageGetUsers(getSessionToken());
   };
 
-  window.editUserField = function(user, gmail, nama, role, unit, kode, scope, aktif, catatan) {
+  window.editUserField = function(user, gmail, nama, role, unit, kode, scope, aktif, method, otp, ttl, cd, catatan) {
     document.getElementById('user-username').value = user;
     document.getElementById('user-gmail').value = gmail;
     document.getElementById('user-nama').value = nama;
@@ -217,6 +287,10 @@ window.initSettingsWorkspace = function(){
     document.getElementById('user-kode').value = kode;
     document.getElementById('user-scope').value = scope || 'puskesmas';
     document.getElementById('user-aktif').value = (aktif === 'TIDAK' || aktif === 'NONAKTIF' || aktif === 'FALSE') ? 'TIDAK' : 'YA';
+    document.getElementById('user-login-method').value = method || 'OTP_GMAIL';
+    document.getElementById('user-otp-enabled').value = otp || 'YA';
+    document.getElementById('user-otp-ttl').value = ttl || 5;
+    document.getElementById('user-otp-cooldown').value = cd || 60;
     document.getElementById('user-catatan').value = catatan;
     document.getElementById('user-form-title').textContent = 'Edit User: ' + user;
   };
@@ -227,7 +301,7 @@ window.initSettingsWorkspace = function(){
       window.showSettingsResult(res);
       loadUserList();
       clearUserForm();
-    }).withFailureHandler(fail).manageDeleteUser(window.getPieSessionToken(), username);
+    }).withFailureHandler(fail).manageDeleteUser(getSessionToken(), username);
   };
 
   const clearUserForm = function() {
@@ -239,6 +313,10 @@ window.initSettingsWorkspace = function(){
     document.getElementById('user-kode').value = '';
     document.getElementById('user-scope').value = 'puskesmas';
     document.getElementById('user-aktif').value = 'YA';
+    document.getElementById('user-login-method').value = 'OTP_GMAIL';
+    document.getElementById('user-otp-enabled').value = 'YA';
+    document.getElementById('user-otp-ttl').value = '5';
+    document.getElementById('user-otp-cooldown').value = '60';
     document.getElementById('user-catatan').value = '';
     document.getElementById('user-form-title').textContent = 'Tambah / Edit User';
   };
@@ -255,6 +333,10 @@ window.initSettingsWorkspace = function(){
       kodePuskesmas: document.getElementById('user-kode')?.value || '',
       scopeLevel: document.getElementById('user-scope')?.value || 'puskesmas',
       statusAktif: document.getElementById('user-aktif')?.value || 'YA',
+      loginMethod: document.getElementById('user-login-method')?.value || 'OTP_GMAIL',
+      otpEnabled: document.getElementById('user-otp-enabled')?.value || 'YA',
+      otpTtlMinutes: Number(document.getElementById('user-otp-ttl')?.value || 5),
+      otpCooldownSeconds: Number(document.getElementById('user-otp-cooldown')?.value || 60),
       catatan: document.getElementById('user-catatan')?.value || ''
     };
     if (!payload.username || !payload.gmail) {
@@ -267,7 +349,7 @@ window.initSettingsWorkspace = function(){
         loadUserList();
         clearUserForm();
       }
-    }).withFailureHandler(fail).manageSaveUser(window.getPieSessionToken(), payload);
+    }).withFailureHandler(fail).manageSaveUser(getSessionToken(), payload);
   });
 
   // Load user list immediately

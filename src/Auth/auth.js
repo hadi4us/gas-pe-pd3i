@@ -484,6 +484,11 @@ function manageGetUsers(token) {
     const ixKode = headerIndex(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
     const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+    const ixLoginMethod = headerIndex(["LoginMethod", "Login Method"]);
+    const ixOtpEnabled = headerIndex(["OtpEnabled", "Otp Enabled"]);
+    const ixOtpTtl = headerIndex(["OtpTtlMinutes", "Otp Ttl Minutes", "OtpTtl"]);
+    const ixOtpCooldown = headerIndex(["OtpCooldownSeconds", "Otp Cooldown Seconds", "OtpCooldown"]);
+    const ixLastLogin = headerIndex(["LastLoginAt", "Last Login At", "LastLogin"]);
     const ixCatatan = headerIndex(["Catatan"]);
 
     const users = [];
@@ -500,7 +505,12 @@ function manageGetUsers(token) {
         unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
         kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
         scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim() : "",
-        statusAktif: ixAktif !== -1 ? String(row[ixAktif] || "").trim() : "AKTIF",
+        statusAktif: ixAktif !== -1 ? String(row[ixAktif] || "").trim() : "YA",
+        loginMethod: ixLoginMethod !== -1 ? String(row[ixLoginMethod] || "").trim() : "OTP_GMAIL",
+        otpEnabled: ixOtpEnabled !== -1 ? String(row[ixOtpEnabled] || "").trim() : "YA",
+        otpTtlMinutes: ixOtpTtl !== -1 ? Number(row[ixOtpTtl] || 5) : 5,
+        otpCooldownSeconds: ixOtpCooldown !== -1 ? Number(row[ixOtpCooldown] || 60) : 60,
+        lastLoginAt: ixLastLogin !== -1 ? String(row[ixLastLogin] || "").trim() : "",
         catatan: ixCatatan !== -1 ? String(row[ixCatatan] || "").trim() : ""
       });
     }
@@ -575,10 +585,10 @@ function manageSaveUser(token, userPayload) {
       else if (h === "ScopeLevel" || h === "Scope Level") val = String(userPayload.scopeLevel || "puskesmas").trim().toLowerCase();
       else if (h === "Aktif" || h === "StatusAktif") val = String(userPayload.statusAktif || "YA").trim().toUpperCase();
       else if (h === "Catatan") val = String(userPayload.catatan || "").trim();
-      else if (h === "LoginMethod" && !val) val = "OTP_GMAIL";
-      else if (h === "OtpEnabled" && !val) val = "YA";
-      else if (h === "OtpTtlMinutes" && !val) val = 5;
-      else if (h === "OtpCooldownSeconds" && !val) val = 60;
+      else if (h === "LoginMethod") val = String(userPayload.loginMethod || "OTP_GMAIL").trim();
+      else if (h === "OtpEnabled") val = String(userPayload.otpEnabled || "YA").trim().toUpperCase();
+      else if (h === "OtpTtlMinutes") val = Number(userPayload.otpTtlMinutes || 5);
+      else if (h === "OtpCooldownSeconds") val = Number(userPayload.otpCooldownSeconds || 60);
       rowValues.push(val);
     });
 
