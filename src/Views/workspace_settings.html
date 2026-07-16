@@ -177,6 +177,14 @@
             </tbody>
           </table>
         </div>
+        <!-- Pagination Controls -->
+        <div class="flex justify-between items-center mt-3 text-xs">
+          <div class="text-slate-500 font-medium" id="user-pagination-info">Menampilkan 0 dari 0 pengguna</div>
+          <div class="flex gap-2">
+            <button id="btn-user-prev" type="button" class="btn btn-xs btn-outline-secondary px-2.5 py-1" disabled><i class="fas fa-chevron-left"></i> Sebelum</button>
+            <button id="btn-user-next" type="button" class="btn btn-xs btn-outline-secondary px-2.5 py-1" disabled>Berikut <i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
       </div>
       </div>
       <pre id="settings-result" class="mt-3 p-3 bg-slate-900 text-white rounded text-xs overflow-auto">Belum ada hasil.</pre>
@@ -236,6 +244,79 @@ window.initSettingsWorkspace = function(){
   document.getElementById('btn-pie-approve-kb-rule')?.addEventListener('click', function(){ const id=document.getElementById('pie-kb-approve-id')?.value||''; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieApproveKbRule(getSessionToken(), id, 'Approved from Settings workspace'); });
 
   // User Management functions
+  let allUsers = [];
+  let currentPage = 1;
+  const itemsPerPage = 10;
+
+  const renderUserPage = function() {
+    const tableBody = document.getElementById('user-table-body');
+    if (!tableBody) return;
+    
+    if (allUsers.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
+      document.getElementById('user-pagination-info').textContent = 'Menampilkan 0 dari 0 pengguna';
+      document.getElementById('btn-user-prev').disabled = true;
+      document.getElementById('btn-user-next').disabled = true;
+      return;
+    }
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, allUsers.length);
+    const paginatedUsers = allUsers.slice(startIndex, endIndex);
+    
+    let html = '';
+    paginatedUsers.forEach(function(u) {
+      const uEsc = String(u.username || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const gEsc = String(u.gmail || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const nEsc = String(u.nama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const rEsc = String(u.role || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const unitEsc = String(u.unitKerja || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const kEsc = String(u.kodePuskesmas || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const sEsc = String(u.scopeLevel || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const aEsc = String(u.statusAktif || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const lEsc = String(u.loginMethod || 'OTP_GMAIL').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const oEsc = String(u.otpEnabled || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const ttlEsc = String(u.otpTtlMinutes || '5').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const cdEsc = String(u.otpCooldownSeconds || '60').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const cEsc = String(u.catatan || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+      html += '<tr>' +
+        '<td class="p-2 border-b font-medium">' + String(u.username || '') + '</td>' +
+        '<td class="p-2 border-b">' + String(u.gmail || '') + '</td>' +
+        '<td class="p-2 border-b">' + String(u.nama || '') + '</td>' +
+        '<td class="p-2 border-b"><span class="badge bg-slate-200 text-slate-800 rounded px-1.5 py-0.5">' + String(u.role || '') + '</span></td>' +
+        '<td class="p-2 border-b">' + String(u.unitKerja || '') + '</td>' +
+        '<td class="p-2 border-b">' + String(u.kodePuskesmas || '') + '</td>' +
+        '<td class="p-2 border-b">' + String(u.scopeLevel || '') + '</td>' +
+        '<td class="p-2 border-b">' +
+          (String(u.statusAktif || '').toUpperCase() === 'YA' || String(u.statusAktif || '').toUpperCase() === 'AKTIF' || String(u.statusAktif || '').toUpperCase() === 'TRUE' 
+            ? '<span class="text-green-600 font-bold">AKTIF</span>' 
+            : '<span class="text-red-500 font-bold">NONAKTIF</span>') +
+        '</td>' +
+        '<td class="p-2 border-b">' + String(u.loginMethod || 'OTP_GMAIL') + '</td>' +
+        '<td class="p-2 border-b">' +
+          (String(u.otpEnabled || '').toUpperCase() === 'YA' 
+            ? '<span class="text-blue-600 font-bold">YA</span>' 
+            : '<span class="text-slate-400">TIDAK</span>') +
+        '</td>' +
+        '<td class="p-2 border-b">' + String(u.otpTtlMinutes || '5') + 'm / ' + String(u.otpCooldownSeconds || '60') + 's</td>' +
+        '<td class="p-2 border-b text-slate-500 font-mono text-[10px]">' + String(u.lastLoginAt || '-') + '</td>' +
+        '<td class="p-2 border-b max-w-[150px] truncate" title="' + cEsc + '">' + String(u.catatan || '') + '</td>' +
+        '<td class="p-2 border-b text-center">' +
+          '<div class="flex gap-1 justify-center">' +
+            '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + lEsc + '\',\'' + oEsc + '\',\'' + ttlEsc + '\',\'' + cdEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
+            '<button type="button" class="btn btn-xs btn-outline-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+    tableBody.innerHTML = html;
+    
+    document.getElementById('user-pagination-info').textContent = 'Menampilkan ' + (startIndex + 1) + '-' + endIndex + ' dari ' + allUsers.length + ' pengguna';
+    document.getElementById('btn-user-prev').disabled = (currentPage === 1);
+    document.getElementById('btn-user-next').disabled = (endIndex >= allUsers.length);
+  };
+
   const loadUserList = function() {
     const tableBody = document.getElementById('user-table-body');
     if (!tableBody) return;
@@ -245,62 +326,27 @@ window.initSettingsWorkspace = function(){
         tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
         return;
       }
-      if (!res.users || res.users.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
-        return;
-      }
-      
-      let html = '';
-      res.users.forEach(function(u) {
-        const uEsc = String(u.username || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const gEsc = String(u.gmail || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const nEsc = String(u.nama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const rEsc = String(u.role || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const unitEsc = String(u.unitKerja || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const kEsc = String(u.kodePuskesmas || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const sEsc = String(u.scopeLevel || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const aEsc = String(u.statusAktif || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const lEsc = String(u.loginMethod || 'OTP_GMAIL').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const oEsc = String(u.otpEnabled || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const ttlEsc = String(u.otpTtlMinutes || '5').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const cdEsc = String(u.otpCooldownSeconds || '60').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const cEsc = String(u.catatan || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-        html += '<tr>' +
-          '<td class="p-2 border-b font-medium">' + String(u.username || '') + '</td>' +
-          '<td class="p-2 border-b">' + String(u.gmail || '') + '</td>' +
-          '<td class="p-2 border-b">' + String(u.nama || '') + '</td>' +
-          '<td class="p-2 border-b"><span class="badge bg-slate-200 text-slate-800 rounded px-1.5 py-0.5">' + String(u.role || '') + '</span></td>' +
-          '<td class="p-2 border-b">' + String(u.unitKerja || '') + '</td>' +
-          '<td class="p-2 border-b">' + String(u.kodePuskesmas || '') + '</td>' +
-          '<td class="p-2 border-b">' + String(u.scopeLevel || '') + '</td>' +
-          '<td class="p-2 border-b">' +
-            (String(u.statusAktif || '').toUpperCase() === 'YA' || String(u.statusAktif || '').toUpperCase() === 'AKTIF' || String(u.statusAktif || '').toUpperCase() === 'TRUE' 
-              ? '<span class="text-green-600 font-bold">AKTIF</span>' 
-              : '<span class="text-red-500 font-bold">NONAKTIF</span>') +
-          '</td>' +
-          '<td class="p-2 border-b">' + String(u.loginMethod || 'OTP_GMAIL') + '</td>' +
-          '<td class="p-2 border-b">' +
-            (String(u.otpEnabled || '').toUpperCase() === 'YA' 
-              ? '<span class="text-blue-600 font-bold">YA</span>' 
-              : '<span class="text-slate-400">TIDAK</span>') +
-          '</td>' +
-          '<td class="p-2 border-b">' + String(u.otpTtlMinutes || '5') + 'm / ' + String(u.otpCooldownSeconds || '60') + 's</td>' +
-          '<td class="p-2 border-b text-slate-500 font-mono text-[10px]">' + String(u.lastLoginAt || '-') + '</td>' +
-          '<td class="p-2 border-b max-w-[150px] truncate" title="' + cEsc + '">' + String(u.catatan || '') + '</td>' +
-          '<td class="p-2 border-b text-center">' +
-            '<div class="flex gap-1 justify-center">' +
-              '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + lEsc + '\',\'' + oEsc + '\',\'' + ttlEsc + '\',\'' + cdEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
-              '<button type="button" class="btn btn-xs btn-outline-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
-            '</div>' +
-          '</td>' +
-        '</tr>';
-      });
-      tableBody.innerHTML = html;
+      allUsers = res.users || [];
+      currentPage = 1;
+      renderUserPage();
     }).withFailureHandler(function(e) {
       tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
     }).manageGetUsers(getSessionToken());
   };
+
+  document.getElementById('btn-user-prev')?.addEventListener('click', function() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderUserPage();
+    }
+  });
+
+  document.getElementById('btn-user-next')?.addEventListener('click', function() {
+    if ((currentPage * itemsPerPage) < allUsers.length) {
+      currentPage++;
+      renderUserPage();
+    }
+  });
 
   window.editUserField = function(user, gmail, nama, role, unit, kode, scope, aktif, method, otp, ttl, cd, catatan) {
     document.getElementById('user-username').value = user;
