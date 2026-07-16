@@ -69,13 +69,13 @@ Agar proses upgrade berjalan aman tanpa merusak fungsionalitas yang ada (terutam
   4. Perbaiki styling peta Leaflet agar legends berada di pojok kiri bawah dengan box yang bersih. [SELESAI]
 * **Uji**: Kedua chart ter-render dengan sempurna, interaktif, dan tidak terjadi kebocoran memori (memory leak) saat ganti filter DX.
 
-### Tahap 4: Panel Alert & Tabel 5 Penyakit Teratas
+### Tahap 4: Panel Alert & Tabel 5 Penyakit Teratas [SELESAI]
 * **Tujuan**: Mengimplementasikan area ringkasan alert kasus baru/urgensi tinggi serta melengkapi tabel kasus teratas dengan mini sparklines.
 * **Langkah**:
-  1. Rancang panel alert di sisi kanan Row 2 dengan daftar notifikasi terverifikasi atau gagal sinkronisasi yang butuh perhatian admin.
-  2. Susun tabel 5 Penyakit/Wilayah Kasus Tertinggi dengan layout baris bersih, indikator jumlah, dan link selengkapnya ke workbench drilldown.
-  3. Integrasikan interaksi klik drilldown agar ketika wilayah atau baris data diklik, langsung membuka detail kasus di bawahnya.
-* **Uji**: Interaksi drill-down berfungsi dan verifikasi admin/pengampu dapat diakses langsung dari dashboard.
+  1. Rancang panel alert di sisi kanan Row 2 dengan daftar notifikasi terverifikasi atau gagal sinkronisasi yang butuh perhatian admin. [SELESAI]
+  2. Susun tabel 5 Penyakit/Wilayah Kasus Tertinggi dengan layout baris bersih, indikator jumlah, dan link selengkapnya ke workbench drilldown. [SELESAI]
+  3. Integrasikan interaksi klik drilldown agar ketika wilayah atau baris data diklik, langsung membuka detail kasus di bawahnya. [SELESAI]
+* **Uji**: Interaksi drill-down berfungsi dan verifikasi admin/pengampu dapat diakses langsung dari dashboard. [SELESAI]
 
 ---
 
