@@ -44,29 +44,29 @@ Dashboard akan didefinisikan menggunakan struktur grid modular agar pas saat di-
 
 Agar proses upgrade berjalan aman tanpa merusak fungsionalitas yang ada (terutama logic penyimpanan dan otorisasi), pekerjaan dibagi menjadi 4 tahap:
 
-### Tahap 1: Pengayaan Aset & Penyelarasan Layout Dasar (UI Shell)
+### Tahap 1: Pengayaan Aset & Penyelarasan Layout Dasar (UI Shell) [SELESAI]
 * **Tujuan**: Membawa CDN Tailwind CSS secara aman dan mengonfigurasi skema warna utama (biru medis) tanpa tabrakan dengan utility Bootstrap 5 yang sudah ada.
 * **Langkah**:
-  1. Tambahkan link CDN Tailwind CSS di `index.html`.
-  2. Perbarui `style.html` untuk menambahkan class palette baru berbasis CSS Variables (biru medis, soft slate background).
-  3. Sesuaikan visual sidebar kiri agar memiliki gradien deep-blue yang modern dan teks kontras tinggi.
+  1. Tambahkan link CDN Tailwind CSS di `index.html`. [SELESAI]
+  2. Perbarui `style.html` untuk menambahkan class palette baru berbasis CSS Variables (biru medis, soft slate background). [SELESAI]
+  3. Sesuaikan visual sidebar kiri agar memiliki gradien deep-blue yang modern dan teks kontras tinggi. [SELESAI]
 * **Uji**: Sidebar ter-render dengan gradien baru dan menu terlihat jelas di Google Sites.
 
-### Tahap 2: Peningkatan Grid Kartu KPI & Filter Analitik
+### Tahap 2: Peningkatan Grid Kartu KPI & Filter Analitik [SELESAI]
 * **Tujuan**: Merestrukturisasi barisan metrik dari 4 kartu menjadi 5 kartu seperti referensi visual (menambahkan metrik Kasus Baru/Aktif yang dinamis).
 * **Langkah**:
-  1. Perbarui HTML di `workspace_dashboard.html` untuk menambahkan layout 5 kolom.
-  2. Perbaiki fungsi `renderDashboard` di `app.dashboard.js.html` untuk mengisi 5 data metrik tersebut (menggunakan data dari `getDashboardStats`).
-  3. Percantik styling kartu: tambahkan ikon bulat berwarna pastel soft, angka tebal (`font-black`), dan sub-text keterangan.
+  1. Perbarui HTML di `workspace_dashboard.html` untuk menambahkan layout 5 kolom. [SELESAI]
+  2. Perbaiki fungsi `renderDashboard` di `app.dashboard.js.html` untuk mengisi 5 data metrik tersebut (menggunakan data dari `getDashboardStats`). [SELESAI]
+  3. Percantik styling kartu: tambahkan ikon bulat berwarna pastel soft, angka tebal (`font-black`), dan sub-text keterangan. [SELESAI]
 * **Uji**: Kartu metrik menampilkan angka yang akurat dan responsif pada layar tablet/desktop.
 
-### Tahap 3: Transformasi Visualisasi & Chart (Tren Waktu & Demografi)
+### Tahap 3: Transformasi Visualisasi & Chart (Tren Waktu & Demografi) [SELESAI]
 * **Tujuan**: Mengubah visualisasi data agar sesuai analisis Orang, Tempat, dan Waktu (OTW).
 * **Langkah**:
-  1. Ubah visualisasi Google Charts dari Pie Chart menjadi Donut Chart untuk kelompok umur di `app.dashboard.js.html` (opsi `pieHole: 0.4`).
-  2. Tambahkan counter total kasus di tengah donat chart.
-  3. Poles line/area chart tren bulanan agar menggunakan warna garis biru medis (`#2563eb`), hijau (`#10b981`), dan merah (`#ef4444`) dengan gridline abu-abu tipis.
-  4. Perbaiki styling peta Leaflet agar legends berada di pojok kiri bawah dengan box yang bersih.
+  1. Ubah visualisasi Google Charts dari Pie Chart menjadi Donut Chart untuk kelompok umur di `app.dashboard.js.html` (opsi `pieHole: 0.4`). [SELESAI]
+  2. Tambahkan counter total kasus di tengah donat chart. [SELESAI]
+  3. Poles line/area chart tren bulanan agar menggunakan warna garis biru medis (`#2563eb`), hijau (`#10b981`), dan merah (`#ef4444`) dengan gridline abu-abu tipis. [SELESAI]
+  4. Perbaiki styling peta Leaflet agar legends berada di pojok kiri bawah dengan box yang bersih. [SELESAI]
 * **Uji**: Kedua chart ter-render dengan sempurna, interaktif, dan tidak terjadi kebocoran memori (memory leak) saat ganti filter DX.
 
 ### Tahap 4: Panel Alert & Tabel 5 Penyakit Teratas
