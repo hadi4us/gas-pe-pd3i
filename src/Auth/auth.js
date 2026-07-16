@@ -455,3 +455,178 @@ function authChangePin(token, oldPin, newPin) {
     return _publicAuthError_(e, "Ubah password belum bisa diproses. Silakan coba lagi atau hubungi admin.");
   }
 }
+
+function manageGetUsers(token) {
+  try {
+    _requirePieSession_(token, { superAdminOnly: true });
+    const sh = getSheetOrNull_("REF_USER");
+    if (!sh) return { ok: false, error: "Sheet REF_USER tidak ditemukan." };
+
+    const values = sh.getDataRange().getValues();
+    if (!values || values.length < 2) return { ok: true, users: [] };
+
+    const headers = values[0].map(function(h) { return String(h || "").trim(); });
+    const rows = values.slice(1);
+
+    function headerIndex(names) {
+      for (var i = 0; i < names.length; i++) {
+        const ix = headers.indexOf(names[i]);
+        if (ix !== -1) return ix;
+      }
+      return -1;
+    }
+
+    const ixUser = headerIndex(["Username"]);
+    const ixGmail = headerIndex(["Gmail", "Email", "EmailPetugas"]);
+    const ixNama = headerIndex(["Nama", "Nama Petugas"]);
+    const ixRole = headerIndex(["Role"]);
+    const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+    const ixKode = headerIndex(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
+    const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
+    const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+    const ixCatatan = headerIndex(["Catatan"]);
+
+    const users = [];
+    for (var r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      // Skip empty rows
+      if (!row.some(function(v) { return String(v || "").trim() !== ""; })) continue;
+
+      users.push({
+        username: ixUser !== -1 ? String(row[ixUser] || "").trim() : "",
+        gmail: ixGmail !== -1 ? String(row[ixGmail] || "").trim() : "",
+        nama: ixNama !== -1 ? String(row[ixNama] || "").trim() : "",
+        role: ixRole !== -1 ? String(row[ixRole] || "").trim() : "",
+        unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
+        kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+        scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim() : "",
+        statusAktif: ixAktif !== -1 ? String(row[ixAktif] || "").trim() : "AKTIF",
+        catatan: ixCatatan !== -1 ? String(row[ixCatatan] || "").trim() : ""
+      });
+    }
+
+    return { ok: true, users: users };
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
+}
+
+function manageSaveUser(token, userPayload) {
+  try {
+    _requirePieSession_(token, { superAdminOnly: true });
+    const sh = getSheetOrNull_("REF_USER");
+    if (!sh) return { ok: false, error: "Sheet REF_USER tidak ditemukan." };
+
+    const values = sh.getDataRange().getValues();
+    const headers = values[0].map(function(h) { return String(h || "").trim(); });
+
+    function headerIndex(names) {
+      for (var i = 0; i < names.length; i++) {
+        const ix = headers.indexOf(names[i]);
+        if (ix !== -1) return ix;
+      }
+      return -1;
+    }
+
+    const ixUser = headerIndex(["Username"]);
+    const ixGmail = headerIndex(["Gmail", "Email", "EmailPetugas"]);
+    const ixNama = headerIndex(["Nama", "Nama Petugas"]);
+    const ixRole = headerIndex(["Role"]);
+    const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+    const ixKode = headerIndex(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
+    const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
+    const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+    const ixCatatan = headerIndex(["Catatan"]);
+
+    if (ixUser === -1 || ixGmail === -1) {
+      return { ok: false, error: "Kolom Username dan Gmail wajib ada di REF_USER." };
+    }
+
+    const targetUser = String(userPayload.username || "").trim();
+    const targetGmail = String(userPayload.gmail || "").trim().toLowerCase();
+
+    if (!targetUser || !targetGmail) {
+      return { ok: false, error: "Username dan Gmail wajib diisi." };
+    }
+
+    let foundRowIndex = -1;
+    for (var i = 1; i < values.length; i++) {
+      const rowUser = String(values[i][ixUser] || "").trim().toLowerCase();
+      const rowGmail = String(values[i][ixGmail] || "").trim().toLowerCase();
+      if (rowUser === targetUser.toLowerCase() || rowGmail === targetGmail) {
+        foundRowIndex = i + 1;
+        break;
+      }
+    }
+
+    // Prepare row values
+    const rowValues = [];
+    // If updating, fetch existing values first, else fill defaults
+    const currentValues = foundRowIndex !== -1 ? sh.getRange(foundRowIndex, 1, 1, headers.length).getValues()[0] : [];
+
+    headers.forEach(function(h, colIdx) {
+      let val = currentValues[colIdx] !== undefined ? currentValues[colIdx] : "";
+      if (h === "Username") val = targetUser;
+      else if (h === "Gmail" || h === "Email" || h === "EmailPetugas") val = targetGmail;
+      else if (h === "Nama" || h === "Nama Petugas") val = String(userPayload.nama || "").trim();
+      else if (h === "Role") val = String(userPayload.role || "petugas").trim().toLowerCase();
+      else if (h === "UnitKerja" || h === "Unit Kerja" || h === "Nama Puskesmas" || h === "Puskesmas") val = String(userPayload.unitKerja || "").trim();
+      else if (h === "KodePuskesmas" || h === "Kode Puskesmas" || h === "Kode PKM") val = String(userPayload.kodePuskesmas || "").trim();
+      else if (h === "ScopeLevel" || h === "Scope Level") val = String(userPayload.scopeLevel || "puskesmas").trim().toLowerCase();
+      else if (h === "Aktif" || h === "StatusAktif") val = String(userPayload.statusAktif || "YA").trim().toUpperCase();
+      else if (h === "Catatan") val = String(userPayload.catatan || "").trim();
+      else if (h === "LoginMethod" && !val) val = "OTP_GMAIL";
+      else if (h === "OtpEnabled" && !val) val = "YA";
+      else if (h === "OtpTtlMinutes" && !val) val = 5;
+      else if (h === "OtpCooldownSeconds" && !val) val = 60;
+      rowValues.push(val);
+    });
+
+    if (foundRowIndex !== -1) {
+      sh.getRange(foundRowIndex, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sh.appendRow(rowValues);
+    }
+
+    return { ok: true, message: "User berhasil disimpan." };
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
+}
+
+function manageDeleteUser(token, username) {
+  try {
+    _requirePieSession_(token, { superAdminOnly: true });
+    const sh = getSheetOrNull_("REF_USER");
+    if (!sh) return { ok: false, error: "Sheet REF_USER tidak ditemukan." };
+
+    const values = sh.getDataRange().getValues();
+    const headers = values[0].map(function(h) { return String(h || "").trim(); });
+    const ixUser = headers.indexOf("Username");
+
+    if (ixUser === -1) {
+      return { ok: false, error: "Kolom Username tidak ditemukan di REF_USER." };
+    }
+
+    const targetUser = String(username || "").trim().toLowerCase();
+    if (!targetUser) return { ok: false, error: "Username wajib diisi." };
+
+    let foundRowIndex = -1;
+    for (var i = 1; i < values.length; i++) {
+      const rowUser = String(values[i][ixUser] || "").trim().toLowerCase();
+      if (rowUser === targetUser) {
+        foundRowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (foundRowIndex === -1) {
+      return { ok: false, error: "User tidak ditemukan." };
+    }
+
+    sh.deleteRow(foundRowIndex);
+    return { ok: true, message: "User berhasil dihapus." };
+  } catch (e) {
+    return { ok: false, error: e.message || String(e) };
+  }
+}

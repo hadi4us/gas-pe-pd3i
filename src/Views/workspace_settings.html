@@ -1,0 +1,276 @@
+<section id="section-settings" class="pd3i-workspace-section hidden" aria-hidden="true">
+  <div class="pd3i-card">
+    <div class="pd3i-local-status-strip" aria-label="Status pengaturan sistem">
+      <div class="pd3i-local-status-copy">
+        <span class="pd3i-card-eyebrow">SUPER-ADMIN</span>
+        <span>Konfigurasi runtime sensitif. Field terbuka hanya untuk role SUPER-ADMIN.</span>
+      </div>
+    </div>
+    <div class="pd3i-card-body">
+      <div id="pie-settings-locked" class="p-3 rounded border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
+      <div data-pie-role="super-admin" class="p-3 rounded border bg-blue-50">
+        <h3 class="font-semibold mb-2">Notifikasi & Integrasi</h3>
+        <div class="grid md:grid-cols-3 gap-2 mt-3">
+          <input id="pie-config-bot-token" class="form-control form-control-sm" type="password" placeholder="TELEGRAM_BOT_TOKEN">
+          <input id="pie-config-chat-id" class="form-control form-control-sm" placeholder="PIE_TELEGRAM_CHAT_ID / chat id">
+          <input id="pie-config-global-chat-id" class="form-control form-control-sm" placeholder="TELEGRAM_CHAT_ID Dinkes/global">
+          <select id="pie-config-waha-enabled" class="form-select form-select-sm" aria-label="Status WAHA enabled"><option value="">WAHA_ENABLED unchanged</option><option value="true">WAHA on</option><option value="false">WAHA off</option></select>
+          <input id="pie-config-waha-base-url" class="form-control form-control-sm" placeholder="WAHA_BASE_URL">
+          <input id="pie-config-waha-session" class="form-control form-control-sm" placeholder="WAHA_SESSION default">
+          <input id="pie-config-waha-api-key" type="password" class="form-control form-control-sm" placeholder="WAHA_API_KEY">
+          <input id="pie-config-waha-dinkes" class="form-control form-control-sm" placeholder="WAHA_DINKES_CHAT_ID">
+        </div>
+        <div class="flex gap-2 flex-wrap mt-3">
+          <button id="btn-pie-save-config" type="button" class="btn btn-sm btn-primary">Simpan Config</button>
+          <button id="btn-pie-test-telegram" type="button" class="btn btn-sm btn-outline-primary">Test Kirim</button>
+          <button id="btn-pie-check-pd3i-notif" type="button" class="btn btn-sm btn-outline-secondary">Cek Notif Pengampu/Dinkes</button>
+          <button id="btn-pie-config" type="button" class="btn btn-sm btn-outline-info">Cek Config Telegram PIE</button>
+          <button id="btn-pie-setup" type="button" class="btn btn-sm btn-outline-warning">Siapkan Sheet PIE</button><button id="btn-pie-validation-metrics" type="button" class="btn btn-sm btn-outline-dark">Hitung Metrik Validasi</button>
+        </div>
+        <div class="text-xs text-slate-500 mt-2">Token tidak ditampilkan balik. Chat id personal MasBro: 61703808.</div>
+      </div>
+      <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
+        <h3 class="font-semibold mb-2">Draft Rule KB SARING-PIE</h3>
+        <p class="text-xs text-slate-500">Rule baru disimpan sebagai draft tidak aktif. Engine produksi tetap memakai rule terverifikasi.</p>
+        <div class="grid md:grid-cols-3 gap-2">
+          <input id="pie-kb-disease" class="form-control form-control-sm" placeholder="Disease code, contoh AVIAN_INFLUENZA">
+          <input id="pie-kb-risk" class="form-control form-control-sm" placeholder="Minimum risiko, contoh E2/E3/EX">
+          <input id="pie-kb-facts" class="form-control form-control-sm" placeholder="Required facts, contoh fever,rodent,flood">
+          <input id="pie-kb-actions" class="form-control form-control-sm" placeholder="Tindak lanjut, contoh START_PE_INVESTIGATION">
+          <input id="pie-kb-specimen" class="form-control form-control-sm" placeholder="Panduan spesimen">
+          <input id="pie-kb-explain" class="form-control form-control-sm" placeholder="Template penjelasan rule">
+        </div>
+        <input id="pie-kb-test-facts" class="form-control form-control-sm mt-2" placeholder="Facts simulasi, contoh fever,rodent,jaundice">
+        <div class="flex gap-2 flex-wrap mt-2"><button id="btn-pie-add-kb-rule" type="button" class="btn btn-sm btn-outline-primary">Simpan Draft Rule</button><button id="btn-pie-test-kb-rule" type="button" class="btn btn-sm btn-outline-info">Uji Draft Rule</button><input id="pie-kb-approve-id" class="form-control form-control-sm" style="max-width:260px" placeholder="Rule ID untuk approve"><button id="btn-pie-approve-kb-rule" type="button" class="btn btn-sm btn-outline-success">Approve Rule</button></div>
+      </div>
+      <!-- User Management Module -->
+      <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
+        <h3 class="font-semibold mb-2 flex items-center gap-1.5"><i class="fas fa-users-cog text-primary"></i> Kelola Pengguna (REF_USER)</h3>
+        <p class="text-xs text-slate-500 mb-3">Tambahkan, edit, atau hapus akses pengguna sistem SIMPEL.</p>
+        
+        <!-- Form Add/Edit User -->
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
+          <div class="font-semibold text-xs text-slate-700 mb-2 uppercase tracking-wide" id="user-form-title">Tambah / Edit User</div>
+          <div class="grid md:grid-cols-4 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Username</label>
+              <input id="user-username" class="form-control form-control-sm" placeholder="Contoh: Budi">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Gmail</label>
+              <input id="user-gmail" type="email" class="form-control form-control-sm" placeholder="user@gmail.com">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Nama</label>
+              <input id="user-nama" class="form-control form-control-sm" placeholder="Nama Lengkap">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Role</label>
+              <select id="user-role" class="form-select form-select-sm">
+                <option value="petugas">Petugas (Faskes/Puskesmas)</option>
+                <option value="surveilans">Surveilans (Dinkes)</option>
+                <option value="admin">Admin (KB Editor)</option>
+                <option value="super-admin">Super Admin</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Unit Kerja</label>
+              <input id="user-unit" class="form-control form-control-sm" placeholder="Nama Faskes/Puskesmas">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Kode Puskesmas</label>
+              <input id="user-kode" class="form-control form-control-sm" placeholder="P3276XXXXX">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Scope Level</label>
+              <select id="user-scope" class="form-select form-select-sm">
+                <option value="puskesmas">Puskesmas</option>
+                <option value="faskes">Faskes</option>
+                <option value="dinkes">Dinkes</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Status Aktif</label>
+              <select id="user-aktif" class="form-select form-select-sm">
+                <option value="YA">Aktif</option>
+                <option value="TIDAK">Nonaktif</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2">
+            <label class="text-[10px] font-bold text-slate-500 uppercase">Catatan</label>
+            <input id="user-catatan" class="form-control form-control-sm" placeholder="Keterangan tambahan">
+          </div>
+          <div class="flex gap-2 justify-end mt-3">
+            <button id="btn-user-clear" type="button" class="btn btn-sm btn-outline-secondary">Reset Form</button>
+            <button id="btn-user-save" type="button" class="btn btn-sm btn-primary">Simpan User</button>
+          </div>
+        </div>
+
+        <!-- User List Table -->
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="table table-sm table-striped mb-0 text-xs text-left" id="table-users">
+            <thead class="bg-slate-100 font-semibold text-slate-700">
+              <tr>
+                <th class="p-2 border-b">Username</th>
+                <th class="p-2 border-b">Gmail</th>
+                <th class="p-2 border-b">Nama</th>
+                <th class="p-2 border-b">Role</th>
+                <th class="p-2 border-b">Unit Kerja</th>
+                <th class="p-2 border-b">Kode PKM</th>
+                <th class="p-2 border-b">Scope</th>
+                <th class="p-2 border-b">Status</th>
+                <th class="p-2 border-b text-center" style="width:110px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body">
+              <tr>
+                <td colspan="9" class="p-3 text-center text-slate-400">Sedang memuat data pengguna...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <pre id="settings-result" class="mt-3 p-3 bg-slate-900 text-white rounded text-xs overflow-auto">Belum ada hasil.</pre>
+    </div>
+  </div>
+</section>
+<script>
+window.showSettingsResult = function(x){ const out=document.getElementById('settings-result'); if(out) out.textContent=JSON.stringify(x,null,2); };
+window.initSettingsWorkspace = function(){
+  if (window.applyPieRoleUi) window.applyPieRoleUi();
+  if(window.__SETTINGS_WORKSPACE_BOUND) return;
+  window.__SETTINGS_WORKSPACE_BOUND=true;
+  
+  const fail=function(e){ window.showSettingsResult({ok:false,error:String((e&&e.message)||e)}); };
+  
+  document.getElementById('btn-pie-config')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetNotificationConfigStatus(window.getPieSessionToken()); });
+  document.getElementById('btn-pie-setup')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).setupPieSheets(window.getPieSessionToken()); });
+  document.getElementById('btn-pie-validation-metrics')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieCalculateValidationMetrics(window.getPieSessionToken()); });
+  document.getElementById('btn-pie-save-config')?.addEventListener('click', function(){ const bot=document.getElementById('pie-config-bot-token')?.value||''; const chat=document.getElementById('pie-config-chat-id')?.value||''; google.script.run.withSuccessHandler(function(x){ window.showSettingsResult(x); const b=document.getElementById('pie-config-bot-token'); if(b) b.value=''; const w=document.getElementById('pie-config-waha-api-key'); if(w) w.value=''; }).withFailureHandler(fail).pieSetupTelegramConfig(window.getPieSessionToken(), {telegram_bot_token:bot, pie_telegram_chat_id:chat, telegram_chat_id:(document.getElementById('pie-config-global-chat-id')?.value||''), waha_enabled:(document.getElementById('pie-config-waha-enabled')?.value||''), waha_base_url:(document.getElementById('pie-config-waha-base-url')?.value||''), waha_session:(document.getElementById('pie-config-waha-session')?.value||''), waha_api_key:(document.getElementById('pie-config-waha-api-key')?.value||''), waha_dinkes_chat_id:(document.getElementById('pie-config-waha-dinkes')?.value||'')}); });
+  document.getElementById('btn-pie-test-telegram')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieSendTestNotification(window.getPieSessionToken()); });
+  document.getElementById('btn-pie-check-pd3i-notif')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetPd3iNotificationConfigStatus(window.getPieSessionToken()); });
+  document.getElementById('btn-pie-add-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', specimen_guidance:document.getElementById('pie-kb-specimen')?.value||'', explanation_template:document.getElementById('pie-kb-explain')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieAddKbRuleDraft(window.getPieSessionToken(), payload); });
+  document.getElementById('btn-pie-test-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', optional_facts:'', exclusion_facts:'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', explanation_template:document.getElementById('pie-kb-explain')?.value||'', facts:document.getElementById('pie-kb-test-facts')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieTestKbRule(window.getPieSessionToken(), payload); });
+  document.getElementById('btn-pie-approve-kb-rule')?.addEventListener('click', function(){ const id=document.getElementById('pie-kb-approve-id')?.value||''; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieApproveKbRule(window.getPieSessionToken(), id, 'Approved from Settings workspace'); });
+
+  // User Management functions
+  const loadUserList = function() {
+    const tableBody = document.getElementById('user-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat data pengguna...</td></tr>';
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res.ok) {
+        tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
+        return;
+      }
+      if (!res.users || res.users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      res.users.forEach(function(u) {
+        const uEsc = String(u.username || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const gEsc = String(u.gmail || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const nEsc = String(u.nama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const rEsc = String(u.role || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const unitEsc = String(u.unitKerja || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const kEsc = String(u.kodePuskesmas || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const sEsc = String(u.scopeLevel || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const aEsc = String(u.statusAktif || 'YA').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const cEsc = String(u.catatan || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+        html += '<tr>' +
+          '<td class="p-2 border-b font-medium">' + String(u.username || '') + '</td>' +
+          '<td class="p-2 border-b">' + String(u.gmail || '') + '</td>' +
+          '<td class="p-2 border-b">' + String(u.nama || '') + '</td>' +
+          '<td class="p-2 border-b"><span class="badge bg-slate-200 text-slate-800 rounded px-1.5 py-0.5">' + String(u.role || '') + '</span></td>' +
+          '<td class="p-2 border-b">' + String(u.unitKerja || '') + '</td>' +
+          '<td class="p-2 border-b">' + String(u.kodePuskesmas || '') + '</td>' +
+          '<td class="p-2 border-b">' + String(u.scopeLevel || '') + '</td>' +
+          '<td class="p-2 border-b">' +
+            (String(u.statusAktif || '').toUpperCase() === 'YA' || String(u.statusAktif || '').toUpperCase() === 'AKTIF' || String(u.statusAktif || '').toUpperCase() === 'TRUE' 
+              ? '<span class="text-green-600 font-bold">AKTIF</span>' 
+              : '<span class="text-red-500 font-bold">NONAKTIF</span>') +
+          '</td>' +
+          '<td class="p-2 border-b text-center">' +
+            '<div class="flex gap-1 justify-center">' +
+              '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
+              '<button type="button" class="btn btn-xs btn-outline-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      });
+      tableBody.innerHTML = html;
+    }).withFailureHandler(function(e) {
+      tableBody.innerHTML = '<tr><td colspan="9" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
+    }).manageGetUsers(window.getPieSessionToken());
+  };
+
+  window.editUserField = function(user, gmail, nama, role, unit, kode, scope, aktif, catatan) {
+    document.getElementById('user-username').value = user;
+    document.getElementById('user-gmail').value = gmail;
+    document.getElementById('user-nama').value = nama;
+    document.getElementById('user-role').value = role || 'petugas';
+    document.getElementById('user-unit').value = unit;
+    document.getElementById('user-kode').value = kode;
+    document.getElementById('user-scope').value = scope || 'puskesmas';
+    document.getElementById('user-aktif').value = (aktif === 'TIDAK' || aktif === 'NONAKTIF' || aktif === 'FALSE') ? 'TIDAK' : 'YA';
+    document.getElementById('user-catatan').value = catatan;
+    document.getElementById('user-form-title').textContent = 'Edit User: ' + user;
+  };
+
+  window.deleteUserField = function(username) {
+    if (!confirm('Apakah Anda yakin ingin menghapus user \"' + username + '\"?')) return;
+    google.script.run.withSuccessHandler(function(res) {
+      window.showSettingsResult(res);
+      loadUserList();
+      clearUserForm();
+    }).withFailureHandler(fail).manageDeleteUser(window.getPieSessionToken(), username);
+  };
+
+  const clearUserForm = function() {
+    document.getElementById('user-username').value = '';
+    document.getElementById('user-gmail').value = '';
+    document.getElementById('user-nama').value = '';
+    document.getElementById('user-role').value = 'petugas';
+    document.getElementById('user-unit').value = '';
+    document.getElementById('user-kode').value = '';
+    document.getElementById('user-scope').value = 'puskesmas';
+    document.getElementById('user-aktif').value = 'YA';
+    document.getElementById('user-catatan').value = '';
+    document.getElementById('user-form-title').textContent = 'Tambah / Edit User';
+  };
+
+  document.getElementById('btn-user-clear')?.addEventListener('click', clearUserForm);
+
+  document.getElementById('btn-user-save')?.addEventListener('click', function() {
+    const payload = {
+      username: document.getElementById('user-username')?.value || '',
+      gmail: document.getElementById('user-gmail')?.value || '',
+      nama: document.getElementById('user-nama')?.value || '',
+      role: document.getElementById('user-role')?.value || 'petugas',
+      unitKerja: document.getElementById('user-unit')?.value || '',
+      kodePuskesmas: document.getElementById('user-kode')?.value || '',
+      scopeLevel: document.getElementById('user-scope')?.value || 'puskesmas',
+      statusAktif: document.getElementById('user-aktif')?.value || 'YA',
+      catatan: document.getElementById('user-catatan')?.value || ''
+    };
+    if (!payload.username || !payload.gmail) {
+      alert('Username dan Gmail wajib diisi!');
+      return;
+    }
+    google.script.run.withSuccessHandler(function(res) {
+      window.showSettingsResult(res);
+      if (res.ok) {
+        loadUserList();
+        clearUserForm();
+      }
+    }).withFailureHandler(fail).manageSaveUser(window.getPieSessionToken(), payload);
+  });
+
+  // Load user list immediately
+  loadUserList();
+};
+</script>
