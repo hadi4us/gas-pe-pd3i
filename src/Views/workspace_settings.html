@@ -8,43 +8,50 @@
     </div>
     <div class="pd3i-card-body">
       <div id="pie-settings-locked" class="p-3 rounded border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
-      <div data-pie-role="super-admin" class="p-3 rounded border bg-blue-50">
-        <h3 class="font-semibold mb-2">Notifikasi & Integrasi</h3>
-        <div class="grid md:grid-cols-3 gap-2 mt-3">
-          <input id="pie-config-bot-token" class="form-control form-control-sm" type="password" placeholder="TELEGRAM_BOT_TOKEN">
-          <input id="pie-config-chat-id" class="form-control form-control-sm" placeholder="PIE_TELEGRAM_CHAT_ID / chat id">
-          <input id="pie-config-global-chat-id" class="form-control form-control-sm" placeholder="TELEGRAM_CHAT_ID Dinkes/global">
-          <select id="pie-config-waha-enabled" class="form-select form-select-sm" aria-label="Status WAHA enabled"><option value="">WAHA_ENABLED unchanged</option><option value="true">WAHA on</option><option value="false">WAHA off</option></select>
-          <input id="pie-config-waha-base-url" class="form-control form-control-sm" placeholder="WAHA_BASE_URL">
-          <input id="pie-config-waha-session" class="form-control form-control-sm" placeholder="WAHA_SESSION default">
-          <input id="pie-config-waha-api-key" type="password" class="form-control form-control-sm" placeholder="WAHA_API_KEY">
-          <input id="pie-config-waha-dinkes" class="form-control form-control-sm" placeholder="WAHA_DINKES_CHAT_ID">
+      
+      <!-- Panel Config -->
+      <div id="settings-panel-config" class="hidden">
+        <div data-pie-role="super-admin" class="p-3 rounded border bg-blue-50">
+          <h3 class="font-semibold mb-2">Notifikasi & Integrasi</h3>
+          <div class="grid md:grid-cols-3 gap-2 mt-3">
+            <input id="pie-config-bot-token" class="form-control form-control-sm" type="password" placeholder="TELEGRAM_BOT_TOKEN">
+            <input id="pie-config-chat-id" class="form-control form-control-sm" placeholder="PIE_TELEGRAM_CHAT_ID / chat id">
+            <input id="pie-config-global-chat-id" class="form-control form-control-sm" placeholder="TELEGRAM_CHAT_ID Dinkes/global">
+            <select id="pie-config-waha-enabled" class="form-select form-select-sm" aria-label="Status WAHA enabled"><option value="">WAHA_ENABLED unchanged</option><option value="true">WAHA on</option><option value="false">WAHA off</option></select>
+            <input id="pie-config-waha-base-url" class="form-control form-control-sm" placeholder="WAHA_BASE_URL">
+            <input id="pie-config-waha-session" class="form-control form-control-sm" placeholder="WAHA_SESSION default">
+            <input id="pie-config-waha-api-key" type="password" class="form-control form-control-sm" placeholder="WAHA_API_KEY">
+            <input id="pie-config-waha-dinkes" class="form-control form-control-sm" placeholder="WAHA_DINKES_CHAT_ID">
+          </div>
+          <div class="flex gap-2 flex-wrap mt-3">
+            <button id="btn-pie-save-config" type="button" class="btn btn-sm btn-primary">Simpan Config</button>
+            <button id="btn-pie-test-telegram" type="button" class="btn btn-sm btn-outline-primary">Test Kirim</button>
+            <button id="btn-pie-check-pd3i-notif" type="button" class="btn btn-sm btn-outline-secondary">Cek Notif Pengampu/Dinkes</button>
+            <button id="btn-pie-config" type="button" class="btn btn-sm btn-outline-info">Cek Config Telegram PIE</button>
+            <button id="btn-pie-setup" type="button" class="btn btn-sm btn-outline-warning">Siapkan Sheet PIE</button><button id="btn-pie-validation-metrics" type="button" class="btn btn-sm btn-outline-dark">Hitung Metrik Validasi</button>
+          </div>
+          <div class="text-xs text-slate-500 mt-2">Token tidak ditampilkan balik. Chat id personal MasBro: 61703808.</div>
         </div>
-        <div class="flex gap-2 flex-wrap mt-3">
-          <button id="btn-pie-save-config" type="button" class="btn btn-sm btn-primary">Simpan Config</button>
-          <button id="btn-pie-test-telegram" type="button" class="btn btn-sm btn-outline-primary">Test Kirim</button>
-          <button id="btn-pie-check-pd3i-notif" type="button" class="btn btn-sm btn-outline-secondary">Cek Notif Pengampu/Dinkes</button>
-          <button id="btn-pie-config" type="button" class="btn btn-sm btn-outline-info">Cek Config Telegram PIE</button>
-          <button id="btn-pie-setup" type="button" class="btn btn-sm btn-outline-warning">Siapkan Sheet PIE</button><button id="btn-pie-validation-metrics" type="button" class="btn btn-sm btn-outline-dark">Hitung Metrik Validasi</button>
+        <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
+          <h3 class="font-semibold mb-2">Draft Rule KB SARING-PIE</h3>
+          <p class="text-xs text-slate-500">Rule baru disimpan sebagai draft tidak aktif. Engine produksi tetap memakai rule terverifikasi.</p>
+          <div class="grid md:grid-cols-3 gap-2">
+            <input id="pie-kb-disease" class="form-control form-control-sm" placeholder="Disease code, contoh AVIAN_INFLUENZA">
+            <input id="pie-kb-risk" class="form-control form-control-sm" placeholder="Minimum risiko, contoh E2/E3/EX">
+            <input id="pie-kb-facts" class="form-control form-control-sm" placeholder="Required facts, contoh fever,rodent,flood">
+            <input id="pie-kb-actions" class="form-control form-control-sm" placeholder="Tindak lanjut, contoh START_PE_INVESTIGATION">
+            <input id="pie-kb-specimen" class="form-control form-control-sm" placeholder="Panduan spesimen">
+            <input id="pie-kb-explain" class="form-control form-control-sm" placeholder="Template penjelasan rule">
+          </div>
+          <input id="pie-kb-test-facts" class="form-control form-control-sm mt-2" placeholder="Facts simulasi, contoh fever,rodent,jaundice">
+          <div class="flex gap-2 flex-wrap mt-2"><button id="btn-pie-add-kb-rule" type="button" class="btn btn-sm btn-outline-primary">Simpan Draft Rule</button><button id="btn-pie-test-kb-rule" type="button" class="btn btn-sm btn-outline-info">Uji Draft Rule</button><input id="pie-kb-approve-id" class="form-control form-control-sm" style="max-width:260px" placeholder="Rule ID untuk approve"><button id="btn-pie-approve-kb-rule" type="button" class="btn btn-sm btn-outline-success">Approve Rule</button></div>
         </div>
-        <div class="text-xs text-slate-500 mt-2">Token tidak ditampilkan balik. Chat id personal MasBro: 61703808.</div>
       </div>
-      <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
-        <h3 class="font-semibold mb-2">Draft Rule KB SARING-PIE</h3>
-        <p class="text-xs text-slate-500">Rule baru disimpan sebagai draft tidak aktif. Engine produksi tetap memakai rule terverifikasi.</p>
-        <div class="grid md:grid-cols-3 gap-2">
-          <input id="pie-kb-disease" class="form-control form-control-sm" placeholder="Disease code, contoh AVIAN_INFLUENZA">
-          <input id="pie-kb-risk" class="form-control form-control-sm" placeholder="Minimum risiko, contoh E2/E3/EX">
-          <input id="pie-kb-facts" class="form-control form-control-sm" placeholder="Required facts, contoh fever,rodent,flood">
-          <input id="pie-kb-actions" class="form-control form-control-sm" placeholder="Tindak lanjut, contoh START_PE_INVESTIGATION">
-          <input id="pie-kb-specimen" class="form-control form-control-sm" placeholder="Panduan spesimen">
-          <input id="pie-kb-explain" class="form-control form-control-sm" placeholder="Template penjelasan rule">
-        </div>
-        <input id="pie-kb-test-facts" class="form-control form-control-sm mt-2" placeholder="Facts simulasi, contoh fever,rodent,jaundice">
-        <div class="flex gap-2 flex-wrap mt-2"><button id="btn-pie-add-kb-rule" type="button" class="btn btn-sm btn-outline-primary">Simpan Draft Rule</button><button id="btn-pie-test-kb-rule" type="button" class="btn btn-sm btn-outline-info">Uji Draft Rule</button><input id="pie-kb-approve-id" class="form-control form-control-sm" style="max-width:260px" placeholder="Rule ID untuk approve"><button id="btn-pie-approve-kb-rule" type="button" class="btn btn-sm btn-outline-success">Approve Rule</button></div>
-      </div>
-      <!-- User Management Module -->
-      <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
+      
+      <!-- Panel Users -->
+      <div id="settings-panel-users" class="hidden">
+        <!-- User Management Module -->
+        <div data-pie-role="super-admin" class="p-3 rounded border bg-white">
         <h3 class="font-semibold mb-2 flex items-center gap-1.5"><i class="fas fa-users-cog text-primary"></i> Kelola Pengguna (REF_USER)</h3>
         <p class="text-xs text-slate-500 mb-3">Tambahkan, edit, atau hapus akses pengguna sistem SIMPEL.</p>
         
@@ -171,13 +178,30 @@
           </table>
         </div>
       </div>
+      </div>
       <pre id="settings-result" class="mt-3 p-3 bg-slate-900 text-white rounded text-xs overflow-auto">Belum ada hasil.</pre>
     </div>
   </div>
 </section>
 <script>
 window.showSettingsResult = function(x){ const out=document.getElementById('settings-result'); if(out) out.textContent=JSON.stringify(x,null,2); };
+window.applySettingsTab = function(tabName) {
+  const activeTab = String(tabName || window.__SETTINGS_ACTIVE_TAB || 'config').toLowerCase();
+  window.__SETTINGS_ACTIVE_TAB = activeTab;
+  
+  const panelConfig = document.getElementById('settings-panel-config');
+  const panelUsers = document.getElementById('settings-panel-users');
+  
+  if (panelConfig) panelConfig.classList.toggle('hidden', activeTab !== 'config');
+  if (panelUsers) panelUsers.classList.toggle('hidden', activeTab !== 'users');
+  
+  // Highlight active sidebar navigation for settings
+  if (typeof updateSidebarActiveState === 'function') {
+    updateSidebarActiveState('settings');
+  }
+};
 window.initSettingsWorkspace = function(){
+  window.applySettingsTab(window.__SETTINGS_ACTIVE_TAB || 'config');
   if (window.applyPieRoleUi) window.applyPieRoleUi();
   if(window.__SETTINGS_WORKSPACE_BOUND) return;
   window.__SETTINGS_WORKSPACE_BOUND=true;
