@@ -42,9 +42,7 @@ const RAW_SCHEMA_COMMON_ = {
     "Status Verifikasi EPID",
     "Tanggal Verifikasi EPID",
     "Petugas Verifikator",
-    "Nomor EPID Rekomendasi",
-    "Nomor EPID Final",
-    "Review Admin Terakhir",
+        "Review Admin Terakhir",
     "Catatan Verifikasi EPID"
   ],
   "sampel": [
@@ -392,7 +390,7 @@ const RAW_SCHEMA_SYSTEM_FIELDS_ = [
 const RAW_SCHEMA_PIPELINE_FIELDS_ = [
   "Kecamatan Pengampu",
   "Kelurahan Pengampu",
-  "KodePuskesmas Pengampu",
+  "KodeFaskes Pengampu",
   "Puskesmas Pengampu",
   "Kepala Puskesmas Pengampu",
   "Email Kapus Pengampu",
@@ -415,6 +413,18 @@ const RAW_SCHEMA_PIPELINE_FIELDS_ = [
   "Telegram Notified At",
   "Telegram Target",
   "Telegram Retry Count",
+  "Status Notifikasi WAHA",
+  "Reason Notifikasi WAHA",
+  "WAHA Notified At",
+  "WAHA Target",
+  "Status Notifikasi Kasus Baru WAHA",
+  "Reason Notifikasi Kasus Baru WAHA",
+  "Kasus Baru WAHA Notified At",
+  "Kasus Baru WAHA Target",
+  "Status Notifikasi Revisi WAHA",
+  "Reason Notifikasi Revisi WAHA",
+  "Revision WAHA Notified At",
+  "Revision WAHA Target",
   "Pipeline Fingerprint",
   "Pipeline Last Run At",
   "Status Notifikasi Revisi Pengampu",
@@ -431,8 +441,6 @@ const RAW_SCHEMA_PIPELINE_FIELDS_ = [
 
 const RAW_SCHEMA_INTERNAL_FIELDS_ = [
   "ID Registrasi Kasus",
-  "Nomor EPID Rekomendasi",
-  "Nomor EPID Final",
   "Status Verifikasi Sebelumnya",
   "Notifikasi Revisi Dibaca",
   "Waktu Permintaan Revisi",
@@ -459,9 +467,7 @@ function getCanonicalRawHeaderOrder_(dx) {
   return _rawSchemaDedupe_([
     'ID Registrasi Kasus',
     'Nomor EPID',
-    'Nomor EPID Rekomendasi',
-    'Nomor EPID Final'
-  ]
+      ]
     .concat(RAW_SCHEMA_SYSTEM_FIELDS_ || [])
     .concat((RAW_SCHEMA_COMMON_ && RAW_SCHEMA_COMMON_.pelapor) || [])
     .concat((RAW_SCHEMA_COMMON_ && RAW_SCHEMA_COMMON_.pasien) || [])

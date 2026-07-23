@@ -87,6 +87,33 @@ const DYNAMIC_TABLE_COLUMNS_ = ["Riwayat Imunisasi", "Kontak Erat", "KontakEratJ
 const FORMULA_INJECTION_PREFIX_RE_ = /^[=\+\-@]/;
 const DEFAULT_TEXT_MAX_LENGTH_ = 2000;
 const LONG_TEXT_HEADER_RE_ = /catatan|alamat|keterangan|rincian|riwayat|hasil|gejala|uraian|deskripsi/i;
+const PHONE_TEXT_HEADERS_ = [
+  "No Whatsapp Petugas",
+  "No. kontak orang tua/wali",
+  "No Telp/WA Orang Tua/Wali",
+  "No Telp Orang Tua/Wali",
+  "No. Telp Orang Tua/Wali",
+  "No. kontak pasien",
+  "No. Kontak Pasien",
+  "No. Telepon Wali",
+  "No. Telp Dokter AFP"
+];
+
+function _isPhoneTextHeader_(header) {
+  const key = String(header || "").trim().toLowerCase();
+  return PHONE_TEXT_HEADERS_.some(function(h) { return String(h || "").trim().toLowerCase() === key; });
+}
+
+function _normalizePhoneTextForSheet_(value, header) {
+  if (!_isPhoneTextHeader_(header)) return value;
+  const raw = String(value === null || value === undefined ? "" : value).trim();
+  if (!raw) return "";
+  const digits = raw.replace(/\D+/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("62") || digits.startsWith("08")) return digits;
+  if (digits.startsWith("8")) return "0" + digits;
+  return digits;
+}
 
 function _maxSheetTextLengthForHeader_(header) {
   return LONG_TEXT_HEADER_RE_.test(String(header || "")) ? 5000 : DEFAULT_TEXT_MAX_LENGTH_;
@@ -125,6 +152,7 @@ function sanitizeStructuredValueForSheet_(value, header) {
 }
 
 function sanitizeSerializedValueForSheet_(value, header) {
+  if (_isPhoneTextHeader_(header)) return sanitizeSheetTextValue_(_normalizePhoneTextForSheet_(value, header), header);
   if (typeof value === "string") return sanitizeSheetTextValue_(value, header);
   return value;
 }
@@ -188,7 +216,7 @@ function deserializeRecord_(row, headers) {
         val = [];
       }
     }
-    result[h] = val;
+    result[h] = _normalizePhoneTextForSheet_(val, h);
   });
   return result;
 }
@@ -230,11 +258,23 @@ function _applyHeaderAliases_(dx, data, headers) {
   putIfMissing("Tempat pemeriksaan ibu hamil", ["Tempat pemeriksaan Ibu Hamil"]);
   putIfMissing("Tempat persalinan lainnya", ["Tempat persalinan - Lainnya"]);
 
-  if (headers.includes("Demam?") && (data["Demam?"] === undefined || String(data["Demam?"]).trim() === "")) {
-    data["Demam?"] = String(data["Tanggal mulai demam"] || "").trim() ? "Ya" : "Tidak";
+  if (headers.includes("Demam?")) {
+    const demamValue = String(data["Demam?"] || "").trim();
+    const demamDateValue = String(data["Tanggal mulai demam"] || "").trim();
+    if (!demamValue) {
+      data["Demam?"] = demamDateValue ? "Ya" : "Tidak";
+    } else if (dx === "MR" && demamDateValue && demamValue.toLowerCase() !== "ya") {
+      data["Demam?"] = "Ya";
+    }
   }
-  if (headers.includes("Ruam Makulopapular?") && (data["Ruam Makulopapular?"] === undefined || String(data["Ruam Makulopapular?"]).trim() === "")) {
-    data["Ruam Makulopapular?"] = String(data["Tanggal mulai ruam"] || "").trim() ? "Ya" : "Tidak";
+  if (headers.includes("Ruam Makulopapular?")) {
+    const ruamValue = String(data["Ruam Makulopapular?"] || "").trim();
+    const ruamDateValue = String(data["Tanggal mulai ruam"] || "").trim();
+    if (!ruamValue) {
+      data["Ruam Makulopapular?"] = ruamDateValue ? "Ya" : "Tidak";
+    } else if (dx === "MR" && ruamDateValue && ruamValue.toLowerCase() !== "ya") {
+      data["Ruam Makulopapular?"] = "Ya";
+    }
   }
   putIfMissing("Umur kehamilan", ["Umur Kehamilan"]);
   putIfMissing("Gejala lain", ["Gejala Lain"]);
@@ -295,6 +335,62 @@ function _normalizeWilayahKey_(value) {
     .replace(/\s+/g, " ");
 }
 
+function _normalizeDuplicateNik_(value) {
+  return String(value || "").replace(/\D+/g, "").trim();
+}
+
+function _normalizeDuplicateDate_(value) {
+  if (value instanceof Date) {
+    const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    return Utilities.formatDate(value, tz, "yyyy-MM-dd");
+  }
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return isoMatch[1] + "-" + isoMatch[2] + "-" + isoMatch[3];
+  const slashMatch = text.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (slashMatch) {
+    const dd = ("0" + slashMatch[1]).slice(-2);
+    const mm = ("0" + slashMatch[2]).slice(-2);
+    return slashMatch[3] + "-" + mm + "-" + dd;
+  }
+  const parsed = new Date(text);
+  if (!isNaN(parsed.getTime())) {
+    const tz = Session.getScriptTimeZone() || "Asia/Jakarta";
+    return Utilities.formatDate(parsed, tz, "yyyy-MM-dd");
+  }
+  return text;
+}
+
+function _assertNoDuplicateMrNikDemam_(sheet, headers, data, currentRecordId, currentEpid) {
+  if (!sheet || !headers || !headers.length) return;
+  const idxNik = headers.indexOf("NIK");
+  const idxDemam = headers.indexOf("Tanggal mulai demam");
+  if (idxNik === -1 || idxDemam === -1) return;
+
+  const nik = _normalizeDuplicateNik_(data["NIK"] || data["NIK Pasien"]);
+  const tglDemam = _normalizeDuplicateDate_(data["Tanggal mulai demam"] || data["Tanggal Mulai Demam"]);
+  if (!nik || !tglDemam) return;
+
+  const idxRecordId = headers.indexOf("ID Registrasi Kasus");
+  const idxEpid = headers.indexOf("Nomor EPID");
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const rows = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowRecordId = idxRecordId !== -1 ? String(row[idxRecordId] || "").trim() : "";
+    const rowEpid = idxEpid !== -1 ? String(row[idxEpid] || "").trim() : "";
+    if ((currentRecordId && rowRecordId === currentRecordId) || (currentEpid && rowEpid === currentEpid)) continue;
+    const rowNik = _normalizeDuplicateNik_(row[idxNik]);
+    const rowDemam = _normalizeDuplicateDate_(row[idxDemam]);
+    if (rowNik && rowNik === nik && rowDemam && rowDemam === tglDemam) {
+      throw new Error("Input ditolak: kasus campak dengan NIK dan tanggal mulai demam yang sama sudah ada. Kasus dianggap duplikat.");
+    }
+  }
+}
+
 // ─── getPengampuByWilayah_ ───────────────────────────────────────────────────
 
 function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
@@ -335,7 +431,7 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
   const idxKab = headers.indexOf("Kab/Kota");
   const idxKecamatan = headers.indexOf("Kecamatan");
   const idxKelurahan = headers.indexOf("Kelurahan");
-  const idxKodePuskesmas = headers.indexOf("KodePuskesmas");
+  const idxKodePuskesmas = headers.indexOf("KodeFaskes");
   const idxNamaPuskesmas = headers.indexOf("NamaPuskesmas");
   const idxPengampu = headers.indexOf("Pengampu");
   const idxKapus = headers.indexOf("KepalaPuskesmas");
@@ -397,7 +493,7 @@ function _ensureSheetHeaders_(sheet, requiredHeaders) {
 const COMMON_PIPELINE_HEADERS_ = [
   "Kecamatan Pengampu",
   "Kelurahan Pengampu",
-  "KodePuskesmas Pengampu",
+  "KodeFaskes Pengampu",
   "Puskesmas Pengampu",
   "Kepala Puskesmas Pengampu",
   "Email Kapus Pengampu",
@@ -420,6 +516,10 @@ const COMMON_PIPELINE_HEADERS_ = [
   "Telegram Notified At",
   "Telegram Target",
   "Telegram Retry Count",
+  "Status Notifikasi WAHA",
+  "Reason Notifikasi WAHA",
+  "WAHA Notified At",
+  "WAHA Target",
   "Pipeline Fingerprint",
   "Pipeline Last Run At",
   "Status Notifikasi Revisi Pengampu",
@@ -446,8 +546,6 @@ const WORKFLOW_PROCESS_HEADERS_ = [
 
 const INTERNAL_TRACKING_HEADERS_ = [
   "ID Registrasi Kasus",
-  "Nomor EPID Rekomendasi",
-  "Nomor EPID Final",
   "Status Verifikasi Sebelumnya",
   "Notifikasi Revisi Dibaca",
   "Waktu Permintaan Revisi",
@@ -465,11 +563,11 @@ function generateCaseRegistrationId_(dx) {
 
 function _deriveEpidBaseCode_(data) {
   var directCandidates = [
-    data && data['KodePuskesmas Pengampu'],
+    data && data['KodeFaskes Pengampu'],
     data && data.KodePuskesmasPengampu,
-    data && data['KodePuskesmas'],
+    data && data['KodeFaskes'],
     data && data.KodePuskesmas,
-    data && data['Kode Puskesmas'],
+    data && data['Kode Faskes'],
     data && data['Kode Puskesmas Pengampu']
   ];
 
@@ -535,77 +633,43 @@ function _deriveMrEpidYear2_(data) {
   return year.slice(-2);
 }
 
-function _recommendMrEpid_(sheet, data) {
-  var targetYear2 = _deriveMrEpidYear2_(data);
-  var maxSeq = '';
+function _getMaxEpidFromNomorEpidColumn_(sheet) {
+  var result = { digits: '', hasHyphen: false };
+  if (!sheet) return result;
 
-  if (sheet) {
-    var values = sheet.getDataRange().getValues();
-    if (values && values.length > 1) {
-      var headers = values[0].map(function(h) { return String(h || '').trim(); });
-      var idxEpid = headers.indexOf('Nomor EPID');
-      if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
+  var values = sheet.getDataRange().getValues();
+  if (!values || values.length <= 1) return result;
 
-      if (idxEpid !== -1) {
-        for (var r = 1; r < values.length; r++) {
-          var epidValue = String(values[r][idxEpid] || '').trim().toUpperCase();
-          if (!epidValue) continue;
-          var match = epidValue.match(/^C-?1022(\d{2})(\d+)$/);
-          if (!match) continue;
-          if (String(match[1] || '') !== targetYear2) continue;
-          var seq = String(match[2] || '').replace(/\D/g, '');
-          if (!seq) continue;
-          if (!maxSeq || _compareNumericStrings_(seq, maxSeq) > 0) {
-            maxSeq = seq;
-          }
-        }
-      }
+  var headers = values[0].map(function(h) { return String(h || '').trim(); });
+  var idxEpid = headers.indexOf('Nomor EPID');
+  if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
+  if (idxEpid === -1) return result;
+
+  for (var r = 1; r < values.length; r++) {
+    var epidValue = String(values[r][idxEpid] || '').trim().toUpperCase();
+    var match = epidValue.match(/^C(-?)(\d+)$/);
+    if (!match) continue;
+    var digits = String(match[2] || '').replace(/\D/g, '');
+    if (!digits) continue;
+    if (!result.digits || _compareNumericStrings_(digits, result.digits) > 0) {
+      result.digits = digits;
+      result.hasHyphen = match[1] === '-';
     }
   }
-
-  if (!maxSeq) return 'C-1022' + targetYear2 + '001';
-  var nextSeq = _incrementNumericString_(maxSeq);
-  if (nextSeq.length < 3) nextSeq = nextSeq.padStart(3, '0');
-  return 'C-1022' + targetYear2 + nextSeq;
+  return result;
 }
 
 function recommendEpid_(dx, data) {
   dx = String(dx || '').trim().toUpperCase();
   var sheet = getSheetOrNull_(dx + '_Raw');
-
-  if (dx === 'MR') {
-    return _recommendMrEpid_(sheet, data);
+  var maxEpid = _getMaxEpidFromNomorEpidColumn_(sheet);
+  if (maxEpid.digits) {
+    return 'C' + (maxEpid.hasHyphen ? '-' : '') + _incrementNumericString_(maxEpid.digits);
   }
 
   var baseCode = _deriveEpidBaseCode_(data);
   var fallbackDigits = String(baseCode || '000000').replace(/\D/g, '').padStart(6, '0').substring(0, 6) + '001';
-  var maxDigits = '';
-
-  if (sheet) {
-    var values = sheet.getDataRange().getValues();
-    if (values && values.length > 1) {
-      var headers = values[0].map(function(h) { return String(h || '').trim(); });
-      var idxEpid = headers.indexOf('Nomor EPID');
-      if (idxEpid === -1 && headers.length >= 3) idxEpid = 2;
-
-      if (idxEpid !== -1) {
-        for (var r = 1; r < values.length; r++) {
-          var epidDigits = _extractComparableEpidNumber_(values[r][idxEpid]);
-          if (!epidDigits) continue;
-          if (!maxDigits || _compareNumericStrings_(epidDigits, maxDigits) > 0) {
-            maxDigits = epidDigits;
-          }
-        }
-      }
-    }
-  }
-
-  if (!maxDigits) {
-    maxDigits = fallbackDigits;
-    return 'C' + maxDigits;
-  }
-
-  return 'C' + _incrementNumericString_(maxDigits);
+  return 'C' + (dx === 'MR' ? '-' : '') + fallbackDigits;
 }
 
 
@@ -664,15 +728,8 @@ function saveDxRecord_(dx, data) {
 
   const incomingVerificationStatus = String(data["Status Verifikasi EPID"] || "").trim();
   let verificationStatus = incomingVerificationStatus;
-  if (!data["Nomor EPID Rekomendasi"]) {
-    try {
-      data["Nomor EPID Rekomendasi"] = recommendEpid_(dx, data);
-    } catch (e) {
-      data["Nomor EPID Rekomendasi"] = "";
-    }
-  }
 
-  let epidValue = String(data["Nomor EPID"] || data["Nomor EPID Final"] || "").trim();
+  let epidValue = String(data["Nomor EPID"] || "").trim();
 
   let rowIndex = -1;
   const lastRowForLookup = sheet.getLastRow();
@@ -701,6 +758,10 @@ function saveDxRecord_(dx, data) {
     }
   }
 
+  if (dx === "MR" && rowIndex === -1) {
+    _assertNoDuplicateMrNikDemam_(sheet, headers, data, recordId, epidValue);
+  }
+
   const incomingKecamatanVal = String(data["Kecamatan"] || data["Kecamatan domisili"] || "").trim();
   const incomingKelurahanVal = String(data["Kelurahan"] || data["Kelurahan domisili"] || "").trim();
   const incomingKabKotaVal = String(data["Kab/Kota"] || data["Kab/Kota Pasien"] || data["Kab/Kota domisili"] || "").trim();
@@ -717,7 +778,7 @@ function saveDxRecord_(dx, data) {
     if (pengampu.found) {
       data["Kecamatan Pengampu"] = pengampu.kecamatan || "";
       data["Kelurahan Pengampu"] = pengampu.kelurahan || "";
-      data["KodePuskesmas Pengampu"] = pengampu.kodePuskesmas || "";
+      data["KodeFaskes Pengampu"] = pengampu.kodePuskesmas || "";
       data["Puskesmas Pengampu"] = pengampu.namaPuskesmas || pengampu.pengampu || "";
       data["Kepala Puskesmas Pengampu"] = pengampu.kepalaPuskesmas || "";
       data["Email Kapus Pengampu"] = pengampu.emailKapus || "";
@@ -729,7 +790,7 @@ function saveDxRecord_(dx, data) {
     } else {
       data["Kecamatan Pengampu"] = "";
       data["Kelurahan Pengampu"] = "";
-      data["KodePuskesmas Pengampu"] = "";
+      data["KodeFaskes Pengampu"] = "";
       data["Puskesmas Pengampu"] = "";
       data["Kepala Puskesmas Pengampu"] = "";
       data["Email Kapus Pengampu"] = "";
@@ -743,7 +804,7 @@ function saveDxRecord_(dx, data) {
     data["Status Routing Pengampu"] = String(data["Status Routing Pengampu"] || existingRowObject["Status Routing Pengampu"] || "").trim();
     data["Kecamatan Pengampu"] = String(data["Kecamatan Pengampu"] || existingRowObject["Kecamatan Pengampu"] || "").trim();
     data["Kelurahan Pengampu"] = String(data["Kelurahan Pengampu"] || existingRowObject["Kelurahan Pengampu"] || "").trim();
-    data["KodePuskesmas Pengampu"] = String(data["KodePuskesmas Pengampu"] || existingRowObject["KodePuskesmas Pengampu"] || "").trim();
+    data["KodeFaskes Pengampu"] = String(data["KodeFaskes Pengampu"] || existingRowObject["KodeFaskes Pengampu"] || "").trim();
     data["Puskesmas Pengampu"] = String(data["Puskesmas Pengampu"] || existingRowObject["Puskesmas Pengampu"] || "").trim();
     data["Kepala Puskesmas Pengampu"] = String(data["Kepala Puskesmas Pengampu"] || existingRowObject["Kepala Puskesmas Pengampu"] || "").trim();
     data["Email Kapus Pengampu"] = String(data["Email Kapus Pengampu"] || existingRowObject["Email Kapus Pengampu"] || "").trim();
@@ -761,12 +822,6 @@ function saveDxRecord_(dx, data) {
       verificationStatus = String(existingRowObject['Status Verifikasi EPID'] || '').trim() || 'Pending';
       data['Status Verifikasi EPID'] = verificationStatus;
     }
-    if (!String(data['Nomor EPID Rekomendasi'] || '').trim()) {
-      data['Nomor EPID Rekomendasi'] = String(existingRowObject['Nomor EPID Rekomendasi'] || '').trim();
-    }
-    if (!String(data['Nomor EPID Final'] || '').trim()) {
-      data['Nomor EPID Final'] = String(existingRowObject['Nomor EPID Final'] || '').trim();
-    }
     if (!epidValue) {
       epidValue = String(existingRowObject['Nomor EPID'] || '').trim();
     }
@@ -774,15 +829,23 @@ function saveDxRecord_(dx, data) {
 
   const normalizedStatus = String(data['Status Verifikasi EPID'] || verificationStatus || 'Pending').trim() || 'Pending';
   data['Status Verifikasi EPID'] = normalizedStatus;
+  var verificationEpidLock = null;
   if (normalizedStatus === 'Terverifikasi') {
-    epidValue = String(data['Nomor EPID Final'] || data['Nomor EPID'] || epidValue || '').trim();
-    if (!epidValue) {
-      epidValue = String(data['Nomor EPID Rekomendasi'] || '').trim() || recommendEpid_(dx, data);
+    try {
+      verificationEpidLock = LockService.getScriptLock();
+      verificationEpidLock.waitLock(20000);
+    } catch (lockErr) {
+      throw new Error('Sistem sedang mengunci nomor EPID untuk verifikasi lain. Coba simpan ulang beberapa detik lagi.');
     }
-    data['Nomor EPID Final'] = epidValue;
+    epidValue = String(data['Nomor EPID'] || '').trim();
+    if (!epidValue) {
+      try { epidValue = recommendEpid_(dx, data); } catch (e) { epidValue = ''; }
+    }
+    if (!epidValue) {
+      throw new Error('Nomor EPID wajib diisi saat status Terverifikasi.');
+    }
     data['Nomor EPID'] = epidValue;
   } else if (rowIndex === -1 || String(data['__workflowStage'] || '').trim() === 'section-verifikasi') {
-    data['Nomor EPID Final'] = '';
     data['Nomor EPID'] = '';
     epidValue = '';
   }
@@ -810,6 +873,8 @@ function saveDxRecord_(dx, data) {
   const rowData = headers.map((header, idx) => {
     if (!header) return "";
     if (header === "Timestamp") return rowIndex !== -1 ? (oldTimestamp || serialized["Timestamp"] || now) : (serialized["Timestamp"] || now);
+    if (header === "Tanggal Input") return rowIndex !== -1 ? (existingRow[idx] || serialized["Tanggal Input"] || now) : (serialized["Tanggal Input"] || now);
+    if (header === "Tanggal Update" || header === "Last Updated At") return serialized[header] || now;
     if (header === "dx") return dx;
     if (header === "ID Registrasi Kasus") return recordId;
     if (header === "Nomor EPID") return epidValue;
@@ -818,10 +883,17 @@ function saveDxRecord_(dx, data) {
   });
 
   const savedRowIndex = rowIndex !== -1 ? rowIndex : (sheet.getLastRow() + 1);
-  if (rowIndex !== -1) {
-    sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-  } else {
-    sheet.appendRow(rowData);
+  const wasNewRecord = rowIndex === -1;
+  try {
+    if (rowIndex !== -1) {
+      sheet.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
+    } else {
+      sheet.appendRow(rowData);
+    }
+  } finally {
+    if (verificationEpidLock) {
+      try { verificationEpidLock.releaseLock(); } catch (releaseErr) {}
+    }
   }
 
   // Req 2.3: perbarui indeks setelah tulis
@@ -837,6 +909,21 @@ function saveDxRecord_(dx, data) {
   }
 
   // Req 10.1, 10.2: audit log
+  try {
+    if (wasNewRecord) {
+      sendCaseCreatedOperationalTelegramNotificationsOnce(data, {
+        caseCode: recordId,
+        diagnosisCode: dx,
+        namaPasien: data['Nama'] || data['Nama Pasien'] || '',
+        asalFaskes: data['Nama unit pelapor'] || data['NamaFaskes'] || data['Nama Faskes'] || '',
+        pengampu: data['Puskesmas Pengampu'] || data['Pengampu'] || '',
+        action: 'Review dan verifikasi kasus baru',
+        workspace: 'verifikasi',
+        status: normalizedStatus || 'PENDING'
+      });
+    }
+  } catch (_e) {}
+
   try {
     const aksi = rowIndex !== -1 ? "UPDATE" : "INSERT";
     const user = (data && data.__user) ? data.__user : { username: "system", role: "system" };

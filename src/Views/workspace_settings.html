@@ -2,88 +2,129 @@
   <div class="pd3i-card">
     <div class="pd3i-local-status-strip" aria-label="Status pengaturan sistem">
       <div class="pd3i-local-status-copy">
-        <span class="pd3i-card-eyebrow">SUPER-ADMIN</span>
-        <span>Konfigurasi runtime sensitif. Field terbuka hanya untuk role SUPER-ADMIN.</span>
+        <span class="pd3i-card-eyebrow">Administrasi sistem</span>
+        <span>Konfigurasi runtime sensitif. Aksi terbatas sesuai role dan wajib auditable.</span>
       </div>
     </div>
+    <div class="pd3i-admin-ops-summary" aria-label="Ringkasan operasi administrasi">
+      <div class="pd3i-admin-ops-item"><strong>Akses pengguna</strong><span>Approval akun, role, scope, dan OTP.</span></div>
+      <div class="pd3i-admin-ops-item"><strong>Integrasi aman</strong><span>Telegram, WAHA, dan status konfigurasi.</span></div>
+      <div class="pd3i-admin-ops-item is-sensitive"><strong>Operasi sensitif</strong><span>Rule, setup sheet, dan perubahan super-admin.</span></div>
+    </div>
+    <div class="pd3i-admin-guardrail-strip" aria-label="Guardrail administrasi sensitif">
+      <div class="pd3i-admin-guardrail-item is-current"><strong>Verifikasi akses</strong><span>Pastikan role dan scope pengguna sebelum aksi.</span></div>
+      <div class="pd3i-admin-guardrail-item"><strong>Audit perubahan</strong><span>Catat alasan dan dampak untuk operasi sensitif.</span></div>
+      <div class="pd3i-admin-guardrail-item"><strong>Uji konfigurasi</strong><span>Gunakan tombol uji sebelum menyimpan integrasi.</span></div>
+      <div class="pd3i-admin-guardrail-item is-sensitive"><strong>Operasi terbatas</strong><span>Setup sheet, rule, dan super-admin tidak untuk perubahan rutin.</span></div>
+    </div>
+    <div class="pd3i-admin-audit-brief" aria-label="Ringkasan audit administrasi">
+      <div><strong>Checklist sebelum simpan</strong><span>Role benar, scope wilayah benar, kanal OTP sesuai, alasan perubahan jelas.</span></div>
+      <div><strong>Jejak audit</strong><span>Perubahan pengguna, integrasi, dan rule wajib bisa ditelusuri dari waktu, pelaku, dan dampak.</span></div>
+      <div class="is-sensitive"><strong>Kontrol risiko</strong><span>Operasi setup, approve rule, dan super-admin dipakai hanya saat perlu.</span></div>
+    </div>
     <div class="pd3i-card-body">
-      <div id="pie-settings-locked" class="p-3 rounded border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
+      <div id="pie-settings-locked" class="pd3i-settings-surface p-3 border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
       
       <!-- Panel Config -->
-      <div id="settings-panel-config" class="hidden">
-        <div data-pie-role="super-admin" class="p-3 rounded border bg-blue-50">
-          <h3 class="font-semibold mb-2">Notifikasi & Integrasi</h3>
+      <div id="settings-panel-config" class="hidden pd3i-settings-panel">
+        <div data-pie-role="super-admin" class="pd3i-settings-surface p-3 border bg-blue-50">
+          <h3 class="font-semibold mb-2">Integrasi notifikasi</h3>
           <div class="grid md:grid-cols-3 gap-2 mt-3">
-            <input id="pie-config-bot-token" class="form-control form-control-sm" type="password" placeholder="TELEGRAM_BOT_TOKEN">
-            <input id="pie-config-chat-id" class="form-control form-control-sm" placeholder="PIE_TELEGRAM_CHAT_ID / chat id">
-            <input id="pie-config-global-chat-id" class="form-control form-control-sm" placeholder="TELEGRAM_CHAT_ID Dinkes/global">
-            <select id="pie-config-waha-enabled" class="form-select form-select-sm" aria-label="Status WAHA enabled"><option value="">WAHA_ENABLED unchanged</option><option value="true">WAHA on</option><option value="false">WAHA off</option></select>
-            <input id="pie-config-waha-base-url" class="form-control form-control-sm" placeholder="WAHA_BASE_URL">
-            <input id="pie-config-waha-session" class="form-control form-control-sm" placeholder="WAHA_SESSION default">
-            <input id="pie-config-waha-api-key" type="password" class="form-control form-control-sm" placeholder="WAHA_API_KEY">
-            <input id="pie-config-waha-dinkes" class="form-control form-control-sm" placeholder="WAHA_DINKES_CHAT_ID">
+            <input id="pie-config-bot-token" class="pd3i-shell-input" type="password" placeholder="TELEGRAM_BOT_TOKEN">
+            <input id="pie-config-chat-id" class="pd3i-shell-input" placeholder="PIE_TELEGRAM_CHAT_ID / chat id">
+            <input id="pie-config-global-chat-id" class="pd3i-shell-input" placeholder="TELEGRAM_CHAT_ID Dinkes/global">
+            <select id="pie-config-waha-enabled" class="pd3i-shell-select" aria-label="Status WAHA enabled"><option value="">WAHA_ENABLED unchanged</option><option value="true">WAHA on</option><option value="false">WAHA off</option></select>
+            <input id="pie-config-waha-base-url" class="pd3i-shell-input" placeholder="WAHA_BASE_URL">
+            <input id="pie-config-waha-session" class="pd3i-shell-input" placeholder="WAHA_SESSION default">
+            <input id="pie-config-waha-api-key" type="password" class="pd3i-shell-input" placeholder="WAHA_API_KEY">
+            <input id="pie-config-waha-dinkes" class="pd3i-shell-input" placeholder="WAHA_DINKES_CHAT_ID">
           </div>
           <div class="flex gap-2 flex-wrap mt-3">
-            <button id="btn-pie-save-config" type="button" class="btn btn-sm btn-primary">Simpan Config</button>
-            <button id="btn-pie-test-telegram" type="button" class="btn btn-sm btn-outline-primary">Test Kirim</button>
-            <button id="btn-pie-check-pd3i-notif" type="button" class="btn btn-sm btn-outline-secondary">Cek Notif Pengampu/Dinkes</button>
-            <button id="btn-pie-config" type="button" class="btn btn-sm btn-outline-info">Cek Config Telegram PIE</button>
-            <button id="btn-pie-setup" type="button" class="btn btn-sm btn-outline-warning">Siapkan Sheet PIE</button><button id="btn-pie-validation-metrics" type="button" class="btn btn-sm btn-outline-dark">Hitung Metrik Validasi</button>
+            <button id="btn-pie-save-config" type="button" class="pd3i-btn pd3i-btn-primary">Simpan konfigurasi</button>
+            <button id="btn-pie-test-telegram" type="button" class="pd3i-btn pd3i-btn-secondary">Uji kirim</button>
+            <button id="btn-pie-check-pd3i-notif" type="button" class="pd3i-btn pd3i-btn-secondary">Cek notifikasi pengampu/Dinkes</button>
+            <button id="btn-pie-config" type="button" class="pd3i-btn pd3i-btn-secondary">Cek konfigurasi Telegram PIE</button>
+            <button id="btn-pie-setup" type="button" class="pd3i-btn pd3i-btn-secondary">Siapkan sheet PIE</button><button id="btn-pie-validation-metrics" type="button" class="pd3i-btn pd3i-btn-secondary">Hitung metrik validasi</button>
           </div>
           <div class="text-xs text-slate-500 mt-2">Token tidak ditampilkan balik. Chat id personal MasBro: 61703808.</div>
         </div>
-        <div data-pie-role="super-admin" class="p-3 rounded border bg-white mt-3">
-          <h3 class="font-semibold mb-2">Draft Rule KB SARING-PIE</h3>
+        <div data-pie-role="super-admin" class="pd3i-settings-surface p-3 border bg-emerald-50 mt-3">
+          <h3 class="font-semibold mb-1">Hubungkan Telegram pengguna</h3>
+          <p class="text-xs text-slate-600 mb-2">Buat link pairing 10 menit. User wajib membuka link lalu menekan Start di bot Telegram.</p>
+          <div class="flex gap-2 flex-wrap">
+            <input id="telegram-pairing-email" type="email" class="pd3i-shell-input" placeholder="Email user di REF_USER">
+            <button id="btn-telegram-pairing" type="button" class="pd3i-btn pd3i-btn-primary">Buat link pairing</button>
+          </div>
+          <div id="telegram-pairing-link" class="text-sm mt-2 break-all"></div>
+        </div>
+        <div data-pie-role="super-admin" class="pd3i-settings-surface p-3 border bg-white mt-3">
+          <h3 class="font-semibold mb-2">Draft rule KB SARING-PIE</h3>
           <p class="text-xs text-slate-500">Rule baru disimpan sebagai draft tidak aktif. Engine produksi tetap memakai rule terverifikasi.</p>
           <div class="grid md:grid-cols-3 gap-2">
-            <input id="pie-kb-disease" class="form-control form-control-sm" placeholder="Disease code, contoh AVIAN_INFLUENZA">
-            <input id="pie-kb-risk" class="form-control form-control-sm" placeholder="Minimum risiko, contoh E2/E3/EX">
-            <input id="pie-kb-facts" class="form-control form-control-sm" placeholder="Required facts, contoh fever,rodent,flood">
-            <input id="pie-kb-actions" class="form-control form-control-sm" placeholder="Tindak lanjut, contoh START_PE_INVESTIGATION">
-            <input id="pie-kb-specimen" class="form-control form-control-sm" placeholder="Panduan spesimen">
-            <input id="pie-kb-explain" class="form-control form-control-sm" placeholder="Template penjelasan rule">
+            <input id="pie-kb-disease" class="pd3i-shell-input" placeholder="Disease code, contoh AVIAN_INFLUENZA">
+            <input id="pie-kb-risk" class="pd3i-shell-input" placeholder="Minimum risiko, contoh E2/E3/EX">
+            <input id="pie-kb-facts" class="pd3i-shell-input" placeholder="Required facts, contoh fever,rodent,flood">
+            <input id="pie-kb-actions" class="pd3i-shell-input" placeholder="Tindak lanjut, contoh START_PE_INVESTIGATION">
+            <input id="pie-kb-specimen" class="pd3i-shell-input" placeholder="Panduan spesimen">
+            <input id="pie-kb-explain" class="pd3i-shell-input" placeholder="Template penjelasan rule">
           </div>
-          <input id="pie-kb-test-facts" class="form-control form-control-sm mt-2" placeholder="Facts simulasi, contoh fever,rodent,jaundice">
-          <div class="flex gap-2 flex-wrap mt-2"><button id="btn-pie-add-kb-rule" type="button" class="btn btn-sm btn-outline-primary">Simpan Draft Rule</button><button id="btn-pie-test-kb-rule" type="button" class="btn btn-sm btn-outline-info">Uji Draft Rule</button><input id="pie-kb-approve-id" class="form-control form-control-sm" style="max-width:260px" placeholder="Rule ID untuk approve"><button id="btn-pie-approve-kb-rule" type="button" class="btn btn-sm btn-outline-success">Approve Rule</button></div>
+          <input id="pie-kb-test-facts" class="pd3i-shell-input mt-2" placeholder="Facts simulasi, contoh fever,rodent,jaundice">
+          <div class="flex gap-2 flex-wrap mt-2"><button id="btn-pie-add-kb-rule" type="button" class="pd3i-btn pd3i-btn-secondary">Simpan draft rule</button><button id="btn-pie-test-kb-rule" type="button" class="pd3i-btn pd3i-btn-secondary">Uji draft rule</button><input id="pie-kb-approve-id" class="pd3i-shell-input" style="max-width:260px" placeholder="Rule ID untuk approve"><button id="btn-pie-approve-kb-rule" type="button" class="pd3i-btn pd3i-btn-secondary">Setujui rule</button></div>
         </div>
       </div>
       
       <!-- Panel Users -->
-      <div id="settings-panel-users" class="hidden">
+      <div id="settings-panel-users" class="hidden pd3i-settings-panel">
+        <div data-pie-role="admin" class="pd3i-shell-card mb-4 account-approval-panel">
+          <div class="flex items-start justify-between gap-3 flex-wrap mb-3"><div><span class="pd3i-card-eyebrow">Administrasi akses</span><h3 class="font-semibold mb-1">Approval permohonan akun</h3><p class="text-xs text-slate-500">Tinjau permohonan pengguna dan tetapkan akses setelah verifikasi.</p></div><button id="btn-account-request-refresh" type="button" class="pd3i-btn pd3i-btn-secondary"><i class="fas fa-rotate"></i> Muat ulang</button></div>
+          <div class="account-approval-stats" id="account-request-admin-stats"><div><b id="account-stat-pending">0</b><span>Menunggu</span></div><div><b id="account-stat-approved">0</b><span>Disetujui</span></div><div><b id="account-stat-rejected">0</b><span>Ditolak</span></div><div><b id="account-stat-all">0</b><span>Semua</span></div></div>
+          <div class="flex items-center gap-2 mb-3"><i class="fas fa-search text-slate-400"></i><input id="account-request-admin-search" class="pd3i-shell-input" placeholder="Cari nama, email, unit kerja, atau nomor permohonan" autocomplete="off"><span id="account-request-admin-status" class="text-xs text-slate-500 ml-auto"></span></div>
+          <div id="account-request-admin-list" class="pd3i-approval-table-wrap overflow-x-auto text-xs" aria-label="Tabel approval permohonan akun"></div>
+          <div class="mt-5 pt-4 border-t border-slate-200">
+            <div class="flex items-center justify-between gap-2 mb-2"><div><h4 class="font-semibold">Review koreksi data faskes</h4><p class="text-xs text-slate-500">Usulan disimpan terpisah dan tidak menimpa REF_FASKES otomatis.</p></div><button id="btn-facility-correction-refresh" type="button" class="pd3i-btn pd3i-btn-secondary text-xs">Muat koreksi</button></div>
+            <div id="facility-correction-admin-list" class="pd3i-approval-table-wrap overflow-x-auto text-xs" aria-label="Tabel review koreksi faskes"><div class="p-3 text-slate-500">Belum dimuat.</div></div>
+          </div>
+        </div>
         <!-- User Management Module -->
-        <div data-pie-role="super-admin" class="p-3 rounded border bg-white">
+        <div data-pie-role="super-admin" class="pd3i-settings-surface p-3 border bg-white user-management-panel">
         <h3 class="font-semibold mb-2 flex items-center gap-1.5"><i class="fas fa-users-cog text-primary"></i> Kelola Pengguna (REF_USER)</h3>
         <p class="text-xs text-slate-500 mb-3">Tambahkan, edit, atau hapus akses pengguna sistem SIMPEL.</p>
         
         <!-- Form Add/Edit User -->
-        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mb-3">
-          <div class="font-semibold text-xs text-slate-700 mb-2 uppercase tracking-wide" id="user-form-title">Tambah / Edit User</div>
+        <div class="pd3i-settings-form-surface bg-slate-50 p-3 border border-slate-200 mb-3">
+          <div class="font-semibold text-xs text-slate-700 mb-2 uppercase tracking-wide" id="user-form-title">Tambah / edit pengguna</div>
           
-          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Identitas Pengguna</div>
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Identitas pengguna</div>
           <div class="grid md:grid-cols-4 gap-2 mb-3">
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Username</label>
-              <input id="user-username" class="form-control form-control-sm" placeholder="Contoh: Budi">
+              <input id="user-username" class="pd3i-shell-input" placeholder="Contoh: Budi">
             </div>
             <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase">Gmail</label>
-              <input id="user-gmail" type="email" class="form-control form-control-sm" placeholder="user@gmail.com">
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Email</label>
+              <input id="user-gmail" type="email" class="pd3i-shell-input" placeholder="user@domain.com">
             </div>
             <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase">Nama Lengkap</label>
-              <input id="user-nama" class="form-control form-control-sm" placeholder="Nama Lengkap">
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Nama lengkap</label>
+              <input id="user-nama" class="pd3i-shell-input" placeholder="Nama lengkap">
             </div>
             <div>
-              <label class="text-[10px] font-bold text-slate-500 uppercase">Unit Kerja</label>
-              <input id="user-unit" class="form-control form-control-sm" placeholder="Nama Faskes/Puskesmas">
+              <label class="text-[10px] font-bold text-slate-500 uppercase">Unit kerja</label>
+              <input id="user-unit" class="pd3i-shell-input" placeholder="Nama Faskes/Puskesmas">
             </div>
           </div>
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Kanal Telegram & notifikasi</div>
+          <div class="grid md:grid-cols-3 gap-2 mb-3">
+            <select id="user-otp-channel" class="pd3i-shell-select"><option value="email">OTP Email</option><option value="telegram">OTP Telegram</option><option value="both">Telegram lalu Email</option></select>
+            <select id="user-otp-fallback" class="pd3i-shell-select"><option value="none">Tanpa fallback Email</option><option value="email">Fallback Email jika Telegram gagal</option></select>
+            <select id="user-notification-channel" class="pd3i-shell-select"><option value="none">Notifikasi nonaktif</option><option value="telegram">Notifikasi Telegram</option><option value="email">Notifikasi Email</option><option value="both">Telegram dan Email</option></select>
+          </div>
 
-          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Otorisasi & Wilayah</div>
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Otorisasi & wilayah</div>
           <div class="grid md:grid-cols-4 gap-2 mb-3">
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Role</label>
-              <select id="user-role" class="form-select form-select-sm">
+              <select id="user-role" class="pd3i-shell-select">
                 <option value="petugas">Petugas (Faskes/Puskesmas)</option>
                 <option value="surveilans">Surveilans (Dinkes)</option>
                 <option value="admin">Admin (KB Editor)</option>
@@ -92,11 +133,11 @@
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Kode Puskesmas</label>
-              <input id="user-kode" class="form-control form-control-sm" placeholder="P3276XXXXX">
+              <input id="user-kode" class="pd3i-shell-input" placeholder="P3276XXXXX">
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Scope Level</label>
-              <select id="user-scope" class="form-select form-select-sm">
+              <select id="user-scope" class="pd3i-shell-select">
                 <option value="puskesmas">Puskesmas</option>
                 <option value="faskes">Faskes</option>
                 <option value="dinkes">Dinkes</option>
@@ -104,61 +145,61 @@
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Status Aktif</label>
-              <select id="user-aktif" class="form-select form-select-sm">
+              <select id="user-aktif" class="pd3i-shell-select">
                 <option value="YA">Aktif</option>
                 <option value="TIDAK">Nonaktif</option>
               </select>
             </div>
           </div>
 
-          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Metode Login & Keamanan (OTP)</div>
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Metode login & keamanan OTP</div>
           <div class="grid md:grid-cols-4 gap-2 mb-3">
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">Login Method</label>
-              <select id="user-login-method" class="form-select form-select-sm">
+              <select id="user-login-method" class="pd3i-shell-select">
                 <option value="OTP_GMAIL">OTP_GMAIL</option>
                 <option value="PIN">PIN</option>
               </select>
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">OTP Enabled</label>
-              <select id="user-otp-enabled" class="form-select form-select-sm">
+              <select id="user-otp-enabled" class="pd3i-shell-select">
                 <option value="YA">YA</option>
                 <option value="TIDAK">TIDAK</option>
               </select>
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">OTP TTL (Menit)</label>
-              <input id="user-otp-ttl" type="number" class="form-control form-control-sm" placeholder="5" min="1" max="60">
+              <input id="user-otp-ttl" type="number" class="pd3i-shell-input" placeholder="5" min="1" max="60">
             </div>
             <div>
               <label class="text-[10px] font-bold text-slate-500 uppercase">OTP Cooldown (Detik)</label>
-              <input id="user-otp-cooldown" type="number" class="form-control form-control-sm" placeholder="60" min="10" max="300">
+              <input id="user-otp-cooldown" type="number" class="pd3i-shell-input" placeholder="60" min="10" max="300">
             </div>
           </div>
 
-          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Informasi Tambahan</div>
+          <div class="text-xs font-bold text-blue-600 mb-2 border-b pb-1">Informasi tambahan</div>
           <div>
             <label class="text-[10px] font-bold text-slate-500 uppercase">Catatan</label>
-            <input id="user-catatan" class="form-control form-control-sm" placeholder="Keterangan tambahan">
+            <input id="user-catatan" class="pd3i-shell-input" placeholder="Keterangan tambahan">
           </div>
 
           <div class="flex gap-2 justify-end mt-3">
-            <button id="btn-user-clear" type="button" class="btn btn-sm btn-outline-secondary">Reset Form</button>
-            <button id="btn-user-save" type="button" class="btn btn-sm btn-primary">Simpan User</button>
+            <button id="btn-user-clear" type="button" class="pd3i-btn pd3i-btn-secondary">Reset form</button>
+            <button id="btn-user-save" type="button" class="pd3i-btn pd3i-btn-primary">Simpan pengguna</button>
           </div>
         </div>
 
         <!-- User List Table -->
-        <div class="overflow-x-auto border rounded-lg">
-          <table class="table table-sm table-striped mb-0 text-xs text-left" id="table-users">
+        <div class="pd3i-settings-table-wrap pd3i-admin-users-table-wrap overflow-x-auto border" aria-label="Tabel kelola pengguna SIMPEL">
+          <table class="pd3i-table pd3i-admin-users-table mb-0 text-xs text-left" id="table-users">
             <thead class="bg-slate-100 font-semibold text-slate-700">
               <tr>
                 <th class="p-2 border-b">Username</th>
-                <th class="p-2 border-b">Gmail</th>
+                <th class="p-2 border-b">Email</th>
                 <th class="p-2 border-b">Nama</th>
                 <th class="p-2 border-b">Role</th>
-                <th class="p-2 border-b">Unit Kerja</th>
+                <th class="p-2 border-b">Unit kerja</th>
                 <th class="p-2 border-b">Kode PKM</th>
                 <th class="p-2 border-b">Scope</th>
                 <th class="p-2 border-b">Status</th>
@@ -167,7 +208,7 @@
                 <th class="p-2 border-b">TTL/Cooldown</th>
                 <th class="p-2 border-b">Last Login</th>
                 <th class="p-2 border-b">Catatan</th>
-                <th class="p-2 border-b text-center" style="width:110px">Aksi</th>
+                <th class="p-2 border-b text-center" style="width:170px">Aksi</th>
               </tr>
             </thead>
             <tbody id="user-table-body">
@@ -181,16 +222,81 @@
         <div class="flex justify-between items-center mt-3 text-xs">
           <div class="text-slate-500 font-medium" id="user-pagination-info">Menampilkan 0 dari 0 pengguna</div>
           <div class="flex gap-2">
-            <button id="btn-user-prev" type="button" class="btn btn-xs btn-outline-secondary px-2.5 py-1" disabled><i class="fas fa-chevron-left"></i> Sebelum</button>
-            <button id="btn-user-next" type="button" class="btn btn-xs btn-outline-secondary px-2.5 py-1" disabled>Berikut <i class="fas fa-chevron-right"></i></button>
+            <button id="btn-user-prev" type="button" class="pd3i-btn pd3i-btn-secondary px-2.5 py-1" disabled><i class="fas fa-chevron-left"></i> Sebelum</button>
+            <button id="btn-user-next" type="button" class="pd3i-btn pd3i-btn-secondary px-2.5 py-1" disabled>Berikut <i class="fas fa-chevron-right"></i></button>
           </div>
         </div>
       </div>
       </div>
-      <pre id="settings-result" class="mt-3 p-3 bg-slate-900 text-white rounded text-xs overflow-auto">Belum ada hasil.</pre>
+      <div id="account-request-review-modal" class="account-review-modal hidden" role="dialog" aria-modal="true" aria-labelledby="account-review-title">
+        <div class="account-review-dialog">
+          <div class="account-review-head"><div><span class="pd3i-card-eyebrow">Administrasi akses</span><h3 id="account-review-title">Review permohonan</h3></div><button type="button" id="account-review-close" class="account-review-close" aria-label="Tutup">&times;</button></div>
+          <div class="account-review-grid"><div class="account-review-detail" id="account-review-detail"></div><div class="account-review-form"><label>Role final<select id="account-review-role" class="pd3i-shell-select"><option value="petugas">Petugas</option><option value="admin">Admin</option><option value="super-admin">Super Admin</option></select></label><label>Lingkup akses final<select id="account-review-scope" class="pd3i-shell-select"><option value="dinkes">Dinkes</option><option value="faskes-pelapor">Faskes Pelapor</option><option value="puskesmas" selected>Puskesmas</option></select></label><label>OTP final<select id="account-review-otp-channel" class="pd3i-shell-select"><option value="email" selected>OTP Email</option><option value="telegram">OTP Telegram jika sudah terhubung</option><option value="both">Telegram + fallback Email</option></select></label><label>Notifikasi final<select id="account-review-notification-channel" class="pd3i-shell-select"><option value="email" selected>Notifikasi Email</option><option value="telegram">Telegram jika sudah terhubung, fallback Gmail</option><option value="both">Telegram dan Email</option><option value="none">Nonaktif</option></select></label><label>Catatan verifikasi<textarea id="account-review-note" class="pd3i-shell-input" rows="4" placeholder="Catatan verifikasi (opsional)"></textarea></label></div></div>
+          <div class="account-review-actions"><button type="button" id="account-review-reject" class="pd3i-btn pd3i-btn-secondary">Tolak</button><button type="button" id="account-review-approve" class="pd3i-btn pd3i-btn-primary">Setujui & aktifkan</button></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
+<style>
+.account-approval-panel.hidden,.user-management-panel.hidden{display:none!important}.account-approval-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.65rem;margin-bottom:1rem}.account-approval-stats>div{min-width:0;padding:.7rem .8rem;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}.account-approval-stats b,.account-approval-stats span{display:block}.account-approval-stats b{font-size:1.35rem;color:#0f172a}.account-approval-stats span{font-size:.68rem;color:#64748b}.account-approval-table{width:100%;border-collapse:collapse;table-layout:auto}.account-approval-table th{padding:.7rem .6rem;background:#f1f5f9;color:#475569;text-align:left;font-size:.68rem;white-space:nowrap}.account-approval-table td{padding:.7rem .6rem;border-bottom:1px solid #e2e8f0;vertical-align:top;overflow-wrap:anywhere}.account-approval-status{display:inline-flex;padding:.2rem .5rem;border-radius:999px;font-size:.65rem;font-weight:800}.account-approval-status.pending{background:#fef3c7;color:#92400e}.account-approval-status.approved{background:#dcfce7;color:#166534}.account-approval-status.rejected{background:#fee2e2;color:#991b1b}@media(max-width:700px){.account-approval-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.account-approval-table{min-width:680px}}
+.account-review-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:start center;padding:clamp(1rem,6vh,3rem) 1rem 1rem;background:rgba(15,23,42,.58)}.account-review-modal.hidden{display:none}.account-review-dialog{width:min(760px,100%);max-height:calc(100vh - 2rem);overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(15,23,42,.28);padding:1.25rem}.account-review-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;padding-bottom:1rem;border-bottom:1px solid #e2e8f0}.account-review-head h3{margin:.2rem 0 0;font-size:1.05rem;letter-spacing:.04em;color:#0f172a}.account-review-close{width:2.25rem;height:2.25rem;border:1px solid #cbd5e1;border-radius:999px;background:#fff;color:#64748b;font-size:1.35rem;line-height:1;cursor:pointer}.account-review-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.9fr);gap:1.25rem;padding:1.25rem 0}.account-review-detail{padding:1rem;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:#334155;font-size:.8rem;line-height:1.7}.account-review-detail b{color:#0f172a}.account-review-detail hr{border:0;border-top:1px solid #e2e8f0;margin:.75rem 0}.account-review-form{display:grid;gap:.8rem}.account-review-form label{display:grid;gap:.35rem;font-size:.72rem;font-weight:700;color:#475569}.account-review-actions{display:flex;justify-content:flex-end;gap:.6rem;padding-top:1rem;border-top:1px solid #e2e8f0}@media(max-width:650px){.account-review-dialog{padding:1rem}.account-review-grid{grid-template-columns:1fr;gap:.8rem}.account-review-actions{flex-direction:column-reverse}.account-review-actions button{width:100%}}
+</style>
+<style>
+/* Content-only rules; frame geometry belongs to pd3i-shell-card. */
+/* Frame geometry intentionally has no page-specific override. */
+#settings-panel-config .grid,
+#settings-panel-users .grid {
+  min-width: 0;
+  align-items: start;
+}
+#settings-panel-config .flex,
+#settings-panel-users .flex { min-width: 0; }
+#settings-panel-users > .user-management-panel { margin-bottom: 1rem; }
+#settings-panel-users .overflow-x-auto {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  clear: both;
+}
+#settings-panel-users #table-users {
+  width: max-content;
+  min-width: 1120px;
+  table-layout: auto;
+  white-space: nowrap;
+}
+#settings-panel-users #table-users th,
+#settings-panel-users #table-users td { vertical-align: middle; }
+#settings-panel-users #table-users th:last-child,
+#settings-panel-users #table-users td:last-child {
+  position: sticky;
+  right: 0;
+  background: #fff;
+  z-index: 2;
+  box-shadow: -4px 0 8px rgba(15, 23, 42, .08);
+}
+@media (max-width: 900px) {
+  #settings-panel-config .grid.md\:grid-cols-3,
+  #settings-panel-users .grid.md\:grid-cols-3,
+  #settings-panel-users .grid.md\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 560px) {
+  #settings-panel-config .grid,
+  #settings-panel-users .grid,
+  #settings-panel-users .grid.md\:grid-cols-3,
+  #settings-panel-users .grid.md\:grid-cols-4 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  #settings-panel-users .justify-end { justify-content: stretch; }
+  #settings-panel-users .justify-end button { flex: 1 1 0; }
+  #settings-panel-users #user-pagination-info { max-width: 55%; }
+}
+</style>
 <script>
 window.showSettingsResult = function(x){ const out=document.getElementById('settings-result'); if(out) out.textContent=JSON.stringify(x,null,2); };
 window.applySettingsTab = function(tabName) {
@@ -201,7 +307,14 @@ window.applySettingsTab = function(tabName) {
   const panelUsers = document.getElementById('settings-panel-users');
   
   if (panelConfig) panelConfig.classList.toggle('hidden', activeTab !== 'config');
-  if (panelUsers) panelUsers.classList.toggle('hidden', activeTab !== 'users');
+  if (panelUsers) panelUsers.classList.toggle('hidden', !['users','account-approval'].includes(activeTab));
+  const approval = document.querySelector('.account-approval-panel');
+  const users = document.querySelector('.user-management-panel');
+  if (approval) approval.classList.toggle('hidden', activeTab !== 'account-approval');
+  if (users) users.classList.toggle('hidden', activeTab !== 'users');
+  if (activeTab === 'account-approval' && window.__SETTINGS_WORKSPACE_BOUND && typeof window.loadSettingsAccountApproval === 'function') {
+    window.loadSettingsAccountApproval();
+  }
   
   // Highlight active sidebar navigation for settings
   if (typeof updateSidebarActiveState === 'function') {
@@ -232,12 +345,64 @@ window.initSettingsWorkspace = function(){
   };
   
   const fail=function(e){ window.showSettingsResult({ok:false,error:String((e&&e.message)||e)}); };
+  let accountRequestRows=[];
+  const escAccount=function(v){return String(v==null?'':v).replace(/[&<>\"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});};
+  const renderAccountRequests = function(res) {
+    const out=document.getElementById('account-request-admin-list'), status=document.getElementById('account-request-admin-status');
+    if (!out) return; if (!res || res.status !== 'success') { out.textContent=(res&&res.message)||'Gagal memuat permohonan.'; return; }
+    accountRequestRows=res.requests||[]; const stats=res.stats||{};
+    ['pending','approved','rejected','all'].forEach(function(k){const el=document.getElementById('account-stat-'+k);if(el)el.textContent=stats[k]||accountRequestRows.length;});
+    const q=String(document.getElementById('account-request-admin-search')?.value||'').trim().toLowerCase();
+    const rows=accountRequestRows.filter(function(r){return !q||[r.RequestId,r.Nama,r.Gmail,r.UnitKerja,r['Unit kerja'],r.StatusPermohonan].some(function(v){return String(v||'').toLowerCase().includes(q);});});
+    status.textContent=rows.length+' dari '+accountRequestRows.length+' permohonan';
+    out.innerHTML='<table class="account-approval-table"><thead><tr><th>Permohonan</th><th>Pemohon</th><th>Unit kerja / Nama faskes</th><th>Status</th><th>Tindakan</th></tr></thead><tbody>'+rows.map(function(r){
+      const pending=r.StatusPermohonan==='MENUNGGU', s=String(r.StatusPermohonan||''), cls=s==='MENUNGGU'?'pending':s==='DISETUJUI'?'approved':'rejected';
+      return '<tr><td><b>'+escAccount(r.RequestId)+'</b><br><span class="text-slate-400">'+escAccount(r.SubmittedAt)+'</span></td><td><b>'+escAccount(r.Nama)+'</b><br>'+escAccount(r.Gmail)+'</td><td>'+escAccount(r.UnitKerja||r['Unit kerja']||'-')+'<br><span class="text-slate-500">'+escAccount(r.NamaFaskes||'-')+'</span><br><span class="text-slate-400">'+escAccount(r.Pengampu)+'</span></td><td><span class="account-approval-status '+cls+'">'+escAccount(s)+'</span></td><td><button type="button" class="pd3i-btn pd3i-btn-secondary text-xs" data-account-view="'+escAccount(r.RequestId)+'">Lihat</button>'+(pending?' <button type="button" class="pd3i-btn pd3i-btn-primary text-xs" data-account-approve="'+escAccount(r.RequestId)+'">Setujui</button>':'')+'</td></tr>';
+    }).join('')+'</tbody></table>';
+    if(!rows.length)out.innerHTML='<div class="p-4 text-center text-slate-500">Belum ada permohonan yang cocok.</div>';
+    out.querySelectorAll('[data-account-view]').forEach(function(b){b.onclick=function(){openAccountReview(b.dataset.accountView);};});
+    out.querySelectorAll('[data-account-approve]').forEach(function(b){b.onclick=function(){openAccountReview(b.dataset.accountApprove);};});
+  };
+  const openAccountReview=function(requestId){const r=accountRequestRows.find(function(x){return String(x.RequestId)===String(requestId);});if(!r)return;const modal=document.getElementById('account-request-review-modal');document.getElementById('account-review-detail').innerHTML='<b>'+escAccount(r.Nama)+'</b><br>'+escAccount(r.Gmail)+'<br>'+escAccount(r.UnitKerja||r['Unit kerja']||'-')+'<br><span class="text-slate-500">'+escAccount(r.SubmittedAt||'-')+'</span><hr><b>ID</b> '+escAccount(r.RequestId)+'<br><b>Faskes</b> '+escAccount(r.NamaFaskes||r.UnitKerja||r['Unit kerja']||'-')+'<br><b>Kode Faskes</b> '+escAccount(r.KodeFaskes||r.KodePuskesmas||'-')+'<br><b>Wilayah</b> '+escAccount(r.Kelurahan||'-')+', '+escAccount(r.Kecamatan||'-')+'<br><b>Pengampu</b> '+escAccount(r.Pengampu||'-');modal.dataset.requestId=r.RequestId;modal.classList.remove('hidden');};
+  document.getElementById('account-review-close')?.addEventListener('click',function(){document.getElementById('account-request-review-modal')?.classList.add('hidden');});
+  document.getElementById('account-review-approve')?.addEventListener('click',function(){const m=document.getElementById('account-request-review-modal');google.script.run.withSuccessHandler(function(){m.classList.add('hidden');loadAccountRequests();}).withFailureHandler(fail).approveAccountRequest(getSessionToken(),m.dataset.requestId,document.getElementById('account-review-role').value,document.getElementById('account-review-scope').value,document.getElementById('account-review-note').value||'',document.getElementById('account-review-otp-channel').value,document.getElementById('account-review-notification-channel').value);});
+  document.getElementById('account-review-reject')?.addEventListener('click',function(){const m=document.getElementById('account-request-review-modal');const reason=window.prompt('Alasan penolakan:','');if(reason===null)return;google.script.run.withSuccessHandler(function(){m.classList.add('hidden');loadAccountRequests();}).withFailureHandler(fail).rejectAccountRequest(getSessionToken(),m.dataset.requestId,reason);});
+  const loadFacilityCorrections=function(){const out=document.getElementById('facility-correction-admin-list');if(!out)return;out.textContent='Memuat koreksi...';google.script.run.withSuccessHandler(function(res){if(!res||res.status!=='success'){out.textContent=(res&&res.message)||'Gagal memuat koreksi.';return;}const rows=res.corrections||[];if(!rows.length){out.innerHTML='<div class="p-3 text-slate-500">Belum ada usulan koreksi.</div>';return;}out.innerHTML='<table class="account-approval-table"><thead><tr><th>Faskes</th><th>Perubahan usulan</th><th>Status</th><th>Tindakan</th></tr></thead><tbody>'+rows.map(function(r){const pending=r.StatusKoreksi==='MENUNGGU';return '<tr><td><b>'+escAccount(r.NamaFaskesMaster||r.KodeFaskes)+'</b><br>'+escAccount(r.KodeFaskes)+'</td><td><b>Alamat:</b> '+escAccount(r.AlamatUsulan||'-')+'<br><b>Wilayah:</b> '+escAccount(r.KecamatanUsulan||'-')+' / '+escAccount(r.KelurahanUsulan||'-')+'<br><b>Catatan:</b> '+escAccount(r.CatatanKoreksi||'-')+'</td><td>'+escAccount(r.StatusKoreksi)+'</td><td>'+(pending?'<button type="button" class="pd3i-btn pd3i-btn-primary text-xs" data-correction-review="'+escAccount(r.CorrectionId)+'" data-decision="DITERIMA">Terima</button> <button type="button" class="pd3i-btn pd3i-btn-secondary text-xs" data-correction-review="'+escAccount(r.CorrectionId)+'" data-decision="DITOLAK">Tolak</button>':'-')+'</td></tr>';}).join('')+'</tbody></table>';out.querySelectorAll('[data-correction-review]').forEach(function(b){b.onclick=function(){const note=window.prompt('Catatan review koreksi (opsional):','');google.script.run.withSuccessHandler(loadFacilityCorrections).withFailureHandler(fail).reviewFacilityCorrection(getSessionToken(),b.dataset.correctionReview,b.dataset.decision,note||'');};});}).withFailureHandler(fail).getFacilityCorrectionDashboard(getSessionToken(),'SEMUA');};
+  const loadAccountRequests=function(){google.script.run.withSuccessHandler(renderAccountRequests).withFailureHandler(fail).getAccountRequestDashboard(getSessionToken(),'SEMUA');};
+  window.loadSettingsAccountApproval=function(){loadAccountRequests();loadFacilityCorrections();};
+  document.getElementById('btn-account-request-refresh')?.addEventListener('click',loadAccountRequests);
+  document.getElementById('btn-facility-correction-refresh')?.addEventListener('click',loadFacilityCorrections);
+  document.getElementById('account-request-admin-search')?.addEventListener('input',function(){renderAccountRequests({status:'success',requests:accountRequestRows,stats:{pending:accountRequestRows.filter(r=>r.StatusPermohonan==='MENUNGGU').length,approved:accountRequestRows.filter(r=>r.StatusPermohonan==='DISETUJUI').length,rejected:accountRequestRows.filter(r=>r.StatusPermohonan==='DITOLAK').length,all:accountRequestRows.length}});});
+  if(window.__SETTINGS_ACTIVE_TAB==='account-approval'){window.loadSettingsAccountApproval();}
   
   document.getElementById('btn-pie-config')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetNotificationConfigStatus(getSessionToken()); });
   document.getElementById('btn-pie-setup')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).setupPieSheets(getSessionToken()); });
   document.getElementById('btn-pie-validation-metrics')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieCalculateValidationMetrics(getSessionToken()); });
   document.getElementById('btn-pie-save-config')?.addEventListener('click', function(){ const bot=document.getElementById('pie-config-bot-token')?.value||''; const chat=document.getElementById('pie-config-chat-id')?.value||''; google.script.run.withSuccessHandler(function(x){ window.showSettingsResult(x); const b=document.getElementById('pie-config-bot-token'); if(b) b.value=''; const w=document.getElementById('pie-config-waha-api-key'); if(w) w.value=''; }).withFailureHandler(fail).pieSetupTelegramConfig(getSessionToken(), {telegram_bot_token:bot, pie_telegram_chat_id:chat, telegram_chat_id:(document.getElementById('pie-config-global-chat-id')?.value||''), waha_enabled:(document.getElementById('pie-config-waha-enabled')?.value||''), waha_base_url:(document.getElementById('pie-config-waha-base-url')?.value||''), waha_session:(document.getElementById('pie-config-waha-session')?.value||''), waha_api_key:(document.getElementById('pie-config-waha-api-key')?.value||''), waha_dinkes_chat_id:(document.getElementById('pie-config-waha-dinkes')?.value||'')}); });
   document.getElementById('btn-pie-test-telegram')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieSendTestNotification(getSessionToken()); });
+  document.getElementById('btn-telegram-pairing')?.addEventListener('click', function(){
+    const email = document.getElementById('telegram-pairing-email')?.value || '';
+    const out = document.getElementById('telegram-pairing-link');
+    if (!email.trim()) { if (out) out.textContent = 'Isi Gmail user terlebih dahulu.'; return; }
+    if (out) out.textContent = 'Membuat link...';
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || res.status !== 'success') { if (out) out.textContent = (res && res.message) || 'Pairing gagal.'; return; }
+      if (out) out.innerHTML = 'Buka link ini di Telegram: <a class="underline text-blue-700" target="_blank" rel="noopener" href="' + res.url + '">' + res.url + '</a><br><span class="text-xs text-slate-500">Berlaku 10 menit.</span>';
+    }).withFailureHandler(function(err) { if (out) out.textContent = String((err && err.message) || err || 'Pairing gagal.'); }).createTelegramPairingForSession(getSessionToken(), email.trim());
+  });
+  window.createTelegramPairingForUser = function(email) {
+    const cleanedEmail = String(email || '').trim();
+    const out = document.getElementById('telegram-pairing-link');
+    const input = document.getElementById('telegram-pairing-email');
+    if (input) input.value = cleanedEmail;
+    if (!cleanedEmail) { if (out) out.textContent = 'Gmail user kosong. Lengkapi Gmail di data user dulu.'; return; }
+    if (out) out.textContent = 'Membuat link pairing Telegram untuk ' + cleanedEmail + '...';
+    google.script.run.withSuccessHandler(function(res) {
+      if (!res || res.status !== 'success') { if (out) out.textContent = (res && res.message) || 'Pairing gagal.'; return; }
+      if (out) out.innerHTML = 'Link pairing Telegram untuk <b>' + cleanedEmail.replace(/[&<>"']/g, function(ch){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]); }) + '</b>: <a class="underline text-blue-700" target="_blank" rel="noopener" href="' + res.url + '">' + res.url + '</a><br><span class="text-xs text-slate-500">Berlaku 10 menit. User buka link lalu tekan Start di @survim_bot.</span>';
+      try { document.getElementById('telegram-pairing-link')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }).withFailureHandler(function(err) { if (out) out.textContent = String((err && err.message) || err || 'Pairing gagal.'); }).createTelegramPairingForSession(getSessionToken(), cleanedEmail);
+  };
   document.getElementById('btn-pie-check-pd3i-notif')?.addEventListener('click', function(){ google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieGetPd3iNotificationConfigStatus(getSessionToken()); });
   document.getElementById('btn-pie-add-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', specimen_guidance:document.getElementById('pie-kb-specimen')?.value||'', explanation_template:document.getElementById('pie-kb-explain')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieAddKbRuleDraft(getSessionToken(), payload); });
   document.getElementById('btn-pie-test-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', optional_facts:'', exclusion_facts:'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', explanation_template:document.getElementById('pie-kb-explain')?.value||'', facts:document.getElementById('pie-kb-test-facts')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieTestKbRule(getSessionToken(), payload); });
@@ -284,7 +449,7 @@ window.initSettingsWorkspace = function(){
         '<td class="p-2 border-b font-medium">' + String(u.username || '') + '</td>' +
         '<td class="p-2 border-b">' + String(u.gmail || '') + '</td>' +
         '<td class="p-2 border-b">' + String(u.nama || '') + '</td>' +
-        '<td class="p-2 border-b"><span class="badge bg-slate-200 text-slate-800 rounded px-1.5 py-0.5">' + String(u.role || '') + '</span></td>' +
+        '<td class="p-2 border-b"><span class="pd3i-settings-role-chip badge bg-slate-200 text-slate-800 px-1.5 py-0.5">' + String(u.role || '') + '</span></td>' +
         '<td class="p-2 border-b">' + String(u.unitKerja || '') + '</td>' +
         '<td class="p-2 border-b">' + String(u.kodePuskesmas || '') + '</td>' +
         '<td class="p-2 border-b">' + String(u.scopeLevel || '') + '</td>' +
@@ -304,8 +469,9 @@ window.initSettingsWorkspace = function(){
         '<td class="p-2 border-b max-w-[150px] truncate" title="' + cEsc + '">' + String(u.catatan || '') + '</td>' +
         '<td class="p-2 border-b text-center">' +
           '<div class="flex gap-1 justify-center">' +
-            '<button type="button" class="btn btn-xs btn-outline-primary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + lEsc + '\',\'' + oEsc + '\',\'' + ttlEsc + '\',\'' + cdEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
-            '<button type="button" class="btn btn-xs btn-outline-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
+            '<button type="button" class="pd3i-btn pd3i-btn-primary px-1.5 py-0.5" title="Buat link pairing Telegram" onclick="createTelegramPairingForUser(\'' + gEsc + '\')"><i class="fab fa-telegram-plane"></i></button>' +
+            '<button type="button" class="pd3i-btn pd3i-btn-secondary px-1.5 py-0.5" onclick="editUserField(\'' + uEsc + '\',\'' + gEsc + '\',\'' + nEsc + '\',\'' + rEsc + '\',\'' + unitEsc + '\',\'' + kEsc + '\',\'' + sEsc + '\',\'' + aEsc + '\',\'' + lEsc + '\',\'' + oEsc + '\',\'' + ttlEsc + '\',\'' + cdEsc + '\',\'' + cEsc + '\')"><i class="fas fa-edit"></i></button>' +
+            '<button type="button" class="pd3i-btn pd3i-btn-danger px-1.5 py-0.5" onclick="deleteUserField(\'' + uEsc + '\')"><i class="fas fa-trash"></i></button>' +
           '</div>' +
         '</td>' +
       '</tr>';
@@ -362,6 +528,10 @@ window.initSettingsWorkspace = function(){
     document.getElementById('user-otp-ttl').value = ttl || 5;
     document.getElementById('user-otp-cooldown').value = cd || 60;
     document.getElementById('user-catatan').value = catatan;
+    const selected = allUsers.find(function(x){ return String(x.username) === String(user); }) || {};
+    document.getElementById('user-otp-channel').value = selected.otpChannel || 'email';
+    document.getElementById('user-otp-fallback').value = selected.otpFallbackChannel || 'none';
+    document.getElementById('user-notification-channel').value = selected.notificationChannel || 'none';
     document.getElementById('user-form-title').textContent = 'Edit User: ' + user;
   };
 
@@ -388,7 +558,10 @@ window.initSettingsWorkspace = function(){
     document.getElementById('user-otp-ttl').value = '5';
     document.getElementById('user-otp-cooldown').value = '60';
     document.getElementById('user-catatan').value = '';
-    document.getElementById('user-form-title').textContent = 'Tambah / Edit User';
+    document.getElementById('user-otp-channel').value = 'email';
+    document.getElementById('user-otp-fallback').value = 'none';
+    document.getElementById('user-notification-channel').value = 'none';
+    document.getElementById('user-form-title').textContent = 'Tambah / edit pengguna';
   };
 
   document.getElementById('btn-user-clear')?.addEventListener('click', clearUserForm);
@@ -408,6 +581,9 @@ window.initSettingsWorkspace = function(){
       otpTtlMinutes: Number(document.getElementById('user-otp-ttl')?.value || 5),
       otpCooldownSeconds: Number(document.getElementById('user-otp-cooldown')?.value || 60),
       catatan: document.getElementById('user-catatan')?.value || ''
+      ,otpChannel: document.getElementById('user-otp-channel')?.value || 'email'
+      ,otpFallbackChannel: document.getElementById('user-otp-fallback')?.value || 'none'
+      ,notificationChannel: document.getElementById('user-notification-channel')?.value || 'none'
     };
     if (!payload.username || !payload.gmail) {
       alert('Username dan Gmail wajib diisi!');

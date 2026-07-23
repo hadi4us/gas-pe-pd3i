@@ -266,9 +266,9 @@ var logoUrl = trim_(pick_(["logoUrl","LogoUrl","logo","logo_url"])) ||
 
 // Nomor EPID, Pengampu, Klasifikasi, Timestamp
 var epid     = trim_(pick_(["Nomor EPID","epid","Epid","EPID"]));
-var pengampu = trim_(pick_(["Pengampu","pengampu"]));
-var klas     = trim_(pick_(["Klasifikasi","klasifikasi"]));
-var ts       = trim_(pick_(["Timestamp","timestamp"]));
+var pengampu = trim_(pick_(["Pengampu","pengampu","Puskesmas Pengampu","NamaPuskesmas","Nama Puskesmas Pengampu","Unit Pengampu"]));
+var klas     = trim_(pick_(["Klasifikasi","klasifikasi","Status Pasien/Kasus","Status Kasus","Keadaan saat ini","Interpretasi Hasil Sampel","Status Verifikasi EPID"]));
+var ts       = trim_(pick_(["Timestamp","timestamp","Created At","CreatedAt","SubmittedAt","Submitted At","Tanggal terima laporan","Tanggal Pelacakan"]));
 
 // Default prov/kab
 var prov = trim_(pick_(["Provinsi unit pelapor","Provinsi"])) || "JAWA BARAT";
@@ -366,7 +366,7 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
 
   <tr>
     <td><b>Nama Orang Tua/Wali</b><br><?!= valOrDash_(pick_(["Nama Orang Tua/Wali","Nama orang tua/wali","Nama Orangtua/Wali","Nama Ayah/Ibu"])) ?></td>
-    <td colspan="2"><b>No. Kontak Orang Tua/Wali</b><br><?!= valOrDash_(pick_(["No Telp/WA Orang Tua/Wali","No Kontak Orang Tua/Wali","Kontak Orang Tua/Wali","No HP Orangtua"])) ?></td>
+    <td colspan="2"><b>No. Kontak Orang Tua/Wali</b><br><?!= valOrDash_(pick_(["No. kontak orang tua/wali","No. Kontak Orang Tua/Wali","No. Kontak orang tua/wali","No Telp/WA Orang Tua/Wali","No Kontak Orang Tua/Wali","No. Telepon Wali","No Telepon Wali","Kontak Orang Tua/Wali","No HP Orangtua"])) ?></td>
   </tr>
 
   <tr><td class="section sec-blue" colspan="3">INFORMASI KLINIS</td></tr>
@@ -447,9 +447,9 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
   <tr>
     <td colspan="3">
       <b>Dirawat di Rumah Sakit?</b>
-      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Rawat inap?","Dirawat di RS?","Dirawat di Rumah Sakit?","Dirawat RS"]), "ya")) ?></span> Ya
+      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Apakah dirawat inap?","Rawat inap?","Dirawat di RS?","Dirawat di Rumah Sakit?","Dirawat RS"]), "ya")) ?></span> Ya
       &nbsp;&nbsp;
-      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Rawat inap?","Dirawat di RS?","Dirawat di Rumah Sakit?","Dirawat RS"]), "tidak")) ?></span> Tidak
+      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Apakah dirawat inap?","Rawat inap?","Dirawat di RS?","Dirawat di Rumah Sakit?","Dirawat RS"]), "tidak")) ?></span> Tidak
     </td>
   </tr>
 
@@ -530,11 +530,11 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
   <tr>
     <td colspan="3">
       <b>Keadaan saat ini</b><br>
-      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Keadaan saat ini","Keadaan"])) === "HIDUP") ?></span> Hidup
+      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Status akhir kasus","Keadaan saat ini","Keadaan"])) === "HIDUP") ?></span> Hidup
       &nbsp;&nbsp;
-      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Keadaan saat ini","Keadaan"])) === "MENINGGAL") ?></span> Meninggal
+      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Status akhir kasus","Keadaan saat ini","Keadaan"])) === "MENINGGAL") ?></span> Meninggal
       &nbsp;&nbsp;
-      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Keadaan saat ini","Keadaan"])) === "LOST TO FOLLOW-UP") ?></span> Lost to follow-up
+      <span class="cbtxt"><?!= cbTxt_(upper_(pick_(["Status akhir kasus","Keadaan saat ini","Keadaan"])) === "LOST TO FOLLOW-UP") ?></span> Lost to follow-up
     </td>
   </tr>
 
@@ -573,7 +573,7 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
         <td><?!= safe_(r["Alamat"] || r["alamat"] || "") ?></td>
         <td><?!= safe_(r["Hub dgn Kasus"] || r["Hubungan"] || r["Hubungan dengan kasus"] || "") ?></td>
         <td class="center"><?!= safe_(imunVal || "") ?></td>
-        <td class="center"><?!= safe_(r["Kondisi saat ini"] || r["Kondisi saat itu"] || "") ?></td>
+        <td class="center"><?!= safe_(r["Kondisi Saat Itu"] || r["Kondisi saat ini"] || r["Kondisi saat itu"] || "") ?></td>
       </tr>
     <? } ?>
   </table>

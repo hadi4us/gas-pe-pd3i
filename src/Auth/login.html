@@ -10,6 +10,55 @@
   </div>
 </div>
 
+<div id="account-request-modal" class="account-request-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="account-request-title">
+  <div class="account-request-shell mx-auto mt-4 mb-8 relative overflow-hidden">
+    <button id="btn-close-account-request" type="button" class="account-request-close" aria-label="Tutup permohonan akun"><i class="fas fa-xmark"></i></button>
+    <div class="account-request-grid">
+      <aside class="account-request-guide">
+        <div class="account-request-brand"><span class="account-request-brand-mark"><i class="fas fa-shield-halved"></i></span><span>SIMPEL<br><small>Surveilans Kota Depok</small></span></div>
+        <div class="pd3i-login-kicker">Akses baru</div>
+        <h2 id="account-request-title">Permohonan akun pengguna</h2>
+        <p class="account-request-lead">Ajukan akses untuk membantu pelaporan dan pemantauan surveilans.</p>
+        <div class="account-request-security-strip" aria-label="Ringkasan keamanan permohonan akun">
+          <span><b>1</b> Identitas</span>
+          <span><b>2</b> Unit kerja</span>
+          <span><b>3</b> Persetujuan</span>
+        </div>
+        <ol class="account-request-steps">
+          <li><b>Isi identitas</b><span>Gunakan nama dan email aktif.</span></li>
+          <li><b>Pilih unit kerja</b><span>Data wilayah dan pengampu dikonfirmasi dari master PD3I.</span></li>
+          <li><b>Verifikasi administrator</b><span>Akun aktif setelah permohonan disetujui.</span></li>
+        </ol>
+        <div class="account-request-note"><i class="fas fa-lock"></i><span>Data digunakan untuk verifikasi akses internal.</span></div>
+      </aside>
+      <section class="account-request-form-panel">
+        <div class="account-request-panel-head"><div><h3>Data pemohon</h3><p>Permohonan diverifikasi administrator sebelum akses aktif.</p></div><span class="account-request-required">* wajib</span></div>
+        <div class="account-request-form-summary" aria-label="Konteks permohonan akun">
+          <span><i class="fas fa-envelope"></i> Email aktif</span>
+          <span><i class="fas fa-hospital"></i> Unit/faskes resmi</span>
+          <span><i class="fas fa-user-shield"></i> Role ditetapkan admin</span>
+        </div>
+        <div id="account-request-alert" class="hidden pd3i-login-alert"></div>
+        <form id="account-request-form" class="pd3i-login-form" novalidate>
+          <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-name">Nama lengkap <em>*</em></label><input id="account-request-name" class="pd3i-login-input" required maxlength="120" placeholder="Nama sesuai identitas"></div>
+          <div class="account-request-two-col"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-email">Email <em>*</em></label><input id="account-request-email" class="pd3i-login-input" type="email" required maxlength="180" placeholder="nama@domain.com"></div><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-email-confirm">Konfirmasi email <em>*</em></label><input id="account-request-email-confirm" class="pd3i-login-input" type="email" required maxlength="180" placeholder="Ulangi email"></div></div>
+          <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-unit">Nama unit kerja <em>*</em></label><input id="account-request-unit" class="pd3i-login-input" required maxlength="180" placeholder="Contoh: Laboratorium, Rekam Medis, Administrasi"></div>
+          <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-faskes">Nama faskes <em>*</em></label><input id="account-request-faskes" class="pd3i-login-input" list="account-request-faskes-options" required autocomplete="off" placeholder="Ketik nama faskes, alias, kecamatan, atau kelurahan"><datalist id="account-request-faskes-options"></datalist><input id="account-request-faskes-key" type="hidden"><small class="text-xs text-slate-500">Pilih faskes master yang paling sesuai. Data yang kurang lengkap dapat dikoreksi di bawah.</small></div>
+          <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-address">Alamat lengkap faskes</label><textarea id="account-request-address" class="pd3i-login-input" maxlength="500" rows="3" placeholder="Tuliskan alamat lengkap faskes"></textarea></div>
+          <div class="account-request-two-col"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-kecamatan">KECAMATAN</label><select id="account-request-kecamatan" class="pd3i-login-input"><option value="">PILIH KECAMATAN</option><option value="BEJI">BEJI</option><option value="BOJONGSARI">BOJONGSARI</option><option value="CILODONG">CILODONG</option><option value="CIMANGGIS">CIMANGGIS</option><option value="CINERE">CINERE</option><option value="CIPAYUNG">CIPAYUNG</option><option value="LIMO">LIMO</option><option value="PANCORAN MAS">PANCORAN MAS</option><option value="SAWANGAN">SAWANGAN</option><option value="SUKMAJAYA">SUKMAJAYA</option><option value="TAPOS">TAPOS</option></select></div><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-kelurahan">KELURAHAN</label><select id="account-request-kelurahan" class="pd3i-login-input"><option value="">PILIH KELURAHAN</option></select></div></div>
+          <div id="account-request-pengampu-notice" class="account-request-routing-notice"><i class="fas fa-route"></i><span id="account-request-pengampu-message">Puskesmas pengampu akan ditentukan dari wilayah.</span></div>
+          <input id="account-request-pengampu" type="hidden"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-correction-note">Catatan data faskes <span class="font-normal text-slate-400">(opsional)</span></label><textarea id="account-request-correction-note" class="pd3i-login-input" maxlength="500" rows="2" placeholder="Tambahkan informasi bila ada data faskes yang perlu diperiksa"></textarea></div>
+          <div class="account-request-admin-info"><i class="fas fa-circle-info"></i><span><b>Info akses</b><br>Role dan tingkat akses ditetapkan administrator sesuai kebutuhan tugas.</span></div>
+          <div class="account-request-telegram-info"><b><i class="fab fa-telegram"></i> Verifikasi Telegram</b><span>Setelah kirim permohonan, buat link Telegram lalu tekan <b>Start</b> pada Akun Telegram Survim Dinkes Kota Depok untuk pairing OTP.</span></div>
+          <label class="account-request-consent"><input id="account-request-consent" type="checkbox" required><span>Saya menyatakan data benar dan menyetujui penggunaannya untuk verifikasi akun. <em>*</em></span></label>
+          <div class="account-request-actions"><button id="btn-clear-account-request" type="button" class="account-request-clear">Bersihkan</button><button id="btn-submit-account-request" type="submit" class="pd3i-login-submit"><span>Kirim permohonan</span></button></div>
+          <div id="account-request-telegram" class="hidden mt-3 text-sm text-slate-600"></div>
+        </form>
+      </section>
+    </div>
+  </div>
+</div>
+
 <div id="login-modal" class="fixed inset-0 z-[100] hidden items-start justify-center pd3i-login-backdrop overflow-y-auto px-2 py-2.5 sm:px-4 sm:py-4">
   <div id="login-card" class="pd3i-login-card mx-auto mt-4 mb-8 relative overflow-hidden">
     <!-- Top accent bar -->
@@ -19,11 +68,9 @@
         <i class="fas fa-shield-virus"></i>
       </div>
       <div>
-        <div class="pd3i-login-kicker">SIMPEL Kota Depok</div>
         <h1 class="pd3i-login-title">Akses SIMPEL</h1>
-        <div class="text-[11px] text-slate-500 font-bold mt-1 text-left">Sistem Informasi Monitoring dan Penyelidikan Epidemiologi Lanjutan</div>
+        <p class="pd3i-login-subtitle"><strong>SIMPEL Surveilans Kota Depok</strong><br>Sistem Informasi Monitoring, Penyelidikan Epidemiologi, dan Laporan.</p>
         <!-- Sistem Surveilans Penyakit yang Dapat Dicegah Dengan Imunisasi -->
-        <p class="pd3i-login-subtitle">Masuk dengan Gmail terdaftar untuk mengelola pelaporan, verifikasi, dan dashboard kasus.</p>
       </div>
     </div>
 
@@ -31,18 +78,25 @@
 
     <form id="login-form" class="pd3i-login-form" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" novalidate>
       <div class="pd3i-login-field">
-        <label class="pd3i-login-label">Gmail</label>
+        <label class="pd3i-login-label">Email</label>
         <div class="pd3i-login-input-wrap">
           <i class="fas fa-envelope"></i>
           <input id="login-email" type="email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
             class="pd3i-login-input"
-            placeholder="Masukkan Gmail Anda" />
+            placeholder="Masukkan email Anda" />
         </div>
       </div>
 
-      <button id="btn-send-otp" type="button" class="pd3i-login-submit">
+
+      <div class="pd3i-login-primary-actions" data-login-actions="request-otp">
+        <button id="btn-send-otp" type="button" class="pd3i-login-submit">
         <span>Kirim OTP</span>
       </button>
+
+        <button id="btn-account-request" type="button" class="pd3i-login-account-request">
+          <i class="fas fa-user-plus"></i> Permohonan akun baru
+        </button>
+      </div>
 
       <div id="otp-section" class="hidden pd3i-login-otp-section">
         <div class="pd3i-login-field">
@@ -60,10 +114,17 @@
         </button>
       </div>
 
-      <div class="pd3i-login-footer">
-        DINAS KESEHATAN KOTA DEPOK
+      <div class="pd3i-login-footer pd3i-login-footer-compact">
+        <span>Dinas Kesehatan Kota Depok</span>
+        <small><i class="fas fa-lock"></i> Akses resmi berbasis peran. Data medis rahasia.</small>
       </div>
     </form>
+
+    <div class="pd3i-login-trust-panel hidden" aria-hidden="true">
+      <span><i class="fas fa-lock"></i> Akses resmi</span>
+      <span><i class="fas fa-user-shield"></i> Sesi berbasis peran</span>
+      <span><i class="fas fa-notes-medical"></i> Data medis rahasia</span>
+    </div>
 
     <div class="mt-6 border-t border-slate-100 pt-4 text-left">
       <p class="text-[11px] leading-relaxed text-slate-500 font-medium">
@@ -72,3 +133,17 @@
     </div>
   </div>
 </div>
+
+<style>
+  .pd3i-login-account-request { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #0f766e; font-weight: 700; cursor: pointer; }
+  .pd3i-login-account-request:hover { background: #f0fdfa; }
+  #account-request-modal { display: none; position: fixed; inset: 0; z-index: 110; overflow-y: auto; align-items: flex-start; justify-content: center; padding: 1rem; background: rgba(15, 23, 42, .48); }
+  #account-request-modal.is-open { display: flex !important; }
+  #account-request-modal .pd3i-login-card { width: min(100%, 560px); margin: 1rem auto 2rem; }
+  .account-request-shell { width: min(100%, 980px); border-radius: 24px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.2); }
+  .account-request-grid { display:grid; grid-template-columns: .82fr 1.18fr; }
+  .account-request-guide { padding:2.4rem 2.2rem; color:#e2e8f0; background:linear-gradient(150deg,#0f766e,#155e75 55%,#12304a); }
+  .account-request-brand { display:flex; align-items:center; gap:.7rem; font-weight:900; letter-spacing:.08em; font-size:1rem; margin-bottom:3rem; }.account-request-brand small{font-size:.58rem;letter-spacing:.03em;font-weight:600;opacity:.8}.account-request-brand-mark{display:grid;place-items:center;width:2.4rem;height:2.4rem;border-radius:12px;background:rgba(255,255,255,.15);font-size:1.1rem}
+  .account-request-guide .pd3i-login-kicker{color:#99f6e4}.account-request-guide h2{margin:.55rem 0 1rem;font-size:1.75rem;line-height:1.15;color:#fff}.account-request-lead{font-size:.84rem;line-height:1.6;color:#cbd5e1}.account-request-steps{list-style:none;padding:0;margin:2rem 0}.account-request-steps li{position:relative;padding:0 0 1.45rem 2.35rem;border-left:1px solid rgba(255,255,255,.3);font-size:.8rem}.account-request-steps li:last-child{border-left:0}.account-request-steps li:before{content:counter(list-item);position:absolute;left:-.72rem;top:-.25rem;width:1.4rem;height:1.4rem;border-radius:50%;display:grid;place-items:center;background:#2dd4bf;color:#134e4a;font-weight:900}.account-request-steps b,.account-request-steps span{display:block}.account-request-steps b{color:#fff;margin-bottom:.25rem}.account-request-steps span{color:#cbd5e1;line-height:1.45}.account-request-note{display:flex;gap:.6rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,.2);font-size:.72rem;color:#cbd5e1}.account-request-close{position:absolute;top:.9rem;right:.9rem;z-index:2;width:2.25rem;height:2.25rem;display:grid;place-items:center;border:1px solid #cbd5e1;border-radius:999px;background:#fff;color:#64748b;font-size:.9rem;box-shadow:0 4px 12px rgba(15,23,42,.08)}.account-request-close:hover{background:#f1f5f9;color:#0f172a}.account-request-form-panel{padding:2.35rem 2.5rem}.account-request-form-panel textarea{resize:vertical;min-height:5.5rem;line-height:1.5}.account-request-panel-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:1.2rem;padding-right:3rem}.account-request-panel-head>div{min-width:0}.account-request-required{white-space:nowrap;padding-top:.25rem}.account-request-panel-head h3{margin:0;color:#0f172a;font-size:1.35rem}.account-request-panel-head p{margin:.3rem 0 0;color:#64748b;font-size:.78rem}.account-request-required{font-size:.68rem;color:#ef4444}.account-request-routing-notice{display:flex;align-items:flex-start;gap:.6rem;padding:.7rem .85rem;border:1px solid #bae6fd;border-radius:10px;background:#f0f9ff;color:#075985;font-size:.74rem;line-height:1.45}.account-request-routing-notice>i{flex:0 0 1rem;margin-top:.12rem;text-align:center}.account-request-consent{display:flex!important;align-items:flex-start;gap:.65rem;margin-top:.15rem;padding:.7rem .8rem;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;font-size:.74rem;line-height:1.45}.account-request-consent input{flex:0 0 auto;width:1.05rem;height:1.05rem;margin:.08rem 0 0;accent-color:#0f766e}.account-request-consent span{min-width:0}.account-request-two-col{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}.account-request-form-panel .pd3i-login-form{gap:.8rem}.account-request-form-panel .pd3i-login-form{margin-top:0}.account-request-form-panel .pd3i-login-field{gap:.25rem}.account-request-form-panel .pd3i-login-input{border-radius:9px;background:#f8fafc}.account-request-form-panel em{font-style:normal;color:#ef4444}.account-request-admin-info,.account-request-telegram-info{display:flex;gap:.7rem;padding:.75rem .85rem;border-radius:10px;font-size:.72rem;line-height:1.45}.account-request-admin-info{background:#f0fdfa;color:#115e59;border:1px solid #ccfbf1}.account-request-telegram-info{flex-direction:column;background:#eff6ff;color:#1e40af;border:1px solid #dbeafe}.account-request-actions{display:flex;justify-content:flex-end;gap:.7rem;margin-top:.4rem}.account-request-clear{min-height:42px;padding:.65rem 1rem;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#475569;font-weight:700}.account-request-clear:hover{background:#f8fafc}.account-request-actions .pd3i-login-submit{width:auto;min-width:185px;margin:0}.account-request-result-card.is-success .account-request-result-title{color:#16a34a}.account-request-result-card.is-error .account-request-result-title{color:#dc2626}
+  @media(max-width:760px){.account-request-grid{grid-template-columns:1fr}.account-request-guide{padding:1.7rem 1.4rem}.account-request-brand{margin-bottom:1.7rem}.account-request-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1.4rem 0 .5rem}.account-request-steps li{border:0;padding:.5rem 0 0 0}.account-request-steps li:before{position:static;margin-bottom:.45rem}.account-request-steps span{font-size:.68rem}.account-request-note{display:none}.account-request-form-panel{padding:1.5rem 1.2rem}.account-request-two-col{grid-template-columns:1fr}}
+</style>

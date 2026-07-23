@@ -61,9 +61,9 @@ const Session_Manager = {
   }
 };
 
-function resolveHtmlFileName_(filename) {
+function getHtmlFileCandidates_(filename) {
   const name = String(filename || "").trim();
-  const candidates = name.indexOf("/") !== -1
+  return name.indexOf("/") !== -1
     ? [name]
     : [
         "Views/" + name,
@@ -71,7 +71,10 @@ function resolveHtmlFileName_(filename) {
         "SARS/" + name,
         name
       ];
+}
 
+function resolveHtmlFileName_(filename) {
+  const candidates = getHtmlFileCandidates_(filename);
   let lastError = null;
   for (let i = 0; i < candidates.length; i++) {
     try {
@@ -81,7 +84,21 @@ function resolveHtmlFileName_(filename) {
       lastError = err;
     }
   }
-  throw lastError || new Error("HTML file tidak ditemukan: " + name);
+  throw lastError || new Error("HTML file tidak ditemukan: " + String(filename || "").trim());
+}
+
+function resolveHtmlTemplateFileName_(filename) {
+  const candidates = getHtmlFileCandidates_(filename);
+  let lastError = null;
+  for (let i = 0; i < candidates.length; i++) {
+    try {
+      HtmlService.createTemplateFromFile(candidates[i]);
+      return candidates[i];
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("Template HTML tidak ditemukan: " + String(filename || "").trim());
 }
 
 function include(filename) {
@@ -89,7 +106,7 @@ function include(filename) {
 }
 
 function createTemplateFromFile_(filename) {
-  return HtmlService.createTemplateFromFile(resolveHtmlFileName_(filename));
+  return HtmlService.createTemplateFromFile(resolveHtmlTemplateFileName_(filename));
 }
 
 function getSpreadsheet_() {

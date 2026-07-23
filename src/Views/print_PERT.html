@@ -18,7 +18,14 @@ function s(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(new RegE
 function t(v){return String(v==null?'':v).trim();}
 function pick_(){for(var i=0;i<arguments.length;i++){var k=arguments[i]; if(Object.prototype.toString.call(k)==='[object Array]'){for(var j=0;j<k.length;j++){var kk=k[j]; if(data[kk]!=null&&data[kk]!=='') return data[kk]; if(meta[kk]!=null&&meta[kk]!=='') return meta[kk];}} else {if(data[k]!=null&&data[k]!=='') return data[k]; if(meta[k]!=null&&meta[k]!=='') return meta[k];}} return '';}
 function yn(v){v=t(v).toLowerCase(); if(['ya','y','yes','true','1'].indexOf(v)!==-1)return 'Ya'; if(['tidak','n','no','false','0'].indexOf(v)!==-1)return 'Tidak'; return v||'-';}
-function d(v){v=t(v); if(!v) return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return m[3]+'-'+m[2]+'-'+m[1]; return s(v);} 
+function d(v){v=t(v); if(!v) return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return m[3]+'-'+m[2]+'-'+m[1]; return s(v);}
+function parseRows_(value){if(Object.prototype.toString.call(value)==='[object Array]') return value; value=t(value); if(!value) return []; try{var parsed=JSON.parse(value); return Object.prototype.toString.call(parsed)==='[object Array]'?parsed:[];}catch(e){return [];}}
+var imunRows=parseRows_(pick_(['Riwayat Imunisasi']));
+var contactRows=(typeof CONTACTS!=='undefined'&&Object.prototype.toString.call(CONTACTS)==='[object Array]'&&CONTACTS.length)?CONTACTS:parseRows_(pick_(['Kontak Erat','KontakEratJSON','KontakEratJson','kontakEratJSON']));
+function findImun_(labels){for(var i=0;i<imunRows.length;i++){var r=imunRows[i]||{}; var jenis=t(r['Jenis Imunisasi']||r['Jenis imunisasi']||r['Imunisasi']||r['LabelImunisasi']||r['Jenis']||'').toLowerCase(); for(var j=0;j<labels.length;j++){if(jenis.indexOf(String(labels[j]).toLowerCase())!==-1) return r;}} return {};}
+function imunStatus_(labels, legacyKeys){var r=findImun_(labels); return s(r['Status']||r['status']||pick_(legacyKeys||[]));}
+function imunDate_(labels, legacyKeys){var r=findImun_(labels); return d(r['Tanggal']||r['tanggal']||pick_(legacyKeys||[]));}
+function imunSource_(labels, legacyKeys){var r=findImun_(labels); return s(r['Sumber Informasi']||r['Sumber']||r['sumber']||pick_(legacyKeys||[]));}
 ?>
 <div class="kop"><div class="title">FORM PERT-01 — INVESTIGASI KASUS SUSPEK PERTUSIS</div><div class="sub">Output PDF otomatis aplikasi PD3I (format ditingkatkan)</div><div class="hr"></div></div>
 <table>
@@ -39,12 +46,12 @@ function d(v){v=t(v); if(!v) return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})
 <tr><td><b>Dirawat di RS?</b><br><?!= yn(pick_(['Rawat inap?'])) ?></td><td><b>Nama Rumah Sakit</b><br><?!= s(pick_(['Nama Rumah Sakit'])) ?></td><td><b>Nomor Rekam Medik</b><br><?!= s(pick_(['Nomor Rekam Medik'])) ?></td></tr>
 <tr><td><b>Tanggal Masuk Rawat Inap</b><br><?!= d(pick_(['Tanggal Masuk Rawat Inap'])) ?></td><td colspan="2"><b>Tanggal Keluar</b><br><?!= d(pick_(['Tanggal Pulang','Tanggal Keluar'])) ?></td></tr>
 <tr><td class="section" colspan="3">Riwayat Vaksinasi</td></tr>
-<tr><td colspan="2"><b>DPT-HB-HiB usia 2 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 2 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 2 bulan'])) ?></td></tr>
-<tr><td colspan="2"><b>DPT-HB-HiB usia 3 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 3 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 3 bulan'])) ?></td></tr>
-<tr><td colspan="2"><b>DPT-HB-HiB usia 4 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 4 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 4 bulan'])) ?></td></tr>
-<tr><td colspan="2"><b>DPT-HB-HiB usia 18 bulan</b><br><?!= s(pick_(['DPT-HB-HiB usia 18 bulan'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber DPT usia 18 bulan'])) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 2 bulan</b><br><?!= imunStatus_(['DPT-HB-HIB 1','DPT-HB-HiB 1','usia 2 bulan'], ['DPT-HB-HiB usia 2 bulan']) ?></td><td><b>Sumber Informasi</b><br><?!= imunSource_(['DPT-HB-HIB 1','DPT-HB-HiB 1','usia 2 bulan'], ['Sumber DPT usia 2 bulan']) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 3 bulan</b><br><?!= imunStatus_(['DPT-HB-HIB 2','DPT-HB-HiB 2','usia 3 bulan'], ['DPT-HB-HiB usia 3 bulan']) ?></td><td><b>Sumber Informasi</b><br><?!= imunSource_(['DPT-HB-HIB 2','DPT-HB-HiB 2','usia 3 bulan'], ['Sumber DPT usia 3 bulan']) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 4 bulan</b><br><?!= imunStatus_(['DPT-HB-HIB 3','DPT-HB-HiB 3','usia 4 bulan'], ['DPT-HB-HiB usia 4 bulan']) ?></td><td><b>Sumber Informasi</b><br><?!= imunSource_(['DPT-HB-HIB 3','DPT-HB-HiB 3','usia 4 bulan'], ['Sumber DPT usia 4 bulan']) ?></td></tr>
+<tr><td colspan="2"><b>DPT-HB-HiB usia 18 bulan</b><br><?!= imunStatus_(['DPT-HB-HIB 4','DPT-HB-HiB 4','usia 18 bulan'], ['DPT-HB-HiB usia 18 bulan']) ?></td><td><b>Sumber Informasi</b><br><?!= imunSource_(['DPT-HB-HIB 4','DPT-HB-HiB 4','usia 18 bulan'], ['Sumber DPT usia 18 bulan']) ?></td></tr>
 <tr><td colspan="2"><b>Pernah imunisasi saat ORI?</b><br><?!= yn(pick_(['Pernah menerima DPT-HB-HiB saat ORI?'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber ORI'])) ?></td></tr>
-<tr><td colspan="3"><b>Tanggal Vaksinasi DPT-HB-HiB terakhir</b><br><?!= d(pick_(['Tanggal vaksinasi DPT terakhir'])) ?></td></tr>
+<tr><td colspan="3"><b>Tanggal Vaksinasi DPT-HB-HiB terakhir</b><br><?!= d(pick_(['Tanggal vaksinasi DPT terakhir'])) || imunDate_(['DPT-HB-HIB 4','DPT-HB-HiB 4','DPT-HB-HIB 3','DPT-HB-HiB 3','DPT-HB-HIB 2','DPT-HB-HiB 2','DPT-HB-HIB 1','DPT-HB-HiB 1'], []) ?></td></tr>
 <tr><td class="section" colspan="3">Informasi Epidemiologis</td></tr>
 <tr><td colspan="2"><b>Ada kasus serupa di keluarga/sekitar?</b><br><?!= yn(pick_(['Ada kasus serupa?','Ada kasus sekitar?'])) ?></td><td><b>Jumlah</b><br><?!= s(pick_(['Jumlah kasus sekitar'])) ?></td></tr>
 <tr><td><b>Bepergian 1 bulan terakhir?</b><br><?!= yn(pick_(['Bepergian 1 bulan terakhir?'])) ?></td><td><b>Lokasi</b><br><?!= s(pick_(['Lokasi perjalanan PERT','Tujuan perjalanan'])) ?></td><td><b>Tanggal pergi / kembali</b><br><?!= d(pick_(['Tanggal pergi PERT','Tanggal pergi'])) ?> / <?!= d(pick_(['Tanggal kembali PERT','Tanggal kembali'])) ?></td></tr>
@@ -53,6 +60,15 @@ function d(v){v=t(v); if(!v) return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})
 <tr><td><b>Spesimen lain diambil?</b><br><?!= yn(pick_(['Spesimen lain pertusis diambil?'])) ?></td><td><b>Jenis Sampel Lain</b><br><?!= s(pick_(['Jenis spesimen lain pertusis','Jenis Sampel Lain'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil spesimen lain pertusis','Tanggal ambil spesimen lain'])) ?> / <?!= d(pick_(['Tanggal kirim spesimen lain pertusis','Tanggal pengiriman spesimen lain ke lab'])) ?></td></tr>
 <tr><td colspan="3"><b>Keadaan saat ini</b><br><?!= s(pick_(['Status akhir PERT','Keadaan saat ini'])) ?></td></tr>
 <tr><td colspan="3"><b>Pelaksana investigasi</b><br><?!= s(pick_(['Petugas','Pelaksana investigasi'])) ?> &nbsp;&nbsp; <b>No Kontak:</b> <?!= s(pick_(['No Whatsapp Petugas','No. Kontak'])) ?></td></tr>
+<tr><td class="section" colspan="3">Kontak Erat</td></tr>
+<? if(contactRows.length){ ?>
+<tr><th>No</th><th>Nama/Umur/Alamat/Hubungan</th><th>Status Imunisasi / Kondisi / Keterangan</th></tr>
+<? for(var ci=0; ci<contactRows.length; ci++){ var c=contactRows[ci]||{}; ?>
+<tr><td><?!= ci+1 ?></td><td><?!= s(c['Nama']||'') ?> | <?!= s(c['Umur']||c['Umur (thn)']||'') ?> | <?!= s(c['Alamat']||'') ?> | <?!= s(c['Hub dgn Kasus']||c['Hubungan']||'') ?></td><td><?!= s(c['Status Imunisasi']||'') ?> | <?!= s(c['Jumlah Imunisasi Terkait']||'') ?> | <?!= s(c['Kondisi Saat Itu']||'') ?> | <?!= s(c['Keterangan']||'') ?></td></tr>
+<? } ?>
+<? } else { ?>
+<tr><td colspan="3">Tidak ada data kontak erat.</td></tr>
+<? } ?>
 </table>
 <div class="small" style="margin-top:8px">Tambahan sistem: ID Registrasi Kasus <?!= s(pick_(['ID Registrasi Kasus'])) ?> | Status Verifikasi EPID <?!= s(pick_(['Status Verifikasi EPID'])) ?></div>
 </body></html>

@@ -18,7 +18,7 @@
           { id: "Nama tempat pengobatan tradisional AFP", label: "Nama tempat pengobatan tradisional", type: "text", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
           { id: "Tanggal berkunjung pengobatan tradisional AFP", label: "Tanggal berkunjung pengobatan tradisional", type: "date", showIf: { field: "Pengobatan tradisional AFP", values: ["Ya"] } },
           { id: "Berobat ke Rumah Sakit AFP", label: "Setelah lemah/lumpuh, apakah berobat ke Rumah Sakit?", type: "choice_buttons", options: ["Ya", "Tidak"] },
-          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", fullWidth: true, showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
           { id: "Tanggal berobat AFP", label: "Tanggal berobat", type: "date", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
           { id: "Diagnosis AFP", label: "Diagnosis", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "No. rekam medik", type: "text", showIf: { field: "Berobat ke Rumah Sakit AFP", values: ["Ya"] } },

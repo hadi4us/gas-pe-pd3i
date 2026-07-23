@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Surveilans Aktif PD3I – Dinkes Kota Depok</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#1a73e8;
+      --primary-dark:#1558b0;
+
+      --bg:#ffffff;
+      --bg-soft:#f8f9fa;
+
+      --card:#ffffff;
+      --text:#202124;
+      --muted:#5f6368;
+      --border:#dadce0;
+
+      --radius:12px;
+      --shadow:0 1px 2px rgba(60,64,67,.16), 0 1px 3px rgba(60,64,67,.08);
+
+      --c-ok:#1a73e8;
+      --c-late:#d93025;
+      --c-nil:#f9ab00;
+
+      --font: Roboto, Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+      --title-desktop:28px;
+      --title-tablet:24px;
+      --title-mobile:22px;
+    }
+
+    *{ box-sizing:border-box; font-family:var(--font); }
+    body{ margin:0; background:var(--bg); color:var(--text); line-height:1.6; }
+    .pd3i-sars-wrap{ max-width:1200px; margin:0 auto; padding:0 16px; }
+
+    /* HEADER */
+    .pd3i-sars-dashboard-top{
+      background: var(--bg);
+      padding: 18px 0 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pd3i-sars-dashboard-top h1{
+      font-size: var(--title-desktop);
+      margin:0;
+      font-weight:500;
+      line-height:1.25;
+    }
+    .pd3i-sars-dashboard-sub{ margin-top:6px; font-size:13px; color:var(--muted); }
+    .pd3i-sars-top-rule{ margin-top: 14px; height:1px; width:320px; background:var(--border); }
+
+    /* CARD */
+    .pd3i-sars-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .pd3i-sars-error{
+      margin:16px 0 0;
+      padding:12px 14px;
+      border-radius:12px;
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      color:#b91c1c;
+      display:none;
+    }
+
+    /* FILTER */
+    .pd3i-sars-filter{
+      margin-top:16px;
+      padding:16px;
+      display:flex;
+      gap:12px;
+      align-items:end;
+      flex-wrap:wrap;
+      background: var(--bg);
+    }
+    .pd3i-sars-filter-item{ display:flex; flex-direction:column; gap:6px; min-width:160px; }
+    .pd3i-sars-filter-item label{ font-size:12px; color:var(--muted); font-weight:500; }
+
+    select{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:9px 12px;
+      font-size:14px;
+      background:var(--bg);
+      outline:none;
+      min-height:40px;
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    select:hover{
+      background-color: var(--bg-soft);
+    }
+
+    select:focus{
+      background-color: var(--bg);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,115,232,.15);
+    }
+
+    /* ✅ Dropdown chevron yang selalu terlihat (cross-browser) */
+    select{
+      padding-right: 38px; /* ruang untuk chevron */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' d='M7 10l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px 18px;
+    }
+
+    /* IE/Edge legacy (aman) */
+    select::-ms-expand{ display:none; }
+
+    .pd3i-sars-btn{
+      margin-left:auto;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:var(--bg);
+      color:var(--text);
+      padding:9px 14px;
+      cursor:pointer;
+      font-weight:500;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-height:40px;
+      transition: background .15s, box-shadow .15s, transform .05s, border-color .15s;
+    }
+    .pd3i-sars-btn:hover{
+      background: var(--bg-soft);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+      border-color: rgba(26,115,232,.35);
+    }
+    .pd3i-sars-btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .pd3i-sars-note{ width:100%; margin-top:6px; color:var(--muted); font-size:12px; }
+
+    /* KPI */
+    .pd3i-sars-kpi-row{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+    }
+    @media(max-width:980px){
+      .pd3i-sars-kpi-row{ grid-template-columns:repeat(2,1fr); }
+      .pd3i-sars-btn{ margin-left:0; }
+    }
+    @media(max-width:520px){ .pd3i-sars-kpi-row{ grid-template-columns:1fr; } }
+    .pd3i-sars-kpi{ padding:16px; }
+    .pd3i-sars-kpi .pd3i-sars-kpi-label{ font-size:12px; color:var(--muted); margin-bottom:10px; font-weight:500; }
+    .pd3i-sars-kpi .pd3i-sars-kpi-value{ font-size:28px; font-weight:700; letter-spacing:-0.2px; }
+    .pd3i-sars-kpi .pd3i-sars-kpi-sub{ margin-top:4px; font-size:12px; color:var(--muted); }
+
+    /* SECTION */
+    .pd3i-sars-section{ margin-top:16px; padding:16px; }
+    .pd3i-sars-section h2{ margin:0 0 10px 0; font-size:16px; font-weight:500; }
+
+    .pd3i-sars-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:980px){ .pd3i-sars-grid{ grid-template-columns:1fr; } }
+
+    .pd3i-sars-chart-box{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      background:var(--bg);
+      min-height:340px;
+    }
+    .pd3i-sars-chart-title{ color:var(--muted); font-size:12px; margin-bottom:8px; font-weight:500; }
+    .pd3i-sars-empty{
+      padding:12px;
+      color:var(--muted);
+      font-style:italic;
+      border:1px dashed #d1d5db;
+      border-radius:12px;
+      background:var(--bg-soft);
+    }
+
+    /* TABLE */
+    .pd3i-sars-table-wrap{
+      margin-top:14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:auto;
+      background:var(--bg);
+    }
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid #eef2f7;
+      text-align:left;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+    th{
+      position:sticky; top:0;
+      background:var(--bg-soft);
+      font-size:12px;
+      color:var(--text);
+      z-index:2;
+      cursor:pointer;
+      user-select:none;
+      font-weight:500;
+    }
+    tr:hover td{ background:#fafcff; }
+
+    .pd3i-sars-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:3px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid var(--border);
+      background:var(--bg-soft);
+      min-width:64px;
+    }
+    .pd3i-sars-pill.ok{ background:#e8f0fe; border-color:#c6dafc; color:#1a73e8; }
+    .pd3i-sars-pill.late{ background:#fce8e6; border-color:#f6aea9; color:#d93025; }
+    .pd3i-sars-pill.nil{ background:#fef7e0; border-color:#fde293; color:#b06000; }
+
+    .pd3i-sars-number-pill{
+      min-width:64px;
+      background:#e8f0fe;
+      border-color:#c6dafc;
+      color:#174ea6;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .pd3i-sars-sort-icon{ opacity:.6; margin-left:6px; font-size:11px; }
+
+    /* ✅ Pagination bar */
+    .pd3i-sars-table-bar{
+      margin-top: 10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pd3i-sars-table-bar .pd3i-sars-table-left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pd3i-sars-table-bar .pd3i-sars-table-right{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pd3i-sars-btn-mini{
+      border:1px solid var(--border);
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text);
+      min-height: 36px;
+      transition: background .15s, box-shadow .15s, transform .05s, border-color .15s;
+    }
+    .pd3i-sars-btn-mini:hover{
+      background: var(--bg-soft);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+      border-color: rgba(26,115,232,.35);
+    }
+    .pd3i-sars-btn-mini:disabled{
+      opacity:.5; cursor:not-allowed; transform:none; box-shadow:none;
+    }
+    .pd3i-sars-page-info{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    @media(max-width:980px){
+      .pd3i-sars-dashboard-top h1{ font-size: var(--title-tablet); }
+      .pd3i-sars-top-rule{ width:260px; }
+    }
+    @media(max-width:520px){
+      .pd3i-sars-dashboard-top h1{ font-size: var(--title-mobile); }
+      .pd3i-sars-top-rule{ width:220px; }
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <script>
+    var DEFAULT_DASHBOARD_YEAR_RAW = <?=
+      (typeof DEFAULT_DASHBOARD_YEAR !== 'undefined' && DEFAULT_DASHBOARD_YEAR !== null)
+        ? JSON.stringify(DEFAULT_DASHBOARD_YEAR)
+        : 'null'
+    ?>;
+
+    var DEFAULT_DASHBOARD_WEEK_RAW = <?=
+      (typeof DEFAULT_DASHBOARD_WEEK !== 'undefined' && DEFAULT_DASHBOARD_WEEK !== null)
+        ? JSON.stringify(DEFAULT_DASHBOARD_WEEK)
+        : 'null'
+    ?>;
+
+    function __toCleanNumber__(v, fallback){
+      if (v === null || v === undefined) return fallback;
+      var s = String(v).trim();
+      s = s.replace(/^"+|"+$/g, '');
+      s = s.replace(/^'+|'+$/g, '');
+      var n = Number(s);
+      return isFinite(n) ? n : fallback;
+    }
+
+    var DEFAULT_DASHBOARD_YEAR = __toCleanNumber__(DEFAULT_DASHBOARD_YEAR_RAW, new Date().getFullYear());
+    var DEFAULT_DASHBOARD_WEEK = __toCleanNumber__(DEFAULT_DASHBOARD_WEEK_RAW, 1);
+  </script>
+</head>
+
+<body>
+  <div class="pd3i-sars-dashboard-top">
+    <div class="pd3i-sars-wrap">
+      <div>
+        <h1>Dashboard SARS PD3I</h1>
+        <div class="pd3i-sars-dashboard-sub">Monitoring kelengkapan & ketepatan pelaporan Surveilans Aktif PD3I</div>
+        <div class="pd3i-sars-top-rule"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pd3i-sars-wrap">
+    <div id="err" class="pd3i-sars-error"></div>
+
+    <div class="pd3i-sars-card pd3i-sars-filter">
+      <div class="pd3i-sars-filter-item">
+        <label for="yearSel">Tahun</label>
+        <select id="yearSel"></select>
+      </div>
+
+      <div class="pd3i-sars-filter-item">
+        <label for="weekSel">Minggu Epidemiologi (ME)</label>
+        <select id="weekSel"></select>
+      </div>
+
+      <div class="pd3i-sars-filter-item">
+        <label for="jenisSel">Jenis Fasyankes</label>
+        <select id="jenisSel">
+          <option value="ALL">Semua</option>
+          <option value="RS">Rumah Sakit</option>
+          <option value="KLINIK">Klinik</option>
+          <option value="TPMD">TPMD</option>
+          <option value="PMB">PMB</option>
+          <option value="LAIN">Lainnya</option>
+        </select>
+      </div>
+
+      <div class="pd3i-sars-filter-item" style="min-width:280px; flex:1;">
+        <label for="pengSel">Pengampu</label>
+        <select id="pengSel">
+          <option value="all">Semua Pengampu</option>
+        </select>
+      </div>
+
+      <button id="btnLoad" class="pd3i-sars-btn" type="button" onclick="loadData(false)">
+        ⟳ Muat Data
+      </button>
+
+      <div id="pd3i-sars-note" class="pd3i-sars-note"></div>
+    </div>
+
+    <div class="pd3i-sars-kpi-row">
+      <div class="pd3i-sars-card pd3i-sars-kpi">
+        <div class="pd3i-sars-kpi-label">Kelengkapan</div>
+        <div class="pd3i-sars-kpi-value" id="completeness">-</div>
+        <div class="pd3i-sars-kpi-sub" id="compSub">-</div>
+      </div>
+
+      <div class="pd3i-sars-card pd3i-sars-kpi">
+        <div class="pd3i-sars-kpi-label">Ketepatan Waktu</div>
+        <div class="pd3i-sars-kpi-value" id="timeliness">-</div>
+        <div class="pd3i-sars-kpi-sub" id="timeSub">-</div>
+      </div>
+
+      <div class="pd3i-sars-card pd3i-sars-kpi">
+        <div class="pd3i-sars-kpi-label">Total Fasyankes</div>
+        <div class="pd3i-sars-kpi-value" id="total">-</div>
+        <div class="pd3i-sars-kpi-sub" id="totalSub">-</div>
+      </div>
+
+      <div class="pd3i-sars-card pd3i-sars-kpi">
+        <div class="pd3i-sars-kpi-label">Belum Lapor</div>
+        <div class="pd3i-sars-kpi-value" id="belum">-</div>
+        <div class="pd3i-sars-kpi-sub" id="belumSub">-</div>
+      </div>
+    </div>
+
+    <div class="pd3i-sars-card pd3i-sars-section">
+      <h2>Ringkasan & Tren</h2>
+
+      <div class="pd3i-sars-grid">
+        <div class="pd3i-sars-chart-box">
+          <div class="pd3i-sars-chart-title">Ringkasan status (ME terpilih)</div>
+          <div id="chartStatus" style="width:100%; height:300px;"></div>
+        </div>
+
+        <div class="pd3i-sars-chart-box">
+          <div class="pd3i-sars-chart-title" id="trendTitle">Tren kelengkapan (ME 1–52/53) — sesuai filter</div>
+          <div id="chartTrend" style="width:100%; height:300px;"></div>
+          <div id="trendEmpty" class="pd3i-sars-empty" style="display:none; margin-top:10px;">Data tren belum tersedia.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pd3i-sars-card pd3i-sars-section">
+      <h2>Rekap Per Pengampu</h2>
+      <div class="pd3i-sars-chart-title">Status pada ME terpilih per pengampu (nama pengampu di sumbu X)</div>
+      <div class="pd3i-sars-chart-box" style="min-height:420px;">
+        <div id="chartPengampu" style="width:100%; height:390px;"></div>
+        <div id="pengEmpty" class="pd3i-sars-empty" style="display:none; margin-top:10px;">Tidak ada data rekap per pengampu untuk filter ini.</div>
+      </div>
+    </div>
+
+    <div class="pd3i-sars-card pd3i-sars-section">
+      <h2>Detail Fasyankes</h2>
+      <div class="pd3i-sars-chart-title" id="detailHelp">
+        Denominator capaian tahunan (YTD) = ME terpilih. Contoh ME 50 → denom 50.
+        Kelengkapan (thn) = minggu lapor / denom. Ketepatan (thn) = minggu tepat waktu / denom.
+      </div>
+
+      <!-- ✅ Table controls (rows per page + pagination) -->
+      <div class="pd3i-sars-table-bar">
+        <div class="pd3i-sars-table-left">
+          <span>Tampilkan</span>
+          <select id="rowsPerPage" style="min-width:120px;">
+            <option value="10">10 baris</option>
+            <option value="15">15 baris</option>
+            <option value="20">20 baris</option>
+            <option value="30">30 baris</option>
+            <option value="50">50 baris</option>
+            <option value="100">100 baris</option>
+          </select>
+          <span id="rowsInfo" class="pd3i-sars-page-info"></span>
+        </div>
+
+        <div class="pd3i-sars-table-right">
+          <button id="btnFirst" class="pd3i-sars-btn-mini" type="button" onclick="goPage('first')">«</button>
+          <button id="btnPrev" class="pd3i-sars-btn-mini" type="button" onclick="goPage('prev')">‹</button>
+          <span id="pageInfo" class="pd3i-sars-page-info">Halaman 1/1</span>
+          <button id="btnNext" class="pd3i-sars-btn-mini" type="button" onclick="goPage('next')">›</button>
+          <button id="btnLast" class="pd3i-sars-btn-mini" type="button" onclick="goPage('last')">»</button>
+        </div>
+      </div>
+
+      <div class="pd3i-sars-table-wrap" id="table"></div>
+    </div>
+  </div>
+
+  <script>
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(init);
+
+    let lastData = null;
+    let sortState = { key: 'status', dir: 'asc' };
+    let lastWeekCap = 52;
+
+    // ✅ Pagination state
+    let pageState = {
+      page: 1,
+      perPage: 10,
+      totalRows: 0,
+      totalPages: 1
+    };
+
+    function setErr(msg){
+      const el = document.getElementById('err');
+      if (!msg){
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+      }
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function fmt1(n){
+      const v = Number(n || 0);
+      return v.toLocaleString('id-ID', { maximumFractionDigits: 1 });
+    }
+    function esc(str){
+      return String(str ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
+    function getCss(varName){
+      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+
+    // ====== YEAR ======
+    function buildYearOptions_(){
+      const ySel = document.getElementById('yearSel');
+      const nowY = new Date().getFullYear();
+      const start = nowY - 2;
+      const end = nowY + 5;
+
+      let html = "";
+      for (let y = end; y >= start; y--){
+        html += `<option value="${y}">${y}</option>`;
+      }
+      ySel.innerHTML = html;
+
+      const defY = (isFinite(DEFAULT_DASHBOARD_YEAR) && DEFAULT_DASHBOARD_YEAR >= 2000)
+        ? DEFAULT_DASHBOARD_YEAR
+        : nowY;
+
+      ySel.value = String(defY);
+
+      if (ySel.value !== String(defY)) {
+        const opt = document.createElement('option');
+        opt.value = String(defY);
+        opt.textContent = String(defY);
+        ySel.insertBefore(opt, ySel.firstChild);
+        ySel.value = String(defY);
+      }
+
+      ySel.addEventListener('change', () => {
+        const y = Number(ySel.value);
+        refreshWeeksForYear_(y, null, () => loadData(false));
+      });
+    }
+
+    function refreshWeeksForYear_(year, selectedWeek, cb){
+      const wSel = document.getElementById('weekSel');
+      wSel.innerHTML = `<option>Memuat...</option>`;
+
+      google.script.run
+        .withSuccessHandler(meta => {
+          const lastWeek = Number(meta && meta.lastWeek ? meta.lastWeek : 52);
+          lastWeekCap = (isFinite(lastWeek) && lastWeek >= 52 && lastWeek <= 53) ? lastWeek : 52;
+
+          document.getElementById('trendTitle').textContent =
+            `Tren kelengkapan (ME 1–${lastWeekCap}) — sesuai filter`;
+
+          let html = "";
+          for (let i=1; i<=lastWeekCap; i++){
+            html += `<option value="${i}">ME ${i}</option>`;
+          }
+          wSel.innerHTML = html;
+
+          const sw = Number(selectedWeek || 0);
+          const defFromInject = Number(DEFAULT_DASHBOARD_WEEK || 0);
+          const defFromServer = Number(meta && meta.reportWeek ? meta.reportWeek : 0);
+
+          const pick = sw || defFromInject || defFromServer || 1;
+          const finalPick = Math.max(1, Math.min(lastWeekCap, pick));
+          wSel.value = String(finalPick);
+
+          if (typeof cb === "function") cb();
+        })
+        .withFailureHandler(err => {
+          lastWeekCap = 52;
+          document.getElementById('trendTitle').textContent =
+            `Tren kelengkapan (ME 1–${lastWeekCap}) — sesuai filter`;
+
+          let html = "";
+          for (let i=1; i<=52; i++) html += `<option value="${i}">ME ${i}</option>`;
+          wSel.innerHTML = html;
+
+          const pick = Number(selectedWeek || DEFAULT_DASHBOARD_WEEK || 1) || 1;
+          wSel.value = String(Math.max(1, Math.min(52, pick)));
+
+          setErr('Gagal memuat jumlah minggu (52/53) dari server: ' + (err && err.message ? err.message : err));
+          if (typeof cb === "function") cb();
+        })
+        .getEpiMetaForDashboard(year);
+    }
+
+    function init(){
+      setErr('');
+      buildYearOptions_();
+
+      // init rows-per-page dropdown
+      const rpp = document.getElementById('rowsPerPage');
+      rpp.value = String(pageState.perPage);
+      rpp.addEventListener('change', () => {
+        pageState.perPage = Number(rpp.value || 10);
+        pageState.page = 1;
+        if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+      });
+
+      const y = Number(document.getElementById('yearSel').value || new Date().getFullYear());
+      refreshWeeksForYear_(y, Number(DEFAULT_DASHBOARD_WEEK || 0), () => {
+        loadData(true);
+      });
+    }
+
+    function loadData(isFirst){
+      setErr('');
+      const btn = document.getElementById('btnLoad');
+      const sarsNote = document.getElementById('pd3i-sars-note');
+      btn.disabled = true;
+      sarsNote.textContent = 'Memuat data dari server...';
+
+      const year  = Number(document.getElementById('yearSel').value || new Date().getFullYear());
+      const minggu= Number(document.getElementById('weekSel').value || 1);
+      const jenis = document.getElementById('jenisSel').value || 'ALL';
+      const peng  = document.getElementById('pengSel').value || 'all';
+
+      google.script.run
+        .withSuccessHandler(function(data){
+          btn.disabled = false;
+          sarsNote.textContent = '';
+
+          if (!data){
+            setErr('Gagal memuat: server mengembalikan null.');
+            return;
+          }
+          lastData = data;
+
+          if (isFirst){
+            const pengSel = document.getElementById('pengSel');
+            const list = Array.isArray(data.pengampuList) ? data.pengampuList : [];
+            const fallbackList = Array.isArray(data.perPengampu)
+              ? data.perPengampu.map(item => item && (item.pengampu || item.namaPengampu || item.name)).filter(Boolean)
+              : [];
+            const pengampuOptions = [...new Set(list.concat(fallbackList).map(p => String(p).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+            pengSel.innerHTML =
+              `<option value="all">Semua Pengampu</option>` +
+              pengampuOptions.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+            pengSel.value = 'all';
+          }
+
+          // reset pagination setiap load data baru
+          pageState.page = 1;
+
+          drawAll(data);
+        })
+        .withFailureHandler(function(err){
+          btn.disabled = false;
+          sarsNote.textContent = '';
+          setErr('Error server: ' + (err && err.message ? err.message : err));
+        })
+        .getDashboardData(year, minggu, jenis, peng);
+    }
+
+    function drawAll(data){
+      drawKPI(data);
+      drawStatusChart(data);
+      drawTrendChart(data);
+      drawPengampuChart(data);
+      renderTable(Array.isArray(data.detail) ? data.detail : [], data.denomWeeks || 0);
+    }
+
+    function drawKPI(data){
+      const kpi = data.kpi || {};
+      const total = Number(kpi.total || 0);
+      const lapor = Number(kpi.lapor || 0);
+      const onTime = Number(kpi.onTime || 0);
+      const terlambat = Number(kpi.terlambat || 0);
+      const belum = Number(kpi.belum || 0);
+
+      const completeness = (kpi.completeness !== undefined) ? Number(kpi.completeness) : (total ? (lapor/total*100) : 0);
+      const timeliness = (kpi.timeliness !== undefined) ? Number(kpi.timeliness) : (lapor ? (onTime/lapor*100) : 0);
+
+      document.getElementById('completeness').textContent = `${fmt1(completeness)}%`;
+      document.getElementById('compSub').textContent = `${lapor} lapor / ${total} total`;
+
+      document.getElementById('timeliness').textContent = `${fmt1(timeliness)}%`;
+      document.getElementById('timeSub').textContent = `${onTime} tepat waktu / ${lapor} yang lapor`;
+
+      document.getElementById('total').textContent = `${total}`;
+      document.getElementById('totalSub').textContent = `Terlambat: ${terlambat} • Tepat waktu: ${onTime}`;
+
+      document.getElementById('belum').textContent = `${belum}`;
+      document.getElementById('belumSub').textContent = `Belum lapor pada ME terpilih`;
+    }
+
+    function drawStatusChart(data){
+      const kpi = data.kpi || {};
+      const onTime = Number(kpi.onTime || 0);
+      const terlambat = Number(kpi.terlambat || 0);
+      const belum = Number(kpi.belum || 0);
+
+      const ds = google.visualization.arrayToDataTable([
+        ['Status', 'Jumlah'],
+        ['Tepat Waktu', onTime],
+        ['Terlambat', terlambat],
+        ['Belum', belum]
+      ]);
+
+      const chart = new google.visualization.PieChart(document.getElementById('chartStatus'));
+      chart.draw(ds, {
+        height: 300,
+        pieHole: 0.55,
+        chartArea: { left: 10, top: 10, width: '95%', height: '90%' },
+        legend: { position: 'right' },
+        slices: {
+          0: { color: getCss('--c-ok') },
+          1: { color: getCss('--c-late') },
+          2: { color: getCss('--c-nil') }
+        }
+      });
+    }
+
+    function drawTrendChart(data){
+      const trendRaw = Array.isArray(data.trend) ? data.trend : [];
+      const trendEmpty = document.getElementById('trendEmpty');
+      const el = document.getElementById('chartTrend');
+
+      if (!trendRaw.length){
+        el.innerHTML = '';
+        trendEmpty.style.display = 'block';
+        return;
+      }
+      trendEmpty.style.display = 'none';
+
+      const cap = (isFinite(lastWeekCap) && lastWeekCap >= 52 && lastWeekCap <= 53) ? lastWeekCap : 52;
+      const trend = trendRaw.slice(0, cap);
+
+      const arr = [['ME', 'Kelengkapan (%)']];
+      trend.forEach(r => arr.push([`ME ${r.week}`, Number(r.pct || 0)]));
+
+      const ds = google.visualization.arrayToDataTable(arr);
+      const chart = new google.visualization.LineChart(el);
+      chart.draw(ds, {
+        height: 300,
+        legend: { position: 'none' },
+        chartArea: { left: 50, top: 20, width: '86%', height: '70%' },
+        hAxis: { slantedText: true, slantedTextAngle: 60 },
+        vAxis: { minValue: 0, maxValue: 100, title: 'Kelengkapan (%)' },
+        colors: [getCss('--c-ok')],
+        pointSize: 4
+      });
+    }
+
+    function drawPengampuChart(data){
+      const per = Array.isArray(data.perPengampu) ? data.perPengampu : [];
+      const el = document.getElementById('chartPengampu');
+      const pengEmpty = document.getElementById('pengEmpty');
+
+      if (!per.length){
+        el.innerHTML = '';
+        pengEmpty.style.display = 'block';
+        return;
+      }
+      pengEmpty.style.display = 'none';
+
+      const arr = [['Pengampu', 'Tepat Waktu', 'Terlambat', 'Belum']];
+      per.forEach(p => {
+        arr.push([
+          String(p.pengampu || '-'),
+          Number(p.onTime || 0),
+          Number(p.terlambat || 0),
+          Number(p.belum || 0),
+        ]);
+      });
+
+      const ds = google.visualization.arrayToDataTable(arr);
+
+      const chart = new google.visualization.ColumnChart(el);
+      chart.draw(ds, {
+        height: 390,
+        isStacked: true,
+        legend: { position: 'top' },
+        chartArea: { left: 60, top: 40, width: '90%', height: '68%' },
+        colors: [getCss('--c-ok'), getCss('--c-late'), getCss('--c-nil')],
+        hAxis: {
+          slantedText: true,
+          slantedTextAngle: 60,
+          textStyle: { fontSize: 11 }
+        },
+        vAxis: { minValue: 0, title: 'Jumlah Fasyankes' },
+        bar: { groupWidth: '72%' }
+      });
+    }
+
+    // =========================
+    // ✅ PAGINATION CONTROLS
+    // =========================
+    function goPage(action){
+      if (!pageState.totalRows) return;
+
+      if (action === 'first') pageState.page = 1;
+      else if (action === 'prev') pageState.page = Math.max(1, pageState.page - 1);
+      else if (action === 'next') pageState.page = Math.min(pageState.totalPages, pageState.page + 1);
+      else if (action === 'last') pageState.page = pageState.totalPages;
+
+      if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+    }
+
+    function updatePagerUI_(){
+      const info = document.getElementById('pageInfo');
+      const rowsInfo = document.getElementById('rowsInfo');
+      const btnFirst = document.getElementById('btnFirst');
+      const btnPrev  = document.getElementById('btnPrev');
+      const btnNext  = document.getElementById('btnNext');
+      const btnLast  = document.getElementById('btnLast');
+
+      info.textContent = `Halaman ${pageState.page}/${pageState.totalPages}`;
+
+      const startIdx = pageState.totalRows ? ((pageState.page - 1) * pageState.perPage + 1) : 0;
+      const endIdx = Math.min(pageState.totalRows, pageState.page * pageState.perPage);
+      rowsInfo.textContent = pageState.totalRows
+        ? `Menampilkan ${startIdx}–${endIdx} dari ${pageState.totalRows}`
+        : '';
+
+      const isFirst = pageState.page <= 1;
+      const isLast  = pageState.page >= pageState.totalPages;
+
+      btnFirst.disabled = isFirst;
+      btnPrev.disabled  = isFirst;
+      btnNext.disabled  = isLast;
+      btnLast.disabled  = isLast;
+    }
+
+    // ---------- TABLE + SORT + PAGINATION ----------
+    function renderTable(detail, denomWeeks){
+      const tableEl = document.getElementById('table');
+      if (!detail.length){
+        tableEl.innerHTML = `<div style="padding:14px;color:#5f6368;font-style:italic;">Tidak ada data detail.</div>`;
+        pageState.totalRows = 0;
+        pageState.totalPages = 1;
+        pageState.page = 1;
+        updatePagerUI_();
+        return;
+      }
+
+      // 1) sort semua data (global)
+      const rowsAll = detail.slice().sort((a,b) => compareBy(a,b, sortState.key, sortState.dir));
+
+      // 2) setup pagination
+      pageState.totalRows = rowsAll.length;
+      pageState.totalPages = Math.max(1, Math.ceil(pageState.totalRows / pageState.perPage));
+      pageState.page = Math.max(1, Math.min(pageState.page, pageState.totalPages));
+
+      const start = (pageState.page - 1) * pageState.perPage;
+      const end = start + pageState.perPage;
+      const rows = rowsAll.slice(start, end);
+
+      updatePagerUI_();
+
+      const head = [
+        { key:'no', label:'No' },
+        { key:'nama', label:'Nama Fasyankes' },
+        { key:'pengampu', label:'Pengampu' },
+        { key:'status', label:'Status' },
+        { key:'capaianKelengkapan', label:'Capaian Kelengkapan (thn)' },
+        { key:'capaianKetepatan', label:'Capaian Ketepatan (thn)' },
+        { key:'mingguLapor', label:'Minggu Lapor' },
+        { key:'mingguTepat', label:'Minggu Tepat Waktu' }
+      ];
+
+      let html = `<table><thead><tr>`;
+      head.forEach(h => {
+        const icon = (sortState.key === h.key) ? (sortState.dir === 'asc' ? '▲' : '▼') : '⇅';
+        html += `<th data-key="${h.key}" onclick="onSort('${h.key}')">${esc(h.label)} <span class="pd3i-sars-sort-icon">${icon}</span></th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      rows.forEach((r,idx) => {
+        const st = String(r.status || '');
+        const cls =
+          st === 'Tepat Waktu' ? 'ok' :
+          st === 'Terlambat' ? 'late' : 'nil';
+
+        const noGlobal = start + idx + 1; // ✅ nomor mengikuti posisi global
+
+        html += `
+          <tr>
+            <td>${noGlobal}</td>
+            <td>${esc(r.nama || '')}</td>
+            <td>${esc(r.pengampu || '-')}</td>
+            <td><span class="pd3i-sars-pill ${cls}">${esc(st)}</span></td>
+
+            <td><span class="pd3i-sars-pill pd3i-sars-number-pill">${fmt1(r.capaianKelengkapan || 0)}%</span></td>
+            <td><span class="pd3i-sars-pill pd3i-sars-number-pill">${fmt1(r.capaianKetepatan || 0)}%</span></td>
+
+            <td><span class="pd3i-sars-pill pd3i-sars-number-pill">${Number(r.mingguLapor||0)}/${Number(denomWeeks||0)}</span></td>
+            <td><span class="pd3i-sars-pill pd3i-sars-number-pill">${Number(r.mingguTepat||0)}/${Number(denomWeeks||0)}</span></td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      tableEl.innerHTML = html;
+    }
+
+    function onSort(key){
+      if (sortState.key === key){
+        sortState.dir = (sortState.dir === 'asc') ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = 'asc';
+      }
+      pageState.page = 1; // ✅ balik ke page 1 setelah sort
+      if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+    }
+
+    function compareBy(a,b,key,dir){
+      const mul = (dir === 'asc') ? 1 : -1;
+
+      if (key === 'status'){
+        const rank = { 'Belum Lapor':0, 'Terlambat':1, 'Tepat Waktu':2 };
+        const ra = (rank[a.status] ?? 9);
+        const rb = (rank[b.status] ?? 9);
+        return (ra - rb) * mul;
+      }
+
+      const va = (a[key] ?? '');
+      const vb = (b[key] ?? '');
+
+      const na = Number(va);
+      const nb = Number(vb);
+      const bothNum = isFinite(na) && isFinite(nb) && String(va).trim() !== '' && String(vb).trim() !== '';
+
+      if (bothNum) return (na - nb) * mul;
+
+      return String(va).localeCompare(String(vb), 'id-ID', { sensitivity:'base' }) * mul;
+    }
+  </script>
+</body>
+</html>

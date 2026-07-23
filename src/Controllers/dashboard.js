@@ -105,11 +105,11 @@ function _parseDateStr_(str) {
   str = String(str || "").trim();
   if (!str) return null;
   
-  // Jika string berisi angka serial saja (e.g. "46047")
-  if (/^\d+$/.test(str)) {
-    const num = parseInt(str, 10);
+  // Jika string berisi angka serial (bisa berupa integer atau desimal, e.g. "46047" atau "46025.8254")
+  if (/^\d+(\.\d+)?$/.test(str)) {
+    const num = parseFloat(str);
     const date = new Date(Date.UTC(1899, 11, 30));
-    date.setUTCDate(date.getUTCDate() + num);
+    date.setUTCDate(date.getUTCDate() + Math.floor(num));
     return date;
   }
   
@@ -143,6 +143,33 @@ function _parseDateStr_(str) {
   }
   
   return null;
+}
+
+
+function _findHeaderIndexes_(headers, name) {
+  var idxs = [];
+  for (var i = 0; i < headers.length; i++) {
+    if (headers[i] === name) idxs.push(i);
+  }
+  return idxs;
+}
+
+function _readLastNonEmptyHeaderValue_(row, idxs) {
+  idxs = Array.isArray(idxs) ? idxs : [];
+  for (var i = idxs.length - 1; i >= 0; i--) {
+    var idx = idxs[i];
+    var value = String(row[idx] || '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
+
+function _queueDxCount_(queue, dx) {
+  const target = String(dx || '').trim().toUpperCase();
+  return (queue || []).filter(function(item) {
+    return String(item && item.dx || '').trim().toUpperCase() === target;
+  }).length;
 }
 
 function _findFirstHeaderIndex_(headers, candidates) {
@@ -346,7 +373,9 @@ function _isDashboardInputerMatch_(sess, inputerUsername, inputerName) {
 function _buildWorkflowInboxData_(sess, dx, options) {
   options = options || {};
   const summaryOnly = !!options.summaryOnly;
-  const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
+  const role = (typeof _normalizePd3iRole_ === 'function')
+    ? _normalizePd3iRole_((sess.user && sess.user.role) || '')
+    : String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
   const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
   const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
   const dxNorm = String(dx || '').trim().toUpperCase();
@@ -383,20 +412,22 @@ function _buildWorkflowInboxData_(sess, dx, options) {
     const idxKabKota = _findFirstHeaderIndex_(headers, ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota']);
     const idxKecamatan = headers.indexOf('Kecamatan');
     const idxKelurahan = headers.indexOf('Kelurahan');
-    const idxVerifikasi = headers.indexOf('Status Verifikasi EPID');
-    const idxCatatanVerif = headers.indexOf('Catatan Verifikasi EPID');
+    const idxVerifikasiList = _findHeaderIndexes_(headers, 'Status Verifikasi EPID');
+    const idxVerifikasi = idxVerifikasiList.length ? idxVerifikasiList[0] : -1;
+    const idxCatatanVerifList = _findHeaderIndexes_(headers, 'Catatan Verifikasi EPID');
+    const idxCatatanVerif = idxCatatanVerifList.length ? idxCatatanVerifList[0] : -1;
     const idxDiinputOleh = headers.indexOf('Diinput Oleh');
     const idxInputAwalOleh = headers.indexOf('Input Awal Diisi Oleh');
-    const idxWorkflowQueue = headers.indexOf('Workflow Current Queue');
-    const idxWorkflowLabel = headers.indexOf('Workflow Current Label');
-    const idxProsesVerifikasi = headers.indexOf('Status Proses Verifikasi EPID');
-    const idxProsesPemeriksaan = headers.indexOf('Status Proses Pemeriksaan');
-    const idxProsesPemantauan = headers.indexOf('Status Proses Pemantauan');
-    const idxProsesPerbaikan = headers.indexOf('Status Proses Perbaikan');
+    const idxWorkflowQueueList = _findHeaderIndexes_(headers, 'Workflow Current Queue');
+    const idxWorkflowLabelList = _findHeaderIndexes_(headers, 'Workflow Current Label');
+    const idxProsesVerifikasiList = _findHeaderIndexes_(headers, 'Status Proses Verifikasi EPID');
+    const idxProsesPemeriksaanList = _findHeaderIndexes_(headers, 'Status Proses Pemeriksaan');
+    const idxProsesPemantauanList = _findHeaderIndexes_(headers, 'Status Proses Pemantauan');
+    const idxProsesPerbaikanList = _findHeaderIndexes_(headers, 'Status Proses Perbaikan');
     const idxTimestamp = headers.indexOf('Timestamp');
     const idxUpdated = headers.indexOf('Updated At');
     const idxPuskesmasPengampu = headers.indexOf('Puskesmas Pengampu');
-    const idxKodePuskesmas = headers.indexOf('KodePuskesmas Pengampu') !== -1 ? headers.indexOf('KodePuskesmas Pengampu') : headers.indexOf('KodePuskesmas');
+    const idxKodePuskesmas = headers.indexOf('KodeFaskes Pengampu') !== -1 ? headers.indexOf('KodeFaskes Pengampu') : headers.indexOf('KodeFaskes');
     const idxNamaUnitPelapor = headers.indexOf('Nama unit pelapor');
     const idxStatusKasus = headers.indexOf('Status Pasien/Kasus');
     const idxSampelDilakukan = headers.indexOf('Pemeriksaan Sampel Dilakukan');
@@ -410,15 +441,18 @@ function _buildWorkflowInboxData_(sess, dx, options) {
     for (let ri = rows.length - 1; ri >= 0; ri--) {
       let row = rows[ri];
       const totalQueued = (summaryOnly ? 0 : (pendingVerification.length + revisionQueue.length + verificationDone.length + sampleQueue.length + sampleDoneQueue.length + statusQueue.length + statusDoneQueue.length));
-      const allQueuesFull = !summaryOnly && pendingVerification.length >= QUEUE_LIMIT && revisionQueue.length >= QUEUE_LIMIT && verificationDone.length >= QUEUE_LIMIT && sampleQueue.length >= QUEUE_LIMIT && sampleDoneQueue.length >= QUEUE_LIMIT && statusQueue.length >= QUEUE_LIMIT && statusDoneQueue.length >= QUEUE_LIMIT;
+      const allQueuesFull = false; // Do not let one diagnosis fill the global queue and block later DX sheets.
       if (allQueuesFull) { break; }
+      const rowHasContent = (row || []).some(function(cell) { return String(cell || '').trim() !== ''; });
+      if (!rowHasContent) continue;
       const recordId = idxRecordId !== -1 ? String(row[idxRecordId] || '').trim() : '';
-      const epid = idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '';
-      const recordKey = recordId || epid;
-      if (!recordKey) return;
+      const epidMain = idxEpid !== -1 ? String(row[idxEpid] || '').trim() : '';
+      const epid = epidMain;
+      const rowRecordKey = 'ROW:' + String(ri + 2);
+      const recordKey = recordId || epid || rowRecordKey;
+      if (!recordKey && !summaryOnly) continue;
 
-      const statusVerifikasi = idxVerifikasi !== -1 ? String(row[idxVerifikasi] || '').trim() : '';
-      const normalizedStatus = String(statusVerifikasi || 'Pending').trim().toUpperCase();
+      const statusVerifikasi = _readLastNonEmptyHeaderValue_(row, idxVerifikasiList);
       const puskesmasPengampu = idxPuskesmasPengampu !== -1 ? String(row[idxPuskesmasPengampu] || '').trim() : '';
       const kodePuskesmas = idxKodePuskesmas !== -1 ? String(row[idxKodePuskesmas] || '').trim() : '';
       const namaUnitPelapor = idxNamaUnitPelapor !== -1 ? String(row[idxNamaUnitPelapor] || '').trim() : '';
@@ -433,12 +467,19 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       const inputerUsername = idxDiinputOleh !== -1 ? String(row[idxDiinputOleh] || '').trim() : '';
       const inputerName = idxInputAwalOleh !== -1 ? String(row[idxInputAwalOleh] || '').trim() : '';
       const inputerMatch = _isDashboardInputerMatch_(sess, inputerUsername, inputerName);
-      const workflowQueue = idxWorkflowQueue !== -1 ? String(row[idxWorkflowQueue] || '').trim() : '';
-      const workflowLabel = idxWorkflowLabel !== -1 ? String(row[idxWorkflowLabel] || '').trim() : '';
-      const prosesVerifikasi = idxProsesVerifikasi !== -1 ? String(row[idxProsesVerifikasi] || '').trim() : '';
-      const prosesPemeriksaan = idxProsesPemeriksaan !== -1 ? String(row[idxProsesPemeriksaan] || '').trim() : '';
-      const prosesPemantauan = idxProsesPemantauan !== -1 ? String(row[idxProsesPemantauan] || '').trim() : '';
-      const prosesPerbaikan = idxProsesPerbaikan !== -1 ? String(row[idxProsesPerbaikan] || '').trim() : '';
+      const workflowQueue = _readLastNonEmptyHeaderValue_(row, idxWorkflowQueueList);
+      const workflowLabel = _readLastNonEmptyHeaderValue_(row, idxWorkflowLabelList);
+      const prosesVerifikasi = _readLastNonEmptyHeaderValue_(row, idxProsesVerifikasiList);
+      const prosesPemeriksaan = _readLastNonEmptyHeaderValue_(row, idxProsesPemeriksaanList);
+      const prosesPemantauan = _readLastNonEmptyHeaderValue_(row, idxProsesPemantauanList);
+      const prosesPerbaikan = _readLastNonEmptyHeaderValue_(row, idxProsesPerbaikanList);
+      const normalizedStatus = String(statusVerifikasi || 'Pending').trim().toUpperCase();
+      const normalizedWorkflowQueue = String(workflowQueue || '').trim().toLowerCase();
+      const normalizedProsesVerifikasi = String(prosesVerifikasi || '').trim().toUpperCase();
+      const isPendingVerificationStatus = !normalizedStatus
+        || ['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI', 'MENUNGGU VERIFIKASI'].indexOf(normalizedStatus) !== -1
+        || normalizedWorkflowQueue === 'verifikasi_epid'
+        || ['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI', 'MENUNGGU VERIFIKASI'].indexOf(normalizedProsesVerifikasi) !== -1;
 
       const statusKasus = idxStatusKasus !== -1 ? String(row[idxStatusKasus] || '').trim() : '';
       const sampelDilakukan = idxSampelDilakukan !== -1 ? String(row[idxSampelDilakukan] || '').trim() : '';
@@ -466,14 +507,14 @@ function _buildWorkflowInboxData_(sess, dx, options) {
           if (kelurahan) kelurahanSet[kelurahan] = true;
           dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
         }
-        if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && normalizedStatus === 'PENDING') pendingVerificationCount += 1;
+        if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && isPendingVerificationStatus) pendingVerificationCount += 1;
         if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && (scopedForWork || inputerMatch)) revisionQueueCount += 1;
         if (normalizedStatus === 'TERVERIFIKASI' && scopedForWork) verificationDoneCount += 1;
         if (sampleStagePending) sampleQueueCount += 1;
         else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && scopedForWork && sampleDone) sampleDoneCount += 1;
         if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && scopedForWork) statusQueueCount += 1;
         else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && scopedForWork) statusDoneCount += 1;
-        return;
+        continue;
       }
 
       const item = {
@@ -481,6 +522,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         recordKey: recordKey,
         recordId: recordId,
         epid: epid,
+        epidMain: epidMain,
         nama: idxNama !== -1 ? String(row[idxNama] || '').trim() : '',
         kecamatan: kecamatan,
         kelurahan: kelurahan,
@@ -488,7 +530,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         statusKasus: statusKasus,
         sampelDilakukan: sampelDilakukan,
         interpretasiSampel: interpretasiSampel,
-        catatanVerifikasi: idxCatatanVerif !== -1 ? String(row[idxCatatanVerif] || '').trim() : '',
+        catatanVerifikasi: _readLastNonEmptyHeaderValue_(row, idxCatatanVerifList),
         diinputOleh: inputerUsername,
         inputAwalOleh: inputerName,
         workflowCurrentQueue: workflowQueue,
@@ -497,6 +539,8 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         statusProsesPemeriksaan: prosesPemeriksaan,
         statusProsesPemantauan: prosesPemantauan,
         statusProsesPerbaikan: prosesPerbaikan,
+        namaUnitPelapor: namaUnitPelapor,
+        asalFaskes: namaUnitPelapor,
         inputAt: idxTimestamp !== -1 ? _formatDateTimeValue_(row[idxTimestamp]) : '',
         updatedAt: idxUpdated !== -1 ? _formatDateTimeValue_(row[idxUpdated]) : ''
       };
@@ -508,8 +552,8 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         dxCounts[dxItem] = (dxCounts[dxItem] || 0) + 1;
       }
 
-      if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && normalizedStatus === 'PENDING') {
-        if (pendingVerification.length < QUEUE_LIMIT) {
+      if ((role === 'admin' || role === 'super-admin' || role === 'superadmin') && isPendingVerificationStatus) {
+        if (_queueDxCount_(pendingVerification, dxItem) < QUEUE_LIMIT) {
         pendingVerification.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian verifikasi'
@@ -517,7 +561,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }
       }
       if ((normalizedStatus === 'PERLU REVISI' || normalizedStatus === 'DITOLAK') && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch || inputerMatch)) {
-        if (revisionQueue.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(revisionQueue, dxItem) < QUEUE_LIMIT) {
         revisionQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: inputerMatch && !scopeMatch && !(role === 'admin' || role === 'super-admin' || role === 'superadmin') ? 'Kasus ditolak - perbaiki input' : 'Antrian revisi puskesmas pengampu',
@@ -527,7 +571,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }
       }
       if (normalizedStatus === 'TERVERIFIKASI' && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
-        if (verificationDone.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(verificationDone, dxItem) < QUEUE_LIMIT) {
         verificationDone.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Verifikasi selesai',
@@ -537,7 +581,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }
       }
       if (sampleStagePending) {
-        if (sampleQueue.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(sampleQueue, dxItem) < QUEUE_LIMIT) {
         sampleQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian hasil sampel',
@@ -548,7 +592,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }));
         }
       } else if (sampleRelevant && normalizedStatus === 'TERVERIFIKASI' && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch) && sampleDone) {
-        if (sampleDoneQueue.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(sampleDoneQueue, dxItem) < QUEUE_LIMIT) {
         sampleDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Hasil sampel selesai',
@@ -558,7 +602,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }
       }
       if (normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
-        if (statusQueue.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(statusQueue, dxItem) < QUEUE_LIMIT) {
         statusQueue.push(Object.assign({}, item, {
           __workflowStageState: 'queue',
           __workflowStageLabel: 'Antrian update status',
@@ -567,7 +611,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         }));
         }
       } else if (normalizedStatus === 'TERVERIFIKASI' && isFinalStatus && ((role === 'admin' || role === 'super-admin' || role === 'superadmin') || scopeMatch)) {
-        if (statusDoneQueue.length < QUEUE_LIMIT) {
+        if (_queueDxCount_(statusDoneQueue, dxItem) < QUEUE_LIMIT) {
         statusDoneQueue.push(Object.assign({}, item, {
           __workflowStageState: 'done',
           __workflowStageLabel: 'Status selesai',
@@ -685,11 +729,15 @@ function getWorkflowInbox(dx, token, options) {
       cache = null;
     }
 
-    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
+    const role = (typeof _normalizePd3iRole_ === 'function')
+      ? _normalizePd3iRole_((sess.user && sess.user.role) || '')
+      : String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
     const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
-    const dxNorm = String(dx || '').trim().toUpperCase() || 'ALL';
-    const cacheKey = ['workflow-inbox', dxNorm, role, userUnit, userKode].join(':');
+    const workspace = String((options && options.workspace) || '').trim().toLowerCase();
+    const effectiveDx = ['verifikasi', 'sampel', 'status', 'search'].indexOf(workspace) !== -1 ? '' : dx;
+    const dxNorm = String(effectiveDx || '').trim().toUpperCase() || 'ALL';
+    const cacheKey = ['workflow-inbox', dxNorm, workspace || 'all', role, userUnit, userKode].join(':');
 
     if (cache && !forceRefresh) {
       try {
@@ -698,19 +746,18 @@ function getWorkflowInbox(dx, token, options) {
       } catch (readErr) {}
     }
 
-    const result = _buildWorkflowInboxData_(sess, dx);
+    const result = _buildWorkflowInboxData_(sess, effectiveDx);
     const cachedResult = {
       summary: result.summary,
-      // Keep complete workflow queues here. The Verifikasi/Sampel/Status menus apply
-      // client-side filters (kecamatan, kelurahan, status kasus) against this payload;
-      // truncating to the first few newest rows makes valid filtered cases disappear.
-      pendingVerification: result.pendingVerification || [],
-      revisionQueue: result.revisionQueue || [],
-      verificationDone: result.verificationDone || [],
-      sampleQueue: result.sampleQueue || [],
-      sampleDone: result.sampleDone || [],
-      statusQueue: result.statusQueue || [],
-      statusDone: result.statusDone || []
+      // Keep complete queues for the active workspace only. Client-side filters need full
+      // active-menu rows, but unrelated menus should not inflate payload or timeout the UI.
+      pendingVerification: (workspace === 'verifikasi' || !workspace) ? (result.pendingVerification || []) : [],
+      revisionQueue: (workspace === 'verifikasi' || workspace === 'input' || workspace === 'edit' || workspace === 'search' || !workspace) ? (result.revisionQueue || []) : [],
+      verificationDone: (workspace === 'verifikasi' || workspace === 'sampel' || !workspace) ? (result.verificationDone || []) : [],
+      sampleQueue: (workspace === 'sampel' || !workspace) ? (result.sampleQueue || []) : [],
+      sampleDone: (workspace === 'sampel' || !workspace) ? (result.sampleDone || []) : [],
+      statusQueue: (workspace === 'status' || !workspace) ? (result.statusQueue || []) : [],
+      statusDone: (workspace === 'status' || !workspace) ? (result.statusDone || []) : []
     };
 
     if (cache) {
@@ -753,7 +800,11 @@ function getOverviewSummary(token) {
     const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
     const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
     const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
-    const cacheKey = ['overview-summary', role, userUnit, userKode].join(':');
+    const userScopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, "-");
+    const userKabKota = _normalizeWilayahKey_((sess.user && sess.user.kabKota) || '');
+    const userKecamatan = _normalizeWilayahKey_((sess.user && sess.user.kecamatan) || '');
+    const username = _normalizeWilayahKey_((sess.user && sess.user.username) || '');
+    const cacheKey = ['overview-summary-v2', role, userUnit, userKode, userScopeLevel, userKabKota, userKecamatan, username].join(':');
 
     if (cache) {
       try {
@@ -838,6 +889,18 @@ function _escapeCsvValue_(val) {
   return str;
 }
 
+
+function _dashboardWeekKey_(tglStr) {
+  if (!tglStr || String(tglStr).length < 10) return '';
+  const d = new Date(String(tglStr).substring(0, 10) + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return '';
+  const year = d.getUTCFullYear();
+  const start = new Date(Date.UTC(year, 0, 1));
+  const dayOfYear = Math.floor((d - start) / 86400000) + 1;
+  const week = Math.max(1, Math.ceil(dayOfYear / 7));
+  return String(year) + 'W' + String(week).padStart(2, '0');
+}
+
 // ─── getDashboardStats ────────────────────────────────────────────────────────
 
 /**
@@ -889,6 +952,7 @@ function getDashboardStats(dx, tahun, token) {
         perRw: {},
         perRtRw: {},
         perBulan: {},
+        perMinggu: {},
         perStatusKasus: {},
         qualityCards: { pendingVerification: 0, waitingSampleResult: 0, confirmed: 0, discarded: 0, clinical: 0 },
         epidemiology: { medianReportToTrackingDays: null, sameDayReportTrackingRate: null, medianOnsetToReportDays: null, workflowCompletenessRate: null },
@@ -947,7 +1011,7 @@ function getDashboardStats(dx, tahun, token) {
     const idxLongitude = headers.indexOf("Longitude");
     const idxKoordinat = headers.indexOf("Koordinat (lat,lon)");
     const idxPuskesmasPengampu = headers.indexOf("Puskesmas Pengampu");
-    const idxKodePuskesmasPengampu = headers.indexOf("KodePuskesmas Pengampu");
+    const idxKodePuskesmasPengampu = headers.indexOf("KodeFaskes Pengampu");
     const idxCatatanVerif = headers.indexOf("Catatan Verifikasi EPID");
     const idxUpdated = headers.indexOf("Updated At");
     const idxTimestamp = headers.indexOf("Timestamp");
@@ -959,6 +1023,7 @@ function getDashboardStats(dx, tahun, token) {
     const perRw = {};
     const perRtRw = {};
     const perBulan = {};
+    const perMinggu = {};
     const perStatusKasus = {};
     const perKelompokUmur = {};
     const perKelompokUsiaSurveilans = {};
@@ -1018,6 +1083,10 @@ function getDashboardStats(dx, tahun, token) {
           // Format: "2025-01-15" → key "202501"
           const bulanKey = tglStr.substring(0, 4) + tglStr.substring(5, 7);
           perBulan[bulanKey] = (perBulan[bulanKey] || 0) + 1;
+        }
+        const mingguKey = _dashboardWeekKey_(tglStr);
+        if (mingguKey) {
+          perMinggu[mingguKey] = (perMinggu[mingguKey] || 0) + 1;
         }
       }
 
@@ -1284,6 +1353,7 @@ function getDashboardStats(dx, tahun, token) {
       perRw: perRw,
       perRtRw: perRtRw,
       perBulan: perBulan,
+      perMinggu: perMinggu,
       perStatusKasus: perStatusKasus,
       perKelompokUmur: perKelompokUmur,
       perKelompokUsiaSurveilans: perKelompokUsiaSurveilans,

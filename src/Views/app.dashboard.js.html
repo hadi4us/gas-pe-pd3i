@@ -33,7 +33,7 @@
     const mapWrap = document.getElementById('dashboard-hotspot-map');
     const listWrap = document.getElementById('dashboard-hotspot-list');
     const summary = stats && stats.coordinateSummary ? stats.coordinateSummary : null;
-    if (!mapWrap || !listWrap) return;
+    if (!mapWrap) return;
 
     if (window.__PD3I_DASHBOARD_MAP) {
       try {
@@ -46,21 +46,25 @@
     const topHotspots = summary && Array.isArray(summary.topHotspots) ? summary.topHotspots : [];
     if (!summary || !points.length) {
       mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada koordinat valid pada filter dashboard ini.</div>';
-      listWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
+      if (listWrap) {
+        listWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
+      }
       return;
     }
 
-    listWrap.innerHTML = topHotspots.length
-      ? topHotspots.map(function(item, idx) {
-          return `<button type="button" class="pd3i-hotspot-list-item" data-dashboard-drilldown-type="hotspot" data-dashboard-drilldown-key="${escapeHtml(item.key || '')}" data-dashboard-drilldown-label="${escapeHtml(item.label || 'Hotspot')}">
-            <div>
-              <div class="pd3i-hotspot-rank">#${idx + 1} ${escapeHtml(item.label || 'Titik koordinat')}</div>
-              <div class="pd3i-helper-text">Lat ${escapeHtml(item.lat)} • Lon ${escapeHtml(item.lon)}</div>
-            </div>
-            <div class="pd3i-hotspot-count">${item.count || 0}</div>
-          </button>`;
-        }).join('')
-      : '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
+    if (listWrap) {
+      listWrap.innerHTML = topHotspots.length
+        ? topHotspots.map(function(item, idx) {
+            return `<button type="button" class="pd3i-hotspot-list-item" data-dashboard-drilldown-type="hotspot" data-dashboard-drilldown-key="${escapeHtml(item.key || '')}" data-dashboard-drilldown-label="${escapeHtml(item.label || 'Hotspot')}">
+              <div>
+                <div class="pd3i-hotspot-rank">#${idx + 1} ${escapeHtml(item.label || 'Titik koordinat')}</div>
+                <div class="pd3i-helper-text">Lat ${escapeHtml(item.lat)} • Lon ${escapeHtml(item.lon)}</div>
+              </div>
+              <div class="pd3i-hotspot-count">${item.count || 0}</div>
+            </button>`;
+          }).join('')
+        : '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
+    }
 
     if (!window.L) {
       mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Pustaka peta belum termuat. Muat ulang halaman untuk menampilkan peta hotspot kasus.</div>';
@@ -195,7 +199,12 @@
 
     window.__openAdminQueueRecord = function(recordKey, dxValue, triggerButton) {
       if (typeof window._loadRecordFromSearch_ === 'function') {
-        window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR', { triggerButton: triggerButton });
+        window._loadRecordFromSearch_(recordKey, dxValue || dx || 'MR', {
+          triggerButton: triggerButton,
+          workspace: 'edit',
+          workflowIntent: 'section-pelapor',
+          skipWorkflowInboxRefresh: true
+        });
       } else {
         showTopAlert('Fungsi membuka data belum siap. Coba lagi sebentar.', false);
       }
@@ -294,11 +303,12 @@
 
   function openDashboardSection(options) {
     if (typeof canAccessSidebarWorkspace === 'function' && !canAccessSidebarWorkspace('dashboard', SESSION_USER)) {
-      if (typeof showTopAlert === 'function') showTopAlert('Dashboard statistik hanya tersedia untuk role admin.', false);
+      if (typeof showTopAlert === 'function') showTopAlert('Dashboard hanya tersedia untuk role yang diizinkan.', false);
       if (typeof openSidebarWorkspace === 'function') openSidebarWorkspace('overview', { scroll: false, useRoute: true, replaceRoute: true });
       return;
     }
     const opts = options || {};
+    updateDashboardScopeIdentity();
     const section = document.getElementById('section-dashboard');
     const overviewInbox = document.getElementById('overview-work-inbox');
     const overviewSummary = document.getElementById('overview-work-summary');
@@ -326,6 +336,26 @@
     const content = document.getElementById('dashboard-content');
     const shouldAutoLoad = opts.autoLoad === true || (opts.autoLoad !== false && content && !content.dataset.loaded);
     if (shouldAutoLoad) loadDashboard();
+  }
+
+  function updateDashboardScopeIdentity() {
+    const user = getSafeSessionUser() || {};
+    const role = String(user.role || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+    const scope = String(user.scopeLevel || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+    const isFaskesPelapor = scope === 'faskes-pelapor' || scope === 'faskespelapor';
+    const isPuskesmas = scope === 'puskesmas' || ['petugas', 'surveilans', 'editor', 'koordinator'].includes(role);
+    const title = document.getElementById('dashboard-scope-title');
+    const eyebrow = document.getElementById('dashboard-scope-eyebrow');
+    const copy = document.getElementById('dashboard-scope-copy');
+    if (isFaskesPelapor) {
+      if (title) title.textContent = 'Dashboard KPI Faskes Pelapor';
+      if (eyebrow) eyebrow.textContent = 'Dashboard faskes pelapor';
+      if (copy) copy.textContent = 'Dashboard light mode untuk memantau laporan faskes ini, kelengkapan data, status proses, dan kasus prioritas.';
+    } else if (isPuskesmas) {
+      if (title) title.textContent = 'Dashboard KPI Puskesmas Pengampu';
+      if (eyebrow) eyebrow.textContent = 'Dashboard puskesmas pengampu';
+      if (copy) copy.textContent = 'Dashboard light mode untuk memantau kasus dalam wilayah pengampu, tindak lanjut, kelengkapan data, dan antrean pemeriksaan.';
+    }
   }
 
   function initDashboard() {
@@ -403,10 +433,10 @@
     const runtimeGuard = (typeof createWorkspaceRuntimeGuard === 'function')
       ? createWorkspaceRuntimeGuard('dashboard')
       : null;
-    content.innerHTML = '<div class="pd3i-dashboard-keadaan is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
+    content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
 
     if (!safeGsRun() || !getSafeSessionToken()) {
-      content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">Tidak dapat terhubung ke server.</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">Tidak dapat terhubung ke server.</div>';
       return;
     }
 
@@ -419,7 +449,7 @@
       .withFailureHandler(function (err) {
         if (content.dataset.loadingRequest !== requestId) return;
         if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
-        content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">Gagal memuat data: ' + String(err) + '</div>';
+        content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
       .getDashboardStats(dx, tahun, getSafeSessionToken());
   }
@@ -430,7 +460,7 @@
 
     if (!stats || stats.status === "error") {
       content.dataset.loaded = '';
-      content.innerHTML = '<div class="pd3i-dashboard-keadaan is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
       return;
     }
 
@@ -438,10 +468,12 @@
     const role = String((safeUser && safeUser.role) || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
     const isAdmin = safeUser && (role === "admin" || role === "super-admin" || role === "superadmin");
     const isViewer = safeUser && safeUser.role === "viewer";
+    const scope = String((safeUser && safeUser.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+    const isFaskesPelapor = scope === 'faskes-pelapor' || scope === 'faskespelapor';
     const qc = stats.qualityCards || {};
     const epi = stats.epidemiology || {};
     const verificationCounts = (stats.verificationQueue && stats.verificationQueue.counts) || {};
-    
+
     // KPI Metrics
     const totalCases = Number(stats.totalKasus || 0);
     const verifiedCount = Number(verificationCounts.terverifikasi || 0);
@@ -452,13 +484,20 @@
     const clinicalCount = Number(qc.clinical || 0);
     const waitingSampleCount = Number(qc.waitingSampleResult || 0);
 
-    const sembuhCount = Number(stats.perStatusKasus && stats.perStatusKasus["Sembuh"] || 0);
-    const meninggalCount = Number(stats.perStatusKasus && stats.perStatusKasus["Meninggal"] || 0);
-    
+    const statusCounts = stats.perStatusKasus || {};
+    function getStatusCount(names) {
+      const wanted = names.map(function(name) { return String(name).trim().toUpperCase(); });
+      return Object.keys(statusCounts).reduce(function(sum, key) {
+        return wanted.indexOf(String(key).trim().toUpperCase()) !== -1 ? sum + Number(statusCounts[key] || 0) : sum;
+      }, 0);
+    }
+    const sembuhCount = getStatusCount(["Sembuh", "Selesai"]);
+    const meninggalCount = getStatusCount(["Meninggal", "Mati"]);
+
     // Kasus Baru (bulan aktif terakhir di tren perBulan)
-    const perBulan = stats.perBulan || {};
-    const bulanKeys = Object.keys(perBulan).sort();
-    const newCases = bulanKeys.length > 0 ? (perBulan[bulanKeys[bulanKeys.length - 1]] || 0) : 0;
+    const perMinggu = stats.perMinggu || stats.perBulan || {};
+    const bulanKeys = Object.keys(perMinggu).sort();
+    const newCases = bulanKeys.length > 0 ? (perMinggu[bulanKeys[bulanKeys.length - 1]] || 0) : 0;
     const latestMonthName = bulanKeys.length > 0 ? (function() {
       const k = bulanKeys[bulanKeys.length - 1];
       const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
@@ -480,202 +519,76 @@
 
     let html = '';
 
-    // ROW 1: KPI CARDS (Medis Clean Design)
+    // ROW 1: KPI CARDS (ringkasan kasus tetap di Dashboard PD3I; KPI operasional/antrian tetap di Beranda)
     html += `
-      <!-- ROW 1: KPI CARDS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <!-- Card 1: Total Kasus -->
+      <div class="pd3i-dashboard-analysis-intro pd3i-dashboard-block mb-6">
+        <div class="pd3i-dashboard-block-title">Analisis kasus ${escapeHtml(dx)} tahun ${escapeHtml(tahun)}</div>
+        <p class="pd3i-helper-text mt-1">Dashboard ini fokus membaca statistik kasus, kurva epidemiologi, sebaran wilayah, kelompok umur, dan prioritas tindak lanjut. KPI operasional/antrian tersedia di Beranda.</p>
+        <div class="pd3i-dashboard-reading-strip" aria-label="Urutan baca dashboard statistik">
+          <div><span>1. Beban kasus</span><strong>Total, kasus aktif, konfirmasi, sembuh, meninggal</strong></div>
+          <div><span>2. Sinyal epidemiologi</span><strong>Kurva mingguan, wilayah teratas, kelompok umur</strong></div>
+          <div><span>3. Respons</span><strong>Prioritaskan verifikasi, lab, klaster, dan kematian</strong></div>
+        </div>
+      </div>
+      <!-- ROW 1: KPI KASUS SURVEILANS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         <div class="pd3i-dashboard-metric-card tone-blue flex flex-col justify-between h-full">
           <div class="flex justify-between items-start w-full">
-            <div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Kasus</div>
-              <div class="text-3xl font-black text-blue-900">${totalCases}</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0">
-              <i class="fas fa-file-medical"></i>
-            </div>
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">${isFaskesPelapor ? 'Total Laporan Faskes' : 'Total Kasus Pengampu'}</div><div class="text-3xl font-black text-blue-900">${totalCases}</div></div>
+            <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-file-medical"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Cakupan kasus diagnosis ${dx} (${tahun})</div>
         </div>
-
-        <!-- Card 2: Kasus Baru -->
         <div class="pd3i-dashboard-metric-card tone-sky flex flex-col justify-between h-full">
           <div class="flex justify-between items-start w-full">
-            <div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus Baru</div>
-              <div class="text-3xl font-black text-sky-900">${newCases}</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-700 flex items-center justify-center text-base shrink-0">
-              <i class="fas fa-plus-circle"></i>
-            </div>
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus suspek baru</div><div class="text-3xl font-black text-sky-900">${newCases}</div></div>
+            <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-plus-circle"></i></div>
           </div>
-          <div class="text-[11px] text-slate-400 mt-2">Laporan di ${latestMonthName || 'bulan terbaru'}</div>
+          <div class="text-[11px] text-slate-400 mt-2">Suspek dilaporkan ${latestMonthName || 'minggu terbaru'}</div>
         </div>
-
-        <!-- Card 3: Kasus Aktif -->
         <div class="pd3i-dashboard-metric-card tone-amber flex flex-col justify-between h-full">
           <div class="flex justify-between items-start w-full">
-            <div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus Aktif</div>
-              <div class="text-3xl font-black text-amber-900">${activeCases}</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center text-base shrink-0">
-              <i class="fas fa-procedures"></i>
-            </div>
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus suspek aktif</div><div class="text-3xl font-black text-amber-900">${activeCases}</div></div>
+            <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-procedures"></i></div>
           </div>
-          <div class="text-[11px] text-slate-400 mt-2">Dalam perawatan / isolasi</div>
+          <div class="text-[11px] text-slate-400 mt-2">Suspek belum sembuh, konfirmasi, atau meninggal</div>
         </div>
-
-        <!-- Card 4: Sembuh -->
+        <div class="pd3i-dashboard-metric-card tone-info flex flex-col justify-between h-full">
+          <div class="flex justify-between items-start w-full">
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus konfirmasi</div><div class="text-3xl font-black text-blue-900">${confirmedCount}</div></div>
+            <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-circle-check"></i></div>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-2">Kasus dengan hasil konfirmasi</div>
+        </div>
         <div class="pd3i-dashboard-metric-card tone-emerald flex flex-col justify-between h-full">
           <div class="flex justify-between items-start w-full">
-            <div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sembuh</div>
-              <div class="text-3xl font-black text-emerald-900">${sembuhCount}</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center text-base shrink-0">
-              <i class="fas fa-heart"></i>
-            </div>
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sembuh</div><div class="text-3xl font-black text-emerald-900">${sembuhCount}</div></div>
+            <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-heart"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Dinyatakan sembuh/selesai PE</div>
         </div>
-
-        <!-- Card 5: Meninggal -->
-        <div class="pd3i-dashboard-metric-card tone-rose flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-muted flex flex-col justify-between h-full">
           <div class="flex justify-between items-start w-full">
-            <div>
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Meninggal</div>
-              <div class="text-3xl font-black text-rose-900">${meninggalCount}</div>
-            </div>
-            <div class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-700 flex items-center justify-center text-base shrink-0">
-              <i class="fas fa-heart-broken"></i>
-            </div>
+            <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Meninggal</div><div class="text-3xl font-black text-slate-900">${meninggalCount}</div></div>
+            <div class="w-10 h-10 rounded-full bg-slate-500/10 text-slate-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-heart-broken"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Kematian terlaporkan</div>
         </div>
       </div>
     `;
 
-    // Operational Metrics for Admin & Performance Breakdown
-    if (isAdmin) {
-      html += `
-        <div class="pd3i-dashboard-block mb-6">
-          <div class="pd3i-dashboard-block-title">Capaian Operasional Admin & Pengampu</div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="pd3i-dashboard-metric-card tone-neutral">
-              <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Revisi Petugas</div>
-              <div class="text-xl font-black text-slate-800">${revisionCount}</div>
-              <div class="pd3i-helper-text mt-1">Kasus dikembalikan untuk perbaikan</div>
-            </div>
-            <div class="pd3i-dashboard-metric-card tone-neutral">
-              <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Menunggu Lab</div>
-              <div class="text-xl font-black text-slate-800">${waitingSampleCount}</div>
-              <div class="pd3i-helper-text mt-1">Spesimen sedang dikirim/diuji</div>
-            </div>
-            <div class="pd3i-dashboard-metric-card tone-neutral">
-              <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Notif Kasus Baru</div>
-              <div class="text-xl font-black text-slate-800">${notifikasiKasusBaru.sent || 0}</div>
-              <div class="pd3i-helper-text mt-1">${notifikasiKasusBaru.failed || 0} gagal, ${notifikasiKasusBaru.pending || 0} pending</div>
-            </div>
-            <div class="pd3i-dashboard-metric-card tone-neutral">
-              <div class="text-xs font-extrabold uppercase text-slate-500 mb-1">Sync Pengampu</div>
-              <div class="text-xl font-black text-slate-800">${sinkronisasiPengampu.synced || 0}</div>
-              <div class="pd3i-helper-text mt-1">${sinkronisasiPengampu.failed || 0} gagal, ${sinkronisasiPengampu.pending || 0} pending</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    // ROW 2: TREN WAKTU & PETA SEBARAN & PANEL ALERTS
-    // Build dynamic alerts list
-    let alertsListHtml = '';
-    const pendingCases = (stats.verificationQueue && stats.verificationQueue.pending) || [];
-    const needRevisionCases = (stats.verificationQueue && stats.verificationQueue.perluRevisi) || [];
-    
-    // Collect error alerts for sync/notif failures
-    const failedSyncList = [];
-    
-    // Populate alertsListHtml
-    let alertCount = 0;
-    
-    // 1. Pending Verifikasi (Max 3)
-    pendingCases.slice(0, 3).forEach(function(c) {
-      alertCount++;
-      alertsListHtml += `
-        <div class="p-2.5 rounded bg-amber-50 border border-amber-100 flex flex-col gap-1 text-xs">
-          <div class="flex items-center justify-between font-bold text-amber-800">
-            <span><i class="fas fa-clock mr-1"></i> Menunggu Verifikasi</span>
-            <span class="text-[10px] bg-amber-100 px-1.5 py-0.5 rounded">EPID</span>
-          </div>
-          <div class="text-slate-700 font-semibold">${escapeHtml(c.nama || 'Pasien')} (${escapeHtml(c.puskesmas || 'Pusk')})</div>
-          <div class="flex justify-between items-center mt-1">
-            <span class="text-[10px] text-slate-400">Input: ${escapeHtml(String(c.inputAt || '').slice(0, 10))}</span>
-            <button type="button" class="text-blue-600 hover:underline font-extrabold text-[10px]" onclick="openDashboardDrilldown('verification-pending', 'pending', 'Menunggu Verifikasi', '${escapeHtml(dx)}', '${escapeHtml(tahun)}')">
-              Detail <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    });
-
-    // 2. Perlu Revisi (Max 2)
-    needRevisionCases.slice(0, 2).forEach(function(c) {
-      alertCount++;
-      alertsListHtml += `
-        <div class="p-2.5 rounded bg-rose-50 border border-rose-100 flex flex-col gap-1 text-xs">
-          <div class="flex items-center justify-between font-bold text-rose-800">
-            <span><i class="fas fa-exclamation-circle mr-1"></i> Perlu Revisi</span>
-            <span class="text-[10px] bg-rose-100 px-1.5 py-0.5 rounded">Revisi</span>
-          </div>
-          <div class="text-slate-700 font-semibold">${escapeHtml(c.nama || 'Pasien')} (${escapeHtml(c.puskesmas || 'Pusk')})</div>
-          <div class="text-[10px] text-slate-500 italic truncate">${escapeHtml(c.catatanVerifikasi || 'Perlu perbaikan data')}</div>
-          <div class="flex justify-between items-center mt-1">
-            <span class="text-[10px] text-slate-400">Diag: ${escapeHtml(dx)}</span>
-            <button type="button" class="text-blue-600 hover:underline font-extrabold text-[10px]" onclick="openDashboardDrilldown('verification-revision', 'perlu-revisi', 'Perlu Revisi', '${escapeHtml(dx)}', '${escapeHtml(tahun)}')">
-              Detail <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    });
-
-    if (alertCount === 0) {
-      alertsListHtml = `
-        <div class="flex flex-col items-center justify-center h-48 text-center text-slate-400">
-          <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl mb-2">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <span class="text-xs font-semibold text-slate-500">Semua Data Bersih</span>
-          <span class="text-[10px] text-slate-400 mt-0.5">Tidak ada antrean verifikasi / revisi.</span>
-        </div>
-      `;
-    }
-
+    // ROW 2: PETA SEBARAN & KURVA EPIDEMIOLOGI
     html += `
-      <!-- ROW 2: TREN, PETA, ALERTS -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Kiri: Tren Waktu Kasus (Google Charts Area Chart) -->
+        <!-- Peta sebaran kasus -->
         <div class="pd3i-dashboard-panel lg:col-span-1">
           <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-chart-area text-blue-600 mr-1"></i> Tren Waktu Kasus Bulanan</span>
-            <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded">Timeline</span>
+            <span><i class="fas fa-map-marked-alt text-emerald-600 mr-1"></i> Peta sebaran kasus</span>
+          <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">Sebaran wilayah</span>
           </div>
-          <div id="chart-tren-bulanan" class="w-full h-64 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-100 rounded">
-            <span><i class="fas fa-spinner fa-spin mr-2"></i>Menyiapkan grafik tren...</span>
-          </div>
-        </div>
-
-        <!-- Tengah: Peta Sebaran Kasus (Leaflet Map) -->
-        <div class="pd3i-dashboard-panel lg:col-span-1">
-          <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-map-marked-alt text-emerald-600 mr-1"></i> Peta Sebaran Hotspot Kasus</span>
-            <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded">Geospatial</span>
-          </div>
-          <div class="relative w-full h-64">
-            <div id="dashboard-hotspot-map" class="pd3i-hotspot-map rounded h-full border border-slate-100"></div>
-            <!-- Overlay Legend di pojok kiri bawah -->
-            <div class="absolute bottom-2 left-2 z-[1005] bg-white/95 backdrop-blur-sm px-2 py-1 rounded shadow-sm border border-slate-200 flex gap-2 text-[10px]">
+          <div class="relative w-full h-80">
+            <div id="dashboard-hotspot-map" class="pd3i-hotspot-map h-full border border-slate-100"></div>
+            <div class="pd3i-hotspot-legend absolute bottom-2 left-2 z-[1005] bg-white/95 backdrop-blur-sm px-2 py-1 border border-slate-200 flex gap-2 text-[10px]">
               <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-low w-2.5 h-2.5 rounded-full inline-block" style="background:#2563eb"></span> 1-2</span>
               <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-mid w-2.5 h-2.5 rounded-full inline-block" style="background:#f97316"></span> 3-4</span>
               <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-high w-2.5 h-2.5 rounded-full inline-block" style="background:#dc2626"></span> ≥5</span>
@@ -683,35 +596,35 @@
           </div>
         </div>
 
-        <!-- Kanan: Panel Alerts Terbaru (Kewaspadaan Dini) -->
-        <div class="pd3i-dashboard-panel lg:col-span-1 flex flex-col h-full">
+        <!-- Kurva epidemiologi mingguan -->
+        <div class="pd3i-dashboard-panel lg:col-span-2">
           <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-bell text-rose-500 mr-1 animate-pulse"></i> Antrean Verifikasi & Alerts</span>
-            <span class="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded">${pendingCases.length + needRevisionCases.length} Urgent</span>
+            <span><i class="fas fa-chart-area text-blue-600 mr-1"></i> Kurva epidemiologi mingguan</span>
+            <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">W1, W2, W3...</span>
           </div>
-          <div class="flex-1 overflow-y-auto space-y-2.5 max-h-64 pr-1">
-            ${alertsListHtml}
+          <div id="chart-tren-bulanan" class="pd3i-dashboard-chart-state w-full h-80 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-100">
+            <span><i class="fas fa-spinner fa-spin mr-2"></i>Menyiapkan kurva epidemiologi...</span>
           </div>
         </div>
       </div>
     `;
 
-    // ROW 3: DONUT CHART DEMOGRAFI & TABEL TOP PENYAKIT / WILAYAH
+    // ROW 3: TABEL TOP PENYAKIT / WILAYAH (Full Width)
     html += `
-      <!-- ROW 3: DEMOGRAFI & TABEL WILAYAH -->
+      <!-- ROW 3: TABEL WILAYAH -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Kiri: Tabel Penyakit / Kecamatan Tertinggi (span 2) -->
-        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table overflow-x-auto lg:col-span-2">
+        <!-- Tabel Penyakit / Kecamatan Tertinggi (span 3 / Full Width) -->
+        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table overflow-x-auto lg:col-span-3">
           <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-hospital-user text-indigo-600 mr-1"></i> Distribusi Kecamatan Teratas</span>
-            <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded">Top Area</span>
+            <span><i class="fas fa-hospital-user text-indigo-600 mr-1"></i> Distribusi kecamatan teratas</span>
+            <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">Wilayah prioritas</span>
           </div>
           <table class="w-full text-sm">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-100 text-slate-600">
-                <th class="text-left px-4 py-3 font-extrabold w-1/3">Nama Kecamatan</th>
+                <th class="text-left px-4 py-3 font-extrabold w-1/3">Kecamatan</th>
                 <th class="text-left px-4 py-3 font-extrabold w-1/2">Proporsi Kasus</th>
-                <th class="text-right px-4 py-3 font-extrabold w-1/6">Jumlah Kasus</th>
+                <th class="text-right px-4 py-3 font-extrabold w-1/6">Jumlah kasus</th>
               </tr>
             </thead>
             <tbody id="top-kecamatan-tbody">
@@ -719,23 +632,68 @@
             </tbody>
           </table>
         </div>
+      </div>
+    `;
 
-        <!-- Kanan: Donut Demografi Usia (Google Charts Pie Chart, span 1) -->
-        <div class="pd3i-dashboard-panel lg:col-span-1">
-          <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-chart-pie text-cyan-600 mr-1"></i> Distribusi Demografi Kelompok Usia</span>
-            <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded">Demographics</span>
-          </div>
-          <div class="relative w-full h-64">
-            <div id="chart-demografi-usia" class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-100 rounded">
-              <span><i class="fas fa-spinner fa-spin mr-2"></i>Menyiapkan grafik demografi...</span>
+    // Analisis Distribusi Kasus Berdasarkan Usia & Kelompok Umur Epidemiologis
+    const perUsiaSurveilans = stats.perKelompokUsiaSurveilans || {};
+    const usiaSurveilansOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
+    const usiaSurveilansKeys = usiaSurveilansOrder.filter(function(k) { return perUsiaSurveilans[k] > 0; });
+    const maxUsiaSurveilans = usiaSurveilansKeys.length ? Math.max.apply(null, usiaSurveilansKeys.map(function(k) { return perUsiaSurveilans[k] || 0; })) : 0;
+    const totalUsiaSurveilans = usiaSurveilansKeys.reduce(function(sum, k) { return sum + (perUsiaSurveilans[k] || 0); }, 0);
+
+    html += `
+      <div class="pd3i-dashboard-block mb-6">
+        <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
+        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table space-y-3">
+          <div class="pd3i-helper-text text-slate-500">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Distribusi Kelompok Umur Epidemiologis umum tetap dipertahaman terpisah.</div>
+    `;
+    if (!usiaSurveilansKeys.length) {
+      html += `<div class="pd3i-empty-keadaan">Belum ada data usia pada filter ini.</div>`;
+    } else {
+      usiaSurveilansKeys.forEach(function(k) {
+        const val = perUsiaSurveilans[k] || 0;
+        const pctOfMax = maxUsiaSurveilans > 0 ? Math.round((val / maxUsiaSurveilans) * 100) : 0;
+        const pctTotal = totalUsiaSurveilans > 0 ? Math.round((val / totalUsiaSurveilans) * 100) : 0;
+        html += `
+          <div class="pd3i-dashboard-month-row flex items-center justify-between gap-3 py-1 text-sm">
+            <div class="pd3i-dashboard-month-label font-semibold text-slate-700 w-1/4">${escapeHtml(k)}</div>
+            <div class="pd3i-dashboard-month-track flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div class="pd3i-dashboard-month-fill bg-blue-600 h-2 rounded-full" style="width: ${pctOfMax}%"></div>
             </div>
-            <!-- Absolute Centered Text Overlay inside Donut -->
-            <div id="chart-demografi-usia-overlay" class="absolute pointer-events-none flex flex-col items-center justify-center text-center hidden" style="transform: translate(-50%, -50%);">
-              <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Kasus</div>
-              <div class="text-xl font-black text-slate-800" id="chart-demografi-total-cases">0</div>
+            <div class="pd3i-dashboard-month-value font-extrabold text-slate-800 text-right w-1/6">
+              ${val} <span class="text-xs font-semibold text-slate-400">(${pctTotal}%)</span>
             </div>
           </div>
+        `;
+      });
+    }
+    html += `
+        </div>
+      </div>
+    `;
+
+    // Distribusi Kelompok Umur Epidemiologis
+    const perUmur = stats.perKelompokUmur || {};
+    const umurKeys = Object.keys(perUmur).sort(function(a, b) { return perUmur[b] - perUmur[a]; });
+    html += `
+      <div class="pd3i-dashboard-block mb-6">
+        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
+          <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>
+    `;
+    if (!umurKeys.length) {
+      html += `<div class="pd3i-empty-keadaan text-slate-400">Belum ada data kelompok umur epidemiologis.</div>`;
+    } else {
+      umurKeys.forEach(function(k) {
+        html += `
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 gap-3">
+            <span class="text-sm font-semibold text-slate-700">${escapeHtml(k)}</span>
+            <span class="text-base font-black text-emerald-700">${perUmur[k]}</span>
+          </div>
+        `;
+      });
+    }
+    html += `
         </div>
       </div>
     `;
@@ -752,9 +710,9 @@
 
     if (actionAlerts.length > 0) {
       html += `
-        <div class="pd3i-dashboard-alert mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
+        <div class="pd3i-dashboard-alert mb-6 p-4 bg-amber-50 border border-amber-200">
           <div class="text-xs font-extrabold text-amber-800 mb-2 uppercase tracking-wide flex items-center gap-1.5">
-            <i class="fas fa-exclamation-triangle"></i> Prioritas Tindak Lanjut
+            <i class="fas fa-exclamation-triangle"></i> Prioritas tindak lanjut
           </div>
           <ul class="list-disc pl-5 space-y-1 text-sm font-semibold text-amber-900">
             ${actionAlerts.map(msg => `<li>${msg}</li>`).join('')}
@@ -830,140 +788,283 @@
 
   // Draw Google Charts Area Trend & Demografi Donut
   function drawGoogleCharts(stats, dx, tahun) {
-    if (typeof google === 'undefined' || typeof google.visualization === 'undefined') {
-      // Load Google Visualization API
-      if (typeof google !== 'undefined' && typeof google.charts !== 'undefined') {
-        google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(function() {
-          runChartsDraw(stats, dx, tahun);
-        });
-      }
+    let googleChartsSuccess = false;
+    if (typeof google !== 'undefined' && google.visualization) {
+      runChartsDraw(stats, dx, tahun);
+      googleChartsSuccess = true;
+    } else if (typeof google !== 'undefined' && google.charts) {
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(function() {
+        runChartsDraw(stats, dx, tahun);
+      });
+      googleChartsSuccess = true;
+    } else {
+      console.error("Google Charts loader not available");
+    }
+
+    if (!googleChartsSuccess) {
+      renderHtmlFallbackChart(stats);
+      renderHtmlFallbackDemografi(stats);
+    }
+  }
+
+  function renderHtmlFallbackChart(stats) {
+    const chartTrenEl = document.getElementById('chart-tren-bulanan');
+    if (!chartTrenEl) return;
+
+    const perMinggu = stats.perMinggu || stats.perBulan || {};
+    const bulanKeys = Object.keys(perMinggu).sort();
+
+    if (bulanKeys.length === 0) {
+      chartTrenEl.innerHTML = `
+        <div class="pd3i-dashboard-chart-state flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50 border border-slate-100">
+          <i class="fas fa-info-circle text-2xl mb-1 text-slate-300"></i>
+          <span class="text-xs">Tidak ada data tren untuk periode ini</span>
+        </div>
+      `;
       return;
     }
-    runChartsDraw(stats, dx, tahun);
+
+    let maxVal = 0;
+    bulanKeys.forEach(function(k) {
+      const val = perMinggu[k] || 0;
+      if (val > maxVal) maxVal = val;
+    });
+    if (maxVal === 0) maxVal = 1;
+
+    let barsHtml = '';
+    bulanKeys.forEach(function(k) {
+      const val = perMinggu[k] || 0;
+      const heightPct = Math.max(8, Math.round((val / maxVal) * 80));
+      const rawMonth = k.substring(4, 6);
+      const year = k.substring(2, 4);
+      const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+      const monthIdx = parseInt(rawMonth, 10) - 1;
+      const label = k.indexOf("W") !== -1 ? k.replace(/^\d{4}W0?/, "W") : ((monthIdx >= 0 && monthIdx < 12 ? months[monthIdx] : rawMonth) + " '" + year);
+
+      barsHtml += `
+        <div class="flex flex-col items-center flex-1 h-full min-w-[36px] justify-end">
+          <div class="text-[10px] font-bold text-blue-600 mb-1">${val}</div>
+          <div class="w-6 bg-blue-600/15 hover:bg-blue-600/35 transition rounded-t-sm relative group" style="height: ${heightPct}%">
+            <div class="pd3i-dashboard-tooltip absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-1.5 py-0.5 shadow opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
+              ${val} Kasus
+            </div>
+          </div>
+          <div class="text-[9px] text-slate-400 mt-2 font-semibold whitespace-nowrap overflow-hidden text-ellipsis w-full text-center" title="${label}">${label}</div>
+        </div>
+      `;
+    });
+
+    chartTrenEl.innerHTML = `
+      <div class="w-full h-full flex flex-col justify-between p-4 bg-white">
+        <div class="flex-1 flex items-end gap-2 h-48 border-b border-slate-100 pb-1 overflow-x-auto">
+          ${barsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHtmlFallbackDemografi(stats) {
+    const chartDemoEl = document.getElementById('chart-demografi-usia');
+    if (!chartDemoEl) return;
+
+    const overlay = document.getElementById('chart-demografi-usia-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+
+    const perUsia = stats.perKelompokUsiaSurveilans || {};
+    const usiaOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
+
+    let totalUsiaCases = 0;
+    usiaOrder.forEach(function(k) {
+      totalUsiaCases += (perUsia[k] || 0);
+    });
+    if (totalUsiaCases === 0) totalUsiaCases = 1;
+
+    let listHtml = '';
+    let hasData = false;
+    usiaOrder.forEach(function(k) {
+      const val = perUsia[k] || 0;
+      if (val > 0) {
+        hasData = true;
+        const pct = Math.min(100, Math.round((val / totalUsiaCases) * 100));
+        listHtml += `
+          <div class="flex items-center gap-3 text-xs mb-2">
+            <span class="w-24 text-slate-500 font-semibold truncate" title="${k}">${k}</span>
+            <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-blue-600 h-2 rounded-full" style="width: ${pct}%"></div>
+            </div>
+            <span class="w-12 text-right font-extrabold text-slate-700">${val} (${pct}%)</span>
+          </div>
+        `;
+      }
+    });
+
+    if (!hasData) {
+      chartDemoEl.innerHTML = `
+        <div class="pd3i-dashboard-chart-state flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50 border border-slate-100">
+          <i class="fas fa-info-circle text-2xl mb-1 text-slate-300"></i>
+          <span class="text-xs">Tidak ada data demografi untuk periode ini</span>
+        </div>
+      `;
+      return;
+    }
+
+    chartDemoEl.innerHTML = `
+      <div class="w-full h-full p-4 overflow-y-auto" style="max-height: 250px;">
+        ${listHtml}
+      </div>
+    `;
   }
 
   function runChartsDraw(stats, dx, tahun) {
+    let trenSuccess = false;
     try {
-      // 1. TREN BULANAN AREA CHART
-      const perBulan = stats.perBulan || {};
-      const bulanKeys = Object.keys(perBulan).sort();
-      const trenData = [['Bulan', 'Jumlah Kasus']];
-      
-      if (bulanKeys.length > 0) {
-        bulanKeys.forEach(function(k) {
-          const label = k.substring(0, 4) + "-" + k.substring(4, 6);
-          trenData.push([label, perBulan[k] || 0]);
-        });
-      } else {
-        trenData.push(['No Data', 0]);
-      }
+      if (typeof google !== 'undefined' && google.visualization && google.visualization.AreaChart) {
+        // 1. KURVA EPIDEMIOLOGI MINGGUAN AREA CHART
+        const perMinggu = stats.perMinggu || stats.perBulan || {};
+        const bulanKeys = Object.keys(perMinggu).sort();
+        const trenData = [['Minggu', 'Jumlah kasus']];
 
-      const dtTren = google.visualization.arrayToDataTable(trenData);
-      const optTren = {
-        title: '',
-        hAxis: { 
-          title: 'Bulan Pelacakan', 
-          titleTextStyle: { color: '#64748b', fontSize: 11, bold: true }, 
-          textStyle: { color: '#64748b', fontSize: 10 },
-          gridlines: { color: 'transparent' }
-        },
-        vAxis: { 
-          title: 'Kasus', 
-          titleTextStyle: { color: '#64748b', fontSize: 11, bold: true }, 
-          textStyle: { color: '#64748b', fontSize: 10 }, 
-          minValue: 0,
-          gridlines: { color: '#f1f5f9' },
-          baselineColor: '#cbd5e1'
-        },
-        colors: ['#2563eb'], // Medical Royal Blue
-        areaOpacity: 0.08,
-        lineWidth: 3,
-        chartArea: { width: '85%', height: '70%', top: 20, left: '10%' },
-        legend: { position: 'none' },
-        fontName: 'Inter, system-ui, sans-serif'
-      };
+        if (bulanKeys.length > 0) {
+          bulanKeys.forEach(function(k) {
+            const label = k.indexOf("W") !== -1 ? k.replace(/^\d{4}W0?/, "W") : (k.substring(0, 4) + "-" + k.substring(4, 6));
+            trenData.push([label, perMinggu[k] || 0]);
+          });
+        } else {
+          trenData.push(['No Data', 0]);
+        }
 
-      const chartTrenEl = document.getElementById('chart-tren-bulanan');
-      if (chartTrenEl) {
-        chartTrenEl.innerHTML = '';
-        const chartTren = new google.visualization.AreaChart(chartTrenEl);
-        chartTren.draw(dtTren, optTren);
+        const dtTren = google.visualization.arrayToDataTable(trenData);
+        const optTren = {
+          title: '',
+          hAxis: {
+            title: 'Minggu epidemiologi',
+            titleTextStyle: { color: '#64748b', fontSize: 11, bold: true },
+            textStyle: { color: '#64748b', fontSize: 10 },
+            gridlines: { color: 'transparent' }
+          },
+          vAxis: {
+            title: 'Kasus',
+            titleTextStyle: { color: '#64748b', fontSize: 11, bold: true },
+            textStyle: { color: '#64748b', fontSize: 10 },
+            minValue: 0,
+            gridlines: { color: '#f1f5f9' },
+            baselineColor: '#cbd5e1'
+          },
+          colors: ['#2563eb'], // Medical Royal Blue
+          areaOpacity: 0.08,
+          lineWidth: 4,
+          curveType: 'function',
+          pointSize: 5,
+          pointShape: 'circle',
+          chartArea: { width: '85%', height: '70%', top: 20, left: '10%' },
+          legend: { position: 'none' },
+          fontName: 'Inter, system-ui, sans-serif'
+        };
+
+        const chartTrenEl = document.getElementById('chart-tren-bulanan');
+        if (chartTrenEl) {
+          chartTrenEl.innerHTML = '';
+          const chartTren = new google.visualization.AreaChart(chartTrenEl);
+          chartTren.draw(dtTren, optTren);
+          trenSuccess = true;
+        }
       }
     } catch(e) {
-      console.error("Gagal menggambar Area Chart:", e);
+      console.error("Gagal menggambar Area Chart dengan Google Charts:", e);
     }
 
+    if (!trenSuccess) {
+      renderHtmlFallbackChart(stats);
+    }
+
+    let demoSuccess = false;
     try {
-      // 2. DEMOGRAFI USIA DONUT CHART
-      const perUsia = stats.perKelompokUsiaSurveilans || {};
-      const usiaOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
-      const demoData = [['Usia', 'Jumlah Kasus']];
-      
-      let hasUsiaData = false;
-      usiaOrder.forEach(function(k) {
-        const count = perUsia[k] || 0;
-        if (count > 0) {
-          demoData.push([k, count]);
-          hasUsiaData = true;
-        }
-      });
+      if (typeof google !== 'undefined' && google.visualization && google.visualization.PieChart) {
+        // 2. DEMOGRAFI USIA DONUT CHART
+        const perUsia = stats.perKelompokUsiaSurveilans || {};
+        const usiaOrder = ["<1 tahun", "1–4 tahun", "5–9 tahun", "10–14 tahun", "15–19 tahun", "20–44 tahun", "45–59 tahun", "≥60 tahun", "Usia tidak diketahui"];
+        const demoData = [['Usia', 'Jumlah kasus']];
 
-      if (!hasUsiaData) {
-        demoData.push(['Tidak ada data', 1]);
-      }
-
-      const dtDemo = google.visualization.arrayToDataTable(demoData);
-      const optDemo = {
-        title: '',
-        pieHole: 0.5, // Donut style
-        colors: ['#0f172a', '#1e3a8a', '#2563eb', '#38bdf8', '#0d9488', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'], // Navy to Sky to Slate palette
-        chartArea: { width: '90%', height: '80%', top: 10 },
-        legend: { position: 'right', textStyle: { color: '#334155', fontSize: 11 } },
-        fontName: 'Inter, system-ui, sans-serif'
-      };
-
-      const chartDemoEl = document.getElementById('chart-demografi-usia');
-      if (chartDemoEl) {
-        chartDemoEl.innerHTML = '';
-        const chartDemo = new google.visualization.PieChart(chartDemoEl);
-
-        // Reposition dynamic overlay to center of the donut hole
-        google.visualization.events.addListener(chartDemo, 'ready', function() {
-          const svg = chartDemoEl.querySelector('svg');
-          if (!svg) return;
-          const paths = svg.querySelectorAll('g path');
-          if (paths && paths.length > 0) {
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            paths.forEach(function(p) {
-              const bbox = p.getBBox();
-              if (bbox.width > 0 && bbox.height > 0) {
-                minX = Math.min(minX, bbox.x);
-                maxX = Math.max(maxX, bbox.x + bbox.width);
-                minY = Math.min(minY, bbox.y);
-                maxY = Math.max(maxY, bbox.y + bbox.height);
-              }
-            });
-            const centerX = minX + (maxX - minX) / 2;
-            const centerY = minY + (maxY - minY) / 2;
-            
-            const overlay = document.getElementById('chart-demografi-usia-overlay');
-            const totalVal = document.getElementById('chart-demografi-total-cases');
-            if (totalVal) {
-              totalVal.textContent = Number(stats.totalKasus || 0);
-            }
-            if (overlay) {
-              overlay.style.left = centerX + 'px';
-              overlay.style.top = centerY + 'px';
-              overlay.classList.remove('hidden');
-            }
+        let hasUsiaData = false;
+        usiaOrder.forEach(function(k) {
+          const count = perUsia[k] || 0;
+          if (count > 0) {
+            demoData.push([k, count]);
+            hasUsiaData = true;
           }
         });
 
-        chartDemo.draw(dtDemo, optDemo);
+        if (!hasUsiaData) {
+          demoData.push(['Tidak ada data', 1]);
+        }
+
+        const dtDemo = google.visualization.arrayToDataTable(demoData);
+        const optDemo = {
+          title: '',
+          pieHole: 0.5, // Donut style
+          colors: ['#0f172a', '#1e3a8a', '#2563eb', '#38bdf8', '#0d9488', '#10b981', '#f59e0b', '#ef4444', '#94a3b8'], // Navy to Sky to Slate palette
+          chartArea: { width: '90%', height: '80%', top: 10 },
+          legend: { position: 'right', textStyle: { color: '#334155', fontSize: 11 } },
+          fontName: 'Inter, system-ui, sans-serif'
+        };
+
+        const chartDemoEl = document.getElementById('chart-demografi-usia');
+        if (chartDemoEl) {
+          chartDemoEl.innerHTML = '';
+          const chartDemo = new google.visualization.PieChart(chartDemoEl);
+
+          // Reposition dynamic overlay to center of the donut hole
+          google.visualization.events.addListener(chartDemo, 'ready', function() {
+            const svg = chartDemoEl.querySelector('svg');
+            if (!svg) return;
+            const paths = svg.querySelectorAll('g path');
+            if (paths && paths.length > 0) {
+              let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+              try {
+                paths.forEach(function(p) {
+                  const bbox = p.getBBox();
+                  if (bbox.width > 0 && bbox.height > 0) {
+                    minX = Math.min(minX, bbox.x);
+                    maxX = Math.max(maxX, bbox.x + bbox.width);
+                    minY = Math.min(minY, bbox.y);
+                    maxY = Math.max(maxY, bbox.y + bbox.height);
+                  }
+                });
+              } catch (e) {
+                console.warn("Failed to get SVG bounding box for demographic chart:", e);
+              }
+
+              if (isFinite(minX) && isFinite(maxX) && isFinite(minY) && isFinite(maxY)) {
+                const centerX = minX + (maxX - minX) / 2;
+                const centerY = minY + (maxY - minY) / 2;
+
+                const overlay = document.getElementById('chart-demografi-usia-overlay');
+                const totalVal = document.getElementById('chart-demografi-total-cases');
+                if (totalVal) {
+                  totalVal.textContent = Number(stats.totalKasus || 0);
+                }
+                if (overlay) {
+                  overlay.style.left = centerX + 'px';
+                  overlay.style.top = centerY + 'px';
+                  overlay.classList.remove('hidden');
+                }
+              }
+            }
+          });
+
+          chartDemo.draw(dtDemo, optDemo);
+          demoSuccess = true;
+        }
       }
     } catch(e) {
-      console.error("Gagal menggambar Pie/Donut Chart:", e);
+      console.error("Gagal menggambar Pie/Donut Chart dengan Google Charts:", e);
+    }
+
+    if (!demoSuccess) {
+      renderHtmlFallbackDemografi(stats);
     }
   }
 

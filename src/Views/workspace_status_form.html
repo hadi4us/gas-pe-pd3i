@@ -1,4 +1,4 @@
-        <section id="section-status-form-shell" class="hidden mt-6">
+        <section id="section-status-form-shell" class="hidden mt-6 pd3i-form-shell">
           <div id="dynamic-form-status" class="hidden" autocomplete="off" data-form-type="status" novalidate>
             <div class="pd3i-form-layout">
               <div class="pd3i-form-main">
@@ -11,6 +11,11 @@
                     <span class="pd3i-badge-soft">Data langsung dari spreadsheet</span>
                   </div>
                   <div class="pd3i-helper-text">Ruang kerja ini membuka ulang data langsung dari spreadsheet/server dan fokus pada pembaruan status kasus tanpa membawa keadaan dari verifikasi atau formulir lain.</div>
+                  <div class="pd3i-status-review-brief" aria-label="Checklist pembaruan status kasus">
+                    <div><strong>Cek kondisi akhir</strong><span>Pastikan status sembuh, meninggal, atau masih pemantauan sesuai informasi terakhir.</span></div>
+                    <div><strong>Cek klasifikasi</strong><span>Selaraskan klasifikasi kasus dengan hasil lab dan kriteria klinis epidemiologi.</span></div>
+                    <div class="is-warning"><strong>Cek tindak lanjut</strong><span>Status akhir memengaruhi pelaporan, analisis dashboard, dan penutupan kasus.</span></div>
+                  </div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
@@ -38,7 +43,7 @@
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
               <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi status</div><h3 class="pd3i-card-title">Simpan Pembaruan Status</h3></div><span class="pd3i-badge-soft">Khusus status</span></div>
               <div class="pd3i-submit-stack">
-                <button type="button" id="btn-submit-status" class="pd3i-submit-button"><i class="fas fa-list-check"></i> Simpan Pembaruan Status</button>
+                <button type="button" id="btn-submit-status" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'status') : false"><i class="fas fa-list-check"></i> Simpan Pembaruan Status</button>
               </div>
             </div>
           </div>

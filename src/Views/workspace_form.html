@@ -6,11 +6,17 @@
                   <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
                   <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
                 </div>
-                <div class="pd3i-edit-badge-title">Data yang sudah ada sedang dibuka untuk verifikasi / pembaruan status</div>
+                <div class="pd3i-edit-badge-title">Detail kasus aktif untuk tinjauan, koreksi, dan aksi lanjutan</div>
                 <div class="pd3i-edit-badge-meta">
                   <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
                   <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
                 </div>
+                <div class="pd3i-edit-review-brief" aria-label="Checklist koreksi detail kasus">
+                  <div><strong>Cek perubahan</strong><span>Bandingkan data baru dengan riwayat kasus sebelum koreksi disimpan.</span></div>
+                  <div><strong>Cek tahapan</strong><span>Pastikan koreksi tidak melewati verifikasi, pemeriksaan, atau status yang sudah berjalan.</span></div>
+                  <div class="is-warning"><strong>Cek dampak data</strong><span>Perubahan NIK, onset, diagnosis, EPID, atau status dapat mengubah antrean dan rekap dashboard.</span></div>
+                </div>
+                <button type="button" class="pd3i-back-to-list-btn" data-pd3i-back-to-case-list="search"><i class="fas fa-arrow-left"></i> Kembali ke daftar kasus</button>
               </div>
 
               <div id="viewer-badge" class="pd3i-viewer-badge" hidden>
@@ -27,54 +33,10 @@
 
               <div id="alert-box" class="pd3i-alert-card" hidden></div>
 
-              <section id="formulir-stepper-card" class="hidden pd3i-shell-card pd3i-stepper-card">
-                <div class="pd3i-card-header-row compact">
-                  <div>
-                    <div class="pd3i-card-eyebrow">Progress input</div>
-                    <h3 class="pd3i-card-title">Alur kerja formulir</h3>
-                  </div>
-                  <span class="pd3i-badge-soft">Stepper</span>
-                </div>
-                <div class="pd3i-stepper" id="pd3i-stepper">
-                  <a href="#section-pelapor" class="pd3i-stepper-item is-active" data-step-target="section-pelapor">
-                    <span class="pd3i-stepper-index">1</span>
-                    <span class="pd3i-stepper-copy">
-                      <strong>Input</strong>
-                      <small>Pelapor, identitas, klinis, epidemiologi</small>
-                    </span>
-                  </a>
-                  <a href="#section-verifikasi" class="pd3i-stepper-item" data-step-target="section-verifikasi">
-                    <span class="pd3i-stepper-index">2</span>
-                    <span class="pd3i-stepper-copy">
-                      <strong>Verifikasi EPID</strong>
-                      <small>Penentuan / pengesahan nomor EPID</small>
-                    </span>
-                  </a>
-                  <a href="#section-sampel" class="pd3i-stepper-item" data-step-target="section-sampel">
-                    <span class="pd3i-stepper-index">3</span>
-                    <span class="pd3i-stepper-copy">
-                      <strong>Hasil Pemeriksaan</strong>
-                      <small>Opsional sesuai ketersediaan pemeriksaan</small>
-                    </span>
-                  </a>
-                  <a href="#section-status" class="pd3i-stepper-item" data-step-target="section-status">
-                    <span class="pd3i-stepper-index">4</span>
-                    <span class="pd3i-stepper-copy">
-                      <strong>Status Pasien</strong>
-                      <small>Suspek / discarded / klinis / konfirmasi / dll</small>
-                    </span>
-                  </a>
-                </div>
-                <div id="pd3i-diagnosis-step-guide" class="pd3i-dx-step-guide" aria-live="polite">
-                  <div class="pd3i-dx-step-guide-title">Pilih diagnosis untuk melihat fokus field.</div>
-                  <div class="pd3i-dx-step-guide-list" id="pd3i-dx-step-guide-list"></div>
-                </div>
-              </section>
-
               <section id="section-pelapor" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 1A</div>
+                    <div class="pd3i-card-eyebrow">Langkah 1A</div>
                     <h3 class="pd3i-card-title"><i class="fas fa-hospital-user text-blue-600 mr-2"></i>Informasi Pelapor</h3>
                   </div>
                   <span class="pd3i-badge-soft">Sumber laporan & petugas</span>
@@ -85,7 +47,7 @@
               <section id="section-pasien" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 1B</div>
+                    <div class="pd3i-card-eyebrow">Langkah 1B</div>
                     <h3 class="pd3i-card-title"><i class="fas fa-address-card text-blue-600 mr-2"></i>Data Demografi Pasien</h3>
                   </div>
                   <span class="pd3i-badge-soft">Identitas & lokasi</span>
@@ -96,7 +58,7 @@
               <section id="section-specific" class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 1C</div>
+                    <div class="pd3i-card-eyebrow">Langkah 1C</div>
                     <h3 class="pd3i-card-title" id="specific-title"><i class="fas fa-stethoscope text-blue-600 mr-2"></i>Data Spesifik Kasus</h3>
                   </div>
                   <span class="pd3i-badge-soft">Klinis, epi, imunisasi, outcome</span>
@@ -107,8 +69,8 @@
               <section id="section-verifikasi" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-verifikasi">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 2</div>
-                    <h3 class="pd3i-card-title"><i class="fas fa-id-card-clip text-blue-600 mr-2"></i>Verifikasi Penentuan Nomor EPID</h3>
+                    <div class="pd3i-card-eyebrow">Langkah 2</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-id-card-clip text-blue-600 mr-2"></i>Verifikasi EPID</h3>
                   </div>
                   <span class="pd3i-badge-soft">Validasi kasus & EPID</span>
                 </div>
@@ -119,8 +81,8 @@
               <section id="section-sampel" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-sampel">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 3</div>
-                    <h3 class="pd3i-card-title"><i class="fas fa-vials text-blue-600 mr-2"></i>Input Hasil Pemeriksaan Sampel</h3>
+                    <div class="pd3i-card-eyebrow">Langkah 3</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-vials text-blue-600 mr-2"></i>Input Hasil pemeriksaan Sampel</h3>
                   </div>
                   <span class="pd3i-badge-soft">Opsional</span>
                 </div>
@@ -130,10 +92,10 @@
               <section id="section-status" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-status">
                 <div class="pd3i-card-header-row">
                   <div>
-                    <div class="pd3i-card-eyebrow">Step 4</div>
-                    <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Pembaruan Status Pasien / Kasus</h3>
+                    <div class="pd3i-card-eyebrow">Langkah 4</div>
+                    <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Pembaruan Status kasus / Kasus</h3>
                   </div>
-                  <span class="pd3i-badge-soft">Suspek / discarded / klinis / konfirmasi / dll</span>
+                  <span class="pd3i-badge-soft">Klasifikasi, outcome, dan tindak lanjut</span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="status-fields-container"></div>
               </section>
@@ -143,10 +105,10 @@
               <div id="case-summary-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-summary-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
-                    <div class="pd3i-card-eyebrow">Ringkasan kasus</div>
-                    <h3 class="pd3i-card-title">Panel Ringkasan</h3>
+                    <div class="pd3i-card-eyebrow">Detail kasus</div>
+                    <h3 class="pd3i-card-title">Ringkasan operasional</h3>
                   </div>
-                  <span class="pd3i-badge-soft">Ringkasan aktif</span>
+                  <span class="pd3i-badge-soft">Kasus aktif</span>
                 </div>
                 <div class="pd3i-summary-grid">
                   <div class="pd3i-summary-item">
@@ -224,26 +186,18 @@
               <div id="wizard-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-wizard-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
-                    <div class="pd3i-card-eyebrow">Wizard</div>
+                    <div class="pd3i-card-eyebrow">Navigasi kerja</div>
                     <h3 class="pd3i-card-title">Navigasi langkah</h3>
                   </div>
-                  <span class="pd3i-badge-soft">Step control</span>
+                  <span class="pd3i-badge-soft">Kontrol langkah</span>
                 </div>
-                <div class="pd3i-wizard-progress-wrap">
-                  <div class="pd3i-wizard-progress-meta">
-                    <span id="wizard-current-label">Langkah 1 dari 4</span>
-                    <span id="wizard-progress-label">0%</span>
-                  </div>
-                  <div class="pd3i-wizard-progress-bar">
-                    <div id="wizard-progress-fill" class="pd3i-wizard-progress-fill" style="width:0%"></div>
-                  </div>
-                </div>
+                
                 <div class="pd3i-wizard-controls">
                   <button type="button" id="btn-prev-step" class="pd3i-wizard-button secondary">
-                    <i class="fas fa-arrow-left"></i> Langkah Sebelumnya
+                    <i class="fas fa-arrow-left"></i> Sebelumnya
                   </button>
                   <button type="button" id="btn-next-step" class="pd3i-wizard-button primary">
-                    Langkah Berikutnya <i class="fas fa-arrow-right"></i>
+                    Berikutnya <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
                 <div id="workflow-stage-helper" class="pd3i-helper-text mt-3">Tahap input, verifikasi, hasil pemeriksaan, dan pembaruan status dipisah. Simpan entri awal dulu, lalu buka data yang sudah ada untuk tahap lanjutan.</div>
@@ -252,10 +206,10 @@
               <div id="workflow-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-workflow-panel-card">
                 <div class="pd3i-card-header-row compact">
                   <div>
-                    <div class="pd3i-card-eyebrow">Workflow</div>
-                    <h3 class="pd3i-card-title">Ringkasan alur data aktif</h3>
+                    <div class="pd3i-card-eyebrow">Timeline status</div>
+                    <h3 class="pd3i-card-title">Alur kasus aktif</h3>
                   </div>
-                  <span class="pd3i-badge-soft">Stage tracker</span>
+                  <span class="pd3i-badge-soft">Status workflow</span>
                 </div>
                 <div class="pd3i-workflow-status-list">
                   <div class="pd3i-workflow-status-item">
@@ -276,16 +230,70 @@
                   </div>
                 </div>
               </div>
+
+              <div id="case-lab-audit-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-lab-audit-panel-card">
+                <div class="pd3i-card-header-row compact">
+                  <div>
+                    <div class="pd3i-card-eyebrow">Lab dan audit</div>
+                    <h3 class="pd3i-card-title">Jejak pemeriksaan</h3>
+                  </div>
+                  <span class="pd3i-badge-soft">Ringkas</span>
+                </div>
+                <div class="pd3i-lab-audit-list">
+                  <div class="pd3i-lab-audit-item">
+                    <span class="pd3i-lab-audit-label">Ringkasan lab</span>
+                    <strong id="case-lab-audit-sample">Ikuti status hasil pemeriksaan</strong>
+                    <small>Gunakan workspace Hasil Sampel untuk memperbarui hasil lab.</small>
+                  </div>
+                  <div class="pd3i-lab-audit-item">
+                    <span class="pd3i-lab-audit-label">Jejak aktivitas</span>
+                    <strong id="case-lab-audit-workflow">Belum ada aktivitas terbaru</strong>
+                    <small id="case-lab-audit-note">Audit tahap terakhir tampil di ringkasan operasional.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div id="case-next-action-panel" class="pd3i-shell-card pd3i-sticky-card pd3i-sidebar-workcard pd3i-next-action-panel-card" aria-live="polite">
+                <div class="pd3i-card-header-row compact">
+                  <div>
+                    <div class="pd3i-card-eyebrow">Aksi berikutnya</div>
+                    <h3 class="pd3i-card-title">Keputusan aman</h3>
+                  </div>
+                  <span class="pd3i-badge-soft" id="next-action-role">Sesuai peran</span>
+                </div>
+                <div class="pd3i-next-action-body">
+                  <div class="pd3i-next-action-focus">
+                    <span class="pd3i-next-action-label">Prioritas kerja</span>
+                    <strong id="next-action-priority">Lengkapi data wajib</strong>
+                    <small id="next-action-detail">Isi identitas, diagnosis, dan tanggal kunci sebelum menyimpan atau memverifikasi.</small>
+                  </div>
+                  <div class="pd3i-next-action-grid">
+                    <div class="pd3i-next-action-item">
+                      <span>Peran aktif</span>
+                      <strong id="next-action-capability">Belum ada sesi</strong>
+                    </div>
+                    <div class="pd3i-next-action-item">
+                      <span>Tujuan alur</span>
+                      <strong id="next-action-target">Daftar kasus</strong>
+                    </div>
+                  </div>
+                  <div class="pd3i-detail-safety-strip" aria-label="Checklist aman detail kasus">
+                    <div><span>Identitas</span><strong>NIK, nama, umur, wilayah</strong></div>
+                    <div><span>Diagnosis</span><strong>DX, onset, gejala kunci</strong></div>
+                    <div><span>Keputusan</span><strong>Simpan koreksi atau lanjutkan workflow</strong></div>
+                  </div>
+                </div>
+              </div>
             </aside>
           </div>
 
           <div id="action-panel" class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
             <div id="action-panel-header" class="pd3i-card-header-row compact">
               <div>
-                <div class="pd3i-card-eyebrow">Aksi utama</div>
-                <h3 class="pd3i-card-title">Submit & kontrol</h3>
+                <div class="pd3i-card-eyebrow">Kontrol simpan</div>
+                <h3 class="pd3i-card-title">Review dan simpan</h3>
               </div>
-              <span class="pd3i-badge-soft">Safe submit</span>
+              <span class="pd3i-badge-soft">Simpan aman</span>
             </div>
             <div id="action-panel-note" class="pd3i-action-panel-note">
               <i class="fas fa-shield-heart"></i>
@@ -299,11 +307,11 @@
               <div id="pd3i-submit-review-list" class="pd3i-submit-review-list"></div>
             </div>
             <div class="pd3i-submit-stack">
-              <button type="button" id="btn-submit" class="pd3i-submit-button">
-                <i class="fas fa-save"></i> Simpan Data ke Database
+              <button type="button" id="btn-submit" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'search') : false">
+                <i class="fas fa-save"></i> Simpan data
               </button>
               <button type="button" id="btn-cancel-edit" class="hidden pd3i-cancel-button">
-                <i class="fas fa-rotate-left"></i> Batal Edit / Reset Formulir
+                <i class="fas fa-rotate-left"></i> Batal edit / reset formulir
               </button>
             </div>
             <div id="action-panel-helper" class="pd3i-helper-text mt-3">Gunakan tombol reset saat ingin keluar dari mode edit dan kembali ke formulir/input bersih.</div>

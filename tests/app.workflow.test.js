@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
-const appHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.js.html'), 'utf8');
+const appHtmlRaw = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.js.html'), 'utf8');
+const appInitHtmlRaw = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.init.js.html'), 'utf8');
+const appHtml = appHtmlRaw + '\n' + appInitHtmlRaw;
 const authHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'auth.js.html'), 'utf8');
 const loginHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'login.html'), 'utf8');
 const pinHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'pin.html'), 'utf8');
@@ -13,14 +15,15 @@ const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'V
 const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_verifikasi_form.html'), 'utf8');
 const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_search.html'), 'utf8');
 const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const endpointSecurityScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-endpoint-security.js'), 'utf8');
 
-test('credential UI uses Gmail OTP login like e-PWS Imunisasi', () => {
+test('credential UI uses email OTP login like e-PWS Imunisasi', () => {
   assert.match(loginHtml, /Sistem Surveilans Penyakit yang Dapat Dicegah Dengan Imunisasi/);
-  assert.match(loginHtml, />Gmail</);
+  assert.match(loginHtml, />Email</);
   assert.match(loginHtml, /id="login-email" type="email"/);
-  assert.match(loginHtml, /placeholder="Masukkan Gmail Anda"/);
+  assert.match(loginHtml, /placeholder="Masukkan email Anda"/);
   assert.match(loginHtml, /id="btn-send-otp"/);
   assert.match(loginHtml, />Kirim OTP</);
   assert.match(loginHtml, /id="login-otp" type="text" inputmode="numeric" maxlength="6"/);
@@ -95,9 +98,9 @@ test('record serialization hardens free-text values before writing to Sheets', (
 test('print endpoint routes each diagnosis to its own PDF template', () => {
   assert.match(printJs, /const templateByDx = \{/);
   ['MR', 'DIF', 'PERT', 'TN', 'AFP'].forEach((dx) => {
-    assert.match(printJs, new RegExp(dx + ': "print_' + dx + '"'));
+    assert.match(printJs, new RegExp(dx + ': "Views/print_' + dx + '"'));
   });
-  assert.match(printJs, /return templateByDx\[dx\] \|\| "print_MR"/);
+  assert.match(printJs, /return templateByDx\[dx\] \|\| "Views\/print_MR"/);
 });
 
 test('dynamic table serialization sanitizes nested string cells before JSON storage', () => {
@@ -108,6 +111,10 @@ test('dynamic table serialization sanitizes nested string cells before JSON stor
 });
 
 test('workflow stage saves follow queue-first blueprint and only offer PDF after EPID verification', () => {
+  assert.match(routesJs, /notifyWaha: true/);
+  assert.match(routesJs, /const shouldNotifyWaha = policy\.notifyWaha && !\(isSameFingerprint && prevWahaStatus === "SENT"\)/);
+  assert.match(routesJs, /_sendWahaPd3iNotification_\(dx, savedRecord, saved, printUrl\)/);
+  assert.match(routesJs, /"Status Notifikasi WAHA": wahaNotify\.sent \? "SENT"/);
   assert.match(appHtml, /refreshWorkflowInbox\(\{ forceRefresh: true \}\)/);
   assert.match(appHtml, /btnPrint\.classList\.add\("hidden", "opacity-60", "pointer-events-none"\)/);
   assert.match(appHtml, /btnPrint\.classList\.remove\("hidden", "opacity-60", "pointer-events-none"\)/);
@@ -117,12 +124,21 @@ test('workflow stage saves follow queue-first blueprint and only offer PDF after
   assert.match(appHtml, /activeStageNormalized === 'section-status'[\s\S]*?openSidebarWorkspace\('status', \{ scroll: true, skipRecordReload: true \}\)/);
 });
 
+
+
+test('queue workspaces reset stale diagnosis filters to show all diagnoses', () => {
+  assert.match(appHtml, /const diagnosisFilter = document\.getElementById\('search-diagnosis'\);/);
+  assert.match(appHtml, /\['verifikasi', 'sampel', 'status'\]\.includes\(normalized\) && diagnosisFilter/);
+  assert.match(appHtml, /diagnosisFilter\.value = 'ALL';/);
+  assert.match(appHtml, /if \(saved\) \{[\s\S]*?applyWorkflowSearchFilters\(saved\);[\s\S]*?applySearchDefaultsForWorkspace\(normalized\);[\s\S]*?saveWorkflowSearchFiltersForWorkspace\(normalized\);[\s\S]*?\} else \{/);
+});
+
 test('workflow inbox can bypass cache after mutations and uses short operational ttl', () => {
   assert.match(dashboardJs, /function getWorkflowInbox\(dx, token, options\)/);
   assert.match(dashboardJs, /const forceRefresh = !!\(options\.forceRefresh \|\| options\.noCache \|\| options\.bustCache\)/);
   assert.match(dashboardJs, /if \(cache && !forceRefresh\)/);
   assert.match(dashboardJs, /cache\.put\(cacheKey, JSON\.stringify\(cachedResult\), 15\)/);
-  assert.match(appHtml, /\.getWorkflowInbox\(dx, SESSION_TOKEN, \{ forceRefresh: !!options\.forceRefresh \}\)/);
+  assert.match(appHtml, /\.getWorkflowInbox\(dx, SESSION_TOKEN, \{ forceRefresh: !!options\.forceRefresh, workspace: workspace \}\)/);
 });
 
 test('workflow inbox refresh never skips a newer menu request while loading', () => {
@@ -134,12 +150,12 @@ test('workflow inbox refresh never skips a newer menu request while loading', ()
 });
 
 test('workflow inbox returns complete queues so workspace filters can find older kelurahan matches', () => {
-  assert.match(dashboardJs, /truncating to the first few newest rows makes valid filtered cases disappear/);
-  assert.match(dashboardJs, /pendingVerification: result\.pendingVerification \|\| \[\]/);
-  assert.match(dashboardJs, /revisionQueue: result\.revisionQueue \|\| \[\]/);
-  assert.match(dashboardJs, /verificationDone: result\.verificationDone \|\| \[\]/);
-  assert.match(dashboardJs, /sampleQueue: result\.sampleQueue \|\| \[\]/);
-  assert.match(dashboardJs, /statusQueue: result\.statusQueue \|\| \[\]/);
+  assert.match(dashboardJs, /Client-side filters need full/);
+  assert.match(dashboardJs, /pendingVerification: \(workspace === 'verifikasi' \|\| !workspace\) \? \(result\.pendingVerification \|\| \[\]\) : \[\]/);
+  assert.match(dashboardJs, /revisionQueue: \(workspace === 'verifikasi' \|\| workspace === 'input' \|\| workspace === 'edit' \|\| workspace === 'search' \|\| !workspace\) \? \(result\.revisionQueue \|\| \[\]\) : \[\]/);
+  assert.match(dashboardJs, /verificationDone: \(workspace === 'verifikasi' \|\| workspace === 'sampel' \|\| !workspace\) \? \(result\.verificationDone \|\| \[\]\) : \[\]/);
+  assert.match(dashboardJs, /sampleQueue: \(workspace === 'sampel' \|\| !workspace\) \? \(result\.sampleQueue \|\| \[\]\) : \[\]/);
+  assert.match(dashboardJs, /statusQueue: \(workspace === 'status' \|\| !workspace\) \? \(result\.statusQueue \|\| \[\]\) : \[\]/);
   assert.doesNotMatch(dashboardJs, /pendingVerification: \(result\.pendingVerification \|\| \[\]\)\.slice\(0, 8\)/);
   assert.doesNotMatch(dashboardJs, /statusQueue: \(result\.statusQueue \|\| \[\]\)\.slice\(0, 8\)/);
 });
@@ -169,7 +185,7 @@ test('workflow route exposes one Daftar Kasus workspace while preserving interna
   assert.match(routesJs, /"overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "sars-form", "sars-dashboard", "guide", "pie"/);
   assert.doesNotMatch(routesJs, /"overview", "search", "input", "edit", "verifikasi", "sampel", "status", "guide"/);
   assert.match(appHtml, /\['search', 'edit', 'verifikasi', 'sampel', 'status'\]\.includes\(normalized\)/);
-  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide'\]\)/);
+  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'edit', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide'\]\)/);
   assert.match(appHtml, /if \(isSuperAdminUiRole\(role\)\) allowed\.add\('settings'\)/);
   assert.match(appHtml, /requestedWorkspace === 'edit' \? 'edit' : 'search'/);
 });
@@ -240,10 +256,12 @@ test('sidebar hides admin-only dashboard and verification menus for petugas/pusk
 });
 
 test('sample workspace lists admin-verified cases and offers PE print only when EPID exists', () => {
-  assert.match(appHtml, /const visibleSampleVerified = workspace === 'sampel' \? filterQueueItemsForWorkspace\(verificationDone, workspace\) : \[\]/);
+  assert.match(appHtml, /const visibleVerified = \['verifikasi', 'sampel'\]\.includes\(workspace\) \? filterQueueItemsForWorkspace\(verificationDone, workspace\) : \[\]/);
   assert.match(appHtml, /Kasus sudah diverifikasi admin/);
   assert.match(appHtml, /function renderVerifiedSampleCaseTable\(items\)/);
   assert.match(appHtml, /buildClientPrintUrl\(item && item\.dx, item && item\.epid, SESSION_TOKEN\)/);
+  assert.doesNotMatch(dashboardJs, /Nomor EPID Final/);
+  assert.match(dashboardJs, /const epid = epidMain/);
   assert.match(appHtml, /item && item\.epid[\s\S]*?Cetak Form PE/);
   assert.match(appHtml, /Nomor EPID belum tersedia/);
 });
@@ -254,6 +272,50 @@ test('switching sidebar menus ends the currently opened case form session', () =
   assert.match(appHtml, /opts\.skipRecordReload \|\| opts\.preserveOpenRecord/);
   assert.match(appHtml, /shouldClearActiveRecordOnWorkspaceChange\(previousWorkspace, normalized, opts\)[\s\S]*?clearActiveRecordContext\(\{ skipLayout: true \}\)/);
   assert.doesNotMatch(appHtml, /if \(!opts\.skipRecordReload && \['search', 'edit', 'verifikasi', 'sampel', 'status'\]\.includes\(normalized\) && activeRecordKey/);
+});
+
+
+
+test('Daftar Kasus and Verifikasi back-to-list controls clear open record without stale detail', () => {
+  assert.match(appHtmlRaw, /\[data-pd3i-back-to-case-list\]/);
+  assert.match(appHtmlRaw, /clearActiveRecordContext\(\{ workspace: workspaceKey, keepSearchResults: true \}\)/);
+  assert.match(appHtmlRaw, /window\.__PD3I_WORKFLOW_LIST_COLLAPSED__\[workspaceKey\] = false/);
+  assert.match(appHtmlRaw, /openSidebarWorkspace\(\['verifikasi', 'sampel', 'status'\]\.includes\(workspaceKey\) \? workspaceKey : 'search', \{ scroll: true, skipRecordReload: true \}\)/);
+  assert.match(workspaceSearchHtml + workspaceVerifikasiHtml, /Kembali ke daftar kasus|Kembali ke daftar verifikasi/);
+  assert.match(styleHtml, /\.pd3i-back-to-list-btn/);
+});
+
+test('opening Daftar Kasus or Verifikasi menu resets active detail to list-first view', () => {
+  assert.match(appHtmlRaw, /if \(normalized === 'search' \|\| normalized === 'edit'\) \{[\s\S]*?clearActiveRecordContext\(\{ workspace: normalized, skipLayout: true \}\)/);
+  assert.match(appHtmlRaw, /if \(\['verifikasi', 'sampel', 'status'\]\.includes\(normalized\) && !opts\.skipRecordReload && !opts\.preserveOpenRecord[\s\S]*?clearActiveRecordContext\(\{ workspace: normalized, skipLayout: true \}\)/);
+  assert.match(appHtmlRaw, /window\.__PD3I_WORKFLOW_LIST_COLLAPSED__\[normalized\] = false/);
+});
+
+
+
+test('Daftar Kasus row action opens edit workspace and does not render workflow inbox after edit load', () => {
+  assert.match(appInitHtmlRaw, /workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'app.dashboard.js.html'), 'utf8'), /window\._loadRecordFromSearch_\(recordKey, dxValue \|\| dx \|\| 'MR', \{[\s\S]*?workspace: 'edit',[\s\S]*?workflowIntent: 'section-pelapor',[\s\S]*?skipWorkflowInboxRefresh: true/);
+  assert.match(appInitHtmlRaw, /const requestedStageBeforeLoad = opts\.workflowIntent[\s\S]*?normalizeWorkflowStepId\(opts\.workflowIntent\)/);
+  assert.match(appInitHtmlRaw, /if \(!opts\.skipWorkflowInboxRefresh && \['verifikasi', 'sampel', 'status'\]\.includes\(openedWorkspace\)\) \{\s*refreshWorkflowInbox\(\);\s*\}/);
+  assert.match(appInitHtmlRaw, /openSidebarWorkspace\(openedWorkspace, \{ scroll: false, skipRecordReload: true, preserveOpenRecord: true \}\)/);
+  assert.match(appHtmlRaw, /if \(workspace === 'search'\) return 'Edit kasus'/);
+});
+
+test('Daftar Kasus menu loads revision workflow inbox but edit workspace clears it', () => {
+  assert.match(appHtmlRaw, /if \(normalized === 'search'\) \{\s*refreshWorkflowInbox\(\);\s*\} else \{\s*clearWorkflowInboxUi\(\);\s*\}/);
+  assert.match(appHtmlRaw, /if \(\['search', 'verifikasi', 'sampel', 'status'\]\.includes\(workspace\)\) \{[\s\S]*?renderPd3iSkeleton\(\{ title: 'Memuat daftar kerja…'/);
+});
+
+test('Daftar Kasus search uses short client cache and refined loading skeleton', () => {
+  assert.match(appHtmlRaw, /let WORKSPACE_SEARCH_RESULT_CACHE = \{\}/);
+  assert.match(appHtmlRaw, /function getWorkspaceSearchResultCache\(workspace, dx, filters\)/);
+  assert.match(appHtmlRaw, /Date\.now\(\) - entry\.at\) > 20000/);
+  assert.match(appInitHtmlRaw, /const cachedSearchData = typeof getWorkspaceSearchResultCache === 'function'/);
+  assert.match(appInitHtmlRaw, /setWorkspaceSearchResultCache\(workspace, dx, filters, data\)/);
+  assert.match(appInitHtmlRaw, /Memuat daftar kasus halaman/);
+  assert.match(utilsHtml, /pd3i-skeleton-spinner/);
+  assert.match(styleHtml, /@keyframes pd3iSpinner/);
 });
 
 test('each sidebar menu has a dedicated spreadsheet-backed backend API', () => {
@@ -291,6 +353,9 @@ test('workflow form submit dispatches to menu-specific save actions instead of g
   assert.match(appHtml, /\.saveVerificationDecision\(SESSION_TOKEN, payload\)/);
   assert.match(appHtml, /\.saveSampleResult\(SESSION_TOKEN, payload\)/);
   assert.match(appHtml, /\.saveCaseStatusUpdate\(SESSION_TOKEN, payload\)/);
+  assert.match(appHtml, /function safeHandleMainFormSubmit\(mode\)/);
+  assert.match(appHtml, /submit handler failed before server save/);
+  assert.match(appHtml, /showWorkflowSubmitError\(submitMode, errMessage \|\| 'Gagal menyimpan data\.'\)/);
 });
 
 
@@ -346,21 +411,22 @@ test('Daftar Kasus search is paginated at 10 records per page with next and prev
   assert.match(appHtml, /data-search-page-target="\$\{Math\.max\(1, page - 1\)\}"/);
   assert.match(appHtml, /data-search-page-target="\$\{Math\.min\(totalPages, page \+ 1\)\}"/);
   assert.match(appHtml, /Halaman \$\{page\} dari \$\{totalPages\}/);
-  assert.match(appHtml, /Menampilkan \$\{startNumber\}–\$\{endNumber\} dari \$\{total\} record/);
+  assert.match(appHtml, /\$\{startNumber\}–\$\{endNumber\} dari \$\{total\} kasus/);
 });
 
 test('verified cases leave verification queue and enter exactly sample or monitoring queue by marker', () => {
-  assert.match(dashboardJs, /super-admin[\s\S]*?normalizedStatus === 'PENDING'/);
+  assert.match(dashboardJs, /super-admin[\s\S]*?isPendingVerificationStatus/);
   assert.match(dashboardJs, /sampleStagePending = normalizedStatus === 'TERVERIFIKASI'[\s\S]*?sampleRelevant[\s\S]*?!sampleDone/);
   assert.match(dashboardJs, /normalizedStatus === 'TERVERIFIKASI' && !isFinalStatus && !sampleStagePending && \(\(role === 'admin' \|\| role === 'super-admin' \|\| role === 'superadmin'\) \|\| scopeMatch\)/);
   assert.match(routesJs, /samplePending[\s\S]*?currentQueue = 'input_pemeriksaan'[\s\S]*?!isFinalStatus[\s\S]*?currentQueue = 'pemantauan'/);
 });
 
 
-test('rejected and revision cases are not rendered in verification workspace', () => {
-  assert.match(routesJs, /workflowIntent === 'section-verifikasi' \|\| workspace === 'verifikasi'\) \{\s*allowedVerificationStatuses = \['PENDING'\]/);
-  assert.doesNotMatch(appHtml, /const visibleRevision = workspace === 'verifikasi'\s*\?[\s\S]*?filterQueueItemsForWorkspace\(revisionQueue, workspace\)/);
-  assert.match(appHtml, /\['input', 'edit', 'search'\]\.includes\(workspace\)[\s\S]*?filterQueueItemsForWorkspace\(revisionQueue, workspace\)/);
+test('verification workspace shows pending, approved, and rejected-returned cases', () => {
+  assert.match(routesJs, /workflowIntent === 'section-verifikasi' \|\| workspace === 'verifikasi'\) \{\s*allowedVerificationStatuses = \['PENDING', 'TERVERIFIKASI', 'PERLU REVISI', 'DITOLAK'\]/);
+  assert.match(appHtml, /const visibleRevision = \['input', 'edit', 'search', 'verifikasi'\]\.includes\(workspace\)[\s\S]*?filterQueueItemsForWorkspace\(revisionQueue, workspace\)/);
+  assert.match(appHtml, /const visibleVerified = \['verifikasi', 'sampel'\]\.includes\(workspace\) \? filterQueueItemsForWorkspace\(verificationDone, workspace\) : \[\]/);
+  assert.match(appHtml, /Kasus approved \/ sudah diverifikasi/);
   assert.match(appHtml, /Kasus ditolak \/ perlu perbaikan/);
 });
 
@@ -391,6 +457,19 @@ test('record hydration scopes duplicate generated field ids to the opened worksp
   assert.match(appHtml, /const el = findScopedFieldControl\(key, hydrateRoot\);/);
   assert.match(appHtml, /await hydrateRecordToForm\(record, openedFormRoot\);/);
   assert.match(appHtml, /hydrateDynamicTables\(record, openedFormRoot\);/);
+  assert.match(appHtml, /if \(!getWilayahNextFieldId\(fieldId\)\) \{\s*el\.dispatchEvent\(new Event\("change", \{ bubbles: true \}\)\);\s*\}/);
+  assert.match(appHtml, /await hydrateWilayahChain\(\["Provinsi", "Kab\/Kota"\], record, hydrateRoot\);/);
+  assert.match(appHtml, /await hydrateWilayahChain\(\["Provinsi Pasien", "Kab\/Kota Pasien", "Kecamatan", "Kelurahan"\], record, hydrateRoot\);/);
+});
+
+
+
+test('workflow verification review hydrates Kontak Erat from scoped tbody and legacy JSON alias', () => {
+  assert.match(appHtml, /record\["Kontak Erat"\] \|\| record\["KontakEratJSON"\] \|\| record\["KontakEratJson"\] \|\| record\["kontakEratJSON"\]/);
+  assert.match(appHtml, /window\.addDynamicRow = function\(tableId, presetRow, targetRootOrTbody\)/);
+  assert.match(appHtml, /addDynamicRow\(tableId, item, tbody\)/);
+  assert.match(appHtml, /function hydrateDynamicTablesWhenReady\(record, formRoot\)/);
+  assert.match(appHtml, /hydrateDynamicTablesWhenReady\(record, openedFormRoot\)/);
 });
 
 test('dedicated workflow saves only write columns owned by that step and preserve existing state for markers', () => {
@@ -426,6 +505,10 @@ test('verification workspace keeps address and GPS context fields editable for a
 
 test('verification submit button has direct fallback handler and saves the active form scope', () => {
   assert.match(workspaceVerifikasiHtml, /id="btn-submit-verifikasi"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_input_form.html'), 'utf8'), /id="btn-submit-input"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_form.html'), 'utf8'), /id="btn-submit"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_sampel_form.html'), 'utf8'), /id="btn-submit-sampel"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_status_form.html'), 'utf8'), /id="btn-submit-status"[^>]*onclick="return window\.__PD3I_SUBMIT_WORKFLOW_CLICK/);
   assert.match(appHtml, /window\.__PD3I_SUBMIT_WORKFLOW_CLICK = function\(ev, mode\)/);
   assert.match(appHtml, /ev\.stopImmediatePropagation\(\)/);
   assert.match(appHtml, /const activeFormElement = submitMode === 'input'[\s\S]*?\? inputFormElement[\s\S]*?submitMode === 'verifikasi'[\s\S]*?\? formElementVerifikasi/);
@@ -433,6 +516,23 @@ test('verification submit button has direct fallback handler and saves the activ
   assert.match(appHtml, /validateAndApplyBirthUI\(\{ silent: false, hard: true, scope: activeFormElement \}\)/);
   assert.match(appHtml, /validateDxBusinessRules\(activeFormElement\)/);
   assert.match(appHtml, /findScopedFieldControl\("Nama unit pelapor", activeFormElement\)/);
+});
+
+
+test('PERT PE print renders dynamic imunisasi and kontak erat tables', () => {
+  const printPertHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'print_PERT.html'), 'utf8');
+  assert.match(printPertHtml, /var imunRows=parseRows_\(pick_\(\['Riwayat Imunisasi'\]\)\)/);
+  assert.match(printPertHtml, /function imunStatus_\(labels, legacyKeys\)/);
+  assert.match(printPertHtml, /function imunDate_\(labels, legacyKeys\)/);
+  assert.match(printPertHtml, /DPT-HB-HIB 1/);
+  assert.match(printPertHtml, /DPT-HB-HIB 4/);
+  assert.match(printPertHtml, /Tanggal Vaksinasi DPT-HB-HiB terakhir[\s\S]*?imunDate_/);
+  assert.match(printPertHtml, /CONTACTS\.length\)\?CONTACTS:parseRows_/);
+  assert.match(printPertHtml, /<td class="section" colspan="3">Kontak Erat<\/td>/);
+  assert.match(printPertHtml, /Jumlah Imunisasi Terkait/);
+  assert.match(printJs, /let contactsRaw = data\["Kontak Erat"\] \|\| data\["KontakEratJSON"\] \|\| data\["KontakEratJson"\] \|\| data\["kontakEratJSON"\] \|\| "";/);
+  assert.match(printJs, /norm\.indexOf\("kontakerat"\)/);
+  assert.match(printJs, /Array\.isArray\(contacts\.rows\)/);
 });
 
 test('Hasil Sampel workspace shows a case summary instead of the full initial input context form', () => {
@@ -480,7 +580,7 @@ test('initial input workspace does not render Nomor EPID because EPID is assigne
   const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
   assert.match(commonConfigHtml, /id: "Nomor EPID"[\s\S]*?hideInWorkspaces: \["input"\]/);
   assert.match(appHtml, /COMMON\.pasien \|\| \[\]\)\.filter\(function\(f\) \{\s*return !f\.hideInWorkspaces \|\| f\.hideInWorkspaces\.indexOf\(normalizedMode\) === -1;\s*\}\)\.map\(generateHTML\)\.join\(''\)/);
-  assert.match(appHtml, /findScopedFieldControl\('Nomor EPID Final'/);
+  assert.match(appHtml, /findScopedFieldControl\('Nomor EPID'/);
   assert.match(appHtml, /findScopedFieldControl\('Nomor EPID'/);
 });
 
@@ -496,9 +596,45 @@ test('performance tuning avoids repeated DOM reparsing and full row deserializat
   assert.match(dashboardJs, /_getPengampuByWilayahCachedForDashboard_\(normKecamatan, normKelurahan, normKabKota\)/);
   assert.match(dashboardJs, /function _buildWorkflowInboxData_\(sess, dx, options\)/);
   assert.match(dashboardJs, /const summaryOnly = !!options\.summaryOnly/);
-  assert.match(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?pendingVerificationCount \+= 1;[\s\S]*?return;[\s\S]*?\}/);
+
+  assert.match(dashboardJs, /const effectiveDx = \['verifikasi', 'sampel', 'status', 'search'\]\.indexOf\(workspace\) !== -1 \? '' : dx;/);
+  assert.match(dashboardJs, /const result = _buildWorkflowInboxData_\(sess, effectiveDx\);/);
+  assert.match(dashboardJs, /function _queueDxCount_\(queue, dx\)/);
+  assert.match(dashboardJs, /const allQueuesFull = false; \/\/ Do not let one diagnosis fill the global queue and block later DX sheets\./);
+  assert.match(dashboardJs, /_queueDxCount_\(pendingVerification, dxItem\) < QUEUE_LIMIT/);
+  assert.match(dashboardJs, /if \(!recordKey && !summaryOnly\) continue;/);
+  assert.match(dashboardJs, /const statusVerifikasi = _readLastNonEmptyHeaderValue_\(row, idxVerifikasiList\);/);
+  assert.match(dashboardJs, /const normalizedWorkflowQueue = String\(workflowQueue \|\| ''\)\.trim\(\)\.toLowerCase\(\);/);
+  assert.match(dashboardJs, /const normalizedProsesVerifikasi = String\(prosesVerifikasi \|\| ''\)\.trim\(\)\.toUpperCase\(\);/);
+  assert.match(dashboardJs, /normalizedWorkflowQueue === 'verifikasi_epid'/);
+  assert.match(dashboardJs, /\['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI', 'MENUNGGU VERIFIKASI'\]\.indexOf\(normalizedProsesVerifikasi\) !== -1/);
+  assert.match(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?pendingVerificationCount \+= 1;[\s\S]*?continue;[\s\S]*?\}/);
   assert.match(dashboardJs, /_buildWorkflowInboxData_\(sess, '', \{ summaryOnly: true \}\)/);
   assert.doesNotMatch(dashboardJs, /getOverviewSummary[\s\S]*?pendingVerification: \(result\.pendingVerification \|\| \[\]\)\.slice\(0, 6\)/);
+});
+
+test('Daftar Kasus search projection can read PERT pengampu and updated aliases', () => {
+  assert.match(routesJs, /\['KodeFaskes Pengampu'\]/);
+  assert.match(routesJs, /\['Puskesmas Pengampu'\]/);
+  assert.match(routesJs, /\['Updated At', 'Last Updated At', 'Tanggal Update'\]/);
+  assert.match(routesJs, /updatedAt: getFirst\(\['Updated At', 'Last Updated At', 'Tanggal Update'\]\)/);
+  assert.match(routesJs, /const recordKodePengampu = _normalizeAccessScopeKey_\(\(data && data\['KodeFaskes Pengampu'\]\) \|\| ''\);/);
+  assert.match(routesJs, /const recordPuskesmasPengampu = _normalizeAccessScopeKey_\(\(data && data\['Puskesmas Pengampu'\]\) \|\| ''\);/);
+  assert.match(routesJs, /if \(userKodePuskesmas && recordKodePengampu && userKodePuskesmas === recordKodePengampu\) return true;/);
+  assert.match(routesJs, /if \(userUnitKerja && recordPuskesmasPengampu && userUnitKerja === recordPuskesmasPengampu\) return true;/);
+});
+
+test('workflow inbox can surface PERT rows before registration id or EPID exists', () => {
+  assert.match(dashboardJs, /const rowHasContent = \(row \|\| \[\]\)\.some\(function\(cell\) \{ return String\(cell \|\| ''\)\.trim\(\) !== ''; \}\);/);
+  assert.match(dashboardJs, /if \(!rowHasContent\) continue;/);
+  assert.match(dashboardJs, /const rowRecordKey = 'ROW:' \+ String\(ri \+ 2\);/);
+  assert.match(dashboardJs, /const recordKey = recordId \|\| epid \|\| rowRecordKey;/);
+  assert.match(dashboardJs, /dxBreakdown: { MR: 0, DIF: 0, PERT: 0, TN: 0, AFP: 0 }/);
+});
+
+test('Beranda summary scans all rows instead of stopping after first valid record', () => {
+  assert.match(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?continue;[\s\S]*?\}\n\n      const item = \{/);
+  assert.doesNotMatch(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?return;[\s\S]*?\}\n\n      const item = \{/);
 });
 
 test('production client logs do not leak captcha answers or noisy workflow debug data', () => {
@@ -512,12 +648,34 @@ test('production client logs do not leak captcha answers or noisy workflow debug
 
 test('session restore does not leave auth boot overlay loading indefinitely', () => {
   const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   assert.ok(styleHtml.indexOf('.hidden { display: none !important; }') > styleHtml.indexOf('.flex { display: flex !important; }'));
   assert.match(authHtml, /const AUTH_RESTORE_TIMEOUT_MS = 8000;/);
   assert.match(authHtml, /const restoreTimeout = window\.setTimeout\(function \(\) \{[\s\S]*?setLoggedOutUI\(\);[\s\S]*?Pemeriksaan sesi terlalu lama\. Silakan login ulang\./);
   assert.match(authHtml, /function finishRestoreSession\(action\) \{[\s\S]*?if \(restoreFinished\) return false;[\s\S]*?window\.clearTimeout\(restoreTimeout\);/);
   assert.match(authHtml, /withSuccessHandler\(function \(res\) \{\s*finishRestoreSession\(function \(\) \{/);
   assert.match(authHtml, /withFailureHandler\(function \(\) \{\s*finishRestoreSession\(function \(\) \{\s*setLoggedOutUI\(\);/);
+});
+
+test('account request faskes master reloads when modal opens', () => {
+  assert.match(authHtml, /function loadAccountRequestMaster\(options\)/);
+  assert.match(authHtml, /if \(accountRequestMaster\.length && !opts\.force\) return;/);
+  assert.match(authHtml, /loadAccountRequestMaster\(\{ force: true \}\);/);
+});
+
+test('Input Kasus submit shows inline errors near save button', () => {
+  const inputHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_input_form.html'), 'utf8');
+  assert.match(inputHtml, /id="workflow-submit-status-input"/);
+  assert.match(appInitHtmlRaw, /if \(submitMode === 'input'\) return document\.getElementById\('workflow-submit-status-input'\);/);
+  assert.match(appInitHtmlRaw, /if \(activeSubmitButton\.getAttribute\('aria-busy'\) === 'true'\) \{[\s\S]*?Proses simpan sebelumnya masih berjalan/);
+  assert.doesNotMatch(appInitHtmlRaw, /Menyiapkan review sebelum simpan/);
+});
+
+test('OTP login does not stay stuck on mobile when google.script.run stalls', () => {
+  assert.match(authHtml, /verifyLoginOtp timeout, trying POST fallback/);
+  assert.match(authHtml, /function verifyLoginViaPost\(\) \{[\s\S]*?fetch\(url, \{[\s\S]*?JSON\.stringify\(\{ action: "verifyLoginOtp", email: email, otp: otp \}\)/);
+  assert.match(authHtml, /function finishLoginOnce\(fn\) \{[\s\S]*?if \(loginFinished\) return false;[\s\S]*?window\.clearTimeout\(loginTimeout\);/);
+  assert.match(routesJs, /if \(action === "verifyLoginOtp"\) \{\s*return responseJSON\(verifyLoginOtp\(data\.email, data\.otp\)\);\s*\}/);
 });
 
 test('login session lasts 6 hours and is shared across same-browser tabs', () => {
@@ -539,13 +697,14 @@ test('login session lasts 6 hours and is shared across same-browser tabs', () =>
 
 test('dynamic tables remain horizontally scrollable on mobile forms', () => {
   const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   assert.match(appHtml, /class="table-container pd3i-dynamic-table-container overflow-x-auto/);
   assert.match(appHtml, /aria-label="Geser tabel \$\{field\.label\} ke kanan\/kiri"/);
   assert.match(appHtml, /class="pd3i-table-scroll-hint md:hidden"/);
   assert.match(appHtml, /<table class="pd3i-dynamic-table w-full/);
   assert.match(styleHtml, /\.pd3i-dynamic-table-container \{[\s\S]*?overflow-x: auto !important;[\s\S]*?-webkit-overflow-scrolling: touch;[\s\S]*?touch-action: pan-x pan-y;/);
   assert.match(styleHtml, /\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{[\s\S]*?width: max-content !important;[\s\S]*?min-width: 100%;/);
-  assert.match(styleHtml, /@media \(max-width: 768px\) \{[\s\S]*?\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{\s*min-width: 56rem;\s*\}/);
+  assert.match(styleHtml, /@media \(max-width: 768px\) \{[\s\S]*?\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{\s*min-width: 72rem;\s*\}/);
 });
 
 test('quality gate includes endpoint security inventory with no review-needed callable functions', () => {
@@ -625,6 +784,7 @@ test('PIE quality data insight card is full-width below dashboard cards', () => 
 
 test('mobile sidebar overlay does not reserve desktop grid column', () => {
   const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-app \{[\s\S]*?display: block;[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/);
   assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-page \{[\s\S]*?width: 100%;[\s\S]*?min-width: 0;/);
   assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-sidebar \{[\s\S]*?position: fixed;[\s\S]*?transform: translateX\(-108%\);/);
@@ -634,7 +794,7 @@ test('PIE identity fields have consistent input box height', () => {
   const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
   assert.match(pieHtml, /pie-identity-grid/);
   assert.match(pieHtml, /#section-pie \.pie-identity-grid>\.pd3i-form-field\{display:flex;flex-direction:column;min-height:5\.65rem;margin:0\}/);
-  assert.match(pieHtml, /#section-pie \.pie-identity-grid>\.pd3i-form-field \.form-control,#section-pie \.pie-identity-grid>\.pd3i-form-field \.form-select\{height:2\.75rem;min-height:2\.75rem;margin-top:\.35rem\}/);
+  assert.match(pieHtml, /#section-pie \.pie-identity-grid>\.pd3i-form-field \.pd3i-shell-input,#section-pie \.pie-identity-grid>\.pd3i-form-field \.pd3i-shell-select\{height:2\.75rem;min-height:2\.75rem;margin-top:\.35rem\}/);
   assert.match(pieHtml, /pie-identity-hint/);
 });
 
@@ -775,4 +935,66 @@ test('Zero Reporting workspace runtime reveals native form internals', () => {
   assert.match(appJs, /sarsFormSection\.querySelector\('#sarsForm'\)/);
   assert.match(appJs, /querySelectorAll\('\.disease-section,\.case-row,\.row,\.row-3,\.nihil-row'\)/);
   assert.match(appJs, /if \(isSarsFormWorkspace\) revealZeroReportingFormWorkspace\(\);/);
+});
+
+test('verification workspace is autonomous review-only with explicit action box', () => {
+  assert.match(workspaceVerifikasiHtml, /Ruang kerja ini otonom/);
+  assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Terverifikasi"[\s\S]*Approved/);
+  assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Pending"[\s\S]*Pending/);
+  assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Perlu Revisi"[\s\S]*Tolak dan Perbaiki/);
+  assert.match(appHtml, /function renderVerifikasiReviewMode\(formRoot, enabled\)/);
+  assert.match(appHtml, /if \(actionRoot && actionRoot\.contains\(el\)\) return;/);
+  assert.match(appHtml, /function syncVerificationActionButtons\(scope\)/);
+  assert.match(appHtml, /data-pd3i-verifikasi-action/);
+  assert.match(appHtml, /pd3i-verifikasi-hidden-technical-field/);
+  assert.match(appHtml, /confirmVerificationEpidBeforeSave/);
+  assert.match(appHtml, /Nomor EPID rekomendasi/);
+  assert.match(dataJs, /verificationEpidLock\.waitLock\(20000\)/);
+});
+
+test('workflow queue open action preserves verification workspace instead of falling back to edit/search', () => {
+  assert.match(appHtml, /const inferredIntentWorkspace = normalizeSidebarWorkspace\(WORKFLOW_SEARCH_INTENT \|\| ''\)/);
+  assert.match(appHtml, /\['verifikasi', 'sampel', 'status'\]\.includes\(inferredIntentWorkspace\) \? inferredIntentWorkspace/);
+  assert.match(appHtml, /const isDedicatedWorkflowWorkspace = \['verifikasi', 'sampel', 'status'\]\.includes\(requestedWorkspace\)/);
+  assert.match(appHtml, /const openedWorkspace = isDedicatedWorkflowWorkspace\s*\? requestedWorkspace/);
+  assert.match(appHtml, /workspace: \$\{JSON\.stringify\(actionWorkspace\)\}/);
+  assert.match(appHtml, /actionLabel: 'Verifikasi'/);
+});
+
+test('Daftar Kasus clears workflow inbox carried from verification workspace', () => {
+  assert.match(appHtml, /function clearWorkflowInboxUi\(\)/);
+  assert.match(appHtml, /if \(normalized === 'search' \|\| normalized === 'edit'\)[\s\S]*?_PD3I_WORKFLOW_INBOX_CALL_ID\+\+/);
+  assert.match(appHtml, /if \(normalized === 'search' \|\| normalized === 'edit'\)[\s\S]*?clearWorkflowInboxUi\(\)/);
+});
+
+test('rendering one workspace form does not clear sibling workspace forms', () => {
+  assert.match(appInitHtmlRaw, /const refs = getWorkspaceFormRefs\(normalizedMode\);\s*clearRenderedFormRefs\(refs\);/);
+  assert.doesNotMatch(appInitHtmlRaw, /\[searchFormRefs, inputFormRefs, verifikasiFormRefs, sampelFormRefs, statusFormRefs\]\.forEach\(function\(refItem\) \{\s*clearRenderedFormRefs\(refItem\);\s*\}\);/);
+});
+
+test('workflow inbox cache and active record meta are isolated per workspace', () => {
+  assert.match(appHtml, /let WORKFLOW_INBOX_CACHE_BY_WORKSPACE = \{\};/);
+  assert.match(appHtml, /let WORKSPACE_ACTIVE_RECORD_META = \{\};/);
+  assert.match(appHtml, /function getWorkspaceInboxCache\(workspace\)/);
+  assert.match(appHtml, /function setWorkspaceInboxCache\(workspace, data\)/);
+  assert.match(appHtml, /function getWorkspaceActiveRecordMeta\(workspace\)/);
+  assert.match(appHtml, /function setWorkspaceActiveRecordMeta\(workspace, record\)/);
+  assert.match(appHtml, /setWorkspaceInboxCache\(workspace, res \|\| null\)/);
+  assert.match(appHtml, /setWorkspaceActiveRecordMeta\(openedWorkspace, record \|\| \{\}\)/);
+});
+
+test('clearActiveRecordContext clears only requested workspace containers', () => {
+  const clearFn = appHtml.match(/function clearActiveRecordContext\(options\) \{[\s\S]*?function resetForNewEntry\(\)/)?.[0] || '';
+  assert.match(clearFn, /const targetWorkspace = normalizeSidebarWorkspace\(clearOptions\.workspace \|\| ACTIVE_SIDEBAR_WORKSPACE \|\| 'search'\)/);
+  assert.match(clearFn, /const containerIdsByWorkspace = \{/);
+  assert.match(clearFn, /containerIdsByWorkspace\[targetWorkspace\]/);
+  assert.doesNotMatch(clearFn, /\['pelapor-fields-container'[\s\S]*'status-fields-container-workspace'\]\.forEach/);
+});
+
+test('MR rejects duplicate campak case when NIK and fever onset date match', () => {
+  assert.match(dataJs, /function _assertNoDuplicateMrNikDemam_\(sheet, headers, data, currentRecordId, currentEpid\)/);
+  assert.match(dataJs, /const idxNik = headers\.indexOf\("NIK"\)/);
+  assert.match(dataJs, /const idxDemam = headers\.indexOf\("Tanggal mulai demam"\)/);
+  assert.match(dataJs, /if \(dx === "MR" && rowIndex === -1\) \{\s*_assertNoDuplicateMrNikDemam_\(sheet, headers, data, recordId, epidValue\);\s*\}/);
+  assert.match(dataJs, /Input ditolak: kasus campak dengan NIK dan tanggal mulai demam yang sama sudah ada\. Kasus dianggap duplikat\./);
 });

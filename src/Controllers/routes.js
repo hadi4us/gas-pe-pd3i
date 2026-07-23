@@ -45,7 +45,7 @@ function doGet(e) {
 
   return template
     .evaluate()
-    .setTitle(view === "dashboard" ? "Dashboard Statistik SIMPEL Kota Depok" : "SIMPEL Kota Depok")
+    .setTitle(view === "dashboard" ? "Dashboard Statistik SIMPEL Surveilans Kota Depok" : "SIMPEL Surveilans Kota Depok")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag("viewport", "width=device-width, initial-scale=1");
 }
@@ -138,8 +138,6 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
 
   try {
-    lock.waitLock(30000);
-
     if (!e || !e.postData || !e.postData.contents) {
       return responseJSON({ status: "error", message: "Payload kosong." });
     }
@@ -151,8 +149,24 @@ function doPost(e) {
       return responseJSON({ status: "error", message: "Payload JSON tidak valid." });
     }
 
-    data.__alreadyLocked = true;
+    // Telegram webhook payloads use message/update shape, not application actions.
+    if (data && data.update_id !== undefined && data.message) {
+      // Do not wait for application write lock: webhook must acknowledge Telegram fast.
+      try {
+        return responseJSON(_handleTelegramUpdate_(data));
+      } catch (telegramErr) {
+        console.error('Telegram webhook handler error:', telegramErr);
+        return responseJSON({ status: 'error', message: 'Telegram webhook processing failed.' });
+      }
+    }
+
     const action = String(data.__action || data.action || "").trim();
+    if (action === "verifyLoginOtp") {
+      return responseJSON(verifyLoginOtp(data.email, data.otp));
+    }
+
+    lock.waitLock(30000);
+    data.__alreadyLocked = true;
     const result = action ? _routeDedicatedWorkflowAction_(action, data) : saveFormPayload_(data);
     return responseJSON(result);
   } catch (err) {
@@ -180,7 +194,7 @@ function _routeDedicatedWorkflowAction_(action, payload) {
   payload = Object.assign({}, payload || {});
   const token = String(payload.__token || '').trim();
   const dx = String(payload.dx || '').trim().toUpperCase();
-  const recordKey = String(payload.recordKey || payload['ID Registrasi Kasus'] || payload.RAW_ROW_NUMBER || payload['Nomor EPID'] || payload['Nomor EPID Final'] || '').trim();
+  const recordKey = String(payload.recordKey || payload['ID Registrasi Kasus'] || payload.RAW_ROW_NUMBER || payload['Nomor EPID'] || '').trim();
   const filters = payload.filters || payload;
   switch (action) {
     case 'createInitialCase': return createInitialCase(token, payload);
@@ -357,6 +371,7 @@ function _normalizePd3iRole_(role) {
   var raw = String(role || "").trim().toLowerCase().replace(/[_\s]+/g, "-");
   var map = {
     "system-admin": "super-admin", "kb-approver": "super-admin", auditor: "super-admin",
+    "admin-dinkes": "admin", "admin-dinas": "admin", "dinkes-admin": "admin", "dinas-admin": "admin", "dinkes": "admin",
     "surveilans-dinkes": "surveilans", "epidemiolog-verifikator": "surveilans", "one-health": "surveilans",
     triage: "petugas", clinician: "petugas", "surveilans-faskes": "petugas", ppi: "petugas", "lab-faskes": "petugas", "kb-editor": "admin"
   };
@@ -554,7 +569,7 @@ function getFaskesFromSheet(token) {
 
   const idxJenis = findIdx(['Jenis', 'JenisFaskes', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
   const idxNama = findIdx(['NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
-  const idxKey = findIdx(['FaskesKey', 'Key', 'Kode', 'Kode Faskes', 'KodeFaskes', 'Kode Fasyankes', 'ID']);
+  const idxKey = findIdx(['KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'KodeFaskes', 'Kode Fasyankes', 'ID']);
   const idxAktif = findIdx(['StatusAktif', 'Status Aktif', 'Aktif', 'IsActive', 'Active', 'Status']);
 
   return rows
@@ -679,7 +694,7 @@ function getWorkflowFilterOptions(token) {
     const headers = data[0].map(function(h) { return String(h || '').trim(); });
     const idxKecamatan = headers.indexOf('Kecamatan');
     const idxKelurahan = headers.indexOf('Kelurahan');
-    const idxKodePuskesmas = headers.indexOf('KodePuskesmas') !== -1 ? headers.indexOf('KodePuskesmas') : headers.indexOf('KodePuskesmas Pengampu');
+    const idxKodePuskesmas = headers.indexOf('KodeFaskes') !== -1 ? headers.indexOf('KodeFaskes') : headers.indexOf('KodeFaskes Pengampu');
     const idxNamaPuskesmas = headers.indexOf('NamaPuskesmas') !== -1 ? headers.indexOf('NamaPuskesmas') : headers.indexOf('Puskesmas Pengampu');
     const idxPengampu = headers.indexOf('Pengampu');
     const isRowInUserScope = function(row) {
@@ -736,13 +751,15 @@ const SEARCH_PROJECTION_CANDIDATE_GROUPS_ = [
   ['Kelurahan', 'Kelurahan domisili', 'Kelurahan/Desa'],
   ['Status Pasien/Kasus', 'Keadaan saat ini'],
   ['Status Verifikasi EPID'],
+  ['KodeFaskes Pengampu'],
+  ['Puskesmas Pengampu'],
   ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
   ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
   ['Deleted At'],
   ['Diinput Oleh'],
   ['Input Awal Diisi Oleh'],
   ['Timestamp'],
-  ['Updated At'],
+  ['Updated At', 'Last Updated At', 'Tanggal Update'],
   ['Nama unit pelapor']
 ];
 
@@ -806,7 +823,8 @@ function _mapSearchResultItem_(dx, record) {
     interpretasiSampel: getFirst(['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab']),
     deletedAt: getFirst(['Deleted At']),
     inputAt: getFirst(['Timestamp']),
-    updatedAt: getFirst(['Updated At'])
+    updatedAt: getFirst(['Updated At', 'Last Updated At', 'Tanggal Update']),
+    asalFaskes: getFirst(['Nama unit pelapor'])
   };
 }
 
@@ -841,7 +859,7 @@ function searchRecords(dx, filters, token) {
     } else if (statusVerifikasiNeedle) {
       allowedVerificationStatuses = [explicitStatus];
     } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
-      allowedVerificationStatuses = ['PENDING'];
+      allowedVerificationStatuses = ['PENDING', 'TERVERIFIKASI', 'PERLU REVISI', 'DITOLAK'];
     } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
       allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
     } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
@@ -961,7 +979,7 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
     } else if (statusVerifikasiNeedle) {
       allowedVerificationStatuses = [explicitStatus];
     } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
-      allowedVerificationStatuses = ['PENDING'];
+      allowedVerificationStatuses = ['PENDING', 'TERVERIFIKASI', 'PERLU REVISI', 'DITOLAK'];
     } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
       allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
     } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
@@ -1039,16 +1057,16 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
 
 // ─── Pipeline policy per DX (Phase-1: config-driven orchestration) ───────────
 const DX_PIPELINE_POLICY = {
-  MR:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
-  DIF:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
-  PERT: { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
-  TN:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true },
-  AFP:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true }
+  MR:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true },
+  DIF:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true },
+  PERT: { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true },
+  TN:   { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true },
+  AFP:  { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true }
 };
 
 function _getDxPipelinePolicy_(dx) {
   dx = String(dx || "").trim().toUpperCase();
-  const fallback = { notifyEmail: true, syncPengampu: true, notifyTelegram: true };
+  const fallback = { notifyEmail: true, syncPengampu: true, notifyTelegram: true, notifyWaha: true };
   return DX_PIPELINE_POLICY[dx] || fallback;
 }
 
@@ -1590,7 +1608,7 @@ function _resolvePengampuNotificationContext_(dx, data) {
   const spreadsheetId = String(data["SpreadsheetId Pengampu"] || (pengampu && pengampu.spreadsheetId) || '').trim();
   const spreadsheetUrl = String(data["SpreadsheetUrl Pengampu"] || (pengampu && pengampu.spreadsheetUrl) || '').trim();
   const puskesmasPengampu = String(data["Puskesmas Pengampu"] || (pengampu && pengampu.namaPuskesmas) || '').trim();
-  const kodePuskesmasPengampu = String(data["KodePuskesmas Pengampu"] || (pengampu && pengampu.kodePuskesmas) || '').trim();
+  const kodePuskesmasPengampu = String(data["KodeFaskes Pengampu"] || (pengampu && pengampu.kodePuskesmas) || '').trim();
 
   return {
     domisili: domisili,
@@ -1750,7 +1768,7 @@ function _syncPengampuSpreadsheet_(dx, data, saved, printUrl) {
       "dx": dx,
       "Link PDF": printUrl || data["Link PDF"] || "",
       "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || data["Puskesmas Pengampu"] || "",
-      "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || data["KodePuskesmas Pengampu"] || "",
+      "KodeFaskes Pengampu": notifyCtx.kodePuskesmasPengampu || data["KodeFaskes Pengampu"] || "",
       "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || data["SpreadsheetId Pengampu"] || "",
       "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || data["SpreadsheetUrl Pengampu"] || "",
       "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String(data["Telegram Chat Id Pengampu"] || '') : (notifyCtx.telegramChatId || String(data["Telegram Chat Id Pengampu"] || '')),
@@ -1799,14 +1817,18 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
 }
 
 // ─── Notifikasi WhatsApp WAHA per pengampu/Dinkes ────────────────────────────
+function _resolveWahaNotificationTarget_(data) {
+  const recordWaha = String((data && (data["WAHA Chat Id Pengampu"] || data["Whatsapp Chat Id Pengampu"] || data["WhatsApp Chat Id Pengampu"])) || '').trim();
+  const globalWaha = String(Config_Manager.getConfig("WAHA_DINKES_CHAT_ID") || '').trim();
+  return { target: recordWaha || globalWaha, source: recordWaha ? 'record' : (globalWaha ? 'global' : '') };
+}
+
 function _sendWahaPd3iNotification_(dx, data, saved, printUrl) {
   try {
     dx = String(dx || "").trim().toUpperCase();
     const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
-    const recordWaha = String(data["WAHA Chat Id Pengampu"] || data["Whatsapp Chat Id Pengampu"] || data["WhatsApp Chat Id Pengampu"] || '').trim();
-    const globalWaha = String(Config_Manager.getConfig("WAHA_DINKES_CHAT_ID") || '').trim();
-    const target = recordWaha || globalWaha;
-    if (!target) return { sent: false, reason: "WAHA_TARGET_NOT_CONFIGURED" };
+    const wahaTarget = _resolveWahaNotificationTarget_(data);
+    if (!wahaTarget.target) return { sent: false, reason: "WAHA_TARGET_NOT_CONFIGURED" };
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
@@ -1816,8 +1838,58 @@ function _sendWahaPd3iNotification_(dx, data, saved, printUrl) {
       '',
       'Tindak lanjut: buka workspace verifikasi/sampel/status sesuai kebutuhan kasus.'
     ];
-    const res = _sendWahaText_(target, lines);
-    if (res.sent) res.source = recordWaha ? 'record' : 'global';
+    const res = _sendWahaText_(wahaTarget.target, lines);
+    if (res.sent) res.source = wahaTarget.source;
+    return res;
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+function _sendRevisionWahaNotification_(dx, data, saved) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    const wahaTarget = _resolveWahaNotificationTarget_(data);
+    if (!wahaTarget.target) return { sent: false, reason: 'WAHA_TARGET_NOT_CONFIGURED' };
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
+    const lines = [
+      `🛠️ Revisi data kasus ${dxLabel} (${dxCode})`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
+      '',
+      `Catatan Admin: ${String(data["Catatan Verifikasi EPID"] || '-').trim() || '-'}`,
+      'Tindak lanjut: buka record existing, lakukan koreksi, lalu simpan ulang untuk direview kembali.'
+    ];
+    const res = _sendWahaText_(wahaTarget.target, lines);
+    if (res.sent) res.source = wahaTarget.source;
+    return res;
+  } catch (err) {
+    return { sent: false, reason: String(err) };
+  }
+}
+
+function _sendNewCaseWahaNotification_(dx, data, saved, printUrl) {
+  try {
+    dx = String(dx || '').trim().toUpperCase();
+    const notifyCtx = _resolvePengampuNotificationContext_(dx, data);
+    const wahaTarget = _resolveWahaNotificationTarget_(data);
+    if (!wahaTarget.target) return { sent: false, reason: 'WAHA_TARGET_NOT_CONFIGURED' };
+    const dxLabel = _getDxNotificationLabel_(dx);
+    const dxCode = String(dx || '').trim().toUpperCase() || '-';
+    const lines = [
+      `🆕 Kasus baru ${dxLabel} (${dxCode}) masuk — status PENDING`,
+      '',
+      ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
+      '',
+      `Status Email Pengampu: ${String(data["Status Notifikasi Pengampu"] || '-').trim() || '-'}`,
+      `Status Sync Pengampu: ${String(data["Status Sinkronisasi Pengampu"] || '-').trim() || '-'}`,
+      '',
+      'Tindak lanjut: buka workspace verifikasi untuk review dan verifikasi kasus ini.'
+    ];
+    const res = _sendWahaText_(wahaTarget.target, lines);
+    if (res.sent) res.source = wahaTarget.source;
     return res;
   } catch (err) {
     return { sent: false, reason: String(err) };
@@ -1939,6 +2011,47 @@ function _sendNewCaseTelegramNotification_(dx, data, saved, printUrl) {
   } catch (err) {
     return { sent: false, reason: String(err) };
   }
+}
+
+// Kanal operasional baru: kirim ke user REF_USER yang memilih Telegram.
+// Idempotency ditangani service; retry pipeline aman.
+function _sendOperationalNewCaseTelegramNotifications_(dx, data, saved) {
+  try {
+    const ctx = _resolvePengampuNotificationContext_(dx, data || {});
+    const emails = _collectNotificationRecipients_([
+      data && data['Email Petugas'],
+      data && data['Email Petugas Pengampu'],
+      data && data['Email Kapus Pengampu'],
+      ctx && ctx.emailRecipients
+    ]);
+    const details = {
+      caseCode: String((saved && (saved.epid || saved.recordId)) || (data && (data['Nomor EPID'] || data['ID Registrasi Kasus'])) || '-'),
+      diagnosisCode: String(dx || '').trim().toUpperCase(),
+      action: 'Review dan verifikasi kasus baru',
+      workspace: 'verifikasi',
+      status: 'PENDING'
+    };
+    return sendAdminOperationalTelegramNotificationsOnce('KASUS_PD3I_BARU', details);
+  } catch (e) { return [{ sent: false, reason: String(e) }]; }
+}
+
+function _sendOperationalVerificationTelegramNotifications_(dx, data, saved) {
+  try {
+    const ctx = _resolvePengampuNotificationContext_(dx, data || {});
+    const emails = _collectNotificationRecipients_([
+      data && data['Email Petugas Pengampu'],
+      data && data['Email Kapus Pengampu'],
+      ctx && ctx.emailRecipients
+    ]);
+    const details = {
+      caseCode: String((saved && (saved.epid || saved.recordId)) || (data && (data['Nomor EPID'] || data['ID Registrasi Kasus'])) || '-'),
+      diagnosisCode: String(dx || '').trim().toUpperCase(),
+      action: 'Verifikasi kasus diperlukan',
+      workspace: 'verifikasi',
+      status: 'PENDING'
+    };
+    return sendAdminOperationalTelegramNotificationsOnce('KASUS_PERLU_VERIFIKASI', details);
+  } catch (e) { return [{ sent: false, reason: String(e) }]; }
 }
 
 function _sendNewCasePengampuNotification_(dx, data, saved, printUrl) {
@@ -2128,6 +2241,11 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
   if (!userKodePuskesmas && !userUnitKerja) return false;
 
+  const recordKodePengampu = _normalizeAccessScopeKey_((data && data['KodeFaskes Pengampu']) || '');
+  const recordPuskesmasPengampu = _normalizeAccessScopeKey_((data && data['Puskesmas Pengampu']) || '');
+  if (userKodePuskesmas && recordKodePengampu && userKodePuskesmas === recordKodePengampu) return true;
+  if (userUnitKerja && recordPuskesmasPengampu && userUnitKerja === recordPuskesmasPengampu) return true;
+
   const domisili = _getRecordDomisiliForAccess_(dx, data || {});
   if (!domisili.kecamatan || !domisili.kelurahan) return false;
 
@@ -2216,7 +2334,7 @@ function _getInitialReportStageOnlyFields_() {
 
 function _getExistingRecordForPayload_(dx, data, token) {
   try {
-    var key = String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'] || data['Nomor EPID Final'])) || '').trim();
+    var key = String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'])) || '').trim();
     if (!key) return null;
     return getRecordByKey(dx, key, token) || null;
   } catch (e) {
@@ -2226,7 +2344,7 @@ function _getExistingRecordForPayload_(dx, data, token) {
 
 function _buildEditDiffSummary_(existing, data, allowMap) {
   var diffs = [];
-  var ignored = { dx: true, __token: true, __workflowStage: true, __editMode: true, RAW_ROW_NUMBER: true, 'ID Registrasi Kasus': true, 'Nomor EPID': true, 'Nomor EPID Rekomendasi': true, 'Nomor EPID Final': true };
+  var ignored = { dx: true, __token: true, __workflowStage: true, __editMode: true, RAW_ROW_NUMBER: true, 'ID Registrasi Kasus': true, 'Nomor EPID': true };
   Object.keys(data || {}).forEach(function(field) {
     if (!allowMap[field] || ignored[field]) return;
     var before = String((existing && existing[field]) || '').trim();
@@ -2241,7 +2359,7 @@ function _getWorkflowStageAllowedUpdateFields_(workflowStage) {
   const normalizedStage = _normalizeWorkflowStage_(workflowStage) || "section-pelapor";
   const commonIdentity = [
     'dx', '__token', '__workflowStage', '__submitMode', '__action', '__alreadyLocked',
-    'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Final', 'Nomor EPID Rekomendasi'
+    'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID'
   ];
   const auditAndWorkflow = [
     'Tahap Workflow Terakhir', 'Label Tahap Workflow Terakhir', 'Diupdate Oleh Tahap Terakhir', 'Role Pengupdate Tahap Terakhir', 'Waktu Update Tahap Terakhir',
@@ -2280,7 +2398,7 @@ function _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess) {
     if (allowed[field]) cleaned[field] = data[field];
   });
   const existing = _getExistingRecordForPayload_(dx, data, String(data.__token || '').trim()) || {};
-  ['ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Final', 'Nomor EPID Rekomendasi', 'Status Verifikasi EPID', 'Status Pasien/Kasus', 'Pemeriksaan Sampel Dilakukan', 'Interpretasi Hasil Sampel'].forEach(function(field) {
+  ['ID Registrasi Kasus', 'Nomor EPID', 'Status Verifikasi EPID', 'Status Pasien/Kasus', 'Pemeriksaan Sampel Dilakukan', 'Interpretasi Hasil Sampel'].forEach(function(field) {
     if (!String(cleaned[field] || '').trim() && String(existing[field] || '').trim()) cleaned[field] = existing[field];
   });
   cleaned.__existingRecordForWorkflow = existing;
@@ -2294,7 +2412,7 @@ function _sanitizeInitialReportEditPayload_(dx, data, sess) {
   var token = String(data.__token || '').trim();
   var existing = _getExistingRecordForPayload_(dx, data, token) || {};
   var allowed = {};
-  ['dx', '__token', '__workflowStage', '__editMode', 'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID', 'Nomor EPID Rekomendasi', 'Nomor EPID Final'].forEach(function(field) { allowed[field] = true; });
+  ['dx', '__token', '__workflowStage', '__editMode', 'RAW_ROW_NUMBER', 'ID Registrasi Kasus', 'Nomor EPID'].forEach(function(field) { allowed[field] = true; });
   _getInitialReportStageOnlyFields_(dx).forEach(function(field) { allowed[String(field || '').trim()] = true; });
 
   var cleaned = {};
@@ -2304,8 +2422,6 @@ function _sanitizeInitialReportEditPayload_(dx, data, sess) {
 
   if (existing['ID Registrasi Kasus']) cleaned['ID Registrasi Kasus'] = existing['ID Registrasi Kasus'];
   if (existing['Nomor EPID']) cleaned['Nomor EPID'] = existing['Nomor EPID'];
-  if (existing['Nomor EPID Final']) cleaned['Nomor EPID Final'] = existing['Nomor EPID Final'];
-  if (existing['Nomor EPID Rekomendasi']) cleaned['Nomor EPID Rekomendasi'] = existing['Nomor EPID Rekomendasi'];
 
   var actor = (sess && sess.user && (sess.user.nama || sess.user.username)) || 'unknown';
   var diffSummary = _buildEditDiffSummary_(existing, cleaned, allowed);
@@ -2398,7 +2514,7 @@ function _requireWriteAccessFromSession_(sess, workflowStage, data) {
 
   if (normalizedStage !== "section-pelapor") {
     const hasExistingRecordKey = !!String(
-      (data && (data["ID Registrasi Kasus"] || data.RAW_ROW_NUMBER || data["Nomor EPID"] || data["Nomor EPID Final"])) || ""
+      (data && (data["ID Registrasi Kasus"] || data.RAW_ROW_NUMBER || data["Nomor EPID"])) || ""
     ).trim();
     if (!hasExistingRecordKey) {
       throw new Error("Tahap verifikasi / hasil pemeriksaan / update status hanya boleh untuk record existing setelah input awal tersimpan.");
@@ -2534,6 +2650,7 @@ function _buildPipelineFingerprint_(dx, savedRecord, saved) {
     targetSpreadsheet: notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || "").trim(),
     emailTargets: (notifyCtx.emailRecipients || []).join("|"),
     telegramTarget: notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || "").trim(),
+    wahaTarget: String((savedRecord && (savedRecord["WAHA Chat Id Pengampu"] || savedRecord["WhatsApp Chat Id Pengampu"] || savedRecord["Whatsapp Chat Id Pengampu"])) || Config_Manager.getConfig("WAHA_DINKES_CHAT_ID") || "").trim(),
     printUrl: String(savedRecord && savedRecord["Link PDF"] || "").trim()
   };
   return _computeJsonFingerprint_(payload);
@@ -2564,10 +2681,12 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
   const prevNotifyStatus = String((savedRecord && savedRecord["Status Notifikasi Pengampu"]) || "").trim().toUpperCase();
   const prevSyncStatus = String((savedRecord && savedRecord["Status Sinkronisasi Pengampu"]) || "").trim().toUpperCase();
   const prevTelegramStatus = String((savedRecord && savedRecord["Status Notifikasi Telegram"]) || "").trim().toUpperCase();
+  const prevWahaStatus = String((savedRecord && savedRecord["Status Notifikasi WAHA"]) || "").trim().toUpperCase();
 
   const shouldNotifyEmail = policy.notifyEmail && !(isSameFingerprint && prevNotifyStatus === "SENT");
   const shouldSyncPengampu = policy.syncPengampu && !(isSameFingerprint && prevSyncStatus === "SYNCED");
   const shouldNotifyTelegram = policy.notifyTelegram && !(isSameFingerprint && prevTelegramStatus === "SENT");
+  const shouldNotifyWaha = policy.notifyWaha && !(isSameFingerprint && prevWahaStatus === "SENT");
 
   const notify = shouldNotifyEmail
     ? _sendPengampuNotification_(dx, savedRecord, saved, printUrl)
@@ -2581,11 +2700,15 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
     ? _sendTelegramPd3iNotification_(dx, savedRecord, saved, printUrl)
     : { sent: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
 
+  const wahaNotify = shouldNotifyWaha
+    ? _sendWahaPd3iNotification_(dx, savedRecord, saved, printUrl)
+    : { sent: false, reason: isSameFingerprint ? "SKIPPED_IDEMPOTENT" : "DISABLED_BY_POLICY" };
+
   const notifyPatch = {
     "ID Registrasi Kasus": saved.recordId,
     "Nomor EPID": saved.epid,
     "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
-    "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+    "KodeFaskes Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodeFaskes Pengampu"]) || '').trim(),
     "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || '').trim(),
     "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || String((savedRecord && savedRecord["SpreadsheetUrl Pengampu"]) || '').trim(),
     "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
@@ -2603,6 +2726,10 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
     "Telegram Notified At": new Date(),
     "Telegram Target": telegramNotify.target || "",
     "Telegram Retry Count": shouldNotifyTelegram ? ((Number(savedRecord["Telegram Retry Count"] || 0) || 0) + 1) : (Number(savedRecord["Telegram Retry Count"] || 0) || 0),
+    "Status Notifikasi WAHA": wahaNotify.sent ? "SENT" : (shouldNotifyWaha ? (wahaNotify.reason || "FAILED") : prevWahaStatus || "SKIPPED"),
+    "Reason Notifikasi WAHA": wahaNotify.sent ? "" : (wahaNotify.reason || ""),
+    "WAHA Notified At": new Date(),
+    "WAHA Target": wahaNotify.target || "",
     "Pipeline Fingerprint": currentFingerprint,
     "Pipeline Last Run At": new Date()
   };
@@ -2617,6 +2744,7 @@ function _runPostSavePipeline_(dx, savedRecord, saved, printUrl) {
     pengampuNotification: notify,
     pengampuSync: syncPengampu,
     telegramNotification: telegramNotify,
+    wahaNotification: wahaNotify,
     idempotent: isSameFingerprint
   };
 }
@@ -2627,10 +2755,12 @@ function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
   const isSameFingerprint = previousFingerprint && previousFingerprint === currentFingerprint;
   const prevEmailStatus = String((savedRecord && savedRecord["Status Notifikasi Revisi Pengampu"]) || '').trim().toUpperCase();
   const prevTelegramStatus = String((savedRecord && savedRecord["Status Notifikasi Revisi Telegram"]) || '').trim().toUpperCase();
+  const prevWahaStatus = String((savedRecord && savedRecord["Status Notifikasi Revisi WAHA"]) || '').trim().toUpperCase();
   const notifyCtx = _resolvePengampuNotificationContext_(dx, savedRecord || {});
 
   const shouldNotifyEmail = !(isSameFingerprint && prevEmailStatus === 'SENT');
   const shouldNotifyTelegram = !(isSameFingerprint && prevTelegramStatus === 'SENT');
+  const shouldNotifyWaha = !(isSameFingerprint && prevWahaStatus === 'SENT');
 
   const revisionEmail = shouldNotifyEmail
     ? _sendRevisionPengampuNotification_(dx, savedRecord, saved)
@@ -2638,12 +2768,15 @@ function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
   const revisionTelegram = shouldNotifyTelegram
     ? _sendRevisionTelegramNotification_(dx, savedRecord, saved)
     : { sent: false, reason: 'SKIPPED_IDEMPOTENT' };
+  const revisionWaha = shouldNotifyWaha
+    ? _sendRevisionWahaNotification_(dx, savedRecord, saved)
+    : { sent: false, reason: 'SKIPPED_IDEMPOTENT' };
 
   const patch = {
     "ID Registrasi Kasus": saved.recordId,
     "Nomor EPID": saved.epid || String((savedRecord && savedRecord["Nomor EPID"]) || '').trim(),
     "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
-    "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+    "KodeFaskes Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodeFaskes Pengampu"]) || '').trim(),
     "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
     "Status Routing Pengampu": notifyCtx.statusRouting || String((savedRecord && savedRecord["Status Routing Pengampu"]) || '').trim(),
     "Status Notifikasi Revisi Pengampu": revisionEmail.sent ? 'SENT' : (shouldNotifyEmail ? (revisionEmail.reason || 'FAILED') : prevEmailStatus || 'SKIPPED'),
@@ -2654,6 +2787,10 @@ function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
     "Reason Notifikasi Revisi Telegram": revisionTelegram.sent ? '' : (revisionTelegram.reason || ''),
     "Revision Telegram Notified At": new Date(),
     "Revision Telegram Target": revisionTelegram.target || '',
+    "Status Notifikasi Revisi WAHA": revisionWaha.sent ? 'SENT' : (shouldNotifyWaha ? (revisionWaha.reason || 'FAILED') : prevWahaStatus || 'SKIPPED'),
+    "Reason Notifikasi Revisi WAHA": revisionWaha.sent ? '' : (revisionWaha.reason || ''),
+    "Revision WAHA Notified At": new Date(),
+    "Revision WAHA Target": revisionWaha.target || '',
     "Revision Notification Fingerprint": currentFingerprint,
     "Revision Notification Last Run At": new Date()
   };
@@ -2664,6 +2801,7 @@ function _runRevisionNotificationPipeline_(dx, savedRecord, saved) {
   return {
     revisionNotification: revisionEmail,
     revisionTelegramNotification: revisionTelegram,
+    revisionWahaNotification: revisionWaha,
     idempotent: isSameFingerprint
   };
 }
@@ -2815,6 +2953,8 @@ function saveFormPayload_(data) {
   // Notifikasi kasus baru (PENDING) — email + Telegram
   const newCaseNotification = { sent: false, reason: 'SKIPPED_NOT_NEW_CASE' };
   const newCaseTelegramNotification = { sent: false, reason: 'SKIPPED_NOT_NEW_CASE' };
+  const newCaseWahaNotification = { sent: false, reason: 'SKIPPED_NOT_NEW_CASE' };
+  let operationalTelegramNotifications = [];
   if (!saved.isUpdate && (verificationStatus === 'PENDING' || verificationStatus === '' || !verificationStatus)) {
     const printUrlNew = hasFinalEpid ? safeGetPdfPrintUrl_(dx, saved.epid, token) : '';
     newCaseNotification["sent"] = true;
@@ -2833,6 +2973,27 @@ function saveFormPayload_(data) {
       newCaseTelegramNotification.sent = false;
       newCaseTelegramNotification.reason = String(e);
     }
+    newCaseWahaNotification["sent"] = true;
+    try {
+      const res = _sendNewCaseWahaNotification_(dx, savedRecord, saved, printUrlNew);
+      Object.assign(newCaseWahaNotification, res);
+    } catch (e) {
+      newCaseWahaNotification.sent = false;
+      newCaseWahaNotification.reason = String(e);
+    }
+    try {
+      saveDxRecord_(dx, {
+        "ID Registrasi Kasus": saved.recordId,
+        "Nomor EPID": saved.epid || String((savedRecord && savedRecord["Nomor EPID"]) || '').trim(),
+        "Status Notifikasi Kasus Baru WAHA": newCaseWahaNotification.sent ? 'SENT' : (newCaseWahaNotification.reason || 'FAILED'),
+        "Reason Notifikasi Kasus Baru WAHA": newCaseWahaNotification.sent ? '' : (newCaseWahaNotification.reason || ''),
+        "Kasus Baru WAHA Notified At": new Date(),
+        "Kasus Baru WAHA Target": newCaseWahaNotification.target || ''
+      });
+    } catch (e) {}
+    operationalTelegramNotifications = _sendOperationalNewCaseTelegramNotifications_(dx, savedRecord, saved);
+  } else if (saved.isUpdate && (verificationStatus === 'PENDING' || verificationStatus === 'BELUM DIVERIFIKASI' || verificationStatus === 'BELUM VERIFIKASI')) {
+    operationalTelegramNotifications = _sendOperationalVerificationTelegramNotifications_(dx, savedRecord, saved);
   }
 
   let pipelineResult = {
@@ -2852,7 +3013,7 @@ function saveFormPayload_(data) {
         "ID Registrasi Kasus": saved.recordId,
         "Nomor EPID": saved.epid,
         "Puskesmas Pengampu": notifyCtx.puskesmasPengampu || String((savedRecord && savedRecord["Puskesmas Pengampu"]) || '').trim(),
-        "KodePuskesmas Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodePuskesmas Pengampu"]) || '').trim(),
+        "KodeFaskes Pengampu": notifyCtx.kodePuskesmasPengampu || String((savedRecord && savedRecord["KodeFaskes Pengampu"]) || '').trim(),
         "SpreadsheetId Pengampu": notifyCtx.spreadsheetId || String((savedRecord && savedRecord["SpreadsheetId Pengampu"]) || '').trim(),
         "SpreadsheetUrl Pengampu": notifyCtx.spreadsheetUrl || String((savedRecord && savedRecord["SpreadsheetUrl Pengampu"]) || '').trim(),
         "Telegram Chat Id Pengampu": notifyCtx.telegramTargetSource === 'global' ? String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim() : (notifyCtx.telegramChatId || String((savedRecord && savedRecord["Telegram Chat Id Pengampu"]) || '').trim()),
@@ -2860,9 +3021,11 @@ function saveFormPayload_(data) {
         "Status Notifikasi Pengampu": "QUEUED",
         "Status Sinkronisasi Pengampu": "QUEUED",
         "Status Notifikasi Telegram": "QUEUED",
+        "Status Notifikasi WAHA": "QUEUED",
         "Reason Notifikasi Pengampu": "QUEUED_ASYNC",
         "Reason Sinkronisasi Pengampu": "QUEUED_ASYNC",
         "Reason Notifikasi Telegram": "QUEUED_ASYNC",
+        "Reason Notifikasi WAHA": "QUEUED_ASYNC",
         "Pipeline Fingerprint": pipelineFingerprint,
         "Pipeline Last Run At": new Date()
       };
@@ -2872,6 +3035,7 @@ function saveFormPayload_(data) {
         pengampuNotification: { sent: false, reason: "QUEUED_ASYNC" },
         pengampuSync: { synced: false, reason: "QUEUED_ASYNC" },
         telegramNotification: { sent: false, reason: "QUEUED_ASYNC" },
+        wahaNotification: { sent: false, reason: "QUEUED_ASYNC" },
         idempotent: false,
         queued: !!(queueRes && queueRes.queued)
       };
@@ -2902,8 +3066,12 @@ function saveFormPayload_(data) {
     pengampuNotification: pipelineResult.pengampuNotification,
     pengampuSync: pipelineResult.pengampuSync,
     telegramNotification: pipelineResult.telegramNotification,
+    wahaNotification: pipelineResult.wahaNotification,
     revisionNotification: revisionPipelineResult.revisionNotification,
     revisionTelegramNotification: revisionPipelineResult.revisionTelegramNotification,
+    revisionWahaNotification: revisionPipelineResult.revisionWahaNotification,
+    newCaseWahaNotification: newCaseWahaNotification,
+    operationalTelegramNotifications: operationalTelegramNotifications,
     nextWorkflowStage: nextWorkflow.stage,
     nextWorkflowWorkspace: nextWorkflow.workspace,
     nextWorkflowLabel: nextWorkflow.label,

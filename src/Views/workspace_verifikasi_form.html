@@ -1,4 +1,4 @@
-        <section id="section-verifikasi-form-shell" class="hidden mt-6">
+        <section id="section-verifikasi-form-shell" class="hidden mt-6 pd3i-form-shell">
           <div id="dynamic-form-verifikasi" class="hidden" autocomplete="off" data-form-type="verifikasi" novalidate>
             <div class="pd3i-form-layout">
               <div class="pd3i-form-main">
@@ -10,11 +10,18 @@
                     </div>
                     <span class="pd3i-badge-soft">Data langsung dari spreadsheet</span>
                   </div>
-                  <div class="pd3i-helper-text">Ruang kerja ini mengambil ulang data langsung dari spreadsheet/server untuk proses verifikasi. Data tidak bergantung pada mode Entri Baru atau Daftar Kasus.</div>
+                  <div class="pd3i-helper-text">Ruang kerja ini otonom: data kasus tampil sebagai review read-only. Verifikator hanya memilih aksi verifikasi dan menyimpan keputusan.</div>
+                  <div class="pd3i-verifikasi-review-brief" aria-label="Checklist verifikasi EPID">
+                    <div><strong>Cek sumber laporan</strong><span>Pastikan pelapor, faskes, wilayah, dan kontak bisa ditelusuri bila butuh klarifikasi.</span></div>
+                    <div><strong>Cek kelayakan EPID</strong><span>Bandingkan data klinis, domisili, dan diagnosis suspek sebelum menyetujui nomor EPID.</span></div>
+                    <div class="is-warning"><strong>Cek alasan revisi</strong><span>Jika ditolak/perbaiki, tulis alasan yang operasional agar inputer tahu data mana yang harus dibetulkan.</span></div>
+                  </div>
+                  
+                  <button type="button" class="pd3i-back-to-list-btn" data-pd3i-back-to-case-list="verifikasi"><i class="fas fa-arrow-left"></i> Kembali ke daftar verifikasi</button>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Lihat/ubah sesuai peran</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Review 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Read-only</span></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-verifikasi"></div>
                 </section>
 
@@ -29,17 +36,22 @@
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-verifikasi">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Verifikasi Penentuan Nomor EPID</h3></div><span class="pd3i-badge-soft">Peninjauan admin</span></div>
-                  <div class="pd3i-helper-text mb-4">Pilih <strong>Terverifikasi</strong> atau <strong>Perlu Revisi</strong>. Nomor EPID final bisa mengikuti rekomendasi sistem atau diubah manual.</div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Verifikasi Penentuan Nomor EPID</h3></div><span class="pd3i-badge-soft">Aksi admin</span></div>
+                  <div class="pd3i-helper-text mb-4">Pilih aksi: <strong>Approved</strong>, <strong>Pending</strong>, atau <strong>Tolak dan Perbaiki</strong>. Nomor EPID rekomendasi dihitung dari nomor EPID terbesar/terakhir + 1 saat status Approved.</div>
+                  <div class="pd3i-verifikasi-action-box" role="group" aria-label="Aksi verifikasi kasus">
+                    <button type="button" class="pd3i-verifikasi-action-btn is-approved" data-pd3i-verifikasi-action="Terverifikasi"><i class="fas fa-circle-check"></i><span>Approved</span></button>
+                    <button type="button" class="pd3i-verifikasi-action-btn is-pending" data-pd3i-verifikasi-action="Pending"><i class="fas fa-clock"></i><span>Pending</span></button>
+                    <button type="button" class="pd3i-verifikasi-action-btn is-revision" data-pd3i-verifikasi-action="Perlu Revisi"><i class="fas fa-rotate-left"></i><span>Tolak dan Perbaiki</span></button>
+                  </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="verifikasi-fields-container-workspace"></div>
                 </section>
               </div>
             </div>
 
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
-              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi verifikasi</div><h3 class="pd3i-card-title">Simpan Verifikasi EPID</h3></div><span class="pd3i-badge-soft">Khusus verifikasi</span></div>
+              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Simpan keputusan</div><h3 class="pd3i-card-title">Simpan Verifikasi EPID</h3></div><span class="pd3i-badge-soft">Review-only + aksi</span></div>
               <div class="pd3i-submit-stack">
-                <button type="button" id="btn-submit-verifikasi" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'verifikasi') : false"><i class="fas fa-id-card-clip"></i> Simpan Verifikasi EPID</button>
+                <button type="button" id="btn-submit-verifikasi" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'verifikasi') : false"><i class="fas fa-id-card-clip"></i> Simpan Keputusan Verifikasi</button>
                 <div id="workflow-submit-status-verifikasi" class="pd3i-helper-text hidden" role="status" aria-live="polite"></div>
               </div>
             </div>

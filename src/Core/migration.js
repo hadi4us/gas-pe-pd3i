@@ -83,7 +83,7 @@ function _buildScopedAccessSheetsFromLegacy_(legacyUser, legacyPengampu) {
     'Nama',
     'Role',
     'UnitKerja',
-    'KodePuskesmas',
+    'KodeFaskes',
     'ScopeLevel',
     'StatusAktif',
     'Catatan Migrasi'
@@ -95,7 +95,7 @@ function _buildScopedAccessSheetsFromLegacy_(legacyUser, legacyPengampu) {
     'Kab/Kota',
     'Kecamatan',
     'Kelurahan',
-    'KodePuskesmas',
+    'KodeFaskes',
     'NamaPuskesmas',
     'Pengampu',
     'PetugasSurveilans',
@@ -115,7 +115,7 @@ function _buildScopedAccessSheetsFromLegacy_(legacyUser, legacyPengampu) {
   const idxKab = _idxHeader_(legacyPengampuHeaders, ['Kab/Kota', 'Kabupaten/Kota', 'Kab/Kota Pasien']);
   const idxKec = _idxHeader_(legacyPengampuHeaders, ['Kecamatan']);
   const idxKel = _idxHeader_(legacyPengampuHeaders, ['Kelurahan', 'Kelurahan/Desa', 'Desa/Kelurahan']);
-  const idxKodePkm = _idxHeader_(legacyPengampuHeaders, ['KodePuskesmas', 'Kode Puskesmas', 'Kode PKM']);
+  const idxKodePkm = _idxHeader_(legacyPengampuHeaders, ['KodeFaskes', 'Kode Faskes', 'Kode PKM']);
   const idxNamaPkm = _idxHeader_(legacyPengampuHeaders, ['NamaPuskesmas', 'Nama Puskesmas', 'Puskesmas']);
   const idxPengampu = _idxHeader_(legacyPengampuHeaders, ['Pengampu']);
   const idxPetugas = _idxHeader_(legacyPengampuHeaders, ['PetugasSurveilans', 'Petugas Surveilans', 'NamaPetugas', 'Nama Petugas']);
@@ -189,7 +189,7 @@ function _buildScopedAccessSheetsFromLegacy_(legacyUser, legacyPengampu) {
   const idxUserRole = _idxHeader_(legacyUserHeaders, ['Role', 'role']);
   const idxUserAktif = _idxHeader_(legacyUserHeaders, ['StatusAktif', 'Aktif', 'Status', 'Active']);
   const idxUserUnit = _idxHeader_(legacyUserHeaders, ['UnitKerja', 'Unit Kerja', 'Nama Puskesmas', 'Puskesmas', 'Unit Kerja']);
-  const idxUserKode = _idxHeader_(legacyUserHeaders, ['KodePuskesmas', 'Kode Puskesmas', 'Kode PKM']);
+  const idxUserKode = _idxHeader_(legacyUserHeaders, ['KodeFaskes', 'Kode Faskes', 'Kode PKM']);
   const idxUserKec = _idxHeader_(legacyUserHeaders, ['Kecamatan Wilayah Kerja', 'Kecamatan']);
   const idxUserKel = _idxHeader_(legacyUserHeaders, ['Kelurahan Wilayah Kerja', 'Kelurahan']);
 

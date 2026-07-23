@@ -50,6 +50,104 @@
       const btnSavePin = document.getElementById("btn-save-pin");
 
       const toggleLoginPin = document.getElementById("toggle-login-pin");
+      const accountRequestButton = document.getElementById("btn-account-request");
+      const accountRequestModal = document.getElementById("account-request-modal");
+      const accountRequestForm = document.getElementById("account-request-form");
+      const accountRequestAlert = document.getElementById("account-request-alert");
+      const clearAccountRequestButton = document.getElementById('btn-clear-account-request');
+      const accountRequestFaskes = document.getElementById('account-request-faskes');
+      let accountRequestMaster = [];
+      let accountRequestWilayah = [];
+      const ACCOUNT_REQUEST_WILAYAH_FALLBACK = [
+        {kecamatan:'Beji',kelurahan:['Beji','Beji Timur','Kemiri Muka','Kukusan','Pondok Cina','Tanah Baru']},
+        {kecamatan:'Bojongsari',kelurahan:['Bojongsari Baru','Bojongsari Lama','Curug','Duren Mekar','Duren Seribu','Pondok Petir','Serua']},
+        {kecamatan:'Cilodong',kelurahan:['Cilodong','Jatimulya','Kalibaru','Kalimulya','Sukamaju']},
+        {kecamatan:'Cimanggis',kelurahan:['Cisalak Pasar','Curug','Harjamukti','Mekarsari','Pasir Gunung Selatan','Tugu']},
+        {kecamatan:'Cinere',kelurahan:['Cinere','Gandul','Pangkalan Jati','Pangkalan Jati Baru']},
+        {kecamatan:'Cipayung',kelurahan:['Bojong Pondok Terong','Cipayung','Cipayung Jaya','Pondok Jaya','Ratujaya']},
+        {kecamatan:'Limo',kelurahan:['Grogol','Krukut','Limo','Meruyung']},
+        {kecamatan:'Pancoran Mas',kelurahan:['Depok','Depok Jaya','Mampang','Pancoran Mas','Rangkapan Jaya','Rangkapan Jaya Baru']},
+        {kecamatan:'Sawangan',kelurahan:['Bedahan','Cinangka','Kedaung','Pasir Putih','Pengasinan','Sawangan Baru','Sawangan Lama']},
+        {kecamatan:'Sukmajaya',kelurahan:['Abadijaya','Bakti Jaya','Cisalak','Mekar Jaya','Sukmajaya','Tirtajaya']},
+        {kecamatan:'Tapos',kelurahan:['Cilangkap','Cimpaeun','Jatijajar','Leuwinanggung','Sukamaju Baru','Sukatani','Tapos']}
+      ];
+      function ensureAccountRequestWilayah(){ if (!accountRequestWilayah.length) accountRequestWilayah = ACCOUNT_REQUEST_WILAYAH_FALLBACK.slice(); }
+      function loadAccountRequestMaster(options) {
+        if (!accountRequestFaskes) return;
+        const opts = options || {};
+        if (accountRequestMaster.length && !opts.force) return;
+        ensureAccountRequestWilayah();
+        populateAccountRequestWilayah();
+        const list=document.getElementById('account-request-faskes-options');
+        if(list && opts.force) list.innerHTML = '';
+        google.script.run.withSuccessHandler(function(res){
+          accountRequestMaster = (res && res.status === 'success' && Array.isArray(res.faskes)) ? res.faskes : [];
+          accountRequestWilayah = (res && res.status === 'success' && Array.isArray(res.wilayah) && res.wilayah.length) ? res.wilayah : ACCOUNT_REQUEST_WILAYAH_FALLBACK.slice();
+          populateAccountRequestWilayah();
+          const list=document.getElementById('account-request-faskes-options');
+          if(list) {
+            list.innerHTML = '';
+            const seen = {};
+            accountRequestMaster.forEach(function(x){
+              const parts = [x.nama, x.jenis, x.kecamatan, x.kelurahan, x.kodeFaskes].map(function(v){ return String(v||'').trim(); }).filter(Boolean);
+              const display = parts.filter(function(v,i,a){ return a.map(function(z){return z.toLowerCase();}).indexOf(v.toLowerCase()) === i; }).join(' — ');
+              x._display = display || String(x.nama||x.kodeFaskes||'').trim();
+              if (!x._display || seen[x._display]) return;
+              seen[x._display] = 1;
+              const o=document.createElement('option');
+              o.value=x._display;
+              o.label=x._display;
+              list.appendChild(o);
+            });
+          }
+        }).withFailureHandler(function(){
+          accountRequestMaster = [];
+          accountRequestWilayah = ACCOUNT_REQUEST_WILAYAH_FALLBACK.slice();
+          populateAccountRequestWilayah();
+        }).getPublicAccountRequestMaster();
+      }
+      function findAccountRequestFaskes(){
+        const q=String(accountRequestFaskes&&accountRequestFaskes.value||'').trim().toLowerCase();
+        return accountRequestMaster.find(function(v){return String(v._display||'').trim().toLowerCase()===q || String(v.nama||'').trim().toLowerCase()===q || String(v.kodeFaskes||'').trim().toLowerCase()===q;}) || null;
+      }
+      function fillAccountRequestFaskes(){
+        const x=findAccountRequestFaskes();
+        const key=document.getElementById('account-request-faskes-key'); if(key)key.value=x?String(x.kodeFaskes||x.nama):'';
+        const note=document.getElementById('account-request-pengampu-message'); const peng=document.getElementById('account-request-pengampu');
+        if(peng)peng.value=x?String(x.pengampu||''):'';
+        if(note)note.textContent=x&&x.pengampu?'Berdasarkan data wilayah saat ini, pengampu terdaftar: '+x.pengampu+'. Data alamat/kawasan tetap dapat dikoreksi.':'Pengampu belum tersedia dari master. Admin perlu memverifikasi wilayah.';
+        const address=document.getElementById('account-request-address'); if(address)address.value=x?String(x.alamat||''):'';
+        const kec=document.getElementById('account-request-kecamatan');
+        const kel=document.getElementById('account-request-kelurahan');
+        if(kec){ kec.value=x&&x.kecamatan?String(x.kecamatan).toUpperCase():''; updateAccountRequestKelurahanOptions(); }
+        if(kel) kel.value=x&&x.kelurahan?String(x.kelurahan).toUpperCase():'';
+      }
+      function populateAccountRequestWilayah(){
+        ensureAccountRequestWilayah();
+        const kecSelect=document.getElementById('account-request-kecamatan');
+        const kec={}; accountRequestWilayah.forEach(function(x){if(x.kecamatan)kec[x.kecamatan]=1;});
+        if(kecSelect)kecSelect.innerHTML='<option value="">PILIH KECAMATAN</option>'+Object.keys(kec).sort().map(function(v){const label=String(v).toUpperCase(); return '<option value="'+label.replace(/&/g,'&amp;').replace(/\"/g,'&quot;')+'">'+label+'</option>';}).join('');
+        updateAccountRequestKelurahanOptions();
+      }
+      function updateAccountRequestKelurahanOptions(){
+        const kec=String(document.getElementById('account-request-kecamatan')?.value||'').trim().toLowerCase();
+        const kelSelect=document.getElementById('account-request-kelurahan');
+        const wilayah=accountRequestWilayah.find(function(x){return String(x.kecamatan||'').trim().toLowerCase()===kec;});
+        const kel={}; (wilayah&&wilayah.kelurahan||[]).forEach(function(v){if(v)kel[v]=1;});
+        if(kelSelect)kelSelect.innerHTML='<option value="">PILIH KELURAHAN</option>'+Object.keys(kel).sort().map(function(v){const label=String(v).toUpperCase(); return '<option value="'+label.replace(/&/g,'&amp;').replace(/\"/g,'&quot;')+'">'+label+'</option>';}).join('');
+      }
+      if (accountRequestFaskes) { accountRequestFaskes.addEventListener('change', fillAccountRequestFaskes); accountRequestFaskes.addEventListener('input', function(){ if(findAccountRequestFaskes()) fillAccountRequestFaskes(); }); }
+      document.getElementById('account-request-kecamatan')?.addEventListener('change', updateAccountRequestKelurahanOptions);
+      ensureAccountRequestWilayah();
+      populateAccountRequestWilayah();
+      setTimeout(function(){ ensureAccountRequestWilayah(); populateAccountRequestWilayah(); }, 0);
+      if (clearAccountRequestButton) clearAccountRequestButton.addEventListener('click', function () {
+        if (!accountRequestForm) return;
+        accountRequestForm.reset();
+        ['account-request-address','account-request-kelurahan','account-request-kecamatan','account-request-pengampu'].forEach(function(id){const el=document.getElementById(id);if(el)el.value='';});
+        const telegram=document.getElementById('account-request-telegram'); if(telegram) { telegram.classList.add('hidden'); telegram.textContent=''; }
+        setAccountRequestAlert('');
+      });
 
       function setCredentialInputsEnabled(mode) {
         const enableLogin = mode === 'login';
@@ -66,6 +164,20 @@
 
       function refreshLoginCaptcha() {}
 
+      function setLoginFlowStage(stage, channel) {
+        const normalized = String(stage || 'email').trim().toLowerCase();
+        if (loginCard) {
+          loginCard.setAttribute('data-login-stage', normalized);
+          loginCard.setAttribute('data-otp-channel', String(channel || '').trim().toLowerCase());
+        }
+        const steps = document.querySelectorAll('#pd3i-login-flow-strip .pd3i-login-access-step');
+        steps.forEach(function(step, idx){
+          const activeIndex = normalized === 'otp' ? 1 : (normalized === 'session' ? 2 : 0);
+          step.classList.toggle('is-current', idx === activeIndex);
+          step.classList.toggle('is-complete', idx < activeIndex);
+        });
+      }
+
       function startOtpCooldown(seconds) {
         if (!btnSendOtp) return;
         let remaining = Number(seconds || 60);
@@ -77,6 +189,7 @@
           if (remaining <= 0) {
             clearInterval(otpCooldownTimer);
             otpCooldownTimer = null;
+            if (loginCard && loginCard.getAttribute('data-login-stage') === 'otp') return;
             btnSendOtp.disabled = false;
             btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
             return;
@@ -117,6 +230,8 @@
         try { window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
 
         if (app) app.classList.remove("hidden");
+        document.body.classList.remove('pd3i-sidebar-open');
+        document.getElementById('pd3i-sidebar-overlay')?.classList.add('hidden');
         closeModal(loginModal);
         closeModal(pinModal);
         hideAuthBootOverlay();
@@ -127,8 +242,10 @@
 
         if (userBadge) userBadge.classList.remove("hidden");
         if (userBadgeText) {
-          const name = String((user && (user.nama || user.username)) || "");
-          userBadgeText.textContent = roleLabel ? `${name} • ${roleLabel}` : name;
+          const name = String((user && (user.nama || user.username)) || "").trim();
+          const faskes = String((user && (user.namaFaskes || user.NamaFaskes || user["Nama Faskes"] || user.unitKerja || user.UnitKerja)) || "").trim();
+          const roleText = String(roleLabel || role || "").trim();
+          userBadgeText.textContent = [name, faskes, roleText].filter(Boolean).join(" - ");
         }
 
         if (adminMenuWrap) {
@@ -176,6 +293,9 @@
 
         if (loginForm) loginForm.reset();
         if (pinForm) pinForm.reset();
+        if (otpSection) otpSection.classList.add("hidden");
+        if (btnSendOtp) { btnSendOtp.disabled = false; btnSendOtp.innerHTML = `<span>Kirim OTP</span>`; }
+        setLoginFlowStage('email');
 
         hideAlert(loginAlert);
         hideAlert(pinAlert);
@@ -215,12 +335,188 @@
 
       bindIdleEvents(refreshIdleSession);
 
+      function setAccountRequestAlert(message, success) {
+        if (!accountRequestAlert) return;
+        accountRequestAlert.textContent = message || '';
+        accountRequestAlert.classList.toggle('hidden', !message);
+        accountRequestAlert.classList.toggle('is-success', !!success);
+        accountRequestAlert.classList.toggle('is-error', !!message && !success);
+      }
+      function openAccountRequest() {
+        if (!accountRequestModal) return;
+        const bootOverlay = document.getElementById('auth-boot-overlay');
+        if (bootOverlay && !bootOverlay.classList.contains('hidden')) return;
+        accountRequestModal.classList.remove('hidden');
+        accountRequestModal.classList.add('flex', 'is-open');
+        accountRequestModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        setAccountRequestAlert('');
+        loadAccountRequestMaster({ force: true });
+        const email = document.getElementById('login-email');
+        const target = document.getElementById('account-request-email');
+        if (target && email) target.value = email.value.trim();
+        const name = document.getElementById('account-request-name');
+        if (name && window.innerWidth > 760) name.focus();
+      }
+      function closeAccountRequest() {
+        if (!accountRequestModal) return;
+        accountRequestModal.classList.add('hidden');
+        accountRequestModal.classList.remove('flex', 'is-open');
+        accountRequestModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      }
+      if (accountRequestButton) accountRequestButton.addEventListener('click', openAccountRequest);
+      const closeAccountRequestButton = document.getElementById('btn-close-account-request');
+      if (closeAccountRequestButton) closeAccountRequestButton.addEventListener('click', closeAccountRequest);
+      if (accountRequestModal) accountRequestModal.addEventListener('click', function (event) {
+        if (event.target === accountRequestModal) closeAccountRequest();
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && accountRequestModal && accountRequestModal.classList.contains('is-open')) closeAccountRequest();
+      });
+      if (accountRequestModal) accountRequestModal.setAttribute('aria-hidden', 'true');
+      function showAccountRequestResultPopup(cfg) {
+        const title = (cfg && cfg.title) || 'Status permohonan';
+        const message = (cfg && cfg.message) || '';
+        const type = (cfg && cfg.type) || 'info';
+        const requestId = (cfg && cfg.requestId) || '';
+        const email = (cfg && cfg.email) || '';
+        const canPairTelegram = !!(cfg && cfg.canPairTelegram && requestId && email);
+        const existing = document.getElementById('account-request-result-popup');
+        if (existing) existing.remove();
+        const wrap = document.createElement('div');
+        wrap.id = 'account-request-result-popup';
+        wrap.className = 'pd3i-confirm-backdrop';
+        wrap.setAttribute('role', 'presentation');
+        wrap.innerHTML = '<div class="pd3i-confirm-card account-request-result-card" role="dialog" aria-modal="true" aria-labelledby="account-request-result-title" aria-describedby="account-request-result-message" tabindex="-1">'
+          + '<div class="pd3i-confirm-title account-request-result-title" id="account-request-result-title">'+escapeHtml(title)+'</div>'
+          + '<div class="pd3i-confirm-message" id="account-request-result-message">'
+          + '<p>'+escapeHtml(message)+'</p>'
+          + (canPairTelegram ? '<div class="account-request-telegram-explain"><b>Fungsi Telegram untuk user</b><br>Telegram dipakai untuk menghubungkan akun dengan Akun Telegram Survim Dinkes Kota Depok, menerima OTP/verifikasi, notifikasi status permohonan, dan pemberitahuan tugas sesuai akses setelah akun disetujui.</div>' : '')
+          + '<div id="account-request-result-telegram" class="account-request-result-telegram hidden"></div>'
+          + '</div>'
+          + '<div class="pd3i-confirm-actions">'
+          + '<button type="button" class="pd3i-confirm-btn is-secondary" data-account-request-result="close">Tutup</button>'
+          + (canPairTelegram ? '<button type="button" class="pd3i-confirm-btn is-primary" data-account-request-result="telegram">Hubungkan akun Telegram</button>' : '')
+          + '</div>'
+          + '</div>';
+        document.body.appendChild(wrap);
+        const card = wrap.querySelector('.account-request-result-card');
+        if (card) card.classList.add(type === 'success' ? 'is-success' : 'is-error');
+        const close = function(){ wrap.remove(); };
+        const makeTelegramLink = function(){
+          const out = wrap.querySelector('#account-request-result-telegram');
+          const btn = wrap.querySelector('[data-account-request-result="telegram"]');
+          if (btn) btn.disabled = true;
+          if (out) { out.classList.remove('hidden'); out.textContent = 'Membuat link Telegram...'; }
+          google.script.run.withSuccessHandler(function (pair) {
+            if (!pair || pair.status !== 'success') { if(out) out.textContent = (pair && pair.message) || 'Link Telegram gagal dibuat.'; if(btn) btn.disabled = false; return; }
+            if (out) out.innerHTML = 'Buka Akun Telegram Survim Dinkes Kota Depok: <a class="underline text-blue-700" target="_blank" rel="noopener" href="' + pair.url + '">' + pair.url + '</a><br><span class="text-xs">Berlaku 6 jam. Tekan Start pada Akun Telegram Survim Dinkes Kota Depok untuk pairing OTP.</span>';
+          }).withFailureHandler(function () { if(out) out.textContent = 'Link Telegram gagal dibuat.'; if(btn) btn.disabled = false; }).requestTelegramPairingForAccountRequest(requestId, email);
+        };
+        wrap.addEventListener('click', function(e){
+          if (e.target === wrap) close();
+          const action = e.target && e.target.getAttribute && e.target.getAttribute('data-account-request-result');
+          if (action === 'close') close();
+          if (action === 'telegram') makeTelegramLink();
+        });
+        document.addEventListener('keydown', function onKeydown(e){ if(e.key === 'Escape'){ document.removeEventListener('keydown', onKeydown); close(); } });
+        try { card.focus(); } catch (e) {}
+      }
+      if (accountRequestForm) accountRequestForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const name = document.getElementById('account-request-name').value.trim();
+        const email = document.getElementById('account-request-email').value.trim();
+        const confirmEmail = document.getElementById('account-request-email-confirm').value.trim();
+        const unit = document.getElementById('account-request-unit').value.trim();
+        const selected = findAccountRequestFaskes() || {};
+        const consent = document.getElementById('account-request-consent').checked;
+        if (name.length < 3 || !email || email.toLowerCase() !== confirmEmail.toLowerCase() || !unit || !consent) {
+          setAccountRequestAlert('Lengkapi nama, email, konfirmasi email, unit kerja, dan persetujuan.', false);
+          return;
+        }
+        if (!selected || !selected.kodeFaskes || !selected.nama) {
+          setAccountRequestAlert('Pilih nama faskes dari daftar master, jangan isi manual.', false);
+          return;
+        }
+        const submit = document.getElementById('btn-submit-account-request');
+        submit.disabled = true;
+        const masterSnapshot=selected;
+        const addressUsulan=(document.getElementById('account-request-address')?.value||'').trim();
+        const kecamatanUsulan=(document.getElementById('account-request-kecamatan')?.value||'').trim();
+        const kelurahanUsulan=(document.getElementById('account-request-kelurahan')?.value||'').trim();
+        const catatanKoreksi=(document.getElementById('account-request-correction-note')?.value||'').trim();
+        google.script.run.withSuccessHandler(function (result) {
+          submit.disabled = false;
+          if (!result || result.status !== 'success') {
+            const message = (result && result.message) || 'Permohonan belum berhasil dikirim.';
+            setAccountRequestAlert(message, false);
+            showAccountRequestResultPopup({type:'error', title:'Permohonan gagal dikirim', message:message});
+            return;
+          }
+          const successMessage = result.message + ' Nomor: ' + result.requestId;
+          setAccountRequestAlert(successMessage, true);
+          showAccountRequestResultPopup({type:'success', title:'Permohonan berhasil dikirim', message:successMessage, requestId:result.requestId, email:email, canPairTelegram:true});
+          accountRequestForm.reset();
+        }).withFailureHandler(function () {
+          submit.disabled = false;
+          const message = 'Permohonan belum berhasil dikirim. Coba lagi.';
+          setAccountRequestAlert(message, false);
+          showAccountRequestResultPopup({type:'error', title:'Permohonan gagal dikirim', message:message});
+        }).submitAccountRequest({nama:name, gmail:email, confirmGmail:confirmEmail, unitKerja:unit, consent:consent, faskesKey:selected.kodeFaskes||'', jenisUnit:selected.jenis||'', namaFaskes:selected.nama||'', alamatFaskes:addressUsulan||selected.alamat||'', kodeFaskes:selected.kodeFaskes||'', kecamatan:kecamatanUsulan||selected.kecamatan||'', kelurahan:kelurahanUsulan||selected.kelurahan||'', pengampu:selected.pengampu||'', kodePuskesmas:selected.kodeFaskes||'', alamatUsulan:addressUsulan, kecamatanUsulan:kecamatanUsulan, kelurahanUsulan:kelurahanUsulan, catatanKoreksi:catatanKoreksi, master:masterSnapshot});
+      });
+
+      function showLoginTelegramChoice(choice, email) {
+        const existing = document.getElementById('login-telegram-choice-popup');
+        if (existing) existing.remove();
+        const wrap = document.createElement('div');
+        wrap.id = 'login-telegram-choice-popup';
+        wrap.className = 'pd3i-confirm-backdrop';
+        wrap.setAttribute('role', 'presentation');
+        const pairUrl = choice && choice.url ? String(choice.url) : '';
+        wrap.innerHTML = '<div class="pd3i-confirm-card account-request-result-card" role="dialog" aria-modal="true" aria-labelledby="login-telegram-choice-title" aria-describedby="login-telegram-choice-message" tabindex="-1">'
+          + '<div class="pd3i-confirm-title account-request-result-title" id="login-telegram-choice-title">Pilih kanal OTP</div>'
+          + '<div class="pd3i-confirm-message" id="login-telegram-choice-message">'
+          + '<p>Email terdaftar, tetapi Telegram belum terhubung. Hubungkan Telegram untuk OTP berikutnya, atau lanjut kirim OTP ke email sekarang.</p>'
+          + (pairUrl ? '<div class="account-request-telegram-explain"><b>Hubungkan Telegram</b><br><a class="underline text-blue-700 break-all" target="_blank" rel="noopener" href="' + escapeHtml(pairUrl) + '">' + escapeHtml(pairUrl) + '</a><br><span class="text-xs">Berlaku 6 jam. Tekan Start di bot Survim Dinkes Kota Depok.</span></div>' : '')
+          + '</div>'
+          + '<div class="pd3i-confirm-actions login-telegram-choice-actions">'
+          + '<button type="button" class="pd3i-confirm-btn is-secondary" data-login-telegram-choice="email">Kirim OTP ke email</button>'
+          + (pairUrl ? '<button type="button" class="pd3i-confirm-btn is-primary" data-login-telegram-choice="telegram">Hubungkan Telegram</button>' : '')
+          + '</div>'
+          + '</div>';
+        document.body.appendChild(wrap);
+        const card = wrap.querySelector('.account-request-result-card');
+        if (card) card.focus();
+        const close = function(){ wrap.remove(); };
+        wrap.addEventListener('click', function(e){
+          const action = e.target && e.target.getAttribute && e.target.getAttribute('data-login-telegram-choice');
+          if (e.target === wrap) {
+            close();
+            btnSendOtp.disabled = false;
+            btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+            return;
+          }
+          if (action === 'telegram') {
+            if (pairUrl) window.open(pairUrl, '_blank', 'noopener');
+            close();
+            setAlert(loginAlert, 'Buka Telegram dan tekan Start. Setelah pairing selesai, klik Kirim OTP lagi.', true);
+            btnSendOtp.disabled = false;
+            btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+          }
+          if (action === 'email') {
+            close();
+            requestOtpNow(email);
+          }
+        });
+      }
+
       if (btnSendOtp) {
         btnSendOtp.addEventListener("click", function () {
           hideAlert(loginAlert);
           const email = ((loginEmail && loginEmail.value) || "").trim();
           if (!email) {
-            setAlert(loginAlert, "Masukkan alamat Gmail terlebih dahulu.", false);
+            setAlert(loginAlert, "Masukkan alamat email terlebih dahulu.", false);
             return;
           }
           if (!safeGsRun()) {
@@ -230,6 +526,33 @@
           btnSendOtp.disabled = true;
           btnSendOtp.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengirim...`;
           google.script.run
+            .withSuccessHandler(function (choice) {
+              if (choice && choice.status === 'pairing_required') {
+                showLoginTelegramChoice(choice, email);
+                return;
+              }
+              if (choice && choice.status === 'error') {
+                setAlert(loginAlert, choice.message || 'Gagal memeriksa kanal OTP.', false);
+                btnSendOtp.disabled = false;
+                btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+                return;
+              }
+              if (choice && choice.status === 'paired') requestOtpNow(email);
+              else {
+                setAlert(loginAlert, 'Pilih OK, buka Telegram, lalu tekan Start untuk menerima OTP.', true);
+                btnSendOtp.disabled = false;
+                btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+              }
+            }).withFailureHandler(function (err) {
+              setAlert(loginAlert, (err && err.message) || 'Gagal memeriksa kanal OTP.', false);
+              btnSendOtp.disabled = false;
+              btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
+            }).requestTelegramPairing(email);
+        });
+      }
+
+      function requestOtpNow(email) {
+        google.script.run
             .withSuccessHandler(function (res) {
               if (!res || res.status !== "success") {
                 setAlert(loginAlert, (res && res.message) || "Gagal mengirim OTP.", false);
@@ -240,7 +563,9 @@
                 }
                 return;
               }
-              setAlert(loginAlert, res.message || "OTP sudah dikirim ke Gmail Anda.", true);
+              const channel = String((res && res.channel) || '').trim().toLowerCase();
+              setAlert(loginAlert, res.message || "OTP sudah dikirim ke email Anda.", true);
+              setLoginFlowStage('otp', channel);
               if (otpSection) otpSection.classList.remove("hidden");
               if (loginOtp) loginOtp.focus();
               startOtpCooldown(res.cooldownSec || 60);
@@ -252,7 +577,6 @@
               btnSendOtp.innerHTML = `<span>Kirim OTP</span>`;
             })
             .requestLoginOtp(email);
-        });
       }
 
       if (loginForm) {
@@ -276,44 +600,83 @@
             return;
           }
 
+          function resetLoginButton() {
+            if (btnLogin) {
+              btnLogin.disabled = false;
+              btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
+            }
+            if (!SESSION_TOKEN) setLoginFlowStage('otp');
+          }
+
+          function completeOtpLogin(res) {
+            resetLoginButton();
+            if (!res || res.status !== "success") {
+              loginAttempt++;
+              setAlert(loginAlert, (res && res.message) || "Login gagal.", false);
+              return;
+            }
+            loginAttempt = 0;
+            SESSION_TOKEN = res.token || "";
+            SESSION_USER = res.user || null;
+            try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
+            setAuthSessionMeta({
+              ttlSec: Number(res.ttlSec || 0),
+              issuedAt: Number(res.issuedAt || 0),
+              expiresAt: Number(res.expiresAt || 0)
+            });
+            saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
+            setLoggedInUI(SESSION_USER);
+            refreshIdleSession();
+            if (window.loadFaskesRealtime) window.loadFaskesRealtime();
+            if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
+          }
+
+          function failOtpLogin(message) {
+            resetLoginButton();
+            setAlert(loginAlert, message || "Login gagal. Coba lagi.", false);
+          }
+
           if (btnLogin) {
+            setLoginFlowStage('session');
             btnLogin.disabled = true;
             btnLogin.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Memverifikasi...`;
           }
 
+          let loginFinished = false;
+          function finishLoginOnce(fn) {
+            if (loginFinished) return false;
+            loginFinished = true;
+            window.clearTimeout(loginTimeout);
+            if (typeof fn === "function") fn();
+            return true;
+          }
+
+          function verifyLoginViaPost() {
+            const url = (typeof GOOGLE_SCRIPT_URL !== "undefined" && GOOGLE_SCRIPT_URL) ? GOOGLE_SCRIPT_URL : window.location.href.split("?")[0];
+            fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify({ action: "verifyLoginOtp", email: email, otp: otp })
+            }).then(function (r) { return r.json(); })
+              .then(function (res) { finishLoginOnce(function () { completeOtpLogin(res); }); })
+              .catch(function (err) {
+                console.error("verifyLoginOtp POST fallback failed:", err);
+                finishLoginOnce(function () { failOtpLogin("Verifikasi OTP terlalu lama. Coba ulangi, atau minta OTP baru."); });
+              });
+          }
+
+          const loginTimeout = window.setTimeout(function () {
+            console.warn("verifyLoginOtp timeout, trying POST fallback");
+            verifyLoginViaPost();
+          }, 12000);
+
           google.script.run
             .withSuccessHandler(function (res) {
-              if (btnLogin) {
-                btnLogin.disabled = false;
-                btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
-              }
-              if (!res || res.status !== "success") {
-                loginAttempt++;
-                setAlert(loginAlert, (res && res.message) || "Login gagal.", false);
-                return;
-              }
-              loginAttempt = 0;
-              SESSION_TOKEN = res.token || "";
-              SESSION_USER = res.user || null;
-              try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
-              setAuthSessionMeta({
-                ttlSec: Number(res.ttlSec || 0),
-                issuedAt: Number(res.issuedAt || 0),
-                expiresAt: Number(res.expiresAt || 0)
-              });
-              saveSessionToBrowser(SESSION_TOKEN, SESSION_USER);
-              setLoggedInUI(SESSION_USER);
-              refreshIdleSession();
-              if (window.loadFaskesRealtime) window.loadFaskesRealtime();
-              if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
+              finishLoginOnce(function () { completeOtpLogin(res); });
             })
             .withFailureHandler(function (err) {
               console.error("verifyLoginOtp failed:", err);
-              if (btnLogin) {
-                btnLogin.disabled = false;
-                btnLogin.innerHTML = `<span>Masuk</span> <i class="fas fa-arrow-right"></i>`;
-              }
-              setAlert(loginAlert, "Login gagal. Coba lagi.", false);
+              verifyLoginViaPost();
             })
             .verifyLoginOtp(email, otp);
         });
@@ -485,6 +848,11 @@
             try { window.__PD3I_SESSION_TOKEN = SESSION_TOKEN; window.__PD3I_SESSION_USER = SESSION_USER; } catch (e) {}
             setLoggedInUI(SESSION_USER);
             refreshIdleSession();
+            if (window.loadFaskesRealtime) window.loadFaskesRealtime(null, true);
+            if (window.loadWorkflowFilterOptions) window.loadWorkflowFilterOptions(true);
+            if (typeof window.initPieWorkspace === 'function') {
+              try { window.initPieWorkspace(); } catch (e) { console.warn('initPieWorkspace after timeout restore failed:', e); }
+            }
             return;
           }
           setLoggedOutUI();
@@ -561,5 +929,6 @@
     } else {
       initAuthModule();
     }
+
   })();
 </script>

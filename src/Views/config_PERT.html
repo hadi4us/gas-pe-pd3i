@@ -22,7 +22,7 @@
         title: "Riwayat Pengobatan / Rawat Inap",
         fields: [
           { id: "Rawat inap?", label: "Rawat inap?", type: "choice_buttons", options: OPT_YA_TIDAK },
-          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", showIf: { field: "Rawat inap?", values: ["Ya"] } },
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", fullWidth: true, showIf: { field: "Rawat inap?", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Rawat inap?", values: ["Ya"] } },
           { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", showIf: { field: "Rawat inap?", values: ["Ya"] } },
           { id: "Tanggal Keluar", label: "Tanggal Keluar", type: "date", showIf: { field: "Rawat inap?", values: ["Ya"] } }

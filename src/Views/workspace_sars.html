@@ -1,0 +1,1515 @@
+
+<style>/* SARS styles handled by SS PD3I design system in style.html */</style>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<section id="section-zero-reporting-form" class="pd3i-zero-reporting-section hidden mt-6" data-legacy-section-id="section-sars-form">
+  <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="form">
+    <div class="pd3i-zero-reporting-host pd3i-zero-reporting-form-host">
+
+  <div class="pd3i-local-status-strip" aria-label="Status formulir Zero Reporting">
+    <div class="pd3i-local-status-copy">
+      <span class="pd3i-card-eyebrow">Status formulir</span>
+      <span>Dinas Kesehatan Kota Depok • format laporan nihil mingguan</span>
+    </div>
+    <div class="pd3i-zero-reporting-header-right">
+      <span class="pd3i-zero-reporting-chip chip--blue" id="chipMode">FORM</span>
+      <span class="pd3i-zero-reporting-chip chip--gray" id="chipUpdate">Update: -</span>
+    </div>
+  </div>
+
+  <div class="pd3i-zero-reporting-ops-summary" aria-label="Ringkasan kerja Zero Reporting">
+    <div class="pd3i-zero-reporting-ops-item">
+      <strong>Periode laporan</strong>
+      <span>Minggu epidemiologis dan faskes pelapor wajib jelas.</span>
+    </div>
+    <div class="pd3i-zero-reporting-ops-item">
+      <strong>Isi atau nihil</strong>
+      <span>Tambahkan kasus per penyakit, atau centang nihil bila tidak ada kasus.</span>
+    </div>
+    <div class="pd3i-zero-reporting-ops-item is-warning">
+      <strong>Laporan segera</strong>
+      <span>Suspek PD3I tetap dilaporkan kurang dari 24 jam melalui kanal surveilans.</span>
+    </div>
+  </div>
+
+  <div class="pd3i-zero-reporting-review-brief" aria-label="Checklist validasi Zero Reporting">
+    <div>
+      <strong>Cek minggu</strong>
+      <span>Pastikan minggu epidemiologis sesuai periode laporan aktif.</span>
+    </div>
+    <div>
+      <strong>Cek faskes</strong>
+      <span>Nama pelapor, unit surveilans, dan faskes login harus selaras.</span>
+    </div>
+    <div class="is-warning">
+      <strong>Cek nihil</strong>
+      <span>Jangan centang nihil bila ada suspek PD3I yang wajib dilaporkan segera.</span>
+    </div>
+  </div>
+
+  <div id="sars-inline-banner" data-zero-reporting-id="zero-reporting-inline-banner" class="hidden" role="status" aria-live="polite"></div>
+
+  <div class="pd3i-shell-container">
+    <div class="pd3i-shell-card">
+      <form id="sarsForm" class="pd3i-form-section">
+        <input type="hidden" id="email" value="">
+
+        <h2 class="pd3i-zero-reporting-section-title"><i class="fas fa-id-card-clip"></i> Identitas laporan</h2>
+
+        <!-- ✅ 3 kolom: Minggu, Nama, WA -->
+        <div class="pd3i-zero-reporting-grid pd3i-form-grid">
+          <div>
+            <label for="mingguEpid" class="pd3i-zero-reporting-required">Minggu epidemiologis</label>
+            <input type="number" id="mingguEpid" min="1" max="53" value="" required placeholder="Contoh: 26">
+            <div class="pd3i-zero-reporting-help-text" id="mingguEpidHelp">Periode: memuat periode epidemiologi...</div>
+          </div>
+
+          <div>
+            <label for="namaPelapor" class="pd3i-zero-reporting-required">Nama petugas pelapor</label>
+            <input type="text" id="namaPelapor" required placeholder="Contoh: dr. Siti">
+          </div>
+
+          <div>
+            <label for="noWA" class="pd3i-zero-reporting-required">Nomor WhatsApp</label>
+            <input
+              type="tel"
+              id="noWA"
+              value=""
+              required
+              placeholder="081234567890"
+              pattern="[0-9]{9,13}"
+              title="Isi 9–13 digit angka"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,13)">
+          </div>
+        </div>
+
+        <div class="pd3i-zero-reporting-grid pd3i-form-grid" style="margin-top:14px;">
+          <div class="span-3">
+            <label for="unitPelapor" class="pd3i-zero-reporting-required">Unit surveilans / penanggung jawab laporan</label>
+            <input type="text" id="unitPelapor" required placeholder="Rekam Medik / Poli Anak / Bangsal Anak / lainnya">
+          </div>
+        </div>
+
+        <div class="sars-login-faskes-box sars-faskes-status-hidden" id="sarsLoginFaskesBox">
+          <strong>Faskes login:</strong> <span id="sarsLoginFaskesName"></span>
+          <div class="pd3i-zero-reporting-help-text" id="asalFaskesHelp"></div>
+        </div>
+
+        <div class="sars-hidden-faskes-fields" aria-hidden="true">
+          <select id="jenisFaskes" tabindex="-1" aria-label="Jenis faskes pelapor">
+            <option value="">Pilih jenis fasilitas kesehatan</option>
+            <option value="rs">Rumah Sakit (RS)</option>
+            <option value="klinik">Klinik</option>
+            <option value="tpmd">TPMD (Praktik Mandiri Dokter)</option>
+            <option value="pmb">PMB (Praktik Mandiri Bidan)</option>
+            <option value="lain">Lainnya</option>
+          </select>
+          <input type="text" id="asalFaskes" tabindex="-1">
+          <div id="acPopup" class="ac-popup" role="listbox" aria-label="Saran fasilitas"></div>
+        </div>
+
+        <!-- ===== Bagian penyakit (tidak diubah) ===== -->
+        <div class="disease-section">
+          <div class="pd3i-zero-reporting-disease-header">AFP (Lumpuh layuh mendadak, bukan karena trauma, umur &lt;15 th)</div>
+          <div id="rows-afp"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Andi">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai lumpuh</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: lumpuh layuh mendadak">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Polio)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: AFP klinis">    </div>  </div></div></div>
+          <div class="nihil-row">
+            <div class="nihil-container">
+              <input type="checkbox" id="nihil-afp" onchange="toggleNihil('afp')">
+              <label for="nihil-afp">Tidak ada kasus AFP minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('afp')">+ Tambah baris kasus</button>
+          </div>
+        </div>
+
+        <div class="disease-section">
+          <div class="pd3i-zero-reporting-disease-header">CAMPAK (Semua umur, demam dan rash)</div>
+          <div id="rows-mr"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Siti">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai rash</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: demam, rash makulopapular">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Campak Rubela)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Campak klinis">    </div>  </div></div></div>
+          <div class="nihil-row">
+            <div class="nihil-container">
+              <input type="checkbox" id="nihil-mr" onchange="toggleNihil('mr')">
+              <label for="nihil-mr">Tidak ada kasus Campak minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('mr')">+ Tambah baris kasus</button>
+          </div>
+        </div>
+
+        <div class="disease-section">
+          <div class="pd3i-zero-reporting-disease-header">DIFTERI (ISPA, demam tidak tinggi, pseudomembran, stridor)</div>
+          <div id="rows-dif"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Rina">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: pseudomembran, stridor">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT/DT/Td)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Difteri">    </div>  </div></div></div>
+          <div class="nihil-row">
+            <div class="nihil-container">
+              <input type="checkbox" id="nihil-dif" onchange="toggleNihil('dif')">
+              <label for="nihil-dif">Tidak ada kasus Difteri minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('dif')">+ Tambah baris kasus</button>
+          </div>
+        </div>
+
+        <div class="disease-section">
+          <div class="pd3i-zero-reporting-disease-header">TETANUS NEONATORUM (Bayi 3–28 hari, mulut mencucu, kejang rangsang)</div>
+          <div id="rows-tn"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama bayi</label>      <input type="text" name="nama" placeholder="Contoh: Bayi A">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama ibu</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Ibu Siti">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat ibu & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: mulut mencucu, kejang rangsang">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (TT Ibu)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong" placeholder="Contoh: Bidan Desa"><div class="pd3i-zero-reporting-help-text">* Isi "-" bila bukan bayi (Pertusis)</div></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Tetanus Neonatorum">    </div>  </div></div></div>
+          <div class="nihil-row">
+            <div class="nihil-container">
+              <input type="checkbox" id="nihil-tn" onchange="toggleNihil('tn')">
+              <label for="nihil-tn">Tidak ada kasus TN minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('tn')">+ Tambah baris kasus</button>
+          </div>
+        </div>
+
+        <div class="disease-section">
+          <div class="pd3i-zero-reporting-disease-header">PERTUSIS (Batuk terus menerus, apnea, batuk rejan, muntah setelah batuk)</div>
+          <div id="rows-pert"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Anak A">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Ibu Siti">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: batuk rejan, apnea, muntah">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong" placeholder="Contoh: Bidan Desa"><div class="pd3i-zero-reporting-help-text">* Isi "-" bila bukan bayi (Pertusis)</div></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Pertusis">    </div>  </div></div></div>
+          <div class="nihil-row">
+            <div class="nihil-container">
+              <input type="checkbox" id="nihil-pert" onchange="toggleNihil('pert')">
+              <label for="nihil-pert">Tidak ada kasus Pertusis minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('pert')">+ Tambah baris kasus</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn pd3i-btn is-primary" id="submitBtn" disabled onclick="return window.submitZeroReporting(event)"><i class="fas fa-save"></i> Simpan dan kirim laporan</button>
+      </form>
+
+      <div class="pd3i-zero-reporting-footer-note">
+        <p><strong>Catatan penting:</strong></p>
+        <ul>
+          <li><strong>Segera laporkan &lt;24 jam</strong> bila menemukan kasus suspek PD3I via WA/telepon ke <strong>+62 813-8630-2835</strong></li>
+          <li>Laporan mingguan dikirim setiap <strong>hari Senin sebelum pukul 16.00 WIB</strong></li>
+          <li>Bila tidak ada kasus, centang <strong>NIHIL</strong> pada tiap jenis penyakit</li>
+          <li>Periode pelaporan: <strong>Minggu–Sabtu</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var SPREADSHEET_ID = (typeof SPREADSHEET_ID !== "undefined" && SPREADSHEET_ID) ? SPREADSHEET_ID : "";
+    var APP_URL = (typeof APP_URL !== "undefined" && APP_URL) ? APP_URL : (document.body && document.body.dataset ? document.body.dataset.appUrl : "");
+    /* ===== Chip Update (seperti dashboard) ===== */
+    (function(){
+      function formatUpdateID(d){
+        const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = months[d.getMonth()];
+        const yy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2,'0');
+        const mi = String(d.getMinutes()).padStart(2,'0');
+        return `Update: ${dd} ${mm} ${yy}, ${hh}.${mi}`;
+      }
+      try{
+        const el = document.getElementById('chipUpdate');
+        if (el) el.textContent = formatUpdateID(new Date());
+      }catch(e){}
+    })();
+
+    // ========= DATA GLOBAL =========
+    let MASTER_RS = [];
+    let MASTER_KLINIK = [];
+    let MASTER_TPMD = [];
+    let MASTER_PMB = [];
+    let MASTER_LAIN = [];
+    let ALL_FASKES = [];
+    let CURRENT_LIST = [];
+
+    let IS_SUBMITTING = false;
+    let SARS_FASKES_READY = false;
+
+    // ========= UTIL =========
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function showSarsBanner(message, options){
+      const cfg = options || {};
+      const type = String(cfg.type || 'info').toLowerCase();
+      const text = String(message || '');
+      let box = document.getElementById('sars-inline-banner') || document.getElementById('zero-reporting-inline-banner');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'sars-inline-banner';
+        box.setAttribute('role', 'status');
+        box.setAttribute('aria-live', 'assertive');
+        const form = document.getElementById('sarsForm');
+        if (form && form.parentNode) form.parentNode.insertBefore(box, form);
+        else document.body.insertBefore(box, document.body.firstChild);
+      }
+      box.classList.remove('hidden');
+      box.hidden = false;
+      box.textContent = text;
+      const tone = type === 'success'
+        ? 'border-green-200 bg-green-50 text-green-900'
+        : (type === 'error' || type === 'danger')
+          ? 'border-red-200 bg-red-50 text-red-900'
+          : 'border-blue-200 bg-blue-50 text-blue-900';
+      box.className = 'pd3i-workflow-banner mt-3 mb-3 border px-4 py-3 text-sm font-semibold ' + tone;
+      box.style.cssText = 'display:block;position:sticky;top:12px;z-index:50;min-height:24px;padding:12px;border-radius:8px;margin:12px 0;';
+      box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      if (cfg.type === 'success' && typeof window.showPd3iToast === 'function') {
+        window.showPd3iToast(message, cfg);
+      } else if (typeof window.showPd3iBanner === 'function') {
+        window.showPd3iBanner(text, cfg);
+      }
+      console[type === 'success' ? 'log' : (type === 'info' ? 'info' : 'warn')](text);
+    }
+
+    function persistSarsSubmitStatus_(message, type) {
+      try { sessionStorage.setItem('pd3i_sars_submit_status', JSON.stringify({ message: String(message || ''), type: type || 'info', at: Date.now() })); } catch (e) {}
+    }
+    function restoreSarsSubmitStatus_() {
+      try {
+        const raw = sessionStorage.getItem('pd3i_sars_submit_status');
+        if (!raw) return;
+        const status = JSON.parse(raw);
+        if (status && status.message && Date.now() - Number(status.at || 0) < 10 * 60 * 1000) {
+          showSarsBanner(status.message, { type: status.type || 'info' });
+        }
+      } catch (e) {}
+    }
+    const _showSarsBannerOriginal_ = showSarsBanner;
+    showSarsBanner = function(message, options) {
+      _showSarsBannerOriginal_(message, options);
+      persistSarsSubmitStatus_(message, options && options.type);
+    };
+
+    async function confirmSarsAction(options){
+      if (typeof window.pd3iConfirmDialog === 'function') return window.pd3iConfirmDialog(options || {});
+      return Promise.resolve(window.confirm((options && (options.message || options.title)) || 'Lanjutkan?'));
+    }
+
+    function highlight(text, q){
+      const T = String(text);
+      const Q = String(q || "").trim();
+      if (!Q) return escapeHtml(T);
+      const idx = T.toUpperCase().indexOf(Q.toUpperCase());
+      if (idx < 0) return escapeHtml(T);
+      const a = T.slice(0, idx), b = T.slice(idx, idx + Q.length), c = T.slice(idx + Q.length);
+      return `${escapeHtml(a)}<span class="ac-hl">${escapeHtml(b)}</span>${escapeHtml(c)}`;
+    }
+
+    function normalizePhone(v){
+      return String(v || "").replace(/[^0-9]/g, "").substring(0, 13);
+    }
+
+    // ========= POPUP AUTOCOMPLETE =========
+    const acPopup = () => document.getElementById('acPopup');
+    const asalFaskesEl = () => document.getElementById('asalFaskes');
+    const jenisEl = () => document.getElementById('jenisFaskes');
+    const helpEl = () => document.getElementById('asalFaskesHelp');
+
+    function openPopup(){ acPopup().style.display = "block"; }
+    function closePopup(){ acPopup().style.display = "none"; acPopup().innerHTML = ""; }
+
+    function setHelpByJenis_(type){
+      if (type === "rs") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih RS dari popup. Jika tidak ada, isi manual.";
+      else if (type === "klinik") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih Klinik dari popup. Jika tidak ada, isi manual.";
+      else if (type === "tpmd") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih TPMD dari popup. Jika tidak ada, isi manual.";
+      else if (type === "pmb") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih PMB dari popup. Jika tidak ada, isi manual.";
+      else if (type === "lain") helpEl().textContent = "Isi manual. Ketik minimal 3 huruf untuk saran dari seluruh daftar.";
+      else helpEl().textContent = "Pilih jenis fasilitas kesehatan terlebih dahulu.";
+    }
+
+    function setCurrentListByJenis(type){
+      if (type === "rs") CURRENT_LIST = Array.isArray(MASTER_RS) ? MASTER_RS.slice() : [];
+      else if (type === "klinik") CURRENT_LIST = Array.isArray(MASTER_KLINIK) ? MASTER_KLINIK.slice() : [];
+      else if (type === "tpmd") CURRENT_LIST = Array.isArray(MASTER_TPMD) ? MASTER_TPMD.slice() : [];
+      else if (type === "pmb") CURRENT_LIST = Array.isArray(MASTER_PMB) ? MASTER_PMB.slice() : [];
+      else if (type === "lain") CURRENT_LIST = Array.isArray(ALL_FASKES) ? ALL_FASKES.slice() : [];
+      else CURRENT_LIST = [];
+    }
+
+    function renderSuggestions(keyword){
+      const q = String(keyword || "").trim();
+      const popup = acPopup();
+
+      if (q.length < 3) {
+        closePopup();
+        if (jenisEl().value) helpEl().textContent = 'Ketik minimal 3 huruf untuk melihat saran.';
+        return;
+      }
+
+      const type = jenisEl().value;
+      if (!type) {
+        closePopup();
+        helpEl().textContent = 'Pilih jenis fasilitas kesehatan terlebih dahulu.';
+        return;
+      }
+
+      const upperQ = q.toUpperCase();
+      const filtered = (CURRENT_LIST || [])
+        .filter(n => String(n).toUpperCase().includes(upperQ))
+        .slice(0, 30);
+
+      if (filtered.length === 0) {
+        popup.innerHTML = `<div class="ac-muted">Tidak ada yang cocok di MASTER_DATA. Anda boleh lanjut isi manual.</div>`;
+        openPopup();
+        return;
+      }
+
+      const badge =
+        type === "rs" ? "RS" :
+        type === "klinik" ? "KLINIK" :
+        type === "tpmd" ? "TPMD" :
+        type === "pmb" ? "PMB" :
+        "FASKES";
+
+      popup.innerHTML = filtered.map(name => `
+        <div class="ac-item" data-name="${escapeHtml(name)}" role="option">
+          <span class="ac-badge">${badge}</span>
+          <div class="ac-name">${highlight(name, q)}</div>
+        </div>
+      `).join("");
+
+      popup.querySelectorAll('.ac-item').forEach(item => {
+        item.addEventListener('mousedown', () => {
+          const val = item.getAttribute('data-name');
+          asalFaskesEl().value = val || "";
+          closePopup();
+        });
+      });
+
+      openPopup();
+    }
+
+    jenisEl().addEventListener('change', () => {
+      const type = (jenisEl().value || "").toLowerCase().trim();
+      setCurrentListByJenis(type);
+      asalFaskesEl().value = "";
+      closePopup();
+      setHelpByJenis_(type);
+      setTimeout(() => asalFaskesEl().focus(), 0);
+    });
+
+    asalFaskesEl().addEventListener('input', (e) => renderSuggestions(e.target.value));
+    asalFaskesEl().addEventListener('focus', (e) => renderSuggestions(e.target.value));
+    asalFaskesEl().addEventListener('blur', () => setTimeout(closePopup, 150));
+    document.addEventListener('keydown', (e) => { if (e.key === "Escape") closePopup(); });
+
+    // ====== LOGIKA KASUS (add/remove/nihil) =====
+    function addRow(disease) {
+      const container = document.getElementById('rows-' + disease);
+      const firstCase = container.querySelector('.pd3i-zero-reporting-case-row');
+      if (!firstCase) return;
+
+      const newCase = firstCase.cloneNode(true);
+      newCase.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      });
+
+      const count = container.querySelectorAll('.pd3i-zero-reporting-case-row').length + 1;
+      newCase.querySelectorAll('[id]').forEach(el => { el.id = el.id.replace(/-\d+$/, '-' + count); });
+      newCase.querySelectorAll('label[for]').forEach(label => { label.htmlFor = label.htmlFor.replace(/-\d+$/, '-' + count); });
+
+      const removeBtnNew = newCase.querySelector('.pd3i-zero-reporting-remove-btn');
+      if (removeBtnNew) removeBtnNew.style.display = 'flex';
+
+      container.appendChild(newCase);
+
+      const firstRow = container.querySelector('.pd3i-zero-reporting-case-row');
+      if (firstRow) {
+        const firstRemove = firstRow.querySelector('.pd3i-zero-reporting-remove-btn');
+        if (firstRemove) firstRemove.style.display = 'none';
+      }
+    }
+
+    async function removeRow(btn) {
+      const caseRow = btn.closest('.pd3i-zero-reporting-case-row');
+      if (!caseRow) return;
+
+      const container = caseRow.parentElement;
+      const allRows = container.querySelectorAll('.pd3i-zero-reporting-case-row');
+      if (allRows.length <= 1) {
+        showSarsBanner('Baris pertama tidak dapat dihapus. Minimal satu baris kasus harus tersedia.', { type: 'error' });
+        return;
+      }
+
+      const ok = await confirmSarsAction({ title: 'Hapus baris kasus?', message: 'Baris kasus ini akan dihapus dari laporan sebelum dikirim.', confirmLabel: 'Hapus baris', cancelLabel: 'Batal', variant: 'danger' });
+      if (!ok) return;
+
+      caseRow.classList.add('is-removing');
+      setTimeout(() => {
+        caseRow.remove();
+        const rowsAfter = container.querySelectorAll('.pd3i-zero-reporting-case-row');
+        if (rowsAfter.length > 0) {
+          const firstRemove = rowsAfter[0].querySelector('.pd3i-zero-reporting-remove-btn');
+          if (firstRemove) firstRemove.style.display = 'none';
+        }
+      }, 250);
+    }
+
+    function toggleNihil(disease) {
+      const nihlCheck = document.getElementById('nihil-' + disease);
+      const rows = document.getElementById('rows-' + disease);
+      const nihilRow = rows.nextElementSibling;
+      const addBtn = nihilRow ? nihilRow.querySelector('.pd3i-zero-reporting-btn-add') : null;
+
+      if (nihlCheck.checked) {
+        rows.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.type === 'checkbox') el.checked = false;
+          else el.value = '';
+          if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        });
+        rows.style.opacity = '0.35';
+        rows.style.pointerEvents = 'none';
+        if (addBtn) addBtn.disabled = true;
+      } else {
+        rows.style.opacity = '1';
+        rows.style.pointerEvents = 'auto';
+        if (addBtn) addBtn.disabled = false;
+      }
+    }
+
+    function setSubmittingState(isSubmitting){
+      const submitBtn = document.getElementById('submitBtn');
+      if (!submitBtn) return;
+
+      if (isSubmitting) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Mengirim laporan...';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📤 Simpan & Kirim Laporan';
+      }
+    }
+
+    const sarsFormElement = document.getElementById('sarsForm');
+    if (sarsFormElement) sarsFormElement.noValidate = true;
+    // Compatibility marker: onsubmit = async function(e)
+    window.submitZeroReporting = async function(e) {
+      e.preventDefault();
+
+      if (IS_SUBMITTING) return;
+      IS_SUBMITTING = true;
+      setSubmittingState(true);
+      showSarsBanner('Mengirim laporan Zero Reporting...', { type: 'info' });
+
+      if (!window.google || !google.script || !google.script.run) {
+        showSarsBanner('Gagal: koneksi Apps Script tidak tersedia. Buka URL Development langsung, bukan preview/cache lama.', { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      if (!SARS_FASKES_READY) {
+        showSarsBanner('Akun/fasilitas kesehatan belum siap. Tunggu sampai nama faskes tampil pada bagian "Faskes login", lalu coba lagi.', { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      const jenisFaskes = (jenisEl().value || "").toLowerCase().trim();
+      const asalFaskes = (asalFaskesEl().value || '').trim();
+
+      // Server owns facility identity and validation. Client autocomplete/session
+      // timing must not block submission before google.script.run is reached.
+      const formData = {
+        email: String(document.getElementById('email').value || '').trim(),
+        mingguEpid: parseInt(document.getElementById('mingguEpid').value, 10),
+        namaPelapor: String(document.getElementById('namaPelapor').value || '').trim(),
+        noWA: normalizePhone(document.getElementById('noWA').value),
+        unitPelapor: String(document.getElementById('unitPelapor').value || '').trim(),
+        jenisFaskes: jenisFaskes,
+        asalFaskes: asalFaskes,
+        cases: []
+      };
+
+      const required = ['mingguEpid','namaPelapor','noWA','unitPelapor'];
+      for (let id of required) {
+        const el = document.getElementById(id);
+        if (!el || !String(el.value || '').trim()) {
+          showSarsBanner(`Kolom "${id.replace(/([A-Z])/g, ' $1')}" wajib diisi.`, { type: 'error' });
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+          return;
+        }
+      }
+
+      const diseases = [
+        { key: 'afp', label: 'AFP' },
+        { key: 'mr', label: 'CAMPAK' },
+        { key: 'dif', label: 'DIFTERI' },
+        { key: 'tn', label: 'TETANUS NEONATORUM' },
+        { key: 'pert', label: 'PERTUSIS' }
+      ];
+
+      const validationErrors = [];
+
+      diseases.forEach(d => {
+        const nihl = document.getElementById('nihil-' + d.key)?.checked;
+        if (nihl) {
+          formData.cases.push({ jenis: d.label, nihl: true });
+        } else {
+          const cases = document.querySelectorAll('#rows-' + d.key + ' .pd3i-zero-reporting-case-row, #rows-' + d.key + ' .case-row');
+          cases.forEach((caseDiv, idx) => {
+            const inputs = {
+              nama: caseDiv.querySelector('[name="nama"]')?.value?.trim(),
+              tglLahir: caseDiv.querySelector('[name="tglLahir"]')?.value,
+              jk: caseDiv.querySelector('[name="jk"]')?.value,
+              namaOrtu: caseDiv.querySelector('[name="namaOrtu"]')?.value?.trim(),
+              alamat: caseDiv.querySelector('[name="alamat"]')?.value?.trim(),
+              tglMulai: caseDiv.querySelector('[name="tglMulai"]')?.value,
+              gejala: caseDiv.querySelector('[name="gejala"]')?.value?.trim(),
+              imunisasi: caseDiv.querySelector('[name="imunisasi"]')?.value?.trim(),
+              keadaan: caseDiv.querySelector('[name="keadaan"]')?.value,
+              spesimenPenolong: (d.key === 'tn' || d.key === 'pert')
+                ? (caseDiv.querySelector('[name="penolong"]')?.value?.trim() || '-')
+                : caseDiv.querySelector('[name="spesimen"]')?.value,
+              diagnosis: caseDiv.querySelector('[name="diagnosis"]')?.value?.trim()
+            };
+
+            const allEmpty = Object.keys(inputs).every(k => !inputs[k] || inputs[k] === '-');
+            if (allEmpty) return;
+
+            if (!inputs.nama) {
+              validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Nama kasus belum diisi.`);
+              return;
+            }
+            if (!inputs.tglMulai || !inputs.keadaan) {
+              validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Isi Tgl MULAI dan Keadaan.`);
+              return;
+            }
+            if (inputs.tglLahir && inputs.tglMulai) {
+              const tL = new Date(inputs.tglLahir);
+              const tM = new Date(inputs.tglMulai);
+              if (tM < tL) {
+                validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Tgl MULAI tidak boleh lebih awal dari Tgl Lahir.`);
+                return;
+              }
+            }
+
+            formData.cases.push({ jenis: d.label, no: idx + 1, ...inputs });
+          });
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        showSarsBanner('Periksa kembali isian kasus berikut: ' + validationErrors.join(' '), { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      if (formData.cases.length === 0) {
+        showSarsBanner('Minimal 1 kasus atau centang NIHIL per penyakit.', { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      // Compatibility marker: await confirmSarsAction({ title: 'Kirim laporan Zero Reporting?' });
+      // Kirim laporan Zero Reporting?
+      // Submit langsung setelah validasi. Dialog custom sebelumnya dapat menahan Promise callback.
+      showSarsBanner('Menghubungi server untuk menyimpan laporan...', { type: 'info' });
+      setSubmittingState(true);
+
+      try {
+      let submitTimeout = setTimeout(() => {
+        showSarsBanner('Gagal: server tidak merespons setelah 30 detik. Periksa Apps Script Executions dan coba lagi.', { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+      }, 30000);
+      google.script.run
+        .withSuccessHandler((res) => {
+          clearTimeout(submitTimeout);
+          try {
+            if (res && typeof res === 'object' && res.ok === false) {
+              showSarsBanner((res.message || 'Laporan ditolak oleh sistem.'), { type: 'error' });
+              IS_SUBMITTING = false;
+              setSubmittingState(false);
+              return;
+            }
+          } catch(e){}
+
+          showSarsBanner('Laporan Zero Reporting berhasil disimpan dan dikirim.', { type: 'success' });
+
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+          // Jangan reload otomatis. Reload menghapus banner sebelum user sempat melihat bukti target write.
+          // User dapat membuka dashboard manual setelah target write terkonfirmasi.
+        })
+        .withFailureHandler(err => {
+          clearTimeout(submitTimeout);
+          showSarsBanner('Gagal: ' + (err && err.message ? err.message : err), { type: 'error' });
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+        })
+        .submitSARS(formData);
+      } catch (err) {
+        showSarsBanner('Gagal memulai pengiriman: ' + (err && err.message ? err.message : err), { type: 'error' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+      }
+    };
+    if (sarsFormElement) {
+      // Keep native binding for initial render.
+      sarsFormElement.onsubmit = window.submitZeroReporting;
+    }
+    // Workspace can replace SARS form DOM after this script runs. Delegate
+    // from document so replacement form/button still reaches one handler.
+    document.addEventListener('submit', function(ev) {
+      const form = ev.target && ev.target.closest ? ev.target.closest('#sarsForm') : null;
+      if (!form || ev.__sarsHandled) return;
+      ev.__sarsHandled = true;
+      window.submitZeroReporting(ev);
+    }, true);
+    document.addEventListener('click', function(ev) {
+      const btn = ev.target && ev.target.closest ? ev.target.closest('#submitBtn') : null;
+      if (!btn || btn.disabled || ev.__sarsClickHandled) return;
+      ev.__sarsClickHandled = true;
+      ev.preventDefault();
+      window.submitZeroReporting({
+        preventDefault: function() {},
+        target: document.getElementById('sarsForm'),
+        submitter: btn
+      });
+    }, true);
+
+
+    function getLocalReportingEpi_() {
+      const now = new Date();
+      const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const currentWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      let week = currentWeek - 2;
+      let year = d.getUTCFullYear();
+      if (week < 1) { week = 52; year -= 1; }
+      return { week, year, rangeLabel: `Tahun ${year}, ME ${week}` };
+    }
+
+    function applyReportingEpi_(info) {
+      const fallback = getLocalReportingEpi_();
+      const data = info && typeof info === 'object' ? info : fallback;
+      const week = Number(data.week || data.me || fallback.week) || fallback.week;
+      const year = Number(data.year || fallback.year) || fallback.year;
+      const range = String(data.rangeLabel || data.label || `Tahun ${year}, ME ${week}`);
+      const input = document.getElementById('mingguEpid');
+      const help = document.getElementById('mingguEpidHelp');
+      if (input && !input.value) input.value = String(week);
+      if (help) help.textContent = `Periode: ${range}`;
+    }
+
+    function initSarsEpiInfo_() {
+      applyReportingEpi_(null);
+      try {
+        google.script.run
+          .withSuccessHandler(applyReportingEpi_)
+          .withFailureHandler(function(){ applyReportingEpi_(null); })
+          .getEpidWeekForReporting();
+      } catch (e) {
+        applyReportingEpi_(null);
+      }
+    }
+
+    function applyFallbackFaskesFromSession_(sessionUser) {
+      // Do not invent a facility identity. Server lookup must succeed first.
+      jenisEl().value = '';
+      asalFaskesEl().value = '';
+      CURRENT_LIST = [];
+    }
+
+    function initSarsNativeForm() {
+      restoreSarsSubmitStatus_();
+      if (window.__SARS_NATIVE_FORM_READY) return;
+      window.__SARS_NATIVE_FORM_READY = true;
+      helpEl().textContent = 'Memuat akun faskes dari MASTER_DATA Zero Reporting...';
+
+      const loginBox = document.getElementById('sarsLoginFaskesBox');
+      const loginBoxName = document.getElementById('sarsLoginFaskesName');
+      if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
+      // Workspace auth state may live on window bridge after login restore.
+      // Prefer live SESSION_USER, then mirrored session user, then browser cache.
+      let sessionUser = {};
+      try { if (typeof SESSION_USER !== 'undefined' && SESSION_USER) sessionUser = SESSION_USER; } catch (e) {}
+      if (!sessionUser || !sessionUser.email) {
+        try { sessionUser = window.__PD3I_SESSION_USER || sessionUser || {}; } catch (e2) {}
+      }
+      if ((!sessionUser || !sessionUser.email) && typeof getSessionUserFromBrowser === 'function') {
+        try { sessionUser = getSessionUserFromBrowser() || sessionUser || {}; } catch (e3) {}
+      }
+      document.getElementById('email').value = String(sessionUser.email || sessionUser.gmail || sessionUser.username || '');
+      document.getElementById('namaPelapor').value = String(sessionUser.nama || sessionUser.username || sessionUser.name || '');
+      document.getElementById('noWA').value = String(sessionUser.noWhatsapp || sessionUser.noWA || sessionUser.whatsapp || '');
+      document.getElementById('unitPelapor').value = String(sessionUser.unitKerja || sessionUser.unit || sessionUser.scopeName || '');
+      initSarsEpiInfo_();
+      applyFallbackFaskesFromSession_(sessionUser);
+
+      ["afp","mr","dif","tn","pert"].forEach(key => {
+        const firstRow = document.querySelector(`#rows-${key} .case-row`);
+        if (firstRow) {
+          const removeBtn = firstRow.querySelector(".btn-remove");
+          if (removeBtn) removeBtn.style.display = "none";
+        }
+      });
+
+      google.script.run
+        .withSuccessHandler(res => {
+          if (!res || res.status !== 'success') {
+            SARS_FASKES_READY = false;
+            const rawMsg = (res && res.message) ? res.message : 'Akun faskes tidak ditemukan.';
+            if (loginBoxName) loginBoxName.textContent = '';
+            helpEl().textContent = '';
+            if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.disabled = true;
+            return;
+          }
+          const typeMap = { RS:'rs', KLINIK:'klinik', TPMD:'tpmd', PMB:'pmb', LAIN:'lain' };
+          SARS_FASKES_READY = true;
+          const submitBtn = document.getElementById('submitBtn');
+          if (submitBtn) submitBtn.disabled = false;
+          const jenis = typeMap[String(res.jenis || '').toUpperCase()] || 'lain';
+          jenisEl().value = jenis;
+          asalFaskesEl().value = String(res.nama || '');
+          setCurrentListByJenis(jenis);
+          setHelpByJenis_(jenis);
+          // Unit laporan berasal dari profil login bila tersedia; jangan isi nama faskes otomatis.
+          // Jika profil tidak punya unit kerja, biarkan kosong agar petugas mengisi sendiri.
+          if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
+          if (loginBoxName) loginBoxName.textContent = `${res.nama || '-'} (${String(res.jenis || '').toUpperCase() || '-'}) — Pengampu: ${res.pengampu || '-'}`;
+          helpEl().textContent = 'Faskes otomatis dari akun login.';
+        })
+        .withFailureHandler(err => {
+          console.error(err);
+          SARS_FASKES_READY = false;
+          const msg = 'Gagal memuat akun faskes.';
+          if (loginBoxName) loginBoxName.textContent = '';
+          helpEl().textContent = '';
+          if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
+          const submitBtn = document.getElementById('submitBtn');
+          if (submitBtn) submitBtn.disabled = true;
+        })
+        .getSarsFacilityForActiveUser(String(sessionUser.email || sessionUser.gmail || sessionUser.username || ''));
+    }
+
+
+    function annotateZeroReportingDynamicFields() {
+      document.querySelectorAll('#section-zero-reporting-form input, #section-zero-reporting-form select, #section-zero-reporting-form textarea').forEach(function(el) {
+        if (!el || el.type === 'hidden' || el.getAttribute('aria-label')) return;
+        var label = '';
+        var wrap = el.closest('label');
+        if (wrap) label = (wrap.textContent || '').trim();
+        if (!label) {
+          var prev = el.previousElementSibling;
+          while (prev && !label) {
+            if (String(prev.tagName || '').toLowerCase() === 'label') label = (prev.textContent || '').trim();
+            prev = prev.previousElementSibling;
+          }
+        }
+        if (!label && el.name) label = el.name.replace(/[_-]/g, ' ');
+        if (!label && el.id) label = el.id.replace(/[_-]/g, ' ');
+        if (label) el.setAttribute('aria-label', label.replace(/\s+/g, ' ').trim());
+      });
+    }
+
+    window.initSarsNativeForm = initSarsNativeForm;
+    window.annotateZeroReportingDynamicFields = annotateZeroReportingDynamicFields;
+
+    if (!window.__ZERO_REPORTING_A11Y_BOUND) {
+      window.__ZERO_REPORTING_A11Y_BOUND = true;
+      document.addEventListener('DOMContentLoaded', annotateZeroReportingDynamicFields);
+      setTimeout(annotateZeroReportingDynamicFields, 250);
+      new MutationObserver(function(){ annotateZeroReportingDynamicFields(); }).observe(document.getElementById('section-zero-reporting-form') || document.body, { childList: true, subtree: true });
+    }
+  </script>
+
+    </div>
+  </div>
+</section>
+
+<section id="section-zero-reporting-dashboard" class="pd3i-zero-reporting-section hidden mt-6" data-legacy-section-id="section-sars-dashboard">
+  <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="dashboard">
+    <div class="pd3i-zero-reporting-host pd3i-zero-reporting-dashboard-host">
+
+  <div class="pd3i-local-status-strip" aria-label="Status dashboard Zero Reporting">
+    <div class="pd3i-local-status-copy">
+      <span class="pd3i-card-eyebrow">Status dashboard</span>
+      <span>Monitoring kelengkapan dan ketepatan laporan nihil mingguan.</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="err" class="error"></div>
+
+    <div class="pd3i-shell-card sars-dashboard-filter">
+      <div class="sars-filter-head">
+        <div>
+          <div class="sars-filter-kicker">Filter Dashboard</div>
+          <h2>Periode dan cakupan laporan</h2>
+        </div>
+        <button id="btnLoad" class="pd3i-btn is-secondary sars-filter-load" type="button" onclick="loadData(false)">
+          <i class="fas fa-rotate-right" aria-hidden="true"></i>
+          <span>Muat Data</span>
+        </button>
+      </div>
+
+      <div class="sars-filter-grid">
+        <div class="fitem sars-filter-item">
+          <label for="yearSel">Tahun</label>
+          <select id="yearSel"></select>
+        </div>
+
+        <div class="fitem sars-filter-item">
+          <label for="weekSel">Minggu Epidemiologi (ME)</label>
+          <select id="weekSel"></select>
+        </div>
+
+        <div class="fitem sars-filter-item">
+          <label for="jenisSel">Jenis Fasyankes</label>
+          <select id="jenisSel">
+            <option value="ALL">Semua Jenis</option>
+            <option value="RS">Rumah Sakit</option>
+            <option value="KLINIK">Klinik</option>
+            <option value="TPMD">TPMD</option>
+            <option value="PMB">PMB</option>
+            <option value="LAIN">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="fitem sars-filter-item sars-filter-pengampu">
+          <label for="pengSel">Pengampu</label>
+          <select id="pengSel">
+            <option value="all">Semua Pengampu</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="note" class="note sars-filter-note"></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="pd3i-dashboard-metric-card">
+        <div class="t">Kelengkapan</div>
+        <div class="v" id="completeness">-</div>
+        <div class="s" id="compSub">-</div>
+      </div>
+
+      <div class="pd3i-dashboard-metric-card">
+        <div class="t">Ketepatan Waktu</div>
+        <div class="v" id="timeliness">-</div>
+        <div class="s" id="timeSub">-</div>
+      </div>
+
+      <div class="pd3i-dashboard-metric-card">
+        <div class="t">Total Fasyankes</div>
+        <div class="v" id="total">-</div>
+        <div class="s" id="totalSub">-</div>
+      </div>
+
+      <div class="pd3i-dashboard-metric-card">
+        <div class="t">Belum Lapor</div>
+        <div class="v" id="belum">-</div>
+        <div class="s" id="belumSub">-</div>
+      </div>
+    </div>
+
+    <div class="pd3i-shell-card pd3i-sars-section">
+      <h2>Ringkasan & Tren</h2>
+
+      <div class="grid-2">
+        <div class="chartBox">
+          <div class="chartTitle">Ringkasan status (ME terpilih)</div>
+          <div id="chartStatus" class="sars-chart sars-chart-status"></div>
+        </div>
+
+        <div class="chartBox">
+          <div class="chartTitle" id="trendTitle">Tren kelengkapan (ME 1–52/53) — sesuai filter</div>
+          <div id="chartTrend" class="sars-chart sars-chart-trend"></div>
+          <div id="trendEmpty" class="empty" style="display:none; margin-top:10px;">Data tren belum tersedia.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pd3i-shell-card pd3i-sars-section">
+      <h2>Rekap Per Pengampu</h2>
+      <div class="chartTitle">Status pada ME terpilih per pengampu (nama pengampu di sumbu X)</div>
+      <div class="chartBox sars-chart-box-pengampu">
+        <div id="chartPengampu" class="sars-chart sars-chart-pengampu"></div>
+        <div id="pengEmpty" class="empty" style="display:none; margin-top:10px;">Tidak ada data rekap per pengampu untuk filter ini.</div>
+      </div>
+    </div>
+
+    <div class="pd3i-shell-card pd3i-sars-section">
+      <h2>Detail Fasyankes</h2>
+      <div class="chartTitle" id="detailHelp">
+        Denominator capaian tahunan (YTD) = ME terpilih. Contoh ME 50 → denom 50.
+        Kelengkapan (thn) = minggu lapor / denom. Ketepatan (thn) = minggu tepat waktu / denom.
+      </div>
+
+      <!-- ✅ Table controls (rows per page + pagination) -->
+      <div class="tableBar pd3i-filter-toolbar" data-component="FilterToolbar">
+        <div class="left">
+          <span>Tampilkan</span>
+          <select id="rowsPerPage" style="min-width:120px;" aria-label="Jumlah baris per halaman">
+            <option value="10">10 baris</option>
+            <option value="15">15 baris</option>
+            <option value="20">20 baris</option>
+            <option value="30">30 baris</option>
+            <option value="50">50 baris</option>
+            <option value="100">100 baris</option>
+          </select>
+          <span id="rowsInfo" class="pageInfo"></span>
+        </div>
+
+        <div class="right">
+          <button id="btnFirst" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('first')">«</button>
+          <button id="btnPrev" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('prev')">‹</button>
+          <span id="pageInfo" class="pageInfo">Halaman 1/1</span>
+          <button id="btnNext" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('next')">›</button>
+          <button id="btnLast" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('last')">»</button>
+        </div>
+      </div>
+
+      <div class="tableWrap pd3i-data-table-wrap" id="table" data-component="DataTable" data-mobile-mode="scroll"></div>
+    </div>
+  </div>
+
+  <script>
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(init);
+
+    const DEFAULT_DASHBOARD_YEAR = Number(new Date().getFullYear());
+    const DEFAULT_DASHBOARD_WEEK = 0;
+    let lastData = null;
+    let sortState = { key: 'status', dir: 'asc' };
+    let lastWeekCap = 52;
+
+    // ✅ Pagination state
+    let pageState = {
+      page: 1,
+      perPage: 10,
+      totalRows: 0,
+      totalPages: 1
+    };
+
+    function setErr(msg){
+      const el = document.getElementById('err');
+      if (!msg){
+        el.style.display = 'none';
+        el.textContent = '';
+        return;
+      }
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function fmt1(n){
+      const v = Number(n || 0);
+      return v.toLocaleString('id-ID', { maximumFractionDigits: 1 });
+    }
+    function esc(str){
+      return String(str ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
+    function getCss(varName){
+      const root = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      const host = document.querySelector('.pd3i-sars-dashboard-host');
+      const scoped = host ? getComputedStyle(host).getPropertyValue(varName).trim() : '';
+      const val = scoped || root;
+      const fallback = {
+        '--c-ok': '#16a34a',
+        '--c-late': '#f59e0b',
+        '--c-nil': '#94a3b8'
+      };
+      return val || fallback[varName] || '#2563eb';
+    }
+    function elWidth_(el){
+      return el ? Math.max(0, Math.floor(el.getBoundingClientRect().width || el.clientWidth || 0)) : 0;
+    }
+
+    // ====== YEAR ======
+    function buildYearOptions_(){
+      const ySel = document.getElementById('yearSel');
+      const nowY = new Date().getFullYear();
+      const start = nowY - 2;
+      const end = nowY + 5;
+
+      let html = "";
+      for (let y = end; y >= start; y--){
+        html += `<option value="${y}">${y}</option>`;
+      }
+      ySel.innerHTML = html;
+
+      const defY = (isFinite(DEFAULT_DASHBOARD_YEAR) && DEFAULT_DASHBOARD_YEAR >= 2000)
+        ? DEFAULT_DASHBOARD_YEAR
+        : nowY;
+
+      ySel.value = String(defY);
+
+      if (ySel.value !== String(defY)) {
+        const opt = document.createElement('option');
+        opt.value = String(defY);
+        opt.textContent = String(defY);
+        ySel.insertBefore(opt, ySel.firstChild);
+        ySel.value = String(defY);
+      }
+
+      ySel.addEventListener('change', () => {
+        const y = Number(ySel.value);
+        refreshWeeksForYear_(y, null, () => loadData(false));
+      });
+    }
+
+    function buildWeekOptionsFallback_(selectedWeek, maxWeek) {
+      const wSel = document.getElementById('weekSel');
+      const cap = Number(maxWeek || 53) || 53;
+      let html = '<option value="">Pilih Minggu Epidemiologi</option>';
+      for (let i=1; i<=cap; i++) html += `<option value="${i}">ME ${i}</option>`;
+      wSel.innerHTML = html;
+      const pick = Number(selectedWeek || DEFAULT_DASHBOARD_WEEK || 0);
+      if (pick >= 1 && pick <= cap) wSel.value = String(pick);
+      else wSel.value = '';
+    }
+
+    function refreshWeeksForYear_(year, selectedWeek, cb){
+      const wSel = document.getElementById('weekSel');
+      buildWeekOptionsFallback_(selectedWeek, 53);
+
+      google.script.run
+        .withSuccessHandler(meta => {
+          const lastWeek = Number(meta && meta.lastWeek ? meta.lastWeek : 52);
+          lastWeekCap = (isFinite(lastWeek) && lastWeek >= 52 && lastWeek <= 53) ? lastWeek : 52;
+
+          document.getElementById('trendTitle').textContent =
+            `Tren kelengkapan (ME 1–${lastWeekCap}) — sesuai filter`;
+
+          let html = "";
+          for (let i=1; i<=lastWeekCap; i++){
+            html += `<option value="${i}">ME ${i}</option>`;
+          }
+          wSel.innerHTML = html;
+
+          const sw = Number(selectedWeek || 0);
+          const defFromInject = Number(DEFAULT_DASHBOARD_WEEK || 0);
+          const defFromServer = Number(meta && meta.reportWeek ? meta.reportWeek : 0);
+
+          const pick = sw || defFromInject || defFromServer || 1;
+          const finalPick = Math.max(1, Math.min(lastWeekCap, pick));
+          wSel.value = String(finalPick);
+
+          if (typeof cb === "function") cb();
+        })
+        .withFailureHandler(err => {
+          lastWeekCap = 52;
+          document.getElementById('trendTitle').textContent =
+            `Tren kelengkapan (ME 1–${lastWeekCap}) — sesuai filter`;
+
+          let html = "";
+          for (let i=1; i<=52; i++) html += `<option value="${i}">ME ${i}</option>`;
+          wSel.innerHTML = html;
+
+          const pick = Number(selectedWeek || DEFAULT_DASHBOARD_WEEK || 1) || 1;
+          wSel.value = String(Math.max(1, Math.min(52, pick)));
+
+          // Jangan ganggu user dengan error teknis; fallback 52 minggu tetap bisa dipakai.
+          setErr('');
+          if (typeof cb === "function") cb();
+        })
+        .getEpiMetaForDashboard(year);
+    }
+
+
+    function scheduleSarsDashboardRedraw_(){
+      if (!lastData) return;
+      clearTimeout(window.__SARS_DASHBOARD_REDRAW_TIMER);
+      window.__SARS_DASHBOARD_REDRAW_TIMER = setTimeout(function(){
+        try { drawAll(lastData); } catch (e) { console.error('Gagal redraw dashboard SARS:', e); }
+      }, 160);
+    }
+
+    function bindSarsDashboardResize_(){
+      if (window.__SARS_DASHBOARD_RESIZE_BOUND) return;
+      window.__SARS_DASHBOARD_RESIZE_BOUND = true;
+      window.addEventListener('resize', scheduleSarsDashboardRedraw_);
+      if (window.ResizeObserver) {
+        const host = document.querySelector('.pd3i-sars-dashboard-host');
+        if (host) {
+          window.__SARS_DASHBOARD_RESIZE_OBSERVER = new ResizeObserver(scheduleSarsDashboardRedraw_);
+          window.__SARS_DASHBOARD_RESIZE_OBSERVER.observe(host);
+        }
+      }
+    }
+
+    function init(){
+      initSarsDashboard();
+    }
+
+    function initSarsDashboard(){
+      if (window.__SARS_DASHBOARD_READY) {
+        if (lastData) {
+          try { scheduleSarsDashboardRedraw_(); } catch(e) { console.error(e); }
+          return;
+        }
+      }
+      window.__SARS_DASHBOARD_READY = true;
+      bindSarsDashboardResize_();
+      setErr('');
+      buildYearOptions_();
+
+      // init rows-per-page dropdown once
+      const rpp = document.getElementById('rowsPerPage');
+      if (rpp && !rpp.dataset.bound) {
+        rpp.dataset.bound = '1';
+        rpp.value = String(pageState.perPage);
+        rpp.addEventListener('change', () => {
+          pageState.perPage = Number(rpp.value || 10);
+          pageState.page = 1;
+          if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+        });
+      }
+
+      const y = Number(document.getElementById('yearSel').value || new Date().getFullYear());
+      refreshWeeksForYear_(y, Number(DEFAULT_DASHBOARD_WEEK || 0), () => {
+        loadData(true);
+      });
+    }
+
+    window.initSarsDashboard = initSarsDashboard;
+
+    function loadData(isFirst){
+      setErr('');
+      const btn = document.getElementById('btnLoad');
+      const note = document.getElementById('note');
+      const year  = Number(document.getElementById('yearSel').value || new Date().getFullYear());
+      const minggu= Number(document.getElementById('weekSel').value || 1);
+      const jenis = document.getElementById('jenisSel').value || 'ALL';
+      const peng  = document.getElementById('pengSel').value || 'all';
+
+      if (btn) btn.disabled = true;
+      if (note) note.textContent = 'Memuat data dari server...';
+
+      google.script.run
+        .withSuccessHandler(function(data){
+          btn.disabled = false;
+          note.textContent = '';
+
+          if (!data){
+            setErr('Gagal memuat: server mengembalikan null.');
+            return;
+          }
+          lastData = data;
+
+          if (isFirst){
+            const pengSel = document.getElementById('pengSel');
+            const list = Array.isArray(data.pengampuList) ? data.pengampuList : [];
+            const fallbackList = Array.isArray(data.perPengampu)
+              ? data.perPengampu.map(item => item && (item.pengampu || item.namaPengampu || item.name)).filter(Boolean)
+              : [];
+            const pengampuOptions = [...new Set(list.concat(fallbackList).map(p => String(p).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+            pengSel.innerHTML =
+              `<option value="all">Semua Pengampu</option>` +
+              pengampuOptions.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+            pengSel.value = 'all';
+          }
+
+          // reset pagination setiap load data baru
+          pageState.page = 1;
+
+          drawAll(data);
+        })
+        .withFailureHandler(function(err){
+          btn.disabled = false;
+          if (note) note.textContent = '';
+          setErr('Dashboard belum bisa memuat data. Coba klik Muat Data lagi atau cek koneksi/server. Detail: ' + (err && err.message ? err.message : err));
+        })
+        .getDashboardData(year, minggu, jenis, peng);
+    }
+
+    function drawAll(data){
+      drawKPI(data);
+      drawStatusChart(data);
+      drawTrendChart(data);
+      drawPengampuChart(data);
+      renderTable(Array.isArray(data.detail) ? data.detail : [], data.denomWeeks || 0);
+    }
+
+    function drawKPI(data){
+      const kpi = data.kpi || {};
+      const total = Number(kpi.total || 0);
+      const lapor = Number(kpi.lapor || 0);
+      const onTime = Number(kpi.onTime || 0);
+      const terlambat = Number(kpi.terlambat || 0);
+      const belum = Number(kpi.belum || 0);
+
+      const completeness = (kpi.completeness !== undefined) ? Number(kpi.completeness) : (total ? (lapor/total*100) : 0);
+      const timeliness = (kpi.timeliness !== undefined) ? Number(kpi.timeliness) : (lapor ? (onTime/lapor*100) : 0);
+
+      document.getElementById('completeness').textContent = `${fmt1(completeness)}%`;
+      document.getElementById('compSub').textContent = `${lapor} lapor / ${total} total`;
+
+      document.getElementById('timeliness').textContent = `${fmt1(timeliness)}%`;
+      document.getElementById('timeSub').textContent = `${onTime} tepat waktu / ${lapor} yang lapor`;
+
+      document.getElementById('total').textContent = `${total}`;
+      document.getElementById('totalSub').textContent = `Terlambat: ${terlambat} • Tepat waktu: ${onTime}`;
+
+      document.getElementById('belum').textContent = `${belum}`;
+      document.getElementById('belumSub').textContent = `Belum lapor pada ME terpilih`;
+    }
+
+    function drawStatusChart(data){
+      const kpi = data.kpi || {};
+      const onTime = Number(kpi.onTime || 0);
+      const terlambat = Number(kpi.terlambat || 0);
+      const belum = Number(kpi.belum || 0);
+
+      const ds = google.visualization.arrayToDataTable([
+        ['Status', 'Jumlah'],
+        ['Tepat Waktu', onTime],
+        ['Terlambat', terlambat],
+        ['Belum', belum]
+      ]);
+
+      const chart = new google.visualization.PieChart(document.getElementById('chartStatus'));
+      const narrow = elWidth_(document.getElementById('chartStatus')) < 520;
+      chart.draw(ds, {
+        height: narrow ? 280 : 320,
+        pieHole: 0.55,
+        chartArea: { left: 12, top: 18, width: narrow ? '92%' : '72%', height: '78%' },
+        legend: { position: narrow ? 'bottom' : 'right', textStyle: { fontSize: 12 } },
+        slices: {
+          0: { color: getCss('--c-ok') },
+          1: { color: getCss('--c-late') },
+          2: { color: getCss('--c-nil') }
+        }
+      });
+    }
+
+    function drawTrendChart(data){
+      const trendRaw = Array.isArray(data.trend) ? data.trend : [];
+      const empty = document.getElementById('trendEmpty');
+      const el = document.getElementById('chartTrend');
+
+      if (!trendRaw.length){
+        el.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      const cap = (isFinite(lastWeekCap) && lastWeekCap >= 52 && lastWeekCap <= 53) ? lastWeekCap : 52;
+      const trend = trendRaw.slice(0, cap);
+
+      const arr = [['ME', 'Kelengkapan (%)']];
+      trend.forEach(r => {
+        const w = Number(r.week || 0);
+        const label = (w === 1 || w === cap || w % 4 === 0) ? `ME ${w}` : '';
+        arr.push([label, Number(r.pct || 0)]);
+      });
+
+      const ds = google.visualization.arrayToDataTable(arr);
+      const chart = new google.visualization.LineChart(el);
+      chart.draw(ds, {
+        height: 320,
+        legend: { position: 'none' },
+        chartArea: { left: 54, top: 22, width: '86%', height: '72%' },
+        hAxis: { slantedText: false, textStyle: { fontSize: 11 } },
+        vAxis: { minValue: 0, maxValue: 100, title: 'Kelengkapan (%)', textStyle: { fontSize: 11 }, titleTextStyle: { fontSize: 12 } },
+        colors: [getCss('--c-ok')],
+        pointSize: 4
+      });
+    }
+
+    function drawPengampuChart(data){
+      const per = Array.isArray(data.perPengampu) ? data.perPengampu : [];
+      const el = document.getElementById('chartPengampu');
+      const empty = document.getElementById('pengEmpty');
+
+      if (!per.length){
+        el.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      function shortLabel_(v){
+        const s = String(v || '-');
+        return s.length > 24 ? s.slice(0, 22) + '…' : s;
+      }
+      const arr = [['Pengampu', 'Tepat Waktu', 'Terlambat', 'Belum']];
+      per.forEach(p => {
+        arr.push([
+          shortLabel_(p.pengampu),
+          Number(p.onTime || 0),
+          Number(p.terlambat || 0),
+          Number(p.belum || 0),
+        ]);
+      });
+
+      const ds = google.visualization.arrayToDataTable(arr);
+
+      const chart = new google.visualization.BarChart(el);
+      const h = Math.max(420, 78 + per.length * 34);
+      el.style.height = h + 'px';
+      chart.draw(ds, {
+        height: h,
+        isStacked: true,
+        legend: { position: 'top', textStyle: { fontSize: 12 } },
+        chartArea: { left: 185, top: 46, width: '72%', height: Math.max(260, h - 95) },
+        colors: [getCss('--c-ok'), getCss('--c-late'), getCss('--c-nil')],
+        hAxis: { minValue: 0, title: 'Jumlah Fasyankes', textStyle: { fontSize: 11 }, titleTextStyle: { fontSize: 12 } },
+        vAxis: { textStyle: { fontSize: 11 } },
+        bar: { groupWidth: '68%' }
+      });
+    }
+
+    // =========================
+    // ✅ PAGINATION CONTROLS
+    // =========================
+    function goPage(action){
+      if (!pageState.totalRows) return;
+
+      if (action === 'first') pageState.page = 1;
+      else if (action === 'prev') pageState.page = Math.max(1, pageState.page - 1);
+      else if (action === 'next') pageState.page = Math.min(pageState.totalPages, pageState.page + 1);
+      else if (action === 'last') pageState.page = pageState.totalPages;
+
+      if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+    }
+
+    function updatePagerUI_(){
+      const info = document.getElementById('pageInfo');
+      const rowsInfo = document.getElementById('rowsInfo');
+      const btnFirst = document.getElementById('btnFirst');
+      const btnPrev  = document.getElementById('btnPrev');
+      const btnNext  = document.getElementById('btnNext');
+      const btnLast  = document.getElementById('btnLast');
+
+      info.textContent = `Halaman ${pageState.page}/${pageState.totalPages}`;
+
+      const startIdx = pageState.totalRows ? ((pageState.page - 1) * pageState.perPage + 1) : 0;
+      const endIdx = Math.min(pageState.totalRows, pageState.page * pageState.perPage);
+      rowsInfo.textContent = pageState.totalRows
+        ? `Menampilkan ${startIdx}–${endIdx} dari ${pageState.totalRows}`
+        : '';
+
+      const isFirst = pageState.page <= 1;
+      const isLast  = pageState.page >= pageState.totalPages;
+
+      btnFirst.disabled = isFirst;
+      btnPrev.disabled  = isFirst;
+      btnNext.disabled  = isLast;
+      btnLast.disabled  = isLast;
+    }
+
+    // ---------- TABLE + SORT + PAGINATION ----------
+    function renderTable(detail, denomWeeks){
+      const tableEl = document.getElementById('table');
+      if (!detail.length){
+        tableEl.innerHTML = (typeof window.renderPd3iUiState === 'function') ? window.renderPd3iUiState({ type: 'empty', title: 'Tidak ada data detail', message: 'Data akan muncul setelah laporan SARS tersedia untuk filter yang dipilih.' }) : `<div style="padding:14px;color:#5f6368;font-style:italic;">Tidak ada data detail.</div>`;
+        pageState.totalRows = 0;
+        pageState.totalPages = 1;
+        pageState.page = 1;
+        updatePagerUI_();
+        return;
+      }
+
+      // 1) sort semua data (global)
+      const rowsAll = detail.slice().sort((a,b) => compareBy(a,b, sortState.key, sortState.dir));
+
+      // 2) setup pagination
+      pageState.totalRows = rowsAll.length;
+      pageState.totalPages = Math.max(1, Math.ceil(pageState.totalRows / pageState.perPage));
+      pageState.page = Math.max(1, Math.min(pageState.page, pageState.totalPages));
+
+      const start = (pageState.page - 1) * pageState.perPage;
+      const end = start + pageState.perPage;
+      const rows = rowsAll.slice(start, end);
+
+      updatePagerUI_();
+
+      const head = [
+        { key:'no', label:'No' },
+        { key:'nama', label:'Nama Fasyankes' },
+        { key:'pengampu', label:'Pengampu' },
+        { key:'status', label:'Status' },
+        { key:'capaianKelengkapan', label:'Capaian Kelengkapan (thn)' },
+        { key:'capaianKetepatan', label:'Capaian Ketepatan (thn)' },
+        { key:'mingguLapor', label:'Minggu Lapor' },
+        { key:'mingguTepat', label:'Minggu Tepat Waktu' }
+      ];
+
+      let html = `<table class="pd3i-data-table"><thead><tr>`;
+      head.forEach(h => {
+        const icon = (sortState.key === h.key) ? (sortState.dir === 'asc' ? '▲' : '▼') : '⇅';
+        html += `<th data-key="${h.key}" onclick="onSort('${h.key}')">${esc(h.label)} <span class="sortIcon">${icon}</span></th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      rows.forEach((r,idx) => {
+        const st = String(r.status || '');
+        const cls =
+          st === 'Tepat Waktu' ? 'ok' :
+          st === 'Terlambat' ? 'late' : 'nil';
+
+        const noGlobal = start + idx + 1; // ✅ nomor mengikuti posisi global
+
+        html += `
+          <tr class="pd3i-mobile-list-card" data-row-action="sars-detail">
+            <td>${noGlobal}</td>
+            <td>${esc(r.nama || '')}</td>
+            <td>${esc(r.pengampu || '-')}</td>
+            <td><span class="pill ${cls}">${esc(st)}</span></td>
+
+            <td><span class="pill numPill">${fmt1(r.capaianKelengkapan || 0)}%</span></td>
+            <td><span class="pill numPill">${fmt1(r.capaianKetepatan || 0)}%</span></td>
+
+            <td><span class="pill numPill">${Number(r.mingguLapor||0)}/${Number(denomWeeks||0)}</span></td>
+            <td><span class="pill numPill">${Number(r.mingguTepat||0)}/${Number(denomWeeks||0)}</span></td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      tableEl.innerHTML = html;
+    }
+
+    function onSort(key){
+      if (sortState.key === key){
+        sortState.dir = (sortState.dir === 'asc') ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = 'asc';
+      }
+      pageState.page = 1; // ✅ balik ke page 1 setelah sort
+      if (lastData) renderTable(lastData.detail || [], lastData.denomWeeks || 0);
+    }
+
+    function compareBy(a,b,key,dir){
+      const mul = (dir === 'asc') ? 1 : -1;
+
+      if (key === 'status'){
+        const rank = { 'Belum Lapor':0, 'Terlambat':1, 'Tepat Waktu':2 };
+        const ra = (rank[a.status] ?? 9);
+        const rb = (rank[b.status] ?? 9);
+        return (ra - rb) * mul;
+      }
+
+      const va = (a[key] ?? '');
+      const vb = (b[key] ?? '');
+
+      const na = Number(va);
+      const nb = Number(vb);
+      const bothNum = isFinite(na) && isFinite(nb) && String(va).trim() !== '' && String(vb).trim() !== '';
+
+      if (bothNum) return (na - nb) * mul;
+
+      return String(va).localeCompare(String(vb), 'id-ID', { sensitivity:'base' }) * mul;
+    }
+  </script>
+
+    </div>
+  </div>
+</section>

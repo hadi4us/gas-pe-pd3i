@@ -6,7 +6,7 @@
   // ------------------------------------------------------------
   // GLOBAL CONSTANTS
   // ------------------------------------------------------------
-  const GOOGLE_SCRIPT_URL = "https:" + "/" + "/script.google.com/macros/s/AKfycbzAiozqZDZ2XYrr9nnuEtyHJaLMo4fsOJAIdUH-rSGbovriD77myFzdAB8LH_P5KL7V/exec";
+  const GOOGLE_SCRIPT_URL = "https:" + "/" + "/script.google.com/macros/s/AKfycbxyOmbssdAKd3Fx7earmhO_tP9j51zivR4NvT5gb6bo4nWDydfV98uxzwHIJHEYDpYIDg/exec";
   const API_WILAYAH_BASE = "https:" + "/" + "/www.emsifa.com/api-wilayah-indonesia/api";
 
   const OPT_YA_TIDAK = ["Ya", "Tidak", "Tidak Tahu"];
@@ -83,7 +83,7 @@
   // ------------------------------------------------------------
   function setAlert(el, msg, ok) {
     if (!el) return;
-    el.className = `pd3i-login-alert mt-5 p-3 rounded-lg text-sm font-bold border ${
+    el.className = `pd3i-login-alert mt-5 p-3 text-sm font-bold border ${
       ok
         ? "is-success bg-green-50 text-green-800 border-green-200"
         : "is-error bg-red-50 text-red-800 border-red-200"
@@ -160,10 +160,14 @@
       const card = wrap.querySelector('.pd3i-confirm-card');
       const releaseFocusTrap = createPd3iModalFocusTrap(card);
       const cleanup = function(value) {
+        let resolvedValue = value;
+        if (value === true && typeof cfg.beforeClose === 'function') {
+          try { resolvedValue = cfg.beforeClose(card); } catch (e) { resolvedValue = value; }
+        }
         document.removeEventListener('keydown', onKeydown);
         releaseFocusTrap();
         wrap.remove();
-        resolve(value);
+        resolve(resolvedValue);
       };
       const onKeydown = function(e) {
         if (e.key === 'Escape') cleanup(false);
@@ -251,12 +255,15 @@
   function renderPd3iSkeleton(options) {
     const cfg = options || {};
     const rows = Math.max(1, Math.min(8, Number(cfg.rows || 3)));
-    const title = cfg.title ? '<div class="pd3i-skeleton-title">'+escapeHtml(cfg.title)+'</div>' : '';
+    const variant = String(cfg.variant || 'table').trim().toLowerCase();
+    const titleText = cfg.title || 'Memuat data…';
+    const title = '<div class="pd3i-skeleton-head"><span class="pd3i-skeleton-spinner" aria-hidden="true"></span><span>'+escapeHtml(titleText)+'</span></div>';
+    const hint = cfg.hint ? '<div class="pd3i-skeleton-hint">'+escapeHtml(cfg.hint)+'</div>' : '';
     let body = '';
     for (let i = 0; i < rows; i++) {
       body += '<div class="pd3i-skeleton-row"><span></span><span></span><span></span></div>';
     }
-    return '<div class="pd3i-skeleton" role="status" aria-live="polite" aria-label="Memuat data">'+title+body+'</div>';
+    return '<div class="pd3i-skeleton is-'+escapeHtml(variant)+'" role="status" aria-live="polite" aria-label="Memuat data">'+title+hint+'<div class="pd3i-skeleton-body">'+body+'</div></div>';
   }
 
   if (typeof window !== 'undefined') {

@@ -1,39 +1,22 @@
         <section id="section-overview" class="pd3i-overview-grid">
-          <div id="overview-hero-card" class="pd3i-hero-card">
-            <div class="pd3i-hero-topline">
-              <div class="pd3i-hero-badge">Indikator Operasional PD3I</div>
-              <span class="pd3i-badge-soft">Beranda Operasional</span>
-            </div>
-            <h2 class="pd3i-hero-title">Ringkasan indikator dan prioritas kerja harian</h2>
-            <p class="pd3i-hero-copy">
-              Beranda menampilkan indikator utama sesuai cakupan akun yang sedang aktif. Gunakan aksi cepat untuk masuk ke menu kerja, lalu tindak lanjuti detail kasus pada menu operasional terkait.
-            </p>
-            <div class="pd3i-hero-metrics">
-              <div class="pd3i-mini-stat">
-                <div class="pd3i-mini-stat-label">Mode</div>
-                <div class="pd3i-mini-stat-value" id="summary-mode-pill">Beranda Indikator</div>
-              </div>
-              <div class="pd3i-mini-stat">
-                <div class="pd3i-mini-stat-label">Cakupan</div>
-                <div class="pd3i-mini-stat-value" id="summary-dx-pill">Lintas diagnosis</div>
-              </div>
-              <div class="pd3i-mini-stat">
-                <div class="pd3i-mini-stat-label">Kerja aktif</div>
-                <div class="pd3i-mini-stat-value" id="summary-warning-pill">0</div>
-              </div>
-            </div>
+          <div id="overview-hero-card" class="pd3i-hero-card" hidden aria-hidden="true">
+            <span id="summary-mode-pill">Beranda KPI</span>
+            <span id="summary-dx-pill">Lintas diagnosis</span>
+            <span id="summary-warning-pill">0</span>
           </div>
 
           <div class="pd3i-shell-card pd3i-overview-panel pd3i-overview-panel-kpi">
-            <div class="pd3i-card-header-row">
-              <div>
-                <div class="pd3i-card-eyebrow">Indikator utama</div>
-                <h3 class="pd3i-card-title">Dashboard operasional harian</h3>
-              </div>
+            <div class="pd3i-card-header-row pd3i-card-header-row-compact">
+              <div id="overview-role-summary" class="pd3i-helper-text">Memuat ringkasan sesi...</div>
               <span class="pd3i-badge-soft">Sesuai cakupan</span>
             </div>
-            <div id="overview-role-summary" class="pd3i-helper-text">Memuat ringkasan sesi...</div>
             <div id="overview-kpi-grid" class="pd3i-overview-summary-grid mt-4"></div>
+            <div id="overview-situation-strip" class="pd3i-overview-situation-strip" aria-label="Ringkasan situasi beranda"></div>
+            <div class="pd3i-overview-ops-brief" aria-label="Checklist prioritas operasional beranda">
+              <div><strong>Cek antrian</strong><span>Mulai dari kasus pending, revisi, sampel, dan status yang butuh tindak lanjut hari ini.</span></div>
+              <div><strong>Cek cakupan</strong><span>Bandingkan beban kerja sesuai wilayah, faskes, dan peran pengguna aktif.</span></div>
+              <div class="is-warning"><strong>Cek yang macet</strong><span>Prioritaskan kasus yang lama tidak bergerak agar tidak hilang dari alur surveilans.</span></div>
+            </div>
             <div id="overview-kpi-focus" class="pd3i-overview-focus-grid mt-4"></div>
           </div>
 

@@ -2,172 +2,150 @@
           <div class="pd3i-hero-card pd3i-guide-hero">
             <div class="pd3i-hero-topline">
               <div class="pd3i-hero-badge">Panduan Aplikasi</div>
-              <span class="pd3i-badge-soft">Petunjuk penggunaan detail</span>
+              <span class="pd3i-badge-soft">Alur kerja</span>
             </div>
-            <h2 class="pd3i-hero-title">Cara menggunakan aplikasi PD3I per menu dan per peran</h2>
-            <p class="pd3i-hero-copy">
-              Halaman ini menjelaskan alur kerja tiap menu, siapa yang boleh mengaksesnya, dan urutan kerja yang disarankan supaya petugas tidak salah tahap.
-            </p>
+            <h2 class="pd3i-hero-title">Panduan kerja SIMPEL Surveilans</h2>
+            <p class="pd3i-hero-copy">Ringkasan menu, peran pengguna, dan urutan kerja agar entri, verifikasi, pemeriksaan, dan pemantauan kasus berjalan konsisten.</p>
           </div>
 
-          <div class="pd3i-guide-grid">
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Prinsip umum</div>
-                  <h3 class="pd3i-card-title">Urutan kerja aplikasi</h3>
-                </div>
-              </div>
-              <ol class="pd3i-guide-list is-numbered">
-                <li><strong>Input Kasus</strong> dipakai untuk membuat data awal kasus baru.</li>
-                <li><strong>Verifikasi EPID</strong> dipakai admin untuk peninjauan, koreksi, dan penetapan EPID.</li>
-                <li><strong>Hasil Pemeriksaan</strong> dipakai saat kasus memang menunggu hasil laboratorium.</li>
-                <li><strong>Status Pasien</strong> dipakai untuk memperbarui status akhir/perkembangan kasus.</li>
-                <li><strong>Daftar Kasus</strong> dipakai untuk membuka data yang sudah ada lintas diagnosis sesuai hak akses, termasuk edit dan hapus sesuai kewenangan.</li>
-                <li><strong>Dashboard Statistik</strong> dipakai untuk melihat indikator, tren, dan distribusi kasus.</li>
+          <div class="pd3i-guide-faq-panel pd3i-shell-card" aria-label="Cari panduan aplikasi">
+            <div>
+              <!-- Cari panduan cepat --><h3 class="pd3i-card-title">Temukan menu kerja</h3>
+              <p class="pd3i-helper-text">Cari dengan kata kunci seperti EPID, laboratorium, status, dashboard, atau akun.</p>
+            </div>
+            <label class="pd3i-guide-search-label" for="pd3i-guide-search-input">Kata kunci panduan</label>
+            <input id="pd3i-guide-search-input" class="pd3i-guide-search-input" type="search" placeholder="Contoh: verifikasi EPID" autocomplete="off" aria-describedby="pd3i-guide-search-help">
+            <div id="pd3i-guide-search-help" class="pd3i-helper-text">Filter visual lokal. Tidak mengubah data aplikasi.</div>
+            <div class="pd3i-guide-faq-chips" aria-label="Topik panduan cepat">
+              <a href="#pd3i-guide-topic-input" class="pd3i-guide-topic-chip">Input kasus</a>
+              <a href="#pd3i-guide-topic-verifikasi" class="pd3i-guide-topic-chip">Verifikasi EPID</a>
+              <a href="#pd3i-guide-topic-lab" class="pd3i-guide-topic-chip">Laboratorium</a>
+              <a href="#pd3i-guide-topic-status" class="pd3i-guide-topic-chip">Status</a>
+              <a href="#pd3i-guide-topic-dashboard" class="pd3i-guide-topic-chip">Dashboard</a>
+            </div>
+          </div>
+
+          <div class="pd3i-guide-overview-grid">
+            <div class="pd3i-guide-summary-card">
+              <span class="pd3i-guide-icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
+              <strong>Kasus baru</strong>
+              <p><mark>Input Kasus</mark> → Verifikasi EPID → Hasil Pemeriksaan → Status.</p>
+            </div>
+            <div class="pd3i-guide-summary-card">
+              <span class="pd3i-guide-icon" aria-hidden="true"><i class="fas fa-list-ul"></i></span>
+              <strong>Daftar Kasus</strong>
+              <p><mark>Daftar Kasus</mark> untuk cari, buka, edit, atau hapus sesuai kewenangan.</p>
+            </div>
+            <div class="pd3i-guide-summary-card">
+              <span class="pd3i-guide-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+              <strong>Dashboard statistik</strong>
+              <p><mark>Dashboard statistik</mark> untuk tren, hotspot, wilayah, dan umur.</p>
+            </div>
+          </div>
+
+
+          <div class="pd3i-shell-card pd3i-guide-role-panel" aria-label="Panduan per peran">
+            <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title">Langkah cepat sesuai peran</h3><p class="pd3i-helper-text">Pilih jalur kerja sesuai akun aktif. Gunakan Daftar Kasus untuk membuka ulang kasus lama.</p></div></div>
+            <div class="pd3i-guide-role-grid">
+              <div class="pd3i-guide-role-card"><strong>Petugas faskes/puskesmas</strong><ol><li>Input Kasus untuk laporan awal.</li><li>Cek Daftar Kasus untuk revisi.</li><li>Lengkapi data yang dikembalikan admin.</li></ol></div>
+              <div class="pd3i-guide-role-card"><strong>Admin/verifikator EPID</strong><ol><li>Buka Verifikasi EPID.</li><li>Review antrean dan tetapkan EPID.</li><li>Kembalikan kasus bila data wajib belum aman.</li></ol></div>
+              <div class="pd3i-guide-role-card"><strong>Laboratorium</strong><ol><li>Buka Pemeriksaan Laboratorium.</li><li>Isi hasil pemeriksaan kasus terverifikasi.</li><li>Simpan agar status antrean diperbarui.</li></ol></div>
+              <div class="pd3i-guide-role-card"><strong>Pengelola status</strong><ol><li>Buka Status dan Klasifikasi.</li><li>Tinjau ringkasan kasus dan hasil lab.</li><li>Tetapkan klasifikasi/status akhir.</li></ol></div>
+            </div>
+            <div class="pd3i-guide-role-safety" aria-label="Catatan aman lintas peran">
+              <div><strong>Cari dulu</strong><span>Gunakan Daftar Kasus sebelum input ulang agar duplikasi lebih mudah dicegah.</span></div>
+              <div><strong>Simpan sesuai tahap</strong><span>Verifikasi, lab, dan status akhir punya antrean masing-masing. Hindari lompat tahap.</span></div>
+              <div class="is-warning"><strong>Data sensitif</strong><span>Bagikan data identitas hanya sesuai kewenangan dan kebutuhan tindak lanjut.</span></div>
+            </div>
+          </div>
+          <div id="pd3i-guide-results-status" class="pd3i-guide-results-status" role="status" aria-live="polite">Menampilkan semua topik panduan.</div>
+
+          <div class="pd3i-guide-grid" data-guide-search-results>
+            <div class="pd3i-shell-card pd3i-guide-card pd3i-guide-card-wide" data-guide-search-item data-guide-keywords="alur kerja kasus pd3i input verifikasi epid laboratorium status daftar kasus">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title">Urutan kerja kasus PD3I</h3><p class="pd3i-helper-text">Dari input awal sampai status akhir.</p></div></div>
+              <ol class="pd3i-guide-flow-list">
+                <li><span>1</span><strong>Input Kasus</strong><em>Data awal</em></li>
+                <li><span>2</span><strong>Verifikasi EPID</strong><em>Review admin</em></li>
+                <li><span>3</span><strong>Hasil Pemeriksaan</strong><em>Lab</em></li>
+                <li><span>4</span><strong>Status dan Klasifikasi</strong><em>Status akhir</em></li>
+                <li><span>5</span><strong>Daftar Kasus</strong><em>Buka ulang</em></li>
               </ol>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Peran & akses</div>
-                  <h3 class="pd3i-card-title">Siapa boleh mengerjakan apa</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" data-guide-search-item data-guide-keywords="hak akses pengguna admin petugas viewer super-admin role kewenangan">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-user-shield"></i></span> Hak akses pengguna</h3></div></div>
               <ul class="pd3i-guide-list">
-                <li><strong>Admin:</strong> bisa input, list kasus/edit/hapus, verifikasi EPID, hasil pemeriksaan, pembaruan status, dan dashboard penuh.</li>
-                <li><strong>Petugas puskesmas:</strong> bisa entri kasus, list kasus/edit sesuai cakupan wilayah, hasil pemeriksaan sesuai pengampu, pembaruan status, dan lihat dashboard statistik.</li>
-                <li><strong>Viewer:</strong> hanya lihat data dan statistik yang diizinkan, tanpa simpan perubahan.</li>
-                <li><strong>Verifikasi EPID</strong> hanya muncul untuk akun <strong>admin</strong>.</li>
-                <li>Pembacaan data untuk akun puskesmas dibatasi oleh mapping <strong>REF_PENGAMPU</strong>.</li>
+                <li><strong>Admin:</strong> input, edit, verifikasi, lab, status, dashboard, administrasi.</li>
+                <li><strong>Petugas:</strong> input dan kelola kasus sesuai cakupan wilayah/pengampu.</li>
+                <li><strong>Viewer:</strong> lihat data dan statistik tanpa simpan perubahan.</li>
+                <li><strong>Super-admin:</strong> konfigurasi sistem dan kelola pengguna.</li>
               </ul>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 1</div>
-                  <h3 class="pd3i-card-title">Beranda indikator</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" data-guide-search-item data-guide-keywords="indikator operasional beranda kpi antrean prioritas aksi cepat">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-chart-column"></i></span> Indikator operasional</h3></div></div>
               <ul class="pd3i-guide-list">
-                <li>Berisi indikator operasional yang disesuaikan dengan akun aktif.</li>
-                <li>Menampilkan total kasus dalam cakupan, rincian diagnosis, beban kerja aktif, dan antrean kerja prioritas.</li>
-                <li>Gunakan aksi cepat untuk masuk ke menu kerja yang dibutuhkan.</li>
-                <li>Beranda <strong>bukan</strong> daftar semua kasus wilayah, tetapi ringkasan kerja operasional.</li>
+                <li>Ringkasan beban kerja sesuai akun aktif.</li>
+                <li>Menampilkan indikator utama, antrean, dan prioritas.</li>
+                <li>Gunakan aksi cepat untuk masuk menu kerja.</li>
               </ul>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 2</div>
-                  <h3 class="pd3i-card-title">Daftar Kasus</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" data-guide-search-item data-guide-keywords="daftar kasus cari buka data edit hapus filter kasus">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-list-ul"></i></span> Cari dan buka data</h3></div></div>
               <ol class="pd3i-guide-list is-numbered">
-                <li>Buka menu <strong>Daftar Kasus</strong>.</li>
-                <li>Isi kata kunci atau filter seperti diagnosis, kecamatan, kelurahan, status kasus, dan status verifikasi.</li>
+                <li>Isi kata kunci atau filter kasus.</li>
                 <li>Klik <strong>Terapkan Filter</strong>.</li>
-                <li>Pilih tombol <strong>Edit</strong> untuk membuka data. Tombol <strong>Hapus</strong> tersedia untuk admin, serta pengguna berwenang pada data yang masih pending/belum diverifikasi.</li>
-                <li>Menu kerja akan mengarahkan pengguna ke mode kerja yang sesuai.</li>
+                <li>Pilih <strong>Edit</strong> untuk membuka data.</li>
+                <li>Hapus hanya tersedia sesuai kewenangan.</li>
               </ol>
-              <p class="pd3i-guide-note">Pencarian bersifat lintas diagnosis, tetapi tetap dibatasi cakupan wilayah untuk akun puskesmas.</p>
+              <p class="pd3i-guide-note">Akses tetap mengikuti wilayah kerja dan mapping REF_PENGAMPU.</p>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 3</div>
-                  <h3 class="pd3i-card-title">Input Kasus</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" id="pd3i-guide-topic-input" data-guide-search-item data-guide-keywords="input kasus entri kasus baru diagnosis pelapor pasien review simpan input awal">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-file-circle-plus"></i></span> Entri kasus baru</h3></div></div>
               <ol class="pd3i-guide-list is-numbered">
-                <li>Pilih diagnosis di launcher input.</li>
-                <li>Isi data pelapor, pasien, lalu data spesifik diagnosis.</li>
-                <li>Pastikan field wajib dan validasi tanggal terisi benar.</li>
+                <li>Pilih diagnosis.</li>
+                <li>Isi pelapor, pasien, dan detail diagnosis.</li>
+                <li>Cek <strong>Review sebelum simpan</strong>.</li>
                 <li>Klik <strong>Simpan Input Awal</strong>.</li>
-                <li>Setelah tersimpan, data siap masuk ke tahap kerja berikutnya sesuai peran.</li>
               </ol>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 4</div>
-                  <h3 class="pd3i-card-title">Verifikasi EPID</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" id="pd3i-guide-topic-verifikasi" data-guide-search-item data-guide-keywords="verifikasi epid review admin pending revisi terverifikasi nomor epid">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-id-card-clip"></i></span> Review admin</h3></div></div>
               <ol class="pd3i-guide-list is-numbered">
-                <li>Menu ini hanya tersedia untuk <strong>admin</strong>.</li>
-                <li>Buka antrian verifikasi atau cari data yang statusnya pending/revisi.</li>
-                <li>Peninjauan data entri awal secara menyeluruh.</li>
-                <li>Tentukan status verifikasi: <strong>Terverifikasi</strong> atau <strong>Perlu Revisi</strong>.</li>
-                <li>Jika terverifikasi, tetapkan atau koreksi <strong>Nomor EPID</strong> lalu simpan.</li>
+                <li>Buka antrean pending/revisi.</li>
+                <li>Tinjau data entri awal.</li>
+                <li>Tetapkan <strong>Terverifikasi</strong> atau <strong>Perlu Revisi</strong>.</li>
+                <li>Tetapkan/koreksi <strong>Nomor EPID</strong>.</li>
               </ol>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 5</div>
-                  <h3 class="pd3i-card-title">Hasil Pemeriksaan</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" id="pd3i-guide-topic-lab" data-guide-search-item data-guide-keywords="laboratorium hasil pemeriksaan lab sampel kasus terverifikasi antrean lab">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-vials"></i></span> Hasil pemeriksaan</h3></div></div>
               <ol class="pd3i-guide-list is-numbered">
-                <li>Buka menu <strong>Hasil Pemeriksaan</strong>.</li>
-                <li>Gunakan filter antrian di atas untuk menyaring kasus menunggu hasil lab.</li>
-                <li>Pilih salah satu kasus dari daftar antrian.</li>
-                <li>Isi formulir hasil pemeriksaan laboratorium.</li>
-                <li>Simpan. Jika hasil sudah final, kasus keluar dari antrean hasil pemeriksaan.</li>
+                <li>Buka kasus menunggu hasil lab.</li>
+                <li>Isi jenis dan hasil pemeriksaan.</li>
+                <li>Simpan agar antrean lab terbarui.</li>
               </ol>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 6</div>
-                  <h3 class="pd3i-card-title">Status Pasien</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" id="pd3i-guide-topic-status" data-guide-search-item data-guide-keywords="status klasifikasi akhir kasus status pasien pembaruan status hasil lab">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-clipboard-list"></i></span> Klasifikasi dan akhir kasus</h3></div></div>
               <ol class="pd3i-guide-list is-numbered">
-                <li>Buka menu <strong>Status Pasien</strong>.</li>
-                <li>Filter antrian kasus yang siap pembaruan status.</li>
-                <li>Buka kasus yang relevan.</li>
-                <li>Isi status pasien/kasus sesuai perkembangan terakhir.</li>
-                <li>Simpan agar riwayat status kasus terbarui.</li>
+                <li>Buka kasus siap pembaruan status.</li>
+                <li>Isi status pasien/kasus terakhir.</li>
+                <li>Simpan riwayat status.</li>
               </ol>
             </div>
 
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Menu 7</div>
-                  <h3 class="pd3i-card-title">Dashboard Statistik</h3>
-                </div>
-              </div>
+            <div class="pd3i-shell-card pd3i-guide-card" id="pd3i-guide-topic-dashboard" data-guide-search-item data-guide-keywords="dashboard analisis surveilans statistik tren hotspot wilayah umur diagnosis tahun">
+              <div class="pd3i-card-header-row"><div><h3 class="pd3i-card-title"><span class="pd3i-guide-title-icon"><i class="fas fa-chart-line"></i></span> Analisis surveilans</h3></div></div>
               <ul class="pd3i-guide-list">
-                <li>Tersedia untuk admin, petugas, dan viewer sesuai blok yang diizinkan.</li>
-                <li>Gunakan untuk melihat indikator, tren kasus, distribusi wilayah, dan hotspot.</li>
-                <li>Blok khusus admin, seperti antrean verifikasi admin, tidak ditampilkan pada peran non-admin.</li>
-                <li>Dashboard tetap mengikuti cakupan wilayah untuk akun puskesmas.</li>
-              </ul>
-            </div>
-
-            <div class="pd3i-shell-card pd3i-guide-card">
-              <div class="pd3i-card-header-row">
-                <div>
-                  <div class="pd3i-card-eyebrow">Tips kerja</div>
-                  <h3 class="pd3i-card-title">Praktik yang disarankan</h3>
-                </div>
-              </div>
-              <ul class="pd3i-guide-list">
-                <li>Gunakan <strong>Daftar Kasus</strong> jika ingin membuka data yang sudah ada lintas diagnosis.</li>
-                <li>Gunakan menu kerja spesifik (<strong>Hasil Pemeriksaan</strong>, <strong>Status</strong>) untuk menyelesaikan antrian lebih cepat.</li>
-                <li>Jangan gunakan <strong>Verifikasi EPID</strong> untuk petugas non-admin.</li>
-                <li>Jika data tidak muncul, cek dulu apakah kasus berada di wilayah kerja sesuai <strong>REF_PENGAMPU</strong>.</li>
-                <li>Untuk data lama/legacy, gunakan pencarian dengan Nomor EPID, ID Registrasi Kasus, atau Nama Pasien.</li>
+                <li>Pilih diagnosis dan tahun.</li>
+                <li>Lihat tren, hotspot, wilayah teratas, dan kelompok umur.</li>
+                <li>Data mengikuti cakupan wilayah akun.</li>
               </ul>
             </div>
           </div>

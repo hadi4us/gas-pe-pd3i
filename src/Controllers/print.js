@@ -86,55 +86,144 @@ function handlePrintRequest_(e) {
   try {
     const dx = String((e.parameter.dx || "")).trim().toUpperCase();
     const epid = String((e.parameter.epid || "")).trim();
+    const recordKey = String((e.parameter.recordKey || e.parameter.recordId || "")).trim();
     const printToken = String((e.parameter.printToken || e.parameter.pt || "")).trim();
+    const sessionToken = String((e.parameter.token || e.parameter.sessionToken || "")).trim();
+    const lookupKey = recordKey || epid;
 
-    const printAuth = _resolveScopedPrintToken_(printToken, dx, epid);
+    if (!dx || !lookupKey) {
+      return HtmlService.createHtmlOutput("<h3>Parameter print tidak lengkap. Silakan buka ulang dari aplikasi.</h3>");
+    }
+
+    let printAuth = _resolveScopedPrintToken_(printToken, dx, lookupKey);
+    if (!printAuth.ok && epid && recordKey) {
+      printAuth = _resolveScopedPrintToken_(printToken, dx, epid);
+    }
+    if (!printAuth.ok && sessionToken) {
+      const auth = _getSessionFromToken_(sessionToken);
+      if (auth.ok) {
+        printAuth = { ok: true, sessionToken: sessionToken, user: auth.user || {} };
+      }
+    }
     if (!printAuth.ok) {
       return HtmlService.createHtmlOutput("<h3>Link print tidak valid atau sudah kedaluwarsa. Silakan buka ulang dari aplikasi.</h3>");
     }
 
-    const data = getRecordByEpid(dx, epid, printAuth.sessionToken);
+    const data = getRecordByKey(dx, lookupKey, printAuth.sessionToken);
     if (!data) {
       return HtmlService.createHtmlOutput("<h3>Data tidak ditemukan.</h3>");
     }
+    const printableCode = String(data["Nomor EPID"] || epid || data["ID Registrasi Kasus"] || recordKey || "-").trim();
 
     let contacts = [];
+    let contactsRaw = data["Kontak Erat"] || data["KontakEratJSON"] || data["KontakEratJson"] || data["kontakEratJSON"] || "";
+    if (!contactsRaw) {
+      Object.keys(data || {}).some(function(key) {
+        const norm = String(key || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        if ((norm.indexOf("kontakerat") !== -1 || (norm.indexOf("kontak") !== -1 && norm.indexOf("erat") !== -1)) && data[key]) {
+          contactsRaw = data[key];
+          return true;
+        }
+        return false;
+      });
+    }
     try {
-      contacts = data["Kontak Erat"] ? JSON.parse(data["Kontak Erat"]) : [];
+      contacts = contactsRaw ? JSON.parse(contactsRaw) : [];
+      if (contacts && !Array.isArray(contacts) && Array.isArray(contacts.rows)) contacts = contacts.rows;
+      if (!Array.isArray(contacts)) contacts = [];
     } catch (err) {
       contacts = [];
     }
 
     const templateName = getPrintTemplateName_(dx);
-    const t = createTemplateFromFile_(templateName);
-    t.DATA = data;
-    t.META = {
+    const printMeta = {
       dx: dx,
-      epid: epid,
+      epid: printableCode,
       printedAt: new Date(),
       user: printAuth.user || {}
     };
-    t.CONTACTS = contacts;
+    try {
+      const t = createTemplateFromFile_(templateName);
+      t.DATA = data;
+      t.META = printMeta;
+      t.CONTACTS = contacts;
 
-    return t.evaluate()
-      .setTitle("Cetak PDF " + epid)
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      return t.evaluate()
+        .setTitle("Cetak PDF " + printableCode)
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (renderErr) {
+      try { console.error("Print template render error [" + templateName + "/" + dx + "/" + printableCode + "]:", renderErr); } catch (logRenderErr) {}
+      return _renderFallbackPrintHtml_(dx, data, printMeta, contacts, renderErr);
+    }
   } catch (err) {
     try { console.error("Public print endpoint error:", err); } catch (logErr) {}
     return HtmlService.createHtmlOutput("<h3>Gagal render print. Silakan buka ulang dari aplikasi atau hubungi admin.</h3>");
   }
 }
 
+
+function _printFallbackEscape_(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function _printFallbackPick_(data, keys) {
+  data = data || {};
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== "" && data[key] != null) {
+      return data[key];
+    }
+  }
+  return "";
+}
+
+function _renderFallbackPrintHtml_(dx, data, meta, contacts, renderErr) {
+  data = data || {};
+  meta = meta || {};
+  const epid = _printFallbackPick_(data, ["Nomor EPID", "ID Registrasi Kasus"]) || meta.epid || "-";
+  const rows = [
+    ["Diagnosis", dx || "-"],
+    ["Nomor EPID / ID", epid],
+    ["Nama", _printFallbackPick_(data, ["Nama", "nama", "Nama Pasien"])],
+    ["Tanggal Lahir", _printFallbackPick_(data, ["Tanggal Lahir", "Tgl Lahir"])],
+    ["Jenis Kelamin", _printFallbackPick_(data, ["JK", "Jenis Kelamin", "Jenis kelamin"])],
+    ["Orang Tua/Wali", _printFallbackPick_(data, ["Nama Orang Tua/Wali", "Nama orang tua/wali", "Nama Orangtua/Wali"])],
+    ["Alamat", _printFallbackPick_(data, ["Alamat", "alamat"])],
+    ["Kelurahan", _printFallbackPick_(data, ["Kelurahan", "kelurahan"])],
+    ["Kecamatan", _printFallbackPick_(data, ["Kecamatan", "kecamatan"])],
+    ["Status Kasus", _printFallbackPick_(data, ["Status Kasus", "Klasifikasi", "klasifikasi"])],
+    ["Status Verifikasi", _printFallbackPick_(data, ["Status Verifikasi", "Status verifikasi"])],
+    ["Demam", _printFallbackPick_(data, ["Demam?", "Demam", "demam"])],
+    ["Ruam", _printFallbackPick_(data, ["Ruam Makulopapular?", "Ruam Makulopapular", "ruam"])],
+    ["Tanggal Mulai Demam", _printFallbackPick_(data, ["Tanggal Mulai Demam", "Tanggal mulai demam"])],
+    ["Tanggal Mulai Ruam", _printFallbackPick_(data, ["Tanggal Mulai Ruam", "Tanggal mulai ruam"])],
+    ["Petugas", _printFallbackPick_(data, ["Petugas", "Pelaksana investigasi", "Pelaksana Investigasi"])]
+  ];
+  const rowHtml = rows.map(function(row) {
+    return "<tr><th>" + _printFallbackEscape_(row[0]) + "</th><td>" + _printFallbackEscape_(row[1] || "-") + "</td></tr>";
+  }).join("");
+  const debug = renderErr && renderErr.message ? String(renderErr.message) : String(renderErr || "Template print utama gagal dirender.");
+  return HtmlService.createHtmlOutput("<!doctype html><html><head><meta charset='utf-8'><base target='_top'><style>body{font-family:Arial,sans-serif;margin:24px;color:#111}h1{font-size:18px;text-align:center}.notice{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px;margin:12px 0;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #333;padding:7px;text-align:left;vertical-align:top}th{width:34%;background:#f3f4f6}@media print{.no-print{display:none}}</style></head><body><h1>FORM PENYELIDIKAN EPIDEMIOLOGI " + _printFallbackEscape_(dx || "PD3I") + "</h1><div class='notice no-print'><b>Catatan:</b> template PDF utama gagal dirender, jadi aplikasi menampilkan versi ringkas sementara agar data tetap bisa dicetak. Admin dapat melihat log: " + _printFallbackEscape_(debug) + "</div><table>" + rowHtml + "</table><p class='no-print'><button onclick='window.print()'>Cetak / Save PDF</button></p></body></html>")
+    .setTitle("Cetak PDF " + _printFallbackEscape_(epid))
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+
 function getPrintTemplateName_(dx) {
   dx = String(dx || "").trim().toUpperCase();
   const templateByDx = {
-    MR: "print_MR",
-    DIF: "print_DIF",
-    PERT: "print_PERT",
-    TN: "print_TN",
-    AFP: "print_AFP"
+    MR: "Views/print_MR",
+    DIF: "Views/print_DIF",
+    PERT: "Views/print_PERT",
+    TN: "Views/print_TN",
+    AFP: "Views/print_AFP"
   };
-  return templateByDx[dx] || "print_MR";
+  return templateByDx[dx] || "Views/print_MR";
 }
 
 function safeGetPdfPrintUrl_(dx, epid, token) {

@@ -77,7 +77,7 @@
         title: "Riwayat Perawatan",
         fields: [
           { id: "Apakah dirawat inap?", label: "Apakah dirawat inap?", type: "choice_buttons", options: ["Ya", "Tidak"], required: true },
-          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
+          { id: "Nama Rumah Sakit", label: "Nama Rumah Sakit", type: "search_select", fullWidth: true, required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Nomor Rekam Medik", label: "Nomor Rekam Medik", type: "text", showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Tanggal Masuk Rawat Inap", label: "Tanggal Masuk Rawat Inap", type: "date", required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },
           { id: "Status Pasien Rawat Inap", label: "Status Pasien Rawat Inap", type: "select", options: ["Masih dirawat", "Sudah pulang"], required: true, showIf: { field: "Apakah dirawat inap?", values: ["Ya"] } },

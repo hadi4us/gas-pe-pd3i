@@ -1,4 +1,4 @@
-        <section id="section-sampel-form-shell" class="hidden mt-6">
+        <section id="section-sampel-form-shell" class="hidden mt-6 pd3i-form-shell">
           <div id="dynamic-form-sampel" class="hidden" autocomplete="off" data-form-type="sampel" novalidate>
             <div class="pd3i-form-layout">
               <div class="pd3i-form-main">
@@ -11,6 +11,11 @@
                     <span class="pd3i-badge-soft">Data laboratorium langsung dari spreadsheet</span>
                   </div>
                   <div class="pd3i-helper-text">Ruang kerja ini mengambil ulang data dari spreadsheet/server saat dibuka, lalu fokus pada tahap hasil pemeriksaan tanpa bergantung pada ruang kerja lain.</div>
+                  <div class="pd3i-sampel-lab-brief" aria-label="Checklist hasil pemeriksaan laboratorium">
+                    <div><strong>Cek kasus</strong><span>Pastikan kasus sudah terverifikasi dan ringkasan pasien sesuai antrean lab.</span></div>
+                    <div><strong>Cek sampel</strong><span>Isi jenis pemeriksaan, tanggal, dan hasil sesuai dokumen laboratorium.</span></div>
+                    <div class="is-warning"><strong>Cek final</strong><span>Hasil yang tersimpan memengaruhi klasifikasi dan tindak lanjut kasus.</span></div>
+                  </div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section" id="sampel-case-summary-card">
@@ -30,7 +35,7 @@
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
               <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi hasil pemeriksaan</div><h3 class="pd3i-card-title">Simpan Hasil Pemeriksaan</h3></div><span class="pd3i-badge-soft">Khusus hasil pemeriksaan</span></div>
               <div class="pd3i-submit-stack">
-                <button type="button" id="btn-submit-sampel" class="pd3i-submit-button"><i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan</button>
+                <button type="button" id="btn-submit-sampel" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'sampel') : false"><i class="fas fa-vials"></i> Simpan Hasil Pemeriksaan</button>
               </div>
             </div>
           </div>

@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Surveilans Aktif-PD3I - Depok</title>
+
+  <script>
+    var SPREADSHEET_ID = <?= (typeof SPREADSHEET_ID !== 'undefined' && SPREADSHEET_ID) ? JSON.stringify(SPREADSHEET_ID) : '""' ?>;
+    var APP_URL = <?= (typeof APP_URL !== 'undefined' && APP_URL) ? JSON.stringify(APP_URL) : '""' ?>;
+
+    window.APP_CONFIG = window.APP_CONFIG || {};
+    window.APP_CONFIG.SPREADSHEET_ID = SPREADSHEET_ID;
+    window.APP_CONFIG.APP_URL = APP_URL;
+
+    const GO_TO_DASHBOARD = false;
+    const DASHBOARD_URL = "https://sites.google.com/view/pd3idepok/dashboard?authuser=0";
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <?!= include('SARS/style') ?>
+
+  <!-- ===== OVERRIDE: pd3i-sars-form-header model dashboard + grid identitas 3 kolom + select 1 chevron ===== -->
+  <style>
+    :root{
+      --gs-text:#202124;
+      --gs-muted:#5f6368;
+      --gs-border:#dadce0;
+      --gs-bg:#ffffff;
+      --gs-bg-soft:#f8f9fa;
+
+      --gs-primary:#1a73e8;
+      --gs-primary-weak:rgba(26,115,232,.15);
+
+      --gs-chip-blue-bg:#e8f0fe;
+      --gs-chip-blue-text:#1a73e8;
+      --gs-chip-gray-bg:#f1f3f4;
+      --gs-chip-gray-text:#374151;
+
+      --gs-radius:12px;
+      --gs-shadow:0 1px 2px rgba(60,64,67,.16), 0 1px 3px rgba(60,64,67,.08);
+      --gs-max: 980px;
+
+      --title-desktop:22px;
+      --title-tablet:20px;
+      --title-mobile:18px;
+    }
+
+    *{ font-family: Roboto, Arial, system-ui, -apple-system, "Segoe UI", sans-serif !important; }
+    body{ background: var(--gs-bg) !important; color: var(--gs-text) !important; }
+
+    /* =========================
+       ✅ HEADER MODEL DASHBOARD
+       (judul biru + pd3i-sars-chip + garis bawah)
+    ========================== */
+    .pd3i-sars-form-header{
+      background: var(--gs-bg) !important;
+      border-bottom: 1px solid var(--gs-border) !important;
+      padding: 14px 0 10px !important;
+      box-shadow: none !important;
+    }
+    .pd3i-sars-form-header > div{
+      max-width: var(--gs-max) !important;
+      margin: 0 auto !important;
+      padding: 0 16px !important;
+      text-align: left !important;
+    }
+
+    .pd3i-sars-header-top{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pd3i-sars-header-icon{
+      width:28px; height:28px;
+      display:grid; place-items:center;
+      border-radius:8px;
+      background: #f8fafc;
+      border:1px solid var(--gs-border);
+      font-size:16px;
+      flex:0 0 auto;
+    }
+    .pd3i-sars-form-header h1{
+      margin: 0 !important;
+      font-size: var(--title-desktop) !important;
+      line-height: 1.25 !important;
+      font-weight: 600 !important;
+      letter-spacing: 0 !important;
+      text-align: left !important;
+      color: var(--gs-primary) !important;   /* ✅ biru seperti dashboard */
+    }
+
+    .pd3i-sars-chip{
+      display:inline-flex;
+      align-items:center;
+      height:28px;
+      padding:0 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:600;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    .pd3i-sars-chip--blue{
+      background: var(--gs-chip-blue-bg);
+      color: var(--gs-chip-blue-text);
+      border-color: rgba(26,115,232,.25);
+    }
+    .pd3i-sars-chip--gray{
+      background: var(--gs-chip-gray-bg);
+      color: var(--gs-chip-gray-text);
+      border-color: rgba(0,0,0,.08);
+      font-weight:600;
+    }
+
+    /* ✅ Chip kanan (FORM + Update) */
+    .pd3i-sars-header-right{
+      margin-left:auto;              /* dorong ke kanan */
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:flex-end;      /* rata kanan */
+      text-align:right;
+    }
+    /* responsif: pd3i-sars-chip turun tapi tetap kanan */
+    @media(max-width: 680px){
+      .pd3i-sars-header-right{
+        width:100%;
+        margin-left:0;
+        justify-content:flex-end;
+      }
+    }
+
+    .pd3i-sars-form-header p{
+      margin: 6px 0 0 !important;
+      font-size: 13px !important;
+      color: var(--gs-muted) !important;
+      text-align: left !important;
+    }
+    .pd3i-sars-header-line{
+      margin-top:10px;
+      height:1px;
+      background: var(--gs-border);
+      width:100%;
+    }
+
+    @media(max-width: 980px){
+      .pd3i-sars-form-header h1{ font-size: var(--title-tablet) !important; }
+      .pd3i-sars-chip{ height:26px; font-size:12px; }
+      .pd3i-sars-header-icon{ width:26px; height:26px; }
+    }
+    @media(max-width: 520px){
+      .pd3i-sars-form-header h1{ font-size: var(--title-mobile) !important; }
+    }
+
+    /* =========================
+       Container & pd3i-sars-form-card: haluskan
+    ========================== */
+    .pd3i-sars-form-container{
+      max-width: var(--gs-max) !important;
+      margin: 0 auto !important;
+      padding: 16px !important;
+    }
+    .pd3i-sars-form-card{
+      border-radius: var(--gs-radius) !important;
+      border: 1px solid var(--gs-border) !important;
+      box-shadow: var(--gs-shadow) !important;
+      background: var(--gs-bg) !important;
+    }
+
+    /* Input/select */
+    input[type="text"], input[type="number"], input[type="tel"], input[type="date"], textarea, select{
+      border: 1px solid var(--gs-border) !important;
+      border-radius: 10px !important;
+      background: var(--gs-bg) !important;
+      color: var(--gs-text) !important;
+      outline: none !important;
+      transition: box-shadow .15s, border-color .15s, background-color .15s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, input[type="tel"]:focus, input[type="date"]:focus, textarea:focus, select:focus{
+      border-color: var(--gs-primary) !important;
+      box-shadow: 0 0 0 3px var(--gs-primary-weak) !important;
+    }
+
+    /* ✅ Select chevron single (hindari double) */
+    select{
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      padding-right: 40px !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' d='M7 10l5 5 5-5'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 12px center !important;
+      background-size: 18px 18px !important;
+    }
+    select::-ms-expand{ display:none; }
+
+    /* ====== ✅ IDENTITAS 3 KOLOM (DESKTOP) ====== */
+    .pd3i-sars-form-grid{
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 18px 24px !important;
+      align-items: start !important;
+    }
+    .pd3i-sars-span-3{ grid-column: 1 / -1 !important; }
+    .pd3i-sars-span-2{ grid-column: span 2 !important; }
+
+    @media(max-width: 980px){
+      .pd3i-sars-form-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+      .pd3i-sars-span-3{ grid-column: 1 / -1 !important; }
+    }
+    @media(max-width: 520px){
+      .pd3i-sars-form-grid{ grid-template-columns: 1fr !important; }
+    }
+
+    /* Tombol */
+    .pd3i-sars-submit-btn{
+      border-radius: 10px !important;
+      background: var(--gs-primary) !important;
+      color: #fff !important;
+      border: 1px solid transparent !important;
+      box-shadow: 0 1px 2px rgba(26,115,232,.25) !important;
+      font-weight: 600 !important;
+    }
+    .pd3i-sars-submit-btn:hover{ background:#1558b0 !important; }
+    .pd3i-sars-submit-btn:disabled{ opacity:.7 !important; cursor:not-allowed !important; }
+
+    .pd3i-sars-add-btn{
+      border-radius: 10px !important;
+      border: 1px solid var(--gs-border) !important;
+      background: var(--gs-bg-soft) !important;
+      color: var(--gs-text) !important;
+      box-shadow: none !important;
+    }
+    .pd3i-sars-add-btn:hover{
+      border-color: rgba(26,115,232,.35) !important;
+      background: #eef3fd !important;
+    }
+  </style>
+
+  <!-- popup autocomplete -->
+  <style>
+    .pd3i-sars-autocomplete-wrap{ position:relative; }
+    .pd3i-sars-ac-popup{
+      position:absolute; left:0; right:0; top: calc(100% + 6px);
+      background:#fff; border:1px solid #d1d5db; border-radius:10px;
+      box-shadow:0 10px 25px rgba(0,0,0,.12);
+      max-height:280px; overflow:auto; display:none; z-index:50;
+    }
+    .pd3i-sars-ac-item{
+      padding:10px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9;
+      font-size:14px; display:flex; gap:10px; align-items:flex-start;
+    }
+    .pd3i-sars-ac-item:last-child{ border-bottom:none; }
+    .pd3i-sars-ac-item:hover{ background:#f8fafc; }
+    .pd3i-sars-ac-badge{
+      font-size:12px; padding:2px 8px; border-radius:999px;
+      background:#e8f0ff; color:#0047b3; border:1px solid #cfe0ff;
+      flex:0 0 auto; margin-top:1px;
+    }
+    .pd3i-sars-ac-name{ flex:1; }
+    .pd3i-sars-ac-muted{ color:#64748b; font-size:12px; padding:10px 12px; }
+    .pd3i-sars-ac-highlight{ font-weight:700; text-decoration:underline; }
+  </style>
+</head>
+
+<body>
+  <!-- ✅ HEADER BARU (MODEL DASHBOARD) -->
+  <div class="pd3i-sars-form-header">
+    <div>
+      <div class="pd3i-sars-header-top">
+        <div class="pd3i-sars-header-icon" aria-hidden="true">📝</div>
+        <h1>FORM Pelaporan Surveilans Aktif-PD3I</h1>
+
+        <!-- ✅ kanan: FORM + Update (rata kanan) -->
+        <div class="pd3i-sars-header-right">
+          <span class="pd3i-sars-chip pd3i-sars-chip--blue" id="pd3i-sars-chipMode">FORM</span>
+          <span class="pd3i-sars-chip pd3i-sars-chip--gray" id="pd3i-sars-chipUpdate">Update: -</span>
+        </div>
+      </div>
+
+      <p>Dinas Kesehatan Kota Depok • Format Pelaporan Surveilans Aktif RS/Fasyankes</p>
+      <div class="pd3i-sars-header-line" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="pd3i-sars-form-container">
+    <div class="pd3i-sars-form-card">
+      <form id="sarsForm" novalidate action="javascript:void(0)" onsubmit="return false;">
+        <input type="hidden" id="email" value="<?= email ?>">
+
+        <h2 class="pd3i-sars-section-title">📋 Identitas Laporan</h2>
+
+        <!-- ✅ 3 kolom: Minggu, Nama, WA -->
+        <div class="pd3i-sars-form-grid">
+          <div>
+            <label for="mingguEpid" class="pd3i-sars-required">Minggu Epidemiologis</label>
+            <input type="number" id="mingguEpid" min="1" max="53" value="<?= epidInfo.week ?>" pd3i-sars-required placeholder="Contoh: 26">
+            <div class="pd3i-sars-help-text">Periode kasus: <?= epidInfo.rangeLabel ?></div>
+          </div>
+
+          <div>
+            <label for="namaPelapor" class="pd3i-sars-required">Nama Petugas Pelapor</label>
+            <input type="text" id="namaPelapor" pd3i-sars-required placeholder="Contoh: dr. Siti">
+          </div>
+
+          <div>
+            <label for="noWA" class="pd3i-sars-required">Nomor WhatsApp</label>
+            <input
+              type="tel"
+              id="noWA"
+              value="<?= defaultWA ?>"
+              pd3i-sars-required
+              placeholder="081234567890"
+              pattern="[0-9]{9,13}"
+              title="Isi 9–13 digit angka"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').substring(0,13)">
+          </div>
+        </div>
+
+        <!-- ✅ 3 kolom: Unit (span 2) + Jenis -->
+        <div class="pd3i-sars-form-grid" style="margin-top:14px;">
+          <div class="pd3i-sars-span-2">
+            <label for="unitPelapor" class="pd3i-sars-required">Unit Surveilans</label>
+            <input type="text" id="unitPelapor" pd3i-sars-required placeholder="Rekam Medik / Poli Anak / Bangsal Anak / lainnya">
+          </div>
+
+          <div>
+            <label for="jenisFaskes" class="pd3i-sars-required">Jenis Fasilitas Kesehatan</label>
+            <select id="jenisFaskes" pd3i-sars-required>
+              <option value="">Pilih jenis fasilitas kesehatan</option>
+              <option value="rs">Rumah Sakit (RS)</option>
+              <option value="klinik">Klinik</option>
+              <option value="tpmd">TPMD (Praktik Mandiri Dokter)</option>
+              <option value="pmb">PMB (Praktik Mandiri Bidan)</option>
+              <option value="lain">Lainnya</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ✅ Nama Faskes full width -->
+        <div class="pd3i-sars-form-grid" style="margin-top:14px;">
+          <div class="pd3i-sars-span-3">
+            <label for="asalFaskes" class="pd3i-sars-required">Nama Fasilitas Kesehatan</label>
+            <div class="pd3i-sars-autocomplete-wrap">
+              <input
+                type="text"
+                id="asalFaskes"
+                pd3i-sars-required
+                placeholder="Ketik minimal 3 huruf untuk muncul saran, atau isi manual bila tidak ada...">
+              <div id="acPopup" class="pd3i-sars-ac-popup" role="listbox" aria-label="Saran fasilitas"></div>
+            </div>
+            <div class="pd3i-sars-help-text" id="asalFaskesHelp">Memuat data fasilitas kesehatan...</div>
+          </div>
+        </div>
+
+        <!-- ===== Bagian penyakit (tidak diubah) ===== -->
+        <div class="pd3i-sars-disease-section">
+          <div class="pd3i-sars-disease-header">AFP (Lumpuh layuh mendadak, bukan karena trauma, umur &lt;15 th)</div>
+          <div id="rows-afp"><?!= generateCaseRow('afp', false) ?></div>
+          <div class="pd3i-sars-nihil-row">
+            <div class="pd3i-sars-nihil-container">
+              <input type="checkbox" id="nihil-afp" onchange="toggleNihil('afp')">
+              <label for="nihil-afp">Tidak ada kasus AFP minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-sars-add-btn" onclick="addRow('afp')">+ Tambah Baris Kasus</button>
+          </div>
+        </div>
+
+        <div class="pd3i-sars-disease-section">
+          <div class="pd3i-sars-disease-header">CAMPAK (Semua umur, demam dan rash)</div>
+          <div id="rows-mr"><?!= generateCaseRow('mr', false) ?></div>
+          <div class="pd3i-sars-nihil-row">
+            <div class="pd3i-sars-nihil-container">
+              <input type="checkbox" id="nihil-mr" onchange="toggleNihil('mr')">
+              <label for="nihil-mr">Tidak ada kasus Campak minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-sars-add-btn" onclick="addRow('mr')">+ Tambah Baris Kasus</button>
+          </div>
+        </div>
+
+        <div class="pd3i-sars-disease-section">
+          <div class="pd3i-sars-disease-header">DIFTERI (ISPA, demam tidak tinggi, pseudomembran, stridor)</div>
+          <div id="rows-dif"><?!= generateCaseRow('dif', false) ?></div>
+          <div class="pd3i-sars-nihil-row">
+            <div class="pd3i-sars-nihil-container">
+              <input type="checkbox" id="nihil-dif" onchange="toggleNihil('dif')">
+              <label for="nihil-dif">Tidak ada kasus Difteri minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-sars-add-btn" onclick="addRow('dif')">+ Tambah Baris Kasus</button>
+          </div>
+        </div>
+
+        <div class="pd3i-sars-disease-section">
+          <div class="pd3i-sars-disease-header">TETANUS NEONATORUM (Bayi 3–28 hari, mulut mencucu, kejang rangsang)</div>
+          <div id="rows-tn"><?!= generateCaseRow('tn', true) ?></div>
+          <div class="pd3i-sars-nihil-row">
+            <div class="pd3i-sars-nihil-container">
+              <input type="checkbox" id="nihil-tn" onchange="toggleNihil('tn')">
+              <label for="nihil-tn">Tidak ada kasus TN minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-sars-add-btn" onclick="addRow('tn')">+ Tambah Baris Kasus</button>
+          </div>
+        </div>
+
+        <div class="pd3i-sars-disease-section">
+          <div class="pd3i-sars-disease-header">PERTUSIS (Batuk terus menerus, apnea, batuk rejan, muntah setelah batuk)</div>
+          <div id="rows-pert"><?!= generateCaseRow('pert', true) ?></div>
+          <div class="pd3i-sars-nihil-row">
+            <div class="pd3i-sars-nihil-container">
+              <input type="checkbox" id="nihil-pert" onchange="toggleNihil('pert')">
+              <label for="nihil-pert">Tidak ada kasus Pertusis minggu ini (NIHIL)</label>
+            </div>
+            <button type="button" class="pd3i-sars-add-btn" onclick="addRow('pert')">+ Tambah Baris Kasus</button>
+          </div>
+        </div>
+
+      <button type="button" class="pd3i-sars-submit-btn" id="submitBtn" onclick="return window.submitLegacyZeroReporting(event)">📤 Simpan &amp; Kirim Laporan</button>
+      </form>
+
+      <div class="pd3i-sars-footer-note">
+        <p><strong>📌 Catatan Penting:</strong></p>
+        <ul>
+          <li><strong>SEGERA LAPORKAN &lt;24 jam</strong> bila menemukan kasus suspek PD3I via WA/telepon ke <strong>+62 813-8630-2835</strong></li>
+          <li>Laporan mingguan dikirim setiap <strong>hari Senin sebelum pukul 16.00 WIB</strong></li>
+          <li>Bila tidak ada kasus, centang <strong>NIHIL</strong> pada tiap jenis penyakit</li>
+          <li>Periode pelaporan: <strong>Minggu - Sabtu</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===== Chip Update (seperti dashboard) ===== */
+    (function(){
+      function formatUpdateID(d){
+        const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = months[d.getMonth()];
+        const yy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2,'0');
+        const mi = String(d.getMinutes()).padStart(2,'0');
+        return `Update: ${dd} ${mm} ${yy}, ${hh}.${mi}`;
+      }
+      try{
+        const el = document.getElementById('pd3i-sars-chipUpdate');
+        if (el) el.textContent = formatUpdateID(new Date());
+      }catch(e){}
+    })();
+
+    // ========= DATA GLOBAL =========
+    let MASTER_RS = [];
+    let MASTER_KLINIK = [];
+    let MASTER_TPMD = [];
+    let MASTER_PMB = [];
+    let MASTER_LAIN = [];
+    let ALL_FASKES = [];
+    let CURRENT_LIST = [];
+
+    let IS_SUBMITTING = false;
+
+    // ========= UTIL =========
+    function escapeHtml(s){
+      return String(s || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function highlight(text, q){
+      const T = String(text);
+      const Q = String(q || "").trim();
+      if (!Q) return escapeHtml(T);
+      const idx = T.toUpperCase().indexOf(Q.toUpperCase());
+      if (idx < 0) return escapeHtml(T);
+      const a = T.slice(0, idx), b = T.slice(idx, idx + Q.length), c = T.slice(idx + Q.length);
+      return `${escapeHtml(a)}<span class="pd3i-sars-ac-highlight">${escapeHtml(b)}</span>${escapeHtml(c)}`;
+    }
+
+    function normalizePhone(v){
+      return String(v || "").replace(/[^0-9]/g, "").substring(0, 13);
+    }
+
+    // ========= POPUP AUTOCOMPLETE =========
+    const acPopup = () => document.getElementById('acPopup');
+    const asalFaskesEl = () => document.getElementById('asalFaskes');
+    const jenisEl = () => document.getElementById('jenisFaskes');
+    const helpEl = () => document.getElementById('asalFaskesHelp');
+
+    function openPopup(){ acPopup().style.display = "block"; }
+    function closePopup(){ acPopup().style.display = "none"; acPopup().innerHTML = ""; }
+
+    function setHelpByJenis_(type){
+      if (type === "rs") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih RS dari popup. Jika tidak ada, isi manual.";
+      else if (type === "klinik") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih Klinik dari popup. Jika tidak ada, isi manual.";
+      else if (type === "tpmd") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih TPMD dari popup. Jika tidak ada, isi manual.";
+      else if (type === "pmb") helpEl().textContent = "Ketik minimal 3 huruf, lalu pilih PMB dari popup. Jika tidak ada, isi manual.";
+      else if (type === "lain") helpEl().textContent = "Isi manual. Ketik minimal 3 huruf untuk saran dari seluruh daftar.";
+      else helpEl().textContent = "Pilih jenis fasilitas kesehatan terlebih dahulu.";
+    }
+
+    function setCurrentListByJenis(type){
+      if (type === "rs") CURRENT_LIST = Array.isArray(MASTER_RS) ? MASTER_RS.slice() : [];
+      else if (type === "klinik") CURRENT_LIST = Array.isArray(MASTER_KLINIK) ? MASTER_KLINIK.slice() : [];
+      else if (type === "tpmd") CURRENT_LIST = Array.isArray(MASTER_TPMD) ? MASTER_TPMD.slice() : [];
+      else if (type === "pmb") CURRENT_LIST = Array.isArray(MASTER_PMB) ? MASTER_PMB.slice() : [];
+      else if (type === "lain") CURRENT_LIST = Array.isArray(ALL_FASKES) ? ALL_FASKES.slice() : [];
+      else CURRENT_LIST = [];
+    }
+
+    function renderSuggestions(keyword){
+      const q = String(keyword || "").trim();
+      const popup = acPopup();
+
+      if (q.length < 3) {
+        closePopup();
+        if (jenisEl().value) helpEl().textContent = 'Ketik minimal 3 huruf untuk melihat saran.';
+        return;
+      }
+
+      const type = jenisEl().value;
+      if (!type) {
+        closePopup();
+        helpEl().textContent = 'Pilih jenis fasilitas kesehatan terlebih dahulu.';
+        return;
+      }
+
+      const upperQ = q.toUpperCase();
+      const filtered = (CURRENT_LIST || [])
+        .filter(n => String(n).toUpperCase().includes(upperQ))
+        .slice(0, 30);
+
+      if (filtered.length === 0) {
+        popup.innerHTML = `<div class="pd3i-sars-ac-muted">Tidak ada yang cocok di REF_FASKES. Anda boleh lanjut isi manual.</div>`;
+        openPopup();
+        return;
+      }
+
+      const badge =
+        type === "rs" ? "RS" :
+        type === "klinik" ? "KLINIK" :
+        type === "tpmd" ? "TPMD" :
+        type === "pmb" ? "PMB" :
+        "FASKES";
+
+      popup.innerHTML = filtered.map(name => `
+        <div class="pd3i-sars-ac-item" data-name="${escapeHtml(name)}" role="option">
+          <span class="pd3i-sars-ac-badge">${badge}</span>
+          <div class="pd3i-sars-ac-name">${highlight(name, q)}</div>
+        </div>
+      `).join("");
+
+      popup.querySelectorAll('.pd3i-sars-ac-item').forEach(item => {
+        item.addEventListener('mousedown', () => {
+          const val = item.getAttribute('data-name');
+          asalFaskesEl().value = val || "";
+          closePopup();
+        });
+      });
+
+      openPopup();
+    }
+
+    jenisEl().addEventListener('change', () => {
+      const type = (jenisEl().value || "").toLowerCase().trim();
+      setCurrentListByJenis(type);
+      asalFaskesEl().value = "";
+      closePopup();
+      setHelpByJenis_(type);
+      setTimeout(() => asalFaskesEl().focus(), 0);
+    });
+
+    asalFaskesEl().addEventListener('input', (e) => renderSuggestions(e.target.value));
+    asalFaskesEl().addEventListener('focus', (e) => renderSuggestions(e.target.value));
+    asalFaskesEl().addEventListener('blur', () => setTimeout(closePopup, 150));
+    document.addEventListener('keydown', (e) => { if (e.key === "Escape") closePopup(); });
+
+    // ====== LOGIKA KASUS (add/remove/nihil) =====
+    function addRow(disease) {
+      const formContainer = document.getElementById('rows-' + disease);
+      const firstCase = formContainer.querySelector('.pd3i-zero-reporting-case-row');
+      if (!firstCase) return;
+
+      const newCase = firstCase.cloneNode(true);
+      newCase.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      });
+
+      const count = formContainer.querySelectorAll('.pd3i-zero-reporting-case-row').length + 1;
+      newCase.querySelectorAll('[id]').forEach(el => { el.id = el.id.replace(/-\d+$/, '-' + count); });
+      newCase.querySelectorAll('label[for]').forEach(label => { label.htmlFor = label.htmlFor.replace(/-\d+$/, '-' + count); });
+
+      const removeBtnNew = newCase.querySelector('.pd3i-zero-reporting-remove-btn');
+      if (removeBtnNew) removeBtnNew.style.display = 'flex';
+
+      formContainer.appendChild(newCase);
+
+      const firstRow = formContainer.querySelector('.pd3i-zero-reporting-case-row');
+      if (firstRow) {
+        const firstRemove = firstRow.querySelector('.pd3i-zero-reporting-remove-btn');
+        if (firstRemove) firstRemove.style.display = 'none';
+      }
+    }
+
+    function removeRow(button) {
+      const caseRow = button.closest('.pd3i-zero-reporting-case-row');
+      if (!caseRow) return;
+
+      const formContainer = caseRow.parentElement;
+      const allRows = formContainer.querySelectorAll('.pd3i-zero-reporting-case-row');
+      if (allRows.length <= 1) {
+        alert('Baris pertama tidak dapat dihapus. Minimal satu baris kasus harus tersedia.');
+        return;
+      }
+
+      const ok = confirm('Yakin ingin menghapus baris kasus ini?');
+      if (!ok) return;
+
+      caseRow.classList.add('is-removing');
+      setTimeout(() => {
+        caseRow.remove();
+        const rowsAfter = formContainer.querySelectorAll('.pd3i-zero-reporting-case-row');
+        if (rowsAfter.length > 0) {
+          const firstRemove = rowsAfter[0].querySelector('.pd3i-zero-reporting-remove-btn');
+          if (firstRemove) firstRemove.style.display = 'none';
+        }
+      }, 250);
+    }
+
+    function toggleNihil(disease) {
+      const nihlCheck = document.getElementById('nihil-' + disease);
+      const rows = document.getElementById('rows-' + disease);
+      const nihilRow = rows.nextElementSibling;
+      const addBtn = nihilRow ? nihilRow.querySelector('.pd3i-sars-add-btn') : null;
+
+      if (nihlCheck.checked) {
+        rows.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.type === 'checkbox') el.checked = false;
+          else el.value = '';
+          if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        });
+        rows.style.opacity = '0.35';
+        rows.style.pointerEvents = 'none';
+        if (addBtn) addBtn.disabled = true;
+      } else {
+        rows.style.opacity = '1';
+        rows.style.pointerEvents = 'auto';
+        if (addBtn) addBtn.disabled = false;
+      }
+    }
+
+    function setSubmittingState(isSubmitting){
+      const submitBtn = document.getElementById('submitBtn');
+      if (!submitBtn) return;
+
+      if (isSubmitting) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Mengirim laporan...';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📤 Simpan & Kirim Laporan';
+      }
+    }
+
+    const sarsForm = document.getElementById('sarsForm');
+    if (sarsForm) sarsForm.noValidate = true;
+    window.submitLegacyZeroReporting = function(e) {
+      e = e || window.event;
+      e.preventDefault();
+
+      if (IS_SUBMITTING) return;
+      IS_SUBMITTING = true;
+      setSubmittingState(true);
+
+      const jenisFaskes = (jenisEl().value || "").toLowerCase().trim();
+      const asalFaskes = (asalFaskesEl().value || '').trim();
+
+      // Facility identity is authoritative on server. Do not block submit here:
+      // autocomplete/session timing can leave client field temporarily blank.
+      // Backend validates account, facility, and REF_FASKES before any write.
+      const formData = {
+        email: String(document.getElementById('email').value || '').trim(),
+        mingguEpid: parseInt(document.getElementById('mingguEpid').value, 10),
+        namaPelapor: String(document.getElementById('namaPelapor').value || '').trim(),
+        noWA: normalizePhone(document.getElementById('noWA').value),
+        unitPelapor: String(document.getElementById('unitPelapor').value || '').trim(),
+        jenisFaskes: jenisFaskes,
+        asalFaskes: asalFaskes,
+        cases: []
+      };
+
+      const pd3iSarsRequired = ['mingguEpid','namaPelapor','noWA','unitPelapor'];
+      for (let id of pd3iSarsRequired) {
+        const el = document.getElementById(id);
+        if (!el || !String(el.value || '').trim()) {
+          alert(`⚠️ Kolom "${id.replace(/([A-Z])/g, ' $1')}" wajib diisi.`);
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+          return;
+        }
+      }
+
+      const diseases = [
+        { key: 'afp', label: 'AFP' },
+        { key: 'mr', label: 'CAMPAK' },
+        { key: 'dif', label: 'DIFTERI' },
+        { key: 'tn', label: 'TETANUS NEONATORUM' },
+        { key: 'pert', label: 'PERTUSIS' }
+      ];
+
+      const validationErrors = [];
+
+      diseases.forEach(d => {
+        const nihl = document.getElementById('nihil-' + d.key)?.checked;
+        if (nihl) {
+          formData.cases.push({ jenis: d.label, nihl: true });
+        } else {
+          const cases = document.querySelectorAll('#rows-' + d.key + ' .pd3i-sars-case-row');
+          cases.forEach((caseDiv, idx) => {
+            const inputs = {
+              nama: caseDiv.querySelector('[name="nama"]')?.value?.trim(),
+              tglLahir: caseDiv.querySelector('[name="tglLahir"]')?.value,
+              jk: caseDiv.querySelector('[name="jk"]')?.value,
+              namaOrtu: caseDiv.querySelector('[name="namaOrtu"]')?.value?.trim(),
+              alamat: caseDiv.querySelector('[name="alamat"]')?.value?.trim(),
+              tglMulai: caseDiv.querySelector('[name="tglMulai"]')?.value,
+              gejala: caseDiv.querySelector('[name="gejala"]')?.value?.trim(),
+              imunisasi: caseDiv.querySelector('[name="imunisasi"]')?.value?.trim(),
+              keadaan: caseDiv.querySelector('[name="keadaan"]')?.value,
+              spesimenPenolong: (d.key === 'tn' || d.key === 'pert')
+                ? (caseDiv.querySelector('[name="penolong"]')?.value?.trim() || '-')
+                : caseDiv.querySelector('[name="spesimen"]')?.value,
+              diagnosis: caseDiv.querySelector('[name="diagnosis"]')?.value?.trim()
+            };
+
+            const allEmpty = Object.keys(inputs).every(k => !inputs[k] || inputs[k] === '-');
+            if (allEmpty) return;
+
+            if (!inputs.nama) {
+              validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Nama kasus belum diisi.`);
+              return;
+            }
+            if (!inputs.tglMulai || !inputs.keadaan) {
+              validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Isi Tgl MULAI dan Keadaan (H/M).`);
+              return;
+            }
+            if (inputs.tglLahir && inputs.tglMulai) {
+              const tL = new Date(inputs.tglLahir);
+              const tM = new Date(inputs.tglMulai);
+              if (tM < tL) {
+                validationErrors.push(`- ${d.label} kasus ke-${idx + 1}: Tgl MULAI tidak boleh lebih awal dari Tgl Lahir.`);
+                return;
+              }
+            }
+
+            formData.cases.push({ jenis: d.label, no: idx + 1, ...inputs });
+          });
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        alert('⚠️ Periksa kembali isian kasus berikut:\n\n' + validationErrors.join('\n'));
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      if (formData.cases.length === 0) {
+        alert('⚠️ Minimal 1 kasus atau centang NIHIL per penyakit.');
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      if (!confirm('Apakah Anda yakin data sudah benar dan akan dikirim ke Dinas Kesehatan?')) {
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler((res) => {
+          try {
+            if (res && typeof res === 'object' && res.ok === false) {
+              alert('⚠️ ' + (res.message || 'Laporan ditolak oleh sistem.'));
+              IS_SUBMITTING = false;
+              setSubmittingState(false);
+              return;
+            }
+          } catch(e){}
+
+          alert('✅ Laporan berhasil disimpan dan dikirim!');
+
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+
+          try {
+            if (GO_TO_DASHBOARD) window.top.location.href = DASHBOARD_URL;
+            else window.top.location.reload();
+          } catch (e) {
+            if (GO_TO_DASHBOARD) window.location.href = DASHBOARD_URL;
+            else window.location.reload();
+          }
+        })
+        .withFailureHandler(err => {
+          alert('❌ Gagal: ' + (err && err.message ? err.message : err));
+          IS_SUBMITTING = false;
+          setSubmittingState(false);
+        })
+        .submitSARS(formData);
+    };
+    if (sarsForm) sarsForm.onsubmit = window.submitLegacyZeroReporting;
+    document.addEventListener('click', function(e) {
+      const btn = e.target && e.target.closest ? e.target.closest('#submitBtn') : null;
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.submitLegacyZeroReporting(e);
+    }, true);
+
+    window.addEventListener('load', () => {
+      helpEl().textContent = 'Memuat data fasilitas dari REF_FASKES...';
+
+      google.script.run
+        .withSuccessHandler(data => {
+          MASTER_RS = data && Array.isArray(data.rs) ? data.rs : [];
+          MASTER_KLINIK = data && Array.isArray(data.klinik) ? data.klinik : [];
+          MASTER_TPMD = data && Array.isArray(data.tpmd) ? data.tpmd : [];
+          MASTER_PMB  = data && Array.isArray(data.pmb)  ? data.pmb  : [];
+          MASTER_LAIN = data && Array.isArray(data.lain) ? data.lain : [];
+
+          ALL_FASKES = data && Array.isArray(data.all)
+            ? data.all
+            : [...new Set([...(MASTER_RS||[]), ...(MASTER_KLINIK||[]), ...(MASTER_TPMD||[]), ...(MASTER_PMB||[]), ...(MASTER_LAIN||[])])];
+
+          const defaultJenisRaw = ("<?= defaultFacilityType ?>".trim() || "klinik").toLowerCase();
+          const allowed = new Set(["rs","klinik","tpmd","pmb","lain"]);
+          const defaultJenis = allowed.has(defaultJenisRaw) ? defaultJenisRaw : "klinik";
+
+          jenisEl().value = defaultJenis;
+          setCurrentListByJenis(defaultJenis);
+          setHelpByJenis_(defaultJenis);
+
+          ["afp","mr","dif","tn","pert"].forEach(key => {
+            const firstRow = document.querySelector(`#rows-${key} .pd3i-sars-case-row`);
+            if (firstRow) {
+              const removeBtn = firstRow.querySelector(".pd3i-sars-remove-btn");
+              if (removeBtn) removeBtn.style.display = "none";
+            }
+          });
+
+          const nowType = (jenisEl().value || "").toLowerCase().trim();
+          setCurrentListByJenis(nowType);
+
+          try {
+            const defName = ("<?= defaultFacilityName ?>".trim() || "");
+            if (defName) asalFaskesEl().value = defName;
+          } catch(e){}
+        })
+        .withFailureHandler(err => {
+          console.error(err);
+          helpEl().textContent = 'Gagal memuat REF_FASKES. Hubungi admin.';
+        })
+        .getMasterFaskesForClient();
+    });
+  </script>
+</body>
+</html>

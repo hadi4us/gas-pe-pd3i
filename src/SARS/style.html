@@ -1,0 +1,372 @@
+<style>
+:root{
+  /* Google Sites-like tokens */
+  --gs-text:#202124;
+  --gs-muted:#5f6368;
+  --gs-border:#dadce0;
+  --gs-bg:#ffffff;
+  --gs-bg-soft:#f8f9fa;
+
+  /* Depok / primary */
+  --primary:#1a73e8;
+  --primary-weak:rgba(26,115,232,.15);
+  --accent:#fbbc04;
+
+  --radius:12px;
+  --shadow:0 1px 2px rgba(60,64,67,.16), 0 1px 3px rgba(60,64,67,.08);
+  --shadow-soft:0 2px 10px rgba(2,6,23,.08);
+
+  /* sections */
+  --info-box-bg:#e8f0ff;
+  --disease-header-bg:#f6f9fe;
+
+  /* width alignment */
+  --gs-max:980px;
+
+  /* ===== Font scale (lebih konsisten) ===== */
+  --fz-body:14px;
+  --fz-label:13px;
+  --fz-input:14px;
+  --fz-help:12px;
+
+  --fz-h1-desktop:24px;
+  --fz-h1-tablet:22px;
+  --fz-h1-mobile:20px;
+
+  --fz-section-title:14px;
+  --fz-disease-header:14px;
+  --fz-btn:14px;
+  --fz-btn-small:13px;
+}
+
+/* ===== Base ===== */
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--gs-bg);
+  color:var(--gs-text);
+  font-family: Roboto, "Segoe UI", "Inter", system-ui, -apple-system, Arial, sans-serif;
+  line-height:1.5;
+  font-size:var(--fz-body);
+}
+
+/* ===== HEADER ===== */
+.pd3i-sars-form-header{
+  background:var(--gs-bg) !important;
+  color:var(--gs-text) !important;
+  padding:18px 0 12px !important;
+  display:block !important;
+  box-shadow:none !important;
+  border-bottom:1px solid var(--gs-border) !important;
+}
+.pd3i-sars-form-header img{ display:none !important; }
+
+.pd3i-sars-form-header > div{
+  max-width:var(--gs-max);
+  margin:0 auto;
+  padding:0 16px;
+  text-align:left;
+}
+
+.pd3i-sars-form-header h1{
+  font-size:var(--fz-h1-desktop);
+  margin:0;
+  font-weight:500;
+  line-height:1.25;
+  color:var(--gs-text);
+  text-align:left;
+}
+
+.pd3i-sars-form-header p{
+  margin:6px 0 0;
+  font-size:12px;
+  color:var(--gs-muted);
+  opacity:1;
+  text-align:left;
+}
+
+.pd3i-sars-form-header > div::after{
+  content:"";
+  display:block;
+  height:1px;
+  width:320px;
+  background:var(--gs-border);
+  margin-top:12px;
+  margin-left:0;
+}
+
+/* ===== MAIN LAYOUT ===== */
+.pd3i-sars-form-container{
+  max-width:var(--gs-max);
+  margin:0 auto;
+  padding:16px;
+}
+
+.pd3i-sars-form-card{
+  background:var(--gs-bg);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  border:1px solid var(--gs-border);
+  padding:20px;
+  margin-bottom:18px;
+}
+
+/* ===== SECTION TITLE ===== */
+.pd3i-sars-section-title{
+  font-size:var(--fz-section-title);
+  font-weight:700;
+  color:var(--gs-text);
+  margin:0 0 16px 0;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--gs-border);
+}
+
+/* ===== Disease section ===== */
+.pd3i-sars-disease-section{
+  margin-top:28px;
+  padding-top:18px;
+  position:relative;
+  border-top:1px solid var(--gs-border);
+}
+
+.pd3i-sars-disease-header{
+  background:var(--disease-header-bg);
+  color:var(--gs-text);
+  padding:12px 14px;
+  font-weight:700;
+  font-size:var(--fz-disease-header);
+  border:1px solid var(--gs-border);
+  margin:0 0 14px 0;
+  border-radius:10px;
+  box-shadow:none;
+}
+
+/* ===== Case pd3i-sars-row ===== */
+.pd3i-sars-case-row{
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+  margin-bottom:14px;
+  border:1px solid var(--gs-border);
+  position:relative;
+  box-shadow:none;
+  transition:opacity .25s ease, transform .25s ease, max-height .25s ease, margin-bottom .25s ease;
+  max-height:999px;
+}
+.pd3i-sars-case-row::before{ display:none; }
+.pd3i-sars-case-row.is-removing{
+  opacity:0;
+  transform:translateX(-8px);
+  max-height:0;
+  margin-bottom:0;
+  overflow:hidden;
+}
+
+/* ===== Remove button ===== */
+.pd3i-sars-remove-btn{
+  background:#ef4444;
+  color:#fff;
+  padding:6px 10px;
+  font-size:var(--fz-btn-small);
+  border-radius:10px;
+  position:absolute;
+  top:10px;
+  right:10px;
+  cursor:pointer;
+  font-weight:600;
+  min-width:60px;
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.pd3i-sars-remove-btn::before{ content:"✕"; font-weight:900; margin:0; }
+.pd3i-sars-remove-btn:hover{ background:#dc2626; }
+
+/* Konten kasus */
+.pd3i-sars-row-content{ padding-top:34px; }
+
+/* ===== Field group ===== */
+.pd3i-sars-field-group{ margin-bottom:16px; }
+.pd3i-sars-field-group:not(:last-child)::after{
+  content:"";
+  display:block;
+  height:1px;
+  background:#eef2f7;
+  margin:14px 0;
+}
+
+/* ===== Layout grid ===== */
+.pd3i-sars-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px 20px;
+  margin-bottom:10px;
+}
+.pd3i-sars-col-1{ flex:1; min-width:240px; }
+.pd3i-sars-col-2{ flex:2; min-width:320px; }
+.pd3i-sars-col-3{ flex:3; min-width:420px; }
+
+/* ===== Labels ===== */
+label{
+  display:inline-block;
+  font-size:var(--fz-label);
+  font-weight:500;
+  color:var(--gs-text);
+  margin:0 0 6px;
+}
+
+/* ===== Required star ===== */
+.pd3i-sars-required{ position:relative; }
+.pd3i-sars-required::after{
+  content:"*";
+  color:#d93025;
+  font-weight:900;
+  margin-left:4px;
+}
+
+/* ===== Controls ===== */
+input:not([type="checkbox"]), select, textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--gs-border);
+  font-size:var(--fz-input);          /* ✅ FIX */
+  height:40px;
+  background:#fff;
+  color:var(--gs-text);
+  transition:border-color .15s, box-shadow .15s;
+}
+textarea{
+  height:auto;
+  min-height:88px;                   /* sedikit lebih nyaman untuk teks */
+  line-height:1.45;
+}
+
+input:focus, select:focus, textarea:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-weak);
+  outline:none;
+}
+
+/* ===== Select chevron single ===== */
+select{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  padding-right:40px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'%3E%3Cpath fill='%235f6368' d='M7 10l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:18px 18px;
+}
+select::-ms-expand{ display:none; }
+
+/* Help text */
+.pd3i-sars-help-text{
+  font-size:var(--fz-help);
+  color:var(--gs-muted);
+  font-style:italic;
+  margin-top:6px;
+}
+
+/* ===== Info & nihil ===== */
+.pd3i-sars-user-info{
+  background:var(--info-box-bg);
+  padding:12px 14px;
+  border-radius:12px;
+  margin-bottom:16px;
+  border:1px solid rgba(26,115,232,.25);
+  border-left:4px solid var(--primary);
+  font-size:var(--fz-body);
+}
+
+.pd3i-sars-nihil-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--gs-border);
+}
+.pd3i-sars-nihil-container{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.pd3i-sars-nihil-container label{
+  margin:0;
+  font-size:var(--fz-label);
+}
+.pd3i-sars-nihil-container input[type="checkbox"]{
+  width:18px;
+  height:18px;
+}
+
+/* ===== Buttons ===== */
+.pd3i-sars-submit-btn{
+  background:var(--primary);
+  color:#fff;
+  padding:12px 18px;
+  border:none;
+  border-radius:10px;
+  font-size:var(--fz-btn);
+  font-weight:700;
+  cursor:pointer;
+  height:48px;
+  width:100%;
+  margin-top:18px;
+  box-shadow:0 1px 2px rgba(26,115,232,.25);
+}
+.pd3i-sars-submit-btn:hover{ background:#1558b0; }
+
+.pd3i-sars-add-btn{
+  background:var(--gs-bg-soft);
+  color:var(--gs-text);
+  padding:6px 12px;
+  font-size:var(--fz-btn-small);
+  border-radius:10px;
+  height:34px;
+  border:1px solid var(--gs-border);
+}
+.pd3i-sars-add-btn:hover{
+  border-color:rgba(26,115,232,.35);
+  background:#eef3fd;
+}
+
+/* ===== Footer note ===== */
+.pd3i-sars-footer-note{
+  background:#fffbe6;
+  padding:16px;
+  border-radius:12px;
+  margin-top:18px;
+  border:1px solid rgba(251,188,4,.35);
+  border-left:4px solid var(--accent);
+  box-shadow:var(--shadow);
+  font-size:var(--fz-body);
+}
+.pd3i-sars-footer-note ul{
+  margin:8px 0 0;
+  padding-left:18px;
+}
+.pd3i-sars-footer-note li{
+  margin:6px 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 980px){
+  .pd3i-sars-form-header h1{ font-size:var(--fz-h1-tablet); }
+  .pd3i-sars-form-header > div::after{ width:280px; }
+}
+@media (max-width: 768px){
+  .pd3i-sars-row{ flex-direction:column; gap:12px; }
+  .pd3i-sars-col-1,.pd3i-sars-col-2,.pd3i-sars-col-3{ min-width:100%; }
+  .pd3i-sars-case-row{ padding:14px; }
+}
+@media (max-width: 520px){
+  .pd3i-sars-form-header h1{ font-size:var(--fz-h1-mobile); }
+  .pd3i-sars-form-header > div::after{ width:240px; }
+}
+</style>

@@ -3,26 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIMPEL Kota Depok - Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan</title>
+  <title>SIMPEL Surveilans Kota Depok - Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan</title>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0faf8',
-              100: '#dff3f0',
-              600: '#147d73',
-              700: '#0f5f5a',
-            }
-          }
-        }
-      }
-    }
-  </script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
@@ -32,7 +14,7 @@
     <?!= include('style'); ?>
   </style>
 </head>
-<body class="pd3i-body" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
+<body class="pd3i-body" data-app-version="v2026.07.22.1" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
 
   <?!= include('login'); ?>
   <?!= include('pin'); ?>
@@ -47,8 +29,8 @@
             <i class="fas fa-shield-virus"></i>
           </div>
           <div>
-            <div class="pd3i-brand-title">SIMPEL Kota Depok</div>
-            <div class="pd3i-brand-subtitle">Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan</div>
+            <div class="pd3i-brand-title">SIMPEL Surveilans</div>
+            <div class="pd3i-brand-subtitle">Kota Depok · v2026.07.22.1</div>
           </div>
         </div>
         <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
@@ -56,18 +38,20 @@
         </button>
       </div>
       <div class="pd3i-sidebar-section">
-        <div class="pd3i-sidebar-label">Navigasi Cepat</div>
         <nav class="pd3i-sidebar-nav" aria-label="Navigasi utama">
           <a href="#section-overview" data-sidebar-workspace="overview" class="pd3i-nav-link is-active">
             <i class="fas fa-house"></i>
             <span>Beranda</span>
           </a>
 
-          <div class="pd3i-nav-group-label">Surveilans PD3I</div>
-          <div id="pd3i-cases-nav-children" class="pd3i-nav-children">
+          <div class="pd3i-nav-group-label" data-nav-group-label="pd3i-cases">
+            <span>Surveilans PD3I</span>
+            <small>Kasus, verifikasi, lab, status</small>
+          </div>
+          <div id="pd3i-cases-nav-children" class="pd3i-nav-children" data-nav-group="pd3i-cases">
             <button id="btn-sidebar-dashboard" data-sidebar-workspace="dashboard" type="button" class="pd3i-nav-link pd3i-nav-child pd3i-nav-button">
               <i class="fas fa-chart-column"></i>
-              <span>Dashboard PD3I</span>
+              <span>Dasbor PD3I</span>
             </button>
             <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-list-ul"></i>
@@ -89,29 +73,28 @@
               <i class="fas fa-list-check"></i>
               <span>Status dan Klasifikasi</span>
             </a>
-          </div>
-
-          <div class="pd3i-nav-group-label">Pelaporan Rutin</div>
-          <div id="pd3i-reporting-nav-children" class="pd3i-nav-children">
             <a href="#section-zero-reporting-form" data-sidebar-workspace="zero-reporting-form" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
               <i class="fas fa-clipboard-list"></i>
-              <span>Input Zero Reporting</span>
+              <span>Input Reporting</span>
             </a>
             <a href="#section-zero-reporting-dashboard" data-sidebar-workspace="zero-reporting-dashboard" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
               <i class="fas fa-chart-line"></i>
-              <span>Dashboard Zero Reporting</span>
+              <span>Dasbor Reporting</span>
             </a>
           </div>
 
-          <div class="pd3i-nav-group-label">Kewaspadaan Dini</div>
-          <div id="pd3i-pie-nav-children" class="pd3i-nav-children">
+          <div class="pd3i-nav-group-label" data-nav-group-label="pd3i-pie">
+            <span>Surveilans PIE</span>
+            <small>Skrining, operasi PE, lab</small>
+          </div>
+          <div id="pd3i-pie-nav-children" class="pd3i-nav-children" data-nav-group="pd3i-pie">
             <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="screening" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-virus-covid"></i>
               <span>Skrining PIE</span>
             </a>
             <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="dashboard" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-chart-line"></i>
-              <span>Dashboard PIE</span>
+              <span>Dasbor PIE</span>
             </a>
             <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="operations" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-list-check"></i>
@@ -123,8 +106,15 @@
             </a>
           </div>
 
-          <div class="pd3i-nav-group-label">Lainnya</div>
-          <div id="pd3i-tools-nav-children" class="pd3i-nav-children">
+          <div class="pd3i-nav-group-label" data-nav-group-label="pd3i-admin">
+            <span>Administrasi</span>
+            <small>Akun, konfigurasi, audit</small>
+          </div>
+          <div id="pd3i-admin-nav-children" class="pd3i-nav-children" data-nav-group="pd3i-admin">
+            <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="account-approval" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-user-check"></i>
+              <span>Approval Permohonan Akun</span>
+            </a>
             <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="config" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-sliders"></i>
               <span>Konfigurasi Sistem</span>
@@ -133,11 +123,12 @@
               <i class="fas fa-user-gear"></i>
               <span>Kelola Pengguna</span>
             </a>
-            <a href="#section-guide" data-sidebar-workspace="guide" class="pd3i-nav-link pd3i-nav-child">
-              <i class="fas fa-book-open"></i>
-              <span>Panduan Aplikasi</span>
-            </a>
           </div>
+
+          <a href="#section-guide" data-sidebar-workspace="guide" class="pd3i-nav-link pd3i-nav-guide-link">
+            <i class="fas fa-book-open"></i>
+            <span>Panduan Aplikasi</span>
+          </a>
         </nav>
       </div>
 
@@ -146,6 +137,7 @@
         <div class="pd3i-note-copy">
           Tampilan dibuat ringkas, operasional, dan nyaman digunakan untuk kegiatan surveilans harian.
         </div>
+        <div class="pd3i-app-version" title="Versi aplikasi untuk trace update">Versi v2026.07.22.1</div>
       </div>
     </aside>
 
@@ -159,15 +151,19 @@
             <nav id="pd3i-breadcrumb" class="pd3i-breadcrumb" aria-label="Breadcrumb">
               <span>Beranda</span>
               <span aria-hidden="true">/</span>
-              <span id="pd3i-breadcrumb-current">SIMPEL Kota Depok</span>
+              <span id="pd3i-breadcrumb-current">SIMPEL Surveilans</span>
             </nav>
             <div id="pd3i-page-eyebrow" class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
-            <h1 id="pd3i-page-title" class="pd3i-page-title">SIMPEL Kota Depok</h1>
+            <h1 id="pd3i-page-title" class="pd3i-page-title">SIMPEL Surveilans</h1>
             <p id="pd3i-page-subtitle" class="pd3i-page-subtitle">Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan.</p>
           </div>
         </div>
 
         <div class="pd3i-topbar-actions">
+          <div class="pd3i-session-context" aria-label="Konteks sesi aktif">
+            <span class="pd3i-session-context-label">Sesi aktif</span>
+            <span class="pd3i-session-context-copy">Peran, unit, dan cakupan mengikuti akun masuk.</span>
+          </div>
           <div id="user-badge" class="hidden pd3i-user-badge">
             <i class="fas fa-user"></i><span id="user-badge-text">-</span>
           </div>
@@ -204,7 +200,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <?!= include('utils.js'); ?>
@@ -218,5 +213,6 @@
   <?!= include('auth.js'); ?>
   <?!= include('app.js'); ?>
   <?!= include('app.dashboard.js'); ?>
+  <?!= include('app.init.js'); ?>
 </body>
 </html>

@@ -84,12 +84,14 @@ function _extractUserScopeInfoFromRow_(row, headers) {
   }
 
   const ixUnit = idx(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-  const ixKode = idx(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
+  const ixFaskes = idx(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+  const ixKode = idx(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
   const ixScope = idx(["ScopeLevel", "Scope Level"]);
   const ixWa = idx(["No Whatsapp", "No WhatsApp", "Whatsapp", "WhatsApp", "NoWA", "No WA", "WA"]);
 
   return {
     unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
+    namaFaskes: ixFaskes !== -1 ? String(row[ixFaskes] || "").trim() : "",
     kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
     scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim().toLowerCase() : "",
     noWhatsapp: ixWa !== -1 ? String(row[ixWa] || "").trim() : ""
@@ -141,6 +143,8 @@ function _findUserByEmail_(email) {
     return -1;
   }
 
+  function fieldIndex(names) { return headerIndex(names); }
+
   const ixEmail = headerIndex(["Email", "Gmail", "EmailPetugas"]);
   const ixUser = headerIndex(["Username"]);
   const ixNama = headerIndex(["Nama", "Nama Petugas"]);
@@ -171,7 +175,12 @@ function _findUserByEmail_(email) {
       unitKerja: scopeInfo.unitKerja,
       kodePuskesmas: scopeInfo.kodePuskesmas,
       scopeLevel: scopeInfo.scopeLevel,
-      noWhatsapp: scopeInfo.noWhatsapp
+      noWhatsapp: scopeInfo.noWhatsapp,
+      otpChannel: fieldIndex(['OtpChannel']) !== -1 ? String(row[fieldIndex(['OtpChannel'])] || '').trim().toLowerCase() : 'email',
+      otpFallbackChannel: fieldIndex(['OtpFallbackChannel']) !== -1 ? String(row[fieldIndex(['OtpFallbackChannel'])] || 'email').trim().toLowerCase() : 'email',
+      telegramChatId: fieldIndex(['TelegramChatId']) !== -1 ? String(row[fieldIndex(['TelegramChatId'])] || '').trim() : '',
+      telegramStatus: fieldIndex(['TelegramStatus']) !== -1 ? String(row[fieldIndex(['TelegramStatus'])] || '').trim().toUpperCase() : '',
+      notificationChannel: fieldIndex(['NotificationChannel']) !== -1 ? String(row[fieldIndex(['NotificationChannel'])] || 'none').trim().toLowerCase() : 'none'
     }};
   }
 
@@ -181,7 +190,7 @@ function _findUserByEmail_(email) {
 function requestLoginOtp(email) {
   try {
     email = _normalizeGmail_(email);
-    if (!email || !/@gmail\.com$/i.test(email)) return { status: "error", message: "Gunakan alamat Gmail yang valid." };
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) return { status: "error", message: "Gunakan alamat email yang valid." };
 
     const found = _findUserByEmail_(email);
     if (!found.user) return { status: "error", message: found.error || "Email belum terdaftar." };
@@ -193,13 +202,29 @@ function requestLoginOtp(email) {
     AUTH_CACHE.put(_authOtpKey_(email), _hashOtpValue_(email, otp), 5 * 60);
     AUTH_CACHE.put(cooldownKey, "1", 60);
 
+    let fallbackReason = '';
+    if (found.user.otpChannel === 'telegram' || found.user.otpChannel === 'both') {
+      if (found.user.telegramChatId && found.user.telegramStatus === 'ACTIVE') {
+        try {
+          _telegramApi_('sendMessage', { chat_id: found.user.telegramChatId, text: 'Kode OTP SIMPEL Surveilans Kota Depok: ' + otp + '\n\nBerlaku selama 5 menit. Jangan bagikan kode ini.' });
+          return { status: "success", message: "OTP sudah dikirim ke Telegram Anda.", channel: "telegram", cooldownSec: 60 };
+        } catch (telegramErr) {
+          fallbackReason = 'TELEGRAM_SEND_FAILED';
+          if (found.user.otpFallbackChannel !== 'email') return _publicAuthError_(telegramErr, "OTP Telegram gagal dikirim. Hubungkan ulang Telegram atau hubungi admin.");
+        }
+      } else {
+        fallbackReason = 'TELEGRAM_NOT_PAIRED';
+        if (found.user.otpFallbackChannel !== 'email') return { status: "error", message: "Telegram belum terhubung. Hubungkan ulang Telegram atau hubungi admin." };
+      }
+    }
+
     MailApp.sendEmail({
       to: email,
       subject: "Kode OTP SS PD3I",
       body: "Kode OTP Anda adalah: " + otp + "\n\nKode berlaku selama 5 menit.\n\nAbaikan email ini jika Anda tidak meminta OTP."
     });
 
-    return { status: "success", message: "OTP sudah dikirim ke Gmail Anda.", cooldownSec: 60 };
+    return { status: "success", message: fallbackReason ? "OTP Telegram belum tersedia. OTP dikirim ke email Anda." : "OTP sudah dikirim ke email Anda.", channel: fallbackReason ? "email_fallback" : "email", fallbackReason: fallbackReason, cooldownSec: 60 };
   } catch (e) {
     return _publicAuthError_(e, "OTP belum bisa dikirim. Silakan coba lagi atau hubungi admin.");
   }
@@ -356,6 +381,12 @@ function authCheck(token) {
       return { status: "error", message: "Sesi tidak valid." };
     }
 
+    // REF_USER is source of truth. Never return stale user scope from browser/cache.
+    // This keeps UnitKerja, KodePuskesmas, Role, and ScopeLevel aligned with sheet.
+    const currentUser = _refreshAuthUserFromRefUser_(obj.user);
+    if (!currentUser) return { status: "error", message: "Akun tidak ditemukan di REF_USER." };
+    obj.user = currentUser;
+
     const ttl = obj.ttl || Session_Manager.getTtlForRole(obj.user.role);
     const nowTs = Date.now();
     obj.ts = nowTs;
@@ -365,6 +396,32 @@ function authCheck(token) {
   } catch (e) {
     return _publicAuthError_(e, "Sesi belum bisa diperiksa. Silakan login ulang.");
   }
+}
+
+function _refreshAuthUserFromRefUser_(cachedUser) {
+  const sh = getSheetOrNull_("REF_USER");
+  if (!sh) return null;
+  const values = sh.getDataRange().getValues();
+  if (!values || values.length < 2) return null;
+  const headers = values[0].map(function(h) { return String(h || "").trim(); });
+  function ix(names) {
+    for (var i = 0; i < names.length; i++) { var n = headers.indexOf(names[i]); if (n !== -1) return n; }
+    return -1;
+  }
+  const ixUser = ix(["Username"]), ixEmail = ix(["Email", "Gmail", "EmailPetugas"]);
+  const ixNama = ix(["Nama", "Nama Petugas"]), ixRole = ix(["Role"]), ixAktif = ix(["Aktif", "StatusAktif"]);
+  const wantedUser = String((cachedUser && cachedUser.username) || "").trim().toLowerCase();
+  const wantedEmail = _normalizeGmail_(cachedUser && cachedUser.email);
+  for (var r = 1; r < values.length; r++) {
+    const row = values[r];
+    const rowUser = ixUser === -1 ? "" : String(row[ixUser] || "").trim();
+    const rowEmail = ixEmail === -1 ? "" : _normalizeGmail_(row[ixEmail]);
+    if (!((wantedEmail && rowEmail === wantedEmail) || (wantedUser && rowUser.toLowerCase() === wantedUser))) continue;
+    if (ixAktif !== -1) { const aktif = String(row[ixAktif] || "").trim().toUpperCase(); if (aktif && !["YA", "AKTIF", "TRUE"].includes(aktif)) return null; }
+    const scope = _extractUserScopeInfoFromRow_(row, headers);
+    return { username: rowUser || cachedUser.username, email: rowEmail || cachedUser.email || "", nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : rowUser) || rowUser, role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "", unitKerja: scope.unitKerja, namaFaskes: scope.namaFaskes, kodePuskesmas: scope.kodePuskesmas, scopeLevel: scope.scopeLevel, noWhatsapp: scope.noWhatsapp };
+  }
+  return null;
 }
 
 function authLogout(token) {
@@ -481,7 +538,8 @@ function manageGetUsers(token) {
     const ixNama = headerIndex(["Nama", "Nama Petugas"]);
     const ixRole = headerIndex(["Role"]);
     const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-    const ixKode = headerIndex(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
+    const ixFaskes = headerIndex(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+    const ixKode = headerIndex(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
     const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
     const ixLoginMethod = headerIndex(["LoginMethod", "Login Method"]);
@@ -490,6 +548,7 @@ function manageGetUsers(token) {
     const ixOtpCooldown = headerIndex(["OtpCooldownSeconds", "Otp Cooldown Seconds", "OtpCooldown"]);
     const ixLastLogin = headerIndex(["LastLoginAt", "Last Login At", "LastLogin"]);
     const ixCatatan = headerIndex(["Catatan"]);
+    const ixOtpChannel = headerIndex(["OtpChannel"]), ixOtpFallback = headerIndex(["OtpFallbackChannel"]), ixNotifChannel = headerIndex(["NotificationChannel"]);
 
     const users = [];
     for (var r = 0; r < rows.length; r++) {
@@ -503,6 +562,7 @@ function manageGetUsers(token) {
         nama: ixNama !== -1 ? String(row[ixNama] || "").trim() : "",
         role: ixRole !== -1 ? String(row[ixRole] || "").trim() : "",
         unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
+        namaFaskes: ixFaskes !== -1 ? String(row[ixFaskes] || "").trim() : "",
         kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
         scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim() : "",
         statusAktif: ixAktif !== -1 ? String(row[ixAktif] || "").trim() : "YA",
@@ -512,6 +572,9 @@ function manageGetUsers(token) {
         otpCooldownSeconds: ixOtpCooldown !== -1 ? Number(row[ixOtpCooldown] || 60) : 60,
         lastLoginAt: ixLastLogin !== -1 ? String(row[ixLastLogin] || "").trim() : "",
         catatan: ixCatatan !== -1 ? String(row[ixCatatan] || "").trim() : ""
+        ,otpChannel: ixOtpChannel !== -1 ? String(row[ixOtpChannel] || "email").trim().toLowerCase() : "email"
+        ,otpFallbackChannel: ixOtpFallback !== -1 ? String(row[ixOtpFallback] || "none").trim().toLowerCase() : "none"
+        ,notificationChannel: ixNotifChannel !== -1 ? String(row[ixNotifChannel] || "none").trim().toLowerCase() : "none"
       });
     }
 
@@ -543,10 +606,12 @@ function manageSaveUser(token, userPayload) {
     const ixNama = headerIndex(["Nama", "Nama Petugas"]);
     const ixRole = headerIndex(["Role"]);
     const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-    const ixKode = headerIndex(["KodePuskesmas", "Kode Puskesmas", "Kode PKM"]);
+    const ixFaskes = headerIndex(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+    const ixKode = headerIndex(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
     const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
     const ixCatatan = headerIndex(["Catatan"]);
+    const ixOtpChannel = headerIndex(["OtpChannel"]), ixOtpFallback = headerIndex(["OtpFallbackChannel"]), ixNotifChannel = headerIndex(["NotificationChannel"]);
 
     if (ixUser === -1 || ixGmail === -1) {
       return { ok: false, error: "Kolom Username dan Gmail wajib ada di REF_USER." };
@@ -581,7 +646,8 @@ function manageSaveUser(token, userPayload) {
       else if (h === "Nama" || h === "Nama Petugas") val = String(userPayload.nama || "").trim();
       else if (h === "Role") val = String(userPayload.role || "petugas").trim().toLowerCase();
       else if (h === "UnitKerja" || h === "Unit Kerja" || h === "Nama Puskesmas" || h === "Puskesmas") val = String(userPayload.unitKerja || "").trim();
-      else if (h === "KodePuskesmas" || h === "Kode Puskesmas" || h === "Kode PKM") val = String(userPayload.kodePuskesmas || "").trim();
+      else if (h === "NamaFaskes" || h === "Nama Faskes" || h === "Nama Fasyankes" || h === "Faskes") val = String(userPayload.namaFaskes || userPayload.unitKerja || "").trim();
+      else if (h === "KodeFaskes" || h === "Kode Faskes" || h === "Kode PKM") val = String(userPayload.kodePuskesmas || "").trim();
       else if (h === "ScopeLevel" || h === "Scope Level") val = String(userPayload.scopeLevel || "puskesmas").trim().toLowerCase();
       else if (h === "Aktif" || h === "StatusAktif") val = String(userPayload.statusAktif || "YA").trim().toUpperCase();
       else if (h === "Catatan") val = String(userPayload.catatan || "").trim();
@@ -589,6 +655,9 @@ function manageSaveUser(token, userPayload) {
       else if (h === "OtpEnabled") val = String(userPayload.otpEnabled || "YA").trim().toUpperCase();
       else if (h === "OtpTtlMinutes") val = Number(userPayload.otpTtlMinutes || 5);
       else if (h === "OtpCooldownSeconds") val = Number(userPayload.otpCooldownSeconds || 60);
+      else if (h === "OtpChannel") val = String(userPayload.otpChannel || "email").trim().toLowerCase();
+      else if (h === "OtpFallbackChannel") val = String(userPayload.otpFallbackChannel || "none").trim().toLowerCase();
+      else if (h === "NotificationChannel") val = String(userPayload.notificationChannel || "none").trim().toLowerCase();
       rowValues.push(val);
     });
 
