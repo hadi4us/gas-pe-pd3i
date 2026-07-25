@@ -13436,22 +13436,22 @@ body.pd3i-body {
 .pd3i-summary-panel-card,
 .pd3i-workflow-panel-card,
 .pd3i-lab-audit-panel-card {
-  background: var(--color-surface) !important;
-  border-color: var(--color-border) !important;
+  background: var(--pd3i-surface) !important;
+  border-color: var(--pd3i-border) !important;
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07) !important;
 }
 
 .pd3i-summary-panel-card .pd3i-card-eyebrow,
 .pd3i-workflow-panel-card .pd3i-card-eyebrow,
 .pd3i-lab-audit-panel-card .pd3i-card-eyebrow {
-  color: var(--color-text-muted) !important;
+  color: var(--pd3i-muted) !important;
   letter-spacing: 0.08em !important;
 }
 
 .pd3i-summary-panel-card .pd3i-card-title,
 .pd3i-workflow-panel-card .pd3i-card-title,
 .pd3i-lab-audit-panel-card .pd3i-card-title {
-  color: var(--color-text) !important;
+  color: var(--pd3i-text) !important;
 }
 
 .pd3i-summary-grid {
@@ -13461,8 +13461,8 @@ body.pd3i-body {
 }
 
 .pd3i-summary-item {
-  background: var(--color-surface-subtle) !important;
-  border-color: var(--color-border) !important;
+  background: var(--pd3i-surface-soft) !important;
+  border-color: var(--pd3i-border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: none !important;
   min-height: 72px;
@@ -15825,9 +15825,9 @@ body.pd3i-body {
   gap: var(--space-2);
 }
 .pd3i-detail-safety-strip > div {
-  border: 1px solid rgba(37, 99, 235, 0.14);
+  border: 1px solid color-mix(in srgb, var(--pd3i-primary) 14%, transparent);
   border-radius: var(--radius-md);
-  background: #f8fafc;
+  background: var(--pd3i-surface-soft);
   padding: var(--space-3);
 }
 .pd3i-detail-safety-strip span {
