@@ -14171,9 +14171,9 @@ body.pd3i-body {
   gap: var(--space-4);
   align-items: start;
   margin-bottom: var(--space-4);
-  background: #ffffff !important;
-  border-color: var(--color-border) !important;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.045) !important;
+  background: var(--pd3i-surface) !important;
+  border-color: var(--pd3i-border) !important;
+  box-shadow: var(--pd3i-shadow-sm) !important;
 }
 .pd3i-guide-search-label {
   position: absolute;
@@ -14197,9 +14197,9 @@ body.pd3i-body {
   font-weight: 700;
 }
 .pd3i-guide-search-input:focus {
-  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline: 3px solid color-mix(in srgb, var(--pd3i-primary) 18%, transparent);
   border-color: var(--color-focus-ring);
-  background: #ffffff;
+  background: var(--pd3i-surface);
 }
 .pd3i-guide-faq-chips {
   grid-column: 1 / -1;
@@ -14236,7 +14236,7 @@ body.pd3i-body {
 }
 .pd3i-guide-card:target {
   border-color: var(--color-info) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 10px 26px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pd3i-primary) 16%, transparent), var(--pd3i-shadow-md) !important;
 }
 @media (max-width: 820px) {
   .pd3i-guide-faq-panel {
@@ -15238,9 +15238,9 @@ body.pd3i-body {
 }
 
 .pd3i-guide-role-card {
-  border: 1px solid rgba(226, 232, 240, 0.92);
+  border: 1px solid var(--pd3i-border);
   border-radius: var(--radius-lg);
-  background: #f8fafc;
+  background: var(--pd3i-surface-soft);
   padding: var(--space-4);
 }
 

@@ -133,6 +133,16 @@ Target:
 - Hero glow memakai `--pd3i-primary`; shadow action memakai `--pd3i-shadow-md`.
 - KPI, quick action, priority inbox, dan responsive layout tetap sama.
 
+| 2026-07-26 | Batch 9 | Guide/Panduan FAQ, focus, target card, dan role safety memakai token canonical | selesai lokal |
+
+## Catatan teknis Batch 9
+
+- FAQ panel memakai `--pd3i-surface`, `--pd3i-border`, dan `--pd3i-shadow-sm`.
+- Search focus dan target card memakai `--pd3i-primary` serta `--pd3i-shadow-md`.
+- Role card memakai `--pd3i-border` dan `--pd3i-surface-soft`.
+- Safety card memakai semantic info/warning tokens.
+- Pencarian panduan, anchor topic, role content, dan responsive layout tetap sama.
+
 
 ## Catatan teknis Batch 3
 
