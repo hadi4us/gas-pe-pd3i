@@ -13317,8 +13317,8 @@ body.pd3i-body {
 }
 
 .pd3i-queue-table thead th {
-  background: #f8fafc !important;
-  color: var(--color-text-muted) !important;
+  background: var(--pd3i-surface-soft) !important;
+  color: var(--pd3i-muted) !important;
   font-size: 0.68rem !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
@@ -13382,8 +13382,8 @@ body.pd3i-body {
 .pd3i-queue-action-btn {
   min-height: 40px !important;
   border-radius: var(--radius-lg) !important;
-  background: var(--color-primary-700) !important;
-  color: #ffffff !important;
+  background: var(--pd3i-primary) !important;
+  color: var(--pd3i-surface) !important;
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.18) !important;
 }
 
@@ -14811,14 +14811,14 @@ body.pd3i-body {
 
 .pd3i-queue-age,
 .pd3i-queue-next-action {
-  color: #334155;
+  color: var(--pd3i-text);
   font-weight: 800;
 }
 
 .pd3i-queue-next-action {
-  border: 1px solid rgba(37, 99, 235, 0.16);
+  border: 1px solid color-mix(in srgb, var(--pd3i-primary) 16%, transparent);
   border-radius: var(--radius-pill);
-  background: #eff6ff;
+  background: var(--color-primary-050);
   padding: 0.28rem 0.48rem;
   width: fit-content;
   max-width: 100%;
