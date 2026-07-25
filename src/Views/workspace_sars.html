@@ -654,7 +654,7 @@
       d.setUTCDate(d.getUTCDate() + 4 - dayNum);
       const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
       const currentWeek = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-      let week = currentWeek - 2;
+      let week = currentWeek - 1;
       let year = d.getUTCFullYear();
       if (week < 1) { week = 52; year -= 1; }
       return { week, year, rangeLabel: `Tahun ${year}, ME ${week}` };

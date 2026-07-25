@@ -172,10 +172,8 @@ function shiftEpiWeek_(year, week, delta) {
  */
 function getEpidWeekForReporting() {
   const cur = getEpidWeekCurrent();          // current epi week/year
-  // Operasional SARS Depok: minggu yang dilaporkan = minggu berjalan yang tampak di kalender - 1.
-  // Fungsi getEpidWeekCurrent() berbasis batas minggu epidemiologi internal bisa menghasilkan +1
-  // terhadap minggu operasional pada hari berjalan, jadi reporting memakai current - 2.
-  const prev = shiftEpiWeek_(cur.year, cur.week, -2);
+  // Laporan default selalu memakai minggu epidemiologi berjalan - 1.
+  const prev = shiftEpiWeek_(cur.year, cur.week, -1);
   return prev;
 }
 
