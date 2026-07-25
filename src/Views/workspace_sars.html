@@ -209,8 +209,8 @@
         : (type === 'error' || type === 'danger')
           ? 'border-red-200 bg-red-50 text-red-900'
           : 'border-blue-200 bg-blue-50 text-blue-900';
-      box.className = 'pd3i-workflow-banner mt-3 mb-3 border px-4 py-3 text-sm font-semibold ' + tone;
-      box.style.cssText = 'display:block;position:sticky;top:12px;z-index:50;min-height:24px;padding:12px;border-radius:8px;margin:12px 0;';
+      box.className = 'pd3i-workflow-banner pd3i-sars-inline-banner is-' + (type === 'error' || type === 'danger' ? 'error' : type === 'success' ? 'success' : 'info');
+      box.style.cssText = '';
       box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       if (cfg.type === 'success' && typeof window.showPd3iToast === 'function') {
         window.showPd3iToast(message, cfg);

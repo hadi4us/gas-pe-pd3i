@@ -1343,6 +1343,23 @@ body[data-active-workspace="sars-dashboard"] #section-zero-reporting-dashboard {
   border-radius: var(--radius-lg);
 }
 
+.pd3i-sars-inline-banner {
+  display: block;
+  position: sticky;
+  top: var(--space-3);
+  z-index: 50;
+  min-height: 24px;
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-md);
+  font-size: .875rem;
+  font-weight: 700;
+}
+.pd3i-sars-inline-banner.is-info { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
+.pd3i-sars-inline-banner.is-success { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+.pd3i-sars-inline-banner.is-error { background: var(--color-danger-bg); color: var(--color-danger); border-color: var(--color-danger-border); }
+
 .pd3i-inline-button {
   min-height: 48px;
   border-radius: var(--radius-lg);

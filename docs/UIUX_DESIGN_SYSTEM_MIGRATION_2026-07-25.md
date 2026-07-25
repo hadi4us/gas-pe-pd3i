@@ -88,6 +88,16 @@ Target:
 | 2026-07-26 | Batch 3 | PIE choice/card/KPI/insight memakai token canonical | selesai lokal |
 | 2026-07-26 | Batch 3 | Administrasi stats/table/modal memakai token canonical | selesai lokal |
 | 2026-07-26 | Batch 3 | Regression assertion diubah dari literal hex ke token design system | selesai |
+| 2026-07-26 | Batch 4 | SARS workspace inline banner memakai class canonical; runtime `style.cssText` dihapus | selesai lokal |
+
+## Catatan teknis Batch 4
+
+- Ditambahkan `.pd3i-sars-inline-banner` ke `src/Views/style.html`.
+- Banner SARS memakai state `.is-info`, `.is-success`, dan `.is-error`.
+- Inline geometry/style runtime dihapus dari `src/Views/workspace_sars.html`.
+- Tone semantic tetap dipertahankan.
+- Tidak mengubah submit, validasi, session, atau workflow SARS.
+
 
 ## Catatan teknis Batch 3
 
