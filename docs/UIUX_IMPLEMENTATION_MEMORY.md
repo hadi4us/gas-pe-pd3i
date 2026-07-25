@@ -480,3 +480,22 @@ Deployment:
 - Validation: `npm test` passed `258/258`; hygiene and endpoint security checks passed.
 - Deployment target: dedicated UI/UX deployment only; deployed @1298.
 - Production and Development/core deployments untouched.
+
+## 2026-07-26 — UI/UX token standardization completion batch (@1360–@1364)
+
+- Dashboard statistik: reading strip normalized to canonical `--pd3i-*` tokens; deployed Development @1360.
+- Daftar Kasus: result registry surface, border, text, and muted tokens normalized; deployed Development @1361.
+- Form Input/Edit: wizard, stepper, progress, review, and action surfaces normalized; deployed Development @1362.
+- Administrasi: settings console surfaces, headings, descriptions, and sensitive panels normalized; deployed Development @1363.
+- Panduan Aplikasi + Zero Reporting/SARS: guide cards, intro checks, disease headers, and footer note normalized; deployed Development @1364.
+- Preserved IDs, classes, handlers, API calls, permission checks, workflow transitions, search/filter, charts, maps, tables, dynamic rows, and legacy aliases.
+- Validation for batch: `npm test` 266/266 pass, project hygiene pass, endpoint security pass, `git diff --check` pass.
+- Smoke test: Development routes returned HTTP 200 with title `SIMPEL Surveilans Kota Depok`.
+- Production untouched. Browser visual/role validation remains pending because authenticated browser session and role fixtures are unavailable.
+
+## Remaining UI/UX assurance gaps
+
+- Remaining `var(--color-*)` references are not mass-replaced: many belong to global foundation, semantic states, legacy SARS/PIE surfaces, or components not yet scoped. Replace only after selector-level audit.
+- Browser visual validation remains pending without authenticated session.
+- Role/workflow smoke validation remains pending for admin, petugas, and pengampu paths.
+- Next action: perform selector-level legacy token audit, then browser and role validation when access is available.
