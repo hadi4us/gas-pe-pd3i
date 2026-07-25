@@ -106,6 +106,16 @@ Target:
 - `workspace_form.html` dan `workspace_input_form.html` memakai class semantic untuk icon.
 - Struktur form, selector ID, onclick submit, dan alur draft tetap sama.
 
+| 2026-07-26 | Batch 6 | Daftar Kasus toolbar dan results panel memakai surface/border/shadow token canonical | selesai lokal |
+
+## Catatan teknis Batch 6
+
+- `workspace_search.html` tidak memerlukan perubahan markup.
+- `.pd3i-search-toolbar` memakai `--pd3i-border`, `--pd3i-surface-soft`, dan `--pd3i-shadow-sm`.
+- `.pd3i-search-results-panel` memakai `--pd3i-border` dan `--pd3i-surface`.
+- `.pd3i-search-sort-select` memakai `--pd3i-surface`.
+- Gradient dan rgba lokal di area Daftar Kasus dihapus; filter, sorting, hasil, dan aksi kasus tetap sama.
+
 
 ## Catatan teknis Batch 3
 
