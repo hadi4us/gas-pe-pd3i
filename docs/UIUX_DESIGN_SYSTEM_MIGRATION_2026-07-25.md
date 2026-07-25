@@ -84,4 +84,16 @@ Target:
 | 2026-07-25 | Audit | Inventarisasi HTML, CSS inline, token, dan workspace | selesai |
 | 2026-07-25 | Batch 1 | Dokumentasi migration baseline | selesai |
 | 2026-07-25 | Batch 1 | Token bridge SARS | selesai |
-| 2026-07-25 | Batch 2 | SARS shared tokens: palette, font, radius, shadow | selesai lokal; visual browser check berikutnya |
+| 2026-07-25 | Batch 2 | SARS shared tokens: palette, font, radius, shadow | selesai; Development @1348 |
+| 2026-07-26 | Batch 3 | PIE choice/card/KPI/insight memakai token canonical | selesai lokal |
+| 2026-07-26 | Batch 3 | Administrasi stats/table/modal memakai token canonical | selesai lokal |
+| 2026-07-26 | Batch 3 | Regression assertion diubah dari literal hex ke token design system | selesai |
+
+## Catatan teknis Batch 3
+
+- Perubahan scoped di `#section-pie`, `.account-approval-*`, dan `.account-review-*`.
+- Tidak mengubah markup, event handler, API, hak akses, atau workflow.
+- Warna khusus status tetap dipertahankan karena membawa makna semantik.
+- Test sebelumnya mengunci string CSS hex lama; assertion diperbarui agar mengunci penggunaan token canonical.
+- Visual browser belum dapat divalidasi pada batch ini karena browser automation belum memiliki sesi login aplikasi. HTTP smoke test tetap dilakukan setelah deploy.
+

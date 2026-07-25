@@ -919,7 +919,7 @@ test('PIE checkbox cards keep equal responsive dimensions', () => {
   const grids = (pieHtml.match(/pie-choice-grid/g) || []).length;
   assert.ok(grids >= 3, 'clinical, exposure, and epidemiology checkbox groups use equal card grid');
   assert.match(pieHtml, /#section-pie \.pie-choice-grid\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(220px,1fr\)\);align-items:stretch;grid-auto-rows:minmax\(4\.1rem,auto\)\}/);
-  assert.match(pieHtml, /#section-pie \.pie-choice\{display:grid;grid-template-columns:1\.1rem minmax\(0,1fr\);gap:\.45rem;align-items:flex-start;padding:\.5rem \.55rem;border:1px solid #e2e8f0;border-radius:\.7rem;background:#fff;transition:\.15s ease;cursor:pointer;min-height:4\.1rem;height:100%;width:100%;min-width:0\}/);
+  assert.match(pieHtml, /#section-pie \.pie-choice\{display:grid;grid-template-columns:1\.1rem minmax\(0,1fr\);gap:\.45rem;align-items:flex-start;padding:\.5rem \.55rem;border:1px solid var\(--pd3i-border\);border-radius:var\(--radius-md\);background:var\(--pd3i-surface\);transition:\.15s ease;cursor:pointer;min-height:4\.1rem;height:100%;width:100%;min-width:0\}/);
   assert.match(pieHtml, /#section-pie \.pie-choice small\{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;color:#64748b;line-height:1\.18;margin-top:\.08rem;font-size:\.74rem\}/);
 });
 
