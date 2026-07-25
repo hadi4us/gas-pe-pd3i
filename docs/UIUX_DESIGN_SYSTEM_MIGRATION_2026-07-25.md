@@ -125,6 +125,14 @@ Target:
 - Gradient metric card dihapus melalui `background-image: none` yang sudah ada.
 - Responsive grid, chart, loading state, error state, dan kalkulasi data tetap sama.
 
+| 2026-07-26 | Batch 8 | Overview/Beranda hero glow dan action hover memakai token primary/shadow canonical | selesai lokal |
+
+## Catatan teknis Batch 8
+
+- `workspace_overview.html` tidak memerlukan perubahan markup.
+- Hero glow memakai `--pd3i-primary`; shadow action memakai `--pd3i-shadow-md`.
+- KPI, quick action, priority inbox, dan responsive layout tetap sama.
+
 
 ## Catatan teknis Batch 3
 
