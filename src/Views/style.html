@@ -12713,9 +12713,9 @@ body.pd3i-body {
 }
 
 .pd3i-guide-card {
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid var(--pd3i-border) !important;
   border-radius: var(--radius-card) !important;
-  background: #ffffff !important;
+  background: var(--pd3i-surface) !important;
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04) !important;
   min-height: 100%;
   display: flex;
@@ -12749,7 +12749,7 @@ body.pd3i-body {
 
 .pd3i-guide-list {
   gap: 0.45rem;
-  color: var(--color-text-secondary);
+  color: var(--pd3i-muted);
   line-height: 1.55;
 }
 
@@ -14076,8 +14076,8 @@ body.pd3i-body {
 }
 
 #section-zero-reporting-form .pd3i-zero-reporting-host .pd3i-zero-reporting-disease-header {
-  background: var(--color-surface-subtle);
-  color: var(--color-text);
+  background: var(--pd3i-surface-soft);
+  color: var(--pd3i-text);
 }
 
 #section-zero-reporting-form .pd3i-zero-reporting-host .pd3i-zero-reporting-case-row input,
@@ -14094,7 +14094,7 @@ body.pd3i-body {
   padding: var(--space-4);
   border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-lg);
-  background: #FFFBEB;
+  background: var(--color-warning-bg);
 }
 
 @media (max-width: 900px) {
@@ -16800,8 +16800,8 @@ body.pd3i-body {
   gap: var(--space-4);
   align-items: center;
   margin-bottom: var(--space-4);
-  background: #ffffff !important;
-  border: 1px solid var(--color-border) !important;
+  background: var(--pd3i-surface) !important;
+  border: 1px solid var(--pd3i-border) !important;
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.045) !important;
 }
 .pd3i-guide-page-intro .pd3i-card-title {
@@ -16817,10 +16817,10 @@ body.pd3i-body {
   min-height: 40px;
   display: flex;
   align-items: center;
-  border: 1px solid rgba(14, 165, 233, 0.18);
+  border: 1px solid color-mix(in srgb, var(--pd3i-primary) 18%, transparent);
   border-radius: var(--radius-lg);
-  background: #f0f9ff;
-  color: var(--color-text);
+  background: var(--color-primary-050);
+  color: var(--pd3i-text);
   padding: 0.55rem 0.75rem;
   font-weight: 900;
 }
