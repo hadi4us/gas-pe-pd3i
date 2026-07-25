@@ -159,3 +159,14 @@ Target:
 - Test sebelumnya mengunci string CSS hex lama; assertion diperbarui agar mengunci penggunaan token canonical.
 - Visual browser belum dapat divalidasi pada batch ini karena browser automation belum memiliki sesi login aplikasi. HTTP smoke test tetap dilakukan setelah deploy.
 
+
+| 2026-07-26 | Batch 10 | PIE/Administrasi token audit dan artefak legacy aman | selesai lokal |
+
+## Catatan teknis Batch 10
+
+- PIE command panel, KPI, choice state, dan insight memakai token canonical scoped.
+- Artefak unreachable pada `renderPieResultCard` dihapus; branch berada setelah `return` dan tidak pernah dieksekusi.
+- Inline width Administrasi yang tidak perlu dihapus; layout tetap memakai class/input constraint yang sudah ada.
+- Selector serta markup aktif dipertahankan bila masih direferensikan.
+- Assertion test diselaraskan dengan token canonical.
+- Tidak menghapus file runtime, data, deployment, atau artefak yang masih direferensikan.
