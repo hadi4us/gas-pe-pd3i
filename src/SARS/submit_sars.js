@@ -26,6 +26,22 @@ function _sToInt_(v) {
   return Number.isFinite(n) ? Math.floor(n) : NaN;
 }
 
+const SARS_SUBMIT_ROLES_ = ['admin', 'super-admin', 'superadmin', 'surveilans', 'petugas'];
+
+function _getSarsSubmitSession_(formData) {
+  const token = _sTrim_(formData.__token);
+  const session = _getSessionFromToken_(token);
+  if (!session.ok || !session.user) throw new Error("Sesi tidak valid.");
+
+  const role = (typeof _normalizePd3iRole_ === 'function')
+    ? _normalizePd3iRole_(session.user.role)
+    : String(session.user.role || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  _sRequire_(SARS_SUBMIT_ROLES_.indexOf(role) !== -1, "Role tidak berwenang mengirim laporan SARS.");
+  _sRequire_(session.user.email || session.user.kodePuskesmas || session.user.namaFaskes || session.user.unitKerja,
+    "Profil akun belum memiliki mapping fasilitas.");
+  return session;
+}
+
 /**
  * Normalisasi untuk match:
  * - uppercase
@@ -328,22 +344,35 @@ function _checkDuplicate_(sheet, hmap, me, faskesKey) {
 
 /** ========= MAIN ========= */
 function submitSARS(formData) {
-  // payload guard
+  // Server-side auth is mandatory. Never trust facility identity from client payload.
   if (formData === undefined || formData === null) throw new Error("Payload formData kosong/invalid.");
+  // Parse first so token cannot be bypassed by sending JSON text.
   if (typeof formData === "string") {
     try { formData = JSON.parse(formData); } catch (e) { throw new Error("Payload formData string bukan JSON valid."); }
   }
   _sRequire_(_sIsObj_(formData), "Payload formData harus object.");
+  const session = _getSarsSubmitSession_(formData);
   _sRequire_(Array.isArray(formData.cases), "Payload cases harus array.");
 
-  // identitas laporan
-  const email         = _sTrim_(formData.email);
+  // Identity comes from authenticated session. Client identity fields are ignored.
+  const email         = _sTrim_(session.user.email);
   const me            = _sToInt_(formData.mingguEpid);
-  const namaPetugas   = _sTrim_(formData.namaPelapor);
-  const noWA          = _sTrim_(formData.noWA);
-  const unit          = _sTrim_(formData.unitPelapor);
+  const namaPetugas   = _sTrim_(session.user.nama || session.user.name || session.user.username || email);
+  const noWA          = _sTrim_(session.user.noWhatsapp || session.user.noWA || formData.noWA);
+  const unit          = _sTrim_(session.user.unitKerja || session.user.unit || formData.unitPelapor);
   const jenisFasyankes= _sTrim_(formData.jenisFaskes);
-  const namaFasyankes = _sTrim_(formData.asalFaskes);
+  const clientFacility = _sTrim_(formData.asalFaskes);
+  const sessionFacility = (typeof getSarsFacilityForActiveUser === 'function')
+    ? getSarsFacilityForActiveUser(email)
+    : { status: 'error', message: 'Resolver fasilitas SARS tidak tersedia.' };
+  _sRequire_(sessionFacility && sessionFacility.status === 'success', sessionFacility.message || 'Akun/fasilitas tidak terdaftar di REF_FASKES.');
+  const namaFasyankes = _sTrim_(sessionFacility.nama);
+  const sessionKey = _normKey_(sessionFacility.key);
+  const sessionCode = _normKey_(session.user.kodePuskesmas || session.user.kodeFaskes || '');
+  _sRequire_(sessionKey && (!sessionCode || sessionKey === sessionCode), 'Mapping fasilitas akun tidak konsisten.');
+  if (clientFacility && _normKey_(clientFacility) !== sessionKey && _normKey_(clientFacility) !== _normKey_(namaFasyankes)) {
+    throw new Error('Fasilitas laporan tidak sesuai dengan akun login.');
+  }
 
   _sRequire_(Number.isFinite(me) && me >= 1 && me <= 53, "Minggu epidemiologis tidak valid.");
   _sRequire_(namaPetugas, "Nama petugas pelapor wajib diisi.");

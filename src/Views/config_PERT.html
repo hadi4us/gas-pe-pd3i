@@ -33,7 +33,7 @@
         key: "epidemiologi",
         title: "Informasi Epidemiologis",
         fields: [
-          { id: "Kontak batuk lama", label: "Riwayat kontak dengan orang batuk lama?", type: "select", options: OPT_YA_TIDAK },
+          { id: "Kontak batuk lama", label: "Riwayat kontak dengan orang batuk lama?", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Ada klaster/kejadian serupa", label: "Ada klaster/kejadian serupa di lingkungan?", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Jumlah kasus sekitar PERT", label: "Jumlah kasus serupa di sekitar", type: "number", showIf: { field: "Ada klaster/kejadian serupa", values: ["Ya"] } },
           { id: "Perjalanan 1 bulan PERT", label: "Apakah bepergian 1 bulan terakhir?", type: "choice_buttons", options: OPT_YA_TIDAK },
@@ -48,7 +48,7 @@
         fields: [
           { id: "Spesimen pertusis diambil?", label: "Spesimen diambil?", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Tanggal ambil spesimen pertusis", label: "Tanggal ambil spesimen", type: "date", showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
-          { id: "Jenis spesimen pertusis", label: "Jenis spesimen", type: "select", options: ["Swab nasofaring", "Aspirat nasofaring"], showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
+          { id: "Jenis spesimen pertusis", label: "Jenis spesimen", type: "choice_buttons", options: ["Swab nasofaring", "Aspirat nasofaring"], showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
           { id: "Tanggal kirim spesimen pertusis", label: "Tanggal kirim spesimen", type: "date", showIf: { field: "Spesimen pertusis diambil?", values: ["Ya"] } },
           { id: "Spesimen lain pertusis diambil?", label: "Apakah spesimen lain diambil?", type: "choice_buttons", options: OPT_YA_TIDAK },
           { id: "Jenis spesimen lain pertusis", label: "Jenis sampel lain", type: "text", showIf: { field: "Spesimen lain pertusis diambil?", values: ["Ya"] } },
@@ -60,7 +60,7 @@
         key: "kondisi",
         title: "Kondisi Saat Ini",
         fields: [
-          { id: "Status akhir PERT", label: "Keadaan saat ini", type: "select", options: ["Hidup", "Meninggal", "Lost to follow-up"] },
+          { id: "Status akhir PERT", label: "Keadaan saat ini", type: "choice_buttons", options: ["Hidup", "Meninggal", "Lost to follow-up"] },
           { id: "Tanggal meninggal PERT", label: "Tanggal meninggal", type: "date", showIf: { field: "Status akhir PERT", values: ["Meninggal"] } }
         ]
       },

@@ -30,7 +30,7 @@
         title: "Informasi Spesimen",
         fields: [
           { id: "Swab diambil?", label: "Swab diambil?", type: "choice_buttons", options: OPT_YA_TIDAK },
-          { id: "Lokasi ambil swab", label: "Jenis Spesimen", type: "select", options: ["Tenggorokan", "Hidung", "Keduanya"], showIf: { field: "Swab diambil?", values: ["Ya"] } },
+          { id: "Lokasi ambil swab", label: "Jenis Spesimen", type: "choice_buttons", options: ["Tenggorokan", "Hidung", "Keduanya"], showIf: { field: "Swab diambil?", values: ["Ya"] } },
           { id: "Tanggal ambil swab", label: "Tanggal Ambil Spesimen", type: "date", showIf: { field: "Swab diambil?", values: ["Ya"] } },
           { id: "No Kode Spesimen", label: "No. Kode Spesimen", type: "text", showIf: { field: "Swab diambil?", values: ["Ya"] } },
           { id: "Tanggal kirim swab", label: "Tanggal Pengiriman Spesimen ke Lab", type: "date", showIf: { field: "Swab diambil?", values: ["Ya"] } }
@@ -61,7 +61,7 @@
           { id: "Tanggal ADS", label: "Tanggal Pemberian ADS", type: "date", showIf: { field: "ADS diberikan?", values: ["Ya"] } },
           { id: "Alasan tidak ADS", label: "Alasan Tidak Diberi ADS", type: "text", showIf: { field: "ADS diberikan?", values: ["Tidak"] } },
           { id: "Obat lain DIF", label: "Obat Lain", type: "text", fullWidth: true },
-          { id: "Kondisi kasus saat ini", label: "Kondisi Kasus Saat Ini", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal"] },
+          { id: "Kondisi kasus saat ini", label: "Kondisi Kasus Saat Ini", type: "choice_buttons", options: ["Masih sakit", "Sembuh", "Meninggal"] },
           { id: "Tanggal sembuh DIF", label: "Tanggal Sembuh", type: "date", showIf: { field: "Kondisi kasus saat ini", values: ["Sembuh"] } },
           { id: "Tanggal meninggal DIF", label: "Tanggal Meninggal", type: "date", showIf: { field: "Kondisi kasus saat ini", values: ["Meninggal"] } }
         ]

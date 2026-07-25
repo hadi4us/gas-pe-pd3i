@@ -120,6 +120,75 @@
     });
   }
 
+  function pd3iOpenDatePicker_(inputEl) {
+    if (!inputEl || inputEl.disabled || inputEl.readOnly) return;
+    let modal = document.getElementById('pd3i-date-picker-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'pd3i-date-picker-modal';
+      modal.className = 'pd3i-date-picker-modal hidden';
+      modal.innerHTML = '<div class="pd3i-date-picker-card"><div class="pd3i-date-picker-head"><button type="button" data-pd3i-date-prev aria-label="Bulan sebelumnya">‹</button><strong data-pd3i-date-title></strong><button type="button" data-pd3i-date-next aria-label="Bulan berikutnya">›</button></div><div class="pd3i-date-picker-days"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div><div class="pd3i-date-picker-grid" data-pd3i-date-grid></div><div class="pd3i-date-picker-foot"><button type="button" data-pd3i-date-today>Hari ini</button><button type="button" data-pd3i-date-close>Tutup</button></div></div>';
+      document.body.appendChild(modal);
+    }
+    const wrap = inputEl.closest('.pd3i-date-control-wrap') || inputEl.parentElement || document.body;
+    if (modal.parentElement !== wrap) wrap.appendChild(modal);
+    const title = modal.querySelector('[data-pd3i-date-title]');
+    const grid = modal.querySelector('[data-pd3i-date-grid]');
+    const current = /^\d{4}-\d{2}-\d{2}$/.test(inputEl.value || '') ? new Date(inputEl.value + 'T00:00:00') : new Date();
+    let year = current.getFullYear();
+    let month = current.getMonth();
+    function setValue(d) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      inputEl.value = yyyy + '-' + mm + '-' + dd;
+      inputEl.dataset.pd3iLastDateValue = inputEl.value;
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+      setTimeout(function() { if (!inputEl.value && inputEl.dataset.pd3iLastDateValue) inputEl.value = inputEl.dataset.pd3iLastDateValue; }, 80);
+      modal.classList.add('hidden');
+    }
+    function render() {
+      title.textContent = new Date(year, month, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      grid.innerHTML = '';
+      const first = new Date(year, month, 1);
+      const startPad = first.getDay();
+      const days = new Date(year, month + 1, 0).getDate();
+      for (let i = 0; i < startPad; i++) grid.appendChild(document.createElement('span'));
+      for (let d = 1; d <= days; d++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(d);
+        const val = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        if (inputEl.value === val) btn.className = 'is-selected';
+        btn.addEventListener('click', function(e) { e.preventDefault(); setValue(new Date(year, month, d)); });
+        grid.appendChild(btn);
+      }
+    }
+    modal.querySelector('[data-pd3i-date-prev]').onclick = function() { month--; if (month < 0) { month = 11; year--; } render(); };
+    modal.querySelector('[data-pd3i-date-next]').onclick = function() { month++; if (month > 11) { month = 0; year++; } render(); };
+    modal.querySelector('[data-pd3i-date-today]').onclick = function() { setValue(new Date()); };
+    modal.querySelector('[data-pd3i-date-close]').onclick = function() { modal.classList.add('hidden'); };
+    render();
+    modal.classList.remove('hidden');
+  }
+
+  if (!window.__PD3I_DATE_PICKER_BOUND__) {
+    window.__PD3I_DATE_PICKER_BOUND__ = true;
+    document.addEventListener('click', function(evt) {
+      const btn = evt.target && evt.target.closest ? evt.target.closest('[data-pd3i-date-open]') : null;
+      if (!btn) return;
+      evt.preventDefault();
+      const scope = getFormScopeForElement(btn);
+      const inputEl = findScopedFieldControl(btn.getAttribute('data-pd3i-date-open'), scope);
+      pd3iOpenDatePicker_(inputEl);
+    });
+    document.addEventListener('change', function(evt) {
+      const el = evt.target;
+      if (el && el.matches && el.matches('input[type="date"][data-pd3i-date-control]') && el.value) el.dataset.pd3iLastDateValue = el.value;
+    });
+  }
+
   if (!window.__PD3I_QUEUE_PAGER_BOUND__) {
     window.__PD3I_QUEUE_PAGER_BOUND__ = true;
     document.addEventListener('click', function(evt) {
@@ -416,14 +485,20 @@
       const numericAttrs = (typeof isNumericOnlyFieldId === "function" && isNumericOnlyFieldId(field.id))
         ? 'inputmode="numeric"'
         : baseInputMode;
-      const safeInputType = (field.type === 'email' || field.type === 'tel') ? 'text' : field.type;
+      const isDateField = field.type === 'date';
+      const safeInputType = (field.type === 'email' || field.type === 'tel' || isDateField) ? 'text' : field.type;
+      const stepAttr = (safeInputType === 'number') ? 'step="any"' : '';
+      const dateAttrs = isDateField ? 'data-pd3i-date-control="1" placeholder="dd/mm/yyyy" inputmode="none" readonly' : '';
 
       if (field.id === "Tanggal Lahir") {
         const today = new Date().toISOString().split("T")[0];
         maxAttr = `max="${today}"`;
       }
 
-      inputHtml = `<input type="${safeInputType}" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} step="any">`;
+      inputHtml = `<input type="${safeInputType}" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} ${dateAttrs} ${stepAttr}>`;
+      if (isDateField) {
+        inputHtml = `<div class="pd3i-date-control-wrap">${inputHtml}<button type="button" class="pd3i-date-picker-btn" data-pd3i-date-open="${field.id}" aria-label="Pilih tanggal ${field.label}"><i class="fas fa-calendar-days"></i></button></div>`;
+      }
     }
 
     const numericHint = _getNumericFieldHintById(field.id);
@@ -869,8 +944,7 @@
     }
 
     if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+      setPd3iButtonLoading(btn, true, 'Mencari...');
     }
     coordinatePickerStatus(`Mencari titik dari alamat: ${query}`, "blue");
     try {
@@ -913,8 +987,7 @@
           coordinatePickerStatus("Mencari lokasi GPS Anda...", "blue");
           const gpsBtn = document.getElementById("btn-coordinate-picker-gps");
           if (gpsBtn) {
-            gpsBtn.disabled = true;
-            gpsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+            setPd3iButtonLoading(gpsBtn, true, 'Mencari...');
           }
           navigator.geolocation.getCurrentPosition(
             function(position) {
@@ -1086,8 +1159,7 @@
         return;
       }
 
-      btnCariAlamat.disabled = true;
-      btnCariAlamat.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+      setPd3iButtonLoading(btnCariAlamat, true, 'Mencari...');
       setCoordinateManualMode(false);
       statusEl.textContent = `Mencari koordinat dari: ${query}`;
       statusEl.className = geoStatusClass("blue");
@@ -4912,15 +4984,14 @@
             `<div class="pd3i-overview-summary-card is-success"><div class="pd3i-mini-stat-label">Kasus terverifikasi</div><span class="count">${verified}</span></div>`,
             `<div class="pd3i-overview-summary-card ${queueFocusCount > 0 ? 'is-warning' : 'is-neutral'}"><div class="pd3i-mini-stat-label">${escapeHtml(queueFocusLabel)}</div><span class="count">${queueFocusCount}</span></div>`,
             `<div class="pd3i-overview-summary-card ${sample > 0 ? 'is-info' : 'is-neutral'}"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
-            `<div class="pd3i-overview-summary-card ${status > 0 ? 'is-info' : 'is-neutral'}"><div class="pd3i-mini-stat-label">Siap update status</div><span class="count">${status}</span></div>`,
-            `<div class="pd3i-overview-summary-card is-neutral"><div class="pd3i-mini-stat-label">Kelurahan aktif</div><span class="count">${activeKelurahan}</span></div>`
+            ``
           ].join('');
 
           if (situationWrap) {
             const workflowLoad = pending + revisi + sample + status;
             const verificationRate = totalRecords > 0 ? Math.round((verified / totalRecords) * 100) : 0;
             situationWrap.innerHTML = [
-              `<div class="pd3i-overview-situation-item is-neutral"><span class="pd3i-overview-situation-label">Cakupan data</span><strong>${totalRecords}</strong><small>${activeKelurahan} kelurahan aktif</small></div>`,
+              `<div class="pd3i-overview-situation-item is-neutral"><span class="pd3i-overview-situation-label">Cakupan data</span><strong>${totalRecords}</strong><small>Total kasus dalam cakupan</small></div>`,
               `<div class="pd3i-overview-situation-item ${workflowLoad > 0 ? 'is-warning' : 'is-neutral'}"><span class="pd3i-overview-situation-label">Beban kerja</span><strong>${workflowLoad}</strong><small>Verifikasi, revisi, lab, status</small></div>`,
               `<div class="pd3i-overview-situation-item ${verificationRate >= 80 ? 'is-success' : (totalRecords > 0 ? 'is-info' : 'is-neutral')}"><span class="pd3i-overview-situation-label">Kelengkapan verifikasi</span><strong>${verificationRate}%</strong><small>${verified} kasus terverifikasi</small></div>`
             ].join('');
@@ -4932,10 +5003,10 @@
           ].join('');
 
           const taskCards = [
-            { workspace: 'verifikasi', label: 'Pending verifikasi', count: pending, copy: 'Kasus masuk yang perlu keputusan EPID/admin.', action: 'Buka verifikasi' },
-            { workspace: 'search', label: 'Perlu revisi', count: revisi, copy: 'Kasus dikembalikan untuk koreksi data awal.', action: 'Buka Daftar Kasus' },
-            { workspace: 'sampel', label: 'Menunggu hasil lab', count: sample, copy: 'Kasus terverifikasi yang menunggu hasil pemeriksaan.', action: 'Buka lab' },
-            { workspace: 'status', label: 'Siap update status', count: status, copy: 'Kasus siap klasifikasi/status akhir dan tindak lanjut.', action: 'Buka status' }
+            { workspace: 'verifikasi', label: 'Pending verifikasi', count: pending, copy: 'Kasus masuk yang perlu keputusan EPID/admin.', next: 'Langkah aman: buka verifikasi, cek kelengkapan, lalu putuskan EPID.', action: 'Buka verifikasi' },
+            { workspace: 'search', label: 'Perlu revisi', count: revisi, copy: 'Kasus dikembalikan untuk koreksi data awal.', next: 'Langkah aman: buka Daftar Kasus, cocokkan identitas, lalu koreksi field yang diminta.', action: 'Buka Daftar Kasus' },
+            { workspace: 'sampel', label: 'Menunggu hasil lab', count: sample, copy: 'Kasus terverifikasi yang menunggu hasil pemeriksaan.', next: 'Langkah aman: buka lab, cocokkan kasus, lalu isi hasil sesuai dokumen pemeriksaan.', action: 'Buka lab' },
+            { workspace: 'status', label: 'Siap update status', count: status, copy: 'Kasus siap klasifikasi/status akhir dan tindak lanjut.', next: 'Langkah aman: buka status, cek kondisi akhir, lalu simpan klasifikasi terbaru.', action: 'Buka status' }
           ];
           const crossModuleCards = [
             { key: 'zero-reporting', workspace: 'zero-reporting-dashboard', label: 'Zero Reporting belum lapor', count: '…', copy: 'Faskes yang belum mengirim laporan minggu epidemiologi berjalan.', action: 'Buka Zero Reporting' },
@@ -4949,6 +5020,7 @@
               <div class="pd3i-overview-task-main">
                 <div class="pd3i-mini-stat-label">${escapeHtml(card.label)}</div>
                 <div class="pd3i-overview-task-copy">${escapeHtml(card.copy)}</div>
+                <div class="pd3i-overview-task-next">${escapeHtml(card.next)}</div>
               </div>
               <div class="pd3i-overview-task-side">
                 <span class="count">${count}</span>
@@ -6355,8 +6427,8 @@
     });
   }
 
-  function getShowIfParentValue(parentId) {
-    const parent = document.getElementById(parentId);
+  function getShowIfParentValue(parentId, scope) {
+    const parent = findScopedFieldControl(parentId, scope) || document.getElementById(parentId);
     return String(parent ? parent.value : "").trim();
   }
 
@@ -6429,8 +6501,9 @@
     if (!wrapper) return;
     const wasHidden = wrapper.classList.contains('hidden');
     const parentId = wrapper.getAttribute('data-parent');
-    const parent = document.getElementById(parentId);
-    const parentValue = getShowIfParentValue(parentId);
+    const scope = getFormScopeForElement(wrapper);
+    const parent = findScopedFieldControl(parentId, scope) || document.getElementById(parentId);
+    const parentValue = getShowIfParentValue(parentId, scope);
     const vals = JSON.parse(wrapper.getAttribute('data-parent-vals') || '[]');
     const required = wrapper.getAttribute('data-required') === 'true';
     const inp = wrapper.querySelector('input, select, textarea');
@@ -6450,9 +6523,9 @@
       if (required && inp) inp.required = true;
       if (inp) restoreShowIfFieldValue(inp);
 
-      if (parentId === 'Apakah dirawat inap?' && String(parentValue || '').trim() === 'Ya' && wrapper.querySelector('#Nama\ Rumah\ Sakit')) {
+      if (parentId === 'Apakah dirawat inap?' && String(parentValue || '').trim() === 'Ya' && findScopedFieldControl('Nama Rumah Sakit', scope)) {
         setTimeout(function() {
-          const currentRs = document.getElementById('Nama Rumah Sakit')?.value || '';
+          const currentRs = findScopedFieldControl('Nama Rumah Sakit', scope)?.value || '';
           if (typeof initChoicesRumahSakit === 'function') initChoicesRumahSakit(currentRs);
         }, 50);
       }

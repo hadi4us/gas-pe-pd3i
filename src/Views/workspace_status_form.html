@@ -8,40 +8,33 @@
                     <div class="pd3i-card-eyebrow">Ruang kerja status</div>
                     <h3 class="pd3i-card-title"><i class="fas fa-list-check text-blue-600 mr-2"></i>Pembaruan status pasien/kasus</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Data langsung dari spreadsheet</span>
-                  </div>
-                  <div class="pd3i-helper-text">Ruang kerja ini membuka ulang data langsung dari spreadsheet/server dan fokus pada pembaruan status kasus tanpa membawa keadaan dari verifikasi atau formulir lain.</div>
-                  <div class="pd3i-status-review-brief" aria-label="Checklist pembaruan status kasus">
-                    <div><strong>Cek kondisi akhir</strong><span>Pastikan status sembuh, meninggal, atau masih pemantauan sesuai informasi terakhir.</span></div>
-                    <div><strong>Cek klasifikasi</strong><span>Selaraskan klasifikasi kasus dengan hasil lab dan kriteria klinis epidemiologi.</span></div>
-                    <div class="is-warning"><strong>Cek tindak lanjut</strong><span>Status akhir memengaruhi pelaporan, analisis dashboard, dan penutupan kasus.</span></div>
                   </div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div><span class="pd3i-badge-soft">Konteks</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1A</div><h3 class="pd3i-card-title">Informasi Pelapor</h3></div></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-status"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pasien">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1B</div><h3 class="pd3i-card-title">Data Demografi Pasien</h3></div><span class="pd3i-badge-soft">Konteks kasus</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1B</div><h3 class="pd3i-card-title">Data Demografi Pasien</h3></div></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container-status"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight pd3i-form-card-section pd3i-form-card-specific">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1C</div><h3 class="pd3i-card-title" id="specific-title-status">Data Spesifik Kasus</h3></div><span class="pd3i-badge-soft">Klinis dan epidemiologi</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Peninjauan 1C</div><h3 class="pd3i-card-title" id="specific-title-status">Data Spesifik Kasus</h3></div></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container-status"></div>
                 </section>
 
                 <section class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-status">
-                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Pembaruan Status Pasien/Kasus</h3></div><span class="pd3i-badge-soft">Tahap status</span></div>
+                  <div class="pd3i-card-header-row"><div><div class="pd3i-card-eyebrow">Tahap inti</div><h3 class="pd3i-card-title">Pembaruan Status Pasien/Kasus</h3></div></div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="status-fields-container-workspace"></div>
                 </section>
               </div>
             </div>
 
             <div class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
-              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi status</div><h3 class="pd3i-card-title">Simpan Pembaruan Status</h3></div><span class="pd3i-badge-soft">Khusus status</span></div>
+              <div class="pd3i-card-header-row compact"><div><div class="pd3i-card-eyebrow">Aksi status</div><h3 class="pd3i-card-title">Simpan Pembaruan Status</h3></div></div>
               <div class="pd3i-submit-stack">
                 <button type="button" id="btn-submit-status" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'status') : false"><i class="fas fa-list-check"></i> Simpan Pembaruan Status</button>
               </div>

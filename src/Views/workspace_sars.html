@@ -5,46 +5,8 @@
   <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="form">
     <div class="pd3i-zero-reporting-host pd3i-zero-reporting-form-host">
 
-  <div class="pd3i-local-status-strip" aria-label="Status formulir Zero Reporting">
-    <div class="pd3i-local-status-copy">
-      <span class="pd3i-card-eyebrow">Status formulir</span>
-      <span>Dinas Kesehatan Kota Depok • format laporan nihil mingguan</span>
-    </div>
-    <div class="pd3i-zero-reporting-header-right">
-      <span class="pd3i-zero-reporting-chip chip--blue" id="chipMode">FORM</span>
-      <span class="pd3i-zero-reporting-chip chip--gray" id="chipUpdate">Update: -</span>
-    </div>
-  </div>
-
-  <div class="pd3i-zero-reporting-ops-summary" aria-label="Ringkasan kerja Zero Reporting">
-    <div class="pd3i-zero-reporting-ops-item">
-      <strong>Periode laporan</strong>
-      <span>Minggu epidemiologis dan faskes pelapor wajib jelas.</span>
-    </div>
-    <div class="pd3i-zero-reporting-ops-item">
-      <strong>Isi atau nihil</strong>
-      <span>Tambahkan kasus per penyakit, atau centang nihil bila tidak ada kasus.</span>
-    </div>
-    <div class="pd3i-zero-reporting-ops-item is-warning">
-      <strong>Laporan segera</strong>
-      <span>Suspek PD3I tetap dilaporkan kurang dari 24 jam melalui kanal surveilans.</span>
-    </div>
-  </div>
-
-  <div class="pd3i-zero-reporting-review-brief" aria-label="Checklist validasi Zero Reporting">
-    <div>
-      <strong>Cek minggu</strong>
-      <span>Pastikan minggu epidemiologis sesuai periode laporan aktif.</span>
-    </div>
-    <div>
-      <strong>Cek faskes</strong>
-      <span>Nama pelapor, unit surveilans, dan faskes login harus selaras.</span>
-    </div>
-    <div class="is-warning">
-      <strong>Cek nihil</strong>
-      <span>Jangan centang nihil bila ada suspek PD3I yang wajib dilaporkan segera.</span>
-    </div>
-  </div>
+  <span id="chipMode" class="hidden" aria-hidden="true">FORM</span>
+  <span id="chipUpdate" class="hidden" aria-hidden="true">Update: -</span>
 
   <div id="sars-inline-banner" data-zero-reporting-id="zero-reporting-inline-banner" class="hidden" role="status" aria-live="polite"></div>
 
@@ -510,6 +472,7 @@
       // Server owns facility identity and validation. Client autocomplete/session
       // timing must not block submission before google.script.run is reached.
       const formData = {
+        __token: String((typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) || window.__PD3I_SESSION_TOKEN || '').trim(),
         email: String(document.getElementById('email').value || '').trim(),
         mingguEpid: parseInt(document.getElementById('mingguEpid').value, 10),
         namaPelapor: String(document.getElementById('namaPelapor').value || '').trim(),
@@ -603,9 +566,21 @@
         return;
       }
 
-      // Compatibility marker: await confirmSarsAction({ title: 'Kirim laporan Zero Reporting?' });
-      // Kirim laporan Zero Reporting?
-      // Submit langsung setelah validasi. Dialog custom sebelumnya dapat menahan Promise callback.
+      const totalNihil = formData.cases.filter(c => c && c.nihl).length;
+      const totalKasus = formData.cases.filter(c => c && !c.nihl).length;
+      const confirmOk = await confirmSarsAction({ title: 'Kirim laporan Zero Reporting?',
+        message: `Pastikan jawaban sudah benar. Minggu epidemiologis: ${formData.mingguEpid}. Pelapor: ${formData.namaPelapor}. Kasus terisi: ${totalKasus}. Penyakit nihil: ${totalNihil}.`,
+        confirmLabel: 'Ya, kirim laporan',
+        cancelLabel: 'Cek lagi',
+        variant: 'primary'
+      });
+      if (!confirmOk) {
+        showSarsBanner('Pengiriman dibatalkan. Silakan cek kembali jawaban sebelum dikirim.', { type: 'info' });
+        IS_SUBMITTING = false;
+        setSubmittingState(false);
+        return;
+      }
+
       showSarsBanner('Menghubungi server untuk menyimpan laporan...', { type: 'info' });
       setSubmittingState(true);
 

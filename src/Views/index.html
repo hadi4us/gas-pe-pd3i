@@ -15,6 +15,16 @@
   </style>
 </head>
 <body class="pd3i-body" data-app-version="v2026.07.22.1" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
+  <script>
+    (function(){
+      var framed = false;
+      try { framed = window.self !== window.top; } catch (err) { framed = true; }
+      if (framed) {
+        document.body.dataset.embedMode = document.body.dataset.embedMode || 'sites';
+        document.body.classList.add('pd3i-embedded-sites');
+      }
+    })();
+  </script>
 
   <?!= include('login'); ?>
   <?!= include('pin'); ?>
@@ -160,10 +170,6 @@
         </div>
 
         <div class="pd3i-topbar-actions">
-          <div class="pd3i-session-context" aria-label="Konteks sesi aktif">
-            <span class="pd3i-session-context-label">Sesi aktif</span>
-            <span class="pd3i-session-context-copy">Peran, unit, dan cakupan mengikuti akun masuk.</span>
-          </div>
           <div id="user-badge" class="hidden pd3i-user-badge">
             <i class="fas fa-user"></i><span id="user-badge-text">-</span>
           </div>
@@ -212,6 +218,7 @@
   <?!= include('config_registry'); ?>
   <?!= include('auth.js'); ?>
   <?!= include('app.js'); ?>
+  <?!= include('depok_kelurahan.geojson.js'); ?>
   <?!= include('app.dashboard.js'); ?>
   <?!= include('app.init.js'); ?>
 </body>

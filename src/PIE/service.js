@@ -425,8 +425,33 @@ function pieReadRows_(sheetName, limit) {
   return limit ? rows.slice(0, Number(limit)) : rows;
 }
 
+function pieDashboardCacheGet_(key) {
+  try {
+    const raw = CacheService.getScriptCache().get(String(key || ''));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function pieDashboardCachePut_(key, value, ttlSec) {
+  try {
+    const json = JSON.stringify(value);
+    if (json.length < 95000) CacheService.getScriptCache().put(String(key || ''), json, Number(ttlSec || 60));
+  } catch (e) {}
+}
+
 function pieGetOperationalDashboard(token) {
-  _requirePieSession_(token);
+  const sess = _requirePieSession_(token);
+  const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  const user = String((sess.user && (sess.user.username || sess.user.email || sess.user.userId)) || '').trim().toLowerCase();
+  const cacheKey = ['PIE_OPERATIONAL_DASHBOARD_V2', role, user].join('|');
+  const cached = pieDashboardCacheGet_(cacheKey);
+  if (cached) {
+    cached.cached = true;
+    if (cached.meta) cached.meta.cached = true;
+    return cached;
+  }
   const cases = pieReadRows_('PIE_CASE', 200);
   const alertsAll = pieReadRows_('PIE_ALERT', 200);
   const alerts = alertsAll.filter(function(a) { return String(a.status || '').toUpperCase() !== 'RESOLVED'; }).slice(0, 20);
@@ -463,7 +488,9 @@ function pieGetOperationalDashboard(token) {
   const positiveClass = cases.filter(function(c) { return ['SUSPECT','PROBABLE','CONFIRMED'].indexOf(String(c.classification_status || '').toUpperCase()) !== -1; }).length;
   const discarded = cases.filter(function(c) { return String(c.classification_status || '').toUpperCase() === 'DISCARDED' || String(c.case_status || '').toUpperCase() === 'ARCHIVED'; }).length;
   const dataQuality = { unclassified_cases: missingClass, high_risk_without_specimen: missingSpecimenHighRisk, specimens_without_lab_result: missingLabForSpecimen, pe_forms_total: peForms.length, pe_forms_complete: peForms.filter(function(p) { return String(p.status || '').toUpperCase() === 'COMPLETE'; }).length, pe_forms_with_gaps: peForms.filter(function(p) { return String(p.status || '').toUpperCase() === 'COMPLETE_WITH_GAPS'; }).length, pe_forms_draft: peForms.filter(function(p) { return ['DRAFT','OPEN',''].indexOf(String(p.status || '').toUpperCase()) !== -1; }).length, avg_alert_ack_hours: avgHoursDash(alertAckDash), avg_specimen_to_lab_hours: avgHoursDash(labHoursDash), avg_case_to_classification_hours: avgHoursDash(classHoursDash), sla_alert_ack_24h_pct: pct(ackWithin24, alertAckDash.filter(isFinite).length), sla_specimen_to_lab_72h_pct: pct(labWithin72, labHoursDash.filter(isFinite).length), ppv_classification_proxy_pct: pct(positiveClass, classified), discarded_or_archived_cases: discarded };
-  return { ok: true, data: { summary: { total_cases: cases.length, open_alerts: alerts.length, open_tasks: tasks.length, overdue_tasks: overdueTasks, high_risk_cases: highRisk, specimen_count: specimens.length, lab_result_count: labResults.length, by_disease: byDisease, by_day: byDay, by_week: byWeek, by_month: byMonth, by_faskes: byFaskes, by_specimen_status: bySpecimenStatus, by_lab_result: byLabResult, by_archive_reason: byArchiveReason, data_quality: dataQuality }, cases: cases.slice(0, 50), alerts: alerts, tasks: tasks, specimens: specimens, lab_results: labResults, cluster_links: clusterLinks, onehealth_signals: oneHealthSignals, pe_forms: peForms.slice(0, 80), archive_cases: archives, validation_metrics: validationMetrics }, meta: { appVersion: PIE_CONFIG.APP_VERSION, ruleSetVersion: PIE_CONFIG.RULE_SET_VERSION, serverTime: pieNowIso_() } };
+  const result = { ok: true, data: { summary: { total_cases: cases.length, open_alerts: alerts.length, open_tasks: tasks.length, overdue_tasks: overdueTasks, high_risk_cases: highRisk, specimen_count: specimens.length, lab_result_count: labResults.length, by_disease: byDisease, by_day: byDay, by_week: byWeek, by_month: byMonth, by_faskes: byFaskes, by_specimen_status: bySpecimenStatus, by_lab_result: byLabResult, by_archive_reason: byArchiveReason, data_quality: dataQuality }, cases: cases.slice(0, 50), alerts: alerts, tasks: tasks, specimens: specimens, lab_results: labResults, cluster_links: clusterLinks, onehealth_signals: oneHealthSignals, pe_forms: peForms.slice(0, 80), archive_cases: archives, validation_metrics: validationMetrics }, meta: { appVersion: PIE_CONFIG.APP_VERSION, ruleSetVersion: PIE_CONFIG.RULE_SET_VERSION, serverTime: pieNowIso_() } };
+  pieDashboardCachePut_(cacheKey, result, 90);
+  return result;
 }
 
 function pieGetCaseTimeline(token, caseId) {

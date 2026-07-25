@@ -523,8 +523,7 @@
             setAlert(loginAlert, "Login hanya bisa digunakan di WebApp (/exec).", false);
             return;
           }
-          btnSendOtp.disabled = true;
-          btnSendOtp.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengirim...`;
+          setPd3iButtonLoading(btnSendOtp, true, "Mengirim...");
           google.script.run
             .withSuccessHandler(function (choice) {
               if (choice && choice.status === 'pairing_required') {
@@ -638,8 +637,7 @@
 
           if (btnLogin) {
             setLoginFlowStage('session');
-            btnLogin.disabled = true;
-            btnLogin.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Memverifikasi...`;
+            setPd3iButtonLoading(btnLogin, true, "Memverifikasi...");
           }
 
           let loginFinished = false;
@@ -771,8 +769,7 @@
 
           const btnSavePin = document.getElementById("btn-save-pin");
           if (btnSavePin) {
-            btnSavePin.disabled = true;
-            btnSavePin.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+            setPd3iButtonLoading(btnSavePin, true, "Menyimpan...");
           }
 
           google.script.run

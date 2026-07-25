@@ -29,7 +29,7 @@
           { id: "Apakah bayi dirawat", label: "Apakah bayi dirawat?", type: "choice_buttons", options: ["Ya", "Tidak"] },
           { id: "Tempat perawatan TN", label: "Tempat perawatan", type: "text", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
           { id: "Tanggal mulai dirawat TN", label: "Tanggal mulai dirawat", type: "date", showIf: { field: "Apakah bayi dirawat", values: ["Ya"] } },
-          { id: "Keadaan bayi setelah dirawat", label: "Keadaan bayi setelah dirawat", type: "select", options: ["", "Sembuh", "Meninggal"] },
+          { id: "Keadaan bayi setelah dirawat", label: "Keadaan bayi setelah dirawat", type: "choice_buttons", options: ["Sembuh", "Meninggal"] },
           { id: "Tanggal meninggal TN", label: "Bila bayi meninggal, tanggal meninggal", type: "date" },
           { id: "Umur bayi meninggal (hari)", label: "Umur bayi meninggal (hari)", type: "number" }
         ]
@@ -57,7 +57,7 @@
           { id: "Alat potong tali pusat lainnya", label: "Sebutkan alat potong lainnya", type: "text", showIf: { field: "Alat potong tali pusat", values: ["Lainnya"] } },
           { id: "Perawatan tali pusat", label: "Perawatan tali pusat", type: "select", options: ["", "Alkohol", "Betadine/Yodium", "Ramuan tradisional", "Lainnya"] },
           { id: "Perawatan tali pusat lainnya", label: "Sebutkan perawatan tali pusat", type: "text", fullWidth: true, showIf: { field: "Perawatan tali pusat", values: ["Ramuan tradisional", "Lainnya"] } },
-          { id: "Keadaan ibu saat ini", label: "Keadaan ibu saat ini", type: "select", options: ["", "Hidup", "Meninggal"] }
+          { id: "Keadaan ibu saat ini", label: "Keadaan ibu saat ini", type: "choice_buttons", options: ["Hidup", "Meninggal"] }
         ]
       },
       {
@@ -121,7 +121,7 @@
         fields: [
           { id: "Berat lahir", label: "Berat lahir (gram)", type: "number" },
           { id: "Riwayat kasus serupa di wilayah", label: "Riwayat kasus serupa di wilayah?", type: "select", options: OPT_YA_TIDAK },
-          { id: "Status akhir TN", label: "Status akhir kasus", type: "select", options: ["Masih sakit", "Sembuh", "Meninggal", "Tidak diketahui"] }
+          { id: "Status akhir TN", label: "Status akhir kasus", type: "choice_buttons", options: ["Masih sakit", "Sembuh", "Meninggal", "Tidak diketahui"] }
         ]
       }
     ]

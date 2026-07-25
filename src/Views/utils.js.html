@@ -61,6 +61,34 @@
     window.setTimeout(fn, 0);
   }
 
+
+  function renderPd3iSpinner(label, spacingClass) {
+    const gap = spacingClass || 'mr-2';
+    const text = label == null ? '' : String(label);
+    return '<i class="fas fa-spinner fa-spin '+escapeHtml(gap)+'" aria-hidden="true"></i>'+escapeHtml(text);
+  }
+
+  function setPd3iButtonLoading(btn, loading, label, fallbackHtml) {
+    if (!btn) return;
+    if (loading) {
+      if (!btn.dataset.pd3iOriginalHtml) btn.dataset.pd3iOriginalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      btn.classList.add('cursor-wait');
+      btn.innerHTML = renderPd3iSpinner(label || 'Memproses...');
+      return;
+    }
+    btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    btn.classList.remove('cursor-wait');
+    if (fallbackHtml) {
+      btn.innerHTML = fallbackHtml;
+    } else if (btn.dataset.pd3iOriginalHtml) {
+      btn.innerHTML = btn.dataset.pd3iOriginalHtml;
+    }
+    delete btn.dataset.pd3iOriginalHtml;
+  }
+
   // ------------------------------------------------------------
   // MODAL HELPERS
   // ------------------------------------------------------------
@@ -268,6 +296,8 @@
 
   if (typeof window !== 'undefined') {
     window.renderPd3iSkeleton = renderPd3iSkeleton;
+    window.renderPd3iSpinner = renderPd3iSpinner;
+    window.setPd3iButtonLoading = setPd3iButtonLoading;
   }
 
   function renderPd3iUiState(options) {

@@ -44,8 +44,39 @@
 
     const points = summary && Array.isArray(summary.points) ? summary.points : [];
     const topHotspots = summary && Array.isArray(summary.topHotspots) ? summary.topHotspots : [];
-    if (!summary || !points.length) {
-      mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada koordinat valid pada filter dashboard ini.</div>';
+    const normalizeMapKey = function(value) {
+      return String(value || '')
+        .trim()
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Z0-9]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const normalizeMapCompactKey = function(value) {
+      return normalizeMapKey(value).replace(/\s+/g, '');
+    };
+    const addKelurahanCount = function(key, value) {
+      const normalKey = normalizeMapKey(key);
+      const compactKey = normalizeMapCompactKey(key);
+      if (normalKey) kelurahanCounts[normalKey] = (kelurahanCounts[normalKey] || 0) + value;
+      if (compactKey && compactKey !== normalKey) kelurahanCounts[compactKey] = (kelurahanCounts[compactKey] || 0) + value;
+    };
+    const perKelurahan = stats && stats.perKelurahan ? stats.perKelurahan : {};
+    const kelurahanCounts = {};
+    Object.keys(perKelurahan).forEach(function(key) {
+      const parts = String(key || '').split('/').map(function(part) { return part.trim(); }).filter(Boolean);
+      const desa = parts.length ? parts[parts.length - 1] : key;
+      const kec = parts.length > 1 ? parts[0] : '';
+      const value = perKelurahan[key] || 0;
+      addKelurahanCount(desa, value);
+      if (kec && desa) addKelurahanCount(kec + ' / ' + desa, value);
+    });
+    const geojson = (typeof window !== 'undefined') ? window.PD3I_DEPOK_KELURAHAN_GEOJSON : null;
+    const hasGeojson = !!(geojson && Array.isArray(geojson.features) && geojson.features.length && window.L);
+    if ((!summary || !points.length) && !hasGeojson) {
+      mapWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada koordinat valid atau peta kelurahan pada filter dashboard ini.</div>';
       if (listWrap) {
         listWrap.innerHTML = '<div class="pd3i-empty-keadaan">Belum ada hotspot kasus yang dapat ditampilkan.</div>';
       }
@@ -80,6 +111,51 @@
     }).addTo(map);
 
     const bounds = [];
+    if (hasGeojson) {
+      const values = Object.keys(kelurahanCounts).map(function(k) { return kelurahanCounts[k] || 0; }).filter(function(v) { return v > 0; });
+      const maxKelurahan = values.length ? Math.max.apply(Math, values) : 0;
+      const getCountForFeature = function(feature) {
+        const props = (feature && feature.properties) || {};
+        const desa = props.DESA || props.KELURAHAN || '';
+        const kec = props.KECAMATAN || '';
+        return kelurahanCounts[normalizeMapKey(kec + ' / ' + desa)] || kelurahanCounts[normalizeMapCompactKey(kec + ' / ' + desa)] || kelurahanCounts[normalizeMapKey(desa)] || kelurahanCounts[normalizeMapCompactKey(desa)] || 0;
+      };
+      const colorForCount = function(count) {
+        if (!count) return '#f8fafc';
+        const ratio = maxKelurahan ? count / maxKelurahan : 0;
+        if (ratio >= 0.75) return '#991b1b';
+        if (ratio >= 0.5) return '#dc2626';
+        if (ratio >= 0.25) return '#f97316';
+        return '#facc15';
+      };
+      const layer = window.L.geoJSON(geojson, {
+        style: function(feature) {
+          const count = getCountForFeature(feature);
+          return {
+            color: '#475569',
+            weight: count ? 1.15 : 0.7,
+            opacity: 0.75,
+            fillColor: colorForCount(count),
+            fillOpacity: count ? 0.72 : 0.2
+          };
+        },
+        onEachFeature: function(feature, layerItem) {
+          const props = feature.properties || {};
+          const count = getCountForFeature(feature);
+          const label = [props.KECAMATAN, props.DESA].filter(Boolean).join(' / ') || props.DESA || 'Kelurahan';
+          layerItem.bindPopup(`<strong>${escapeHtml(label)}</strong><br>Kasus: ${count}<br><small>Klik area untuk lihat daftar kasus kelurahan.</small>`);
+          layerItem.on('click', function() {
+            openDashboardDrilldown('kelurahan', label, label, dx, tahun);
+          });
+        }
+      }).addTo(map);
+      try {
+        map.fitBounds(layer.getBounds(), { padding: [18, 18] });
+      } catch (e) {}
+      if (!values.length) {
+        mapWrap.insertAdjacentHTML('beforeend', '<div class="pd3i-map-empty-overlay">Peta kelurahan tersedia. Belum ada kasus terpetakan pada filter ini.</div>');
+      }
+    }
     points.forEach(function(point) {
       const count = Math.max(1, parseInt(point.count || 1, 10));
       const radius = Math.min(26, 7 + (count - 1) * 2.5);
@@ -98,10 +174,12 @@
       bounds.push([point.lat, point.lon]);
     });
 
-    if (bounds.length === 1) {
-      map.setView(bounds[0], 14);
-    } else {
-      map.fitBounds(bounds, { padding: [24, 24] });
+    if (!hasGeojson) {
+      if (bounds.length === 1) {
+        map.setView(bounds[0], 14);
+      } else {
+        map.fitBounds(bounds, { padding: [24, 24] });
+      }
     }
     setTimeout(function() {
       try { map.invalidateSize(); } catch (e) {}
@@ -146,7 +224,6 @@
     wrap.innerHTML = `
       <div class="pd3i-card-header-row mt-4">
         <div>
-          <div class="pd3i-card-eyebrow">Rincian dashboard</div>
           <h3 class="pd3i-card-title">${escapeHtml(result.label || 'Detail kasus')}</h3>
           <div class="pd3i-helper-text mt-1">Menampilkan <strong>${items.length}</strong> dari total <strong>${result.total || 0}</strong> kasus untuk filter ini.</div>
         </div>
@@ -170,7 +247,7 @@
     if (!wrap || !safeGsRun() || !getSafeSessionToken()) return;
     window.__DASHBOARD_DRILLDOWN_STATE = { type: type, key: key, label: label, dx: dx, tahun: tahun };
     wrap.classList.remove('hidden');
-    wrap.innerHTML = '<div class="pd3i-empty-keadaan"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat daftar kasus...</div>';
+    wrap.innerHTML = '<div class="pd3i-empty-keadaan" role="status" aria-live="polite">'+renderPd3iSpinner('Memuat daftar kasus...')+'</div>';
     google.script.run
       .withSuccessHandler(function(res) {
         renderDashboardDrilldownPanel(res, dx, tahun);
@@ -350,11 +427,11 @@
     if (isFaskesPelapor) {
       if (title) title.textContent = 'Dashboard KPI Faskes Pelapor';
       if (eyebrow) eyebrow.textContent = 'Dashboard faskes pelapor';
-      if (copy) copy.textContent = 'Dashboard light mode untuk memantau laporan faskes ini, kelengkapan data, status proses, dan kasus prioritas.';
+      if (copy) copy.textContent = 'Ringkasan komando untuk memantau laporan faskes ini, kelengkapan data, status proses, dan kasus prioritas.';
     } else if (isPuskesmas) {
       if (title) title.textContent = 'Dashboard KPI Puskesmas Pengampu';
       if (eyebrow) eyebrow.textContent = 'Dashboard puskesmas pengampu';
-      if (copy) copy.textContent = 'Dashboard light mode untuk memantau kasus dalam wilayah pengampu, tindak lanjut, kelengkapan data, dan antrean pemeriksaan.';
+      if (copy) copy.textContent = 'Ringkasan komando untuk memantau kasus dalam wilayah pengampu, tindak lanjut, kelengkapan data, dan antrean pemeriksaan.';
     }
   }
 
@@ -407,7 +484,11 @@
       btnDashboard.addEventListener("click", function () {
         const dd = document.getElementById("admin-menu-dropdown");
         if (dd) dd.classList.add("hidden");
-        openDashboardSection({ autoLoad: false });
+        if (typeof openSidebarWorkspace === 'function') {
+          openSidebarWorkspace('dashboard', { autoLoad: false, useRoute: true });
+        } else {
+          openDashboardSection({ autoLoad: false });
+        }
       });
     }
 
@@ -427,28 +508,58 @@
 
     const section = document.getElementById('section-dashboard');
     if (section) section.classList.remove('hidden');
+
+    const requestKey = [String(dx || 'MR').toUpperCase(), String(tahun || '')].join(':');
+    const now = Date.now();
+    const cache = window.__PD3I_DASHBOARD_STATS_CACHE || (window.__PD3I_DASHBOARD_STATS_CACHE = {});
+    const cached = cache[requestKey];
+    if (cached && cached.stats && (now - cached.ts) < 60000) {
+      content.dataset.loaded = '1';
+      renderDashboard(cached.stats, dx, tahun);
+      return;
+    }
+    if (content.dataset.loadingKey === requestKey && (now - Number(content.dataset.loadingStarted || 0)) < 45000) {
+      return;
+    }
+
     content.dataset.loaded = '';
-    const requestId = String(Date.now());
+    content.dataset.loadingKey = requestKey;
+    content.dataset.loadingStarted = String(now);
+    const requestId = String(now);
     content.dataset.loadingRequest = requestId;
-    const runtimeGuard = (typeof createWorkspaceRuntimeGuard === 'function')
-      ? createWorkspaceRuntimeGuard('dashboard')
-      : null;
-    content.innerHTML = '<div class="pd3i-dashboard-state is-loading"><span><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data dashboard...</span></div>';
+    content.innerHTML = '<div class="pd3i-dashboard-state is-loading" role="status" aria-live="polite"><span>'+renderPd3iSpinner('Memuat data dashboard...')+'</span></div>';
 
     if (!safeGsRun() || !getSafeSessionToken()) {
+      content.dataset.loadingKey = '';
+      content.dataset.loadingStarted = '';
       content.innerHTML = '<div class="pd3i-dashboard-state is-error">Tidak dapat terhubung ke server.</div>';
       return;
     }
 
+    const timeoutId = setTimeout(function() {
+      if (content.dataset.loadingRequest !== requestId) return;
+      content.dataset.loadingKey = '';
+      content.dataset.loadingStarted = '';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">Dashboard belum merespons. Klik Muat data lagi dalam beberapa detik.</div>';
+    }, 30000);
+
     google.script.run
       .withSuccessHandler(function (stats) {
         if (content.dataset.loadingRequest !== requestId) return;
-        if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+        clearTimeout(timeoutId);
+        content.dataset.loadingKey = '';
+        content.dataset.loadingStarted = '';
+        try {
+          const cache = window.__PD3I_DASHBOARD_STATS_CACHE || (window.__PD3I_DASHBOARD_STATS_CACHE = {});
+          cache[requestKey] = { ts: Date.now(), stats: stats };
+        } catch (e) {}
         renderDashboard(stats, dx, tahun);
       })
       .withFailureHandler(function (err) {
         if (content.dataset.loadingRequest !== requestId) return;
-        if (runtimeGuard && typeof isWorkspaceRuntimeGuardActive === 'function' && !isWorkspaceRuntimeGuardActive(runtimeGuard)) return;
+        clearTimeout(timeoutId);
+        content.dataset.loadingKey = '';
+        content.dataset.loadingStarted = '';
         content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
       })
       .getDashboardStats(dx, tahun, getSafeSessionToken());
@@ -517,57 +628,67 @@
     const notifikasiKasusBaru = stats.statusNotifikasi || { sent: 0, failed: 0, pending: 0 };
     const sinkronisasiPengampu = stats.statusSinkronisasi || { synced: 0, failed: 0, pending: 0 };
 
+    const actionAlerts = [];
+    if (pendingPeninjauanCount > 0) actionAlerts.push(`${pendingPeninjauanCount} kasus masih belum / menunggu verifikasi EPID.`);
+    if (waitingSampleCount > 0) actionAlerts.push(`${waitingSampleCount} kasus menunggu hasil pemeriksaan.`);
+    if (epi.workflowCompletenessRate != null && epi.workflowCompletenessRate < 70) actionAlerts.push(`Kelengkapan workflow baru ${epi.workflowCompletenessRate}% — perlu perapihan data.`);
+    if (epi.medianReportToTrackingDays != null && epi.medianReportToTrackingDays > 2) actionAlerts.push(`Median laporan ke pelacakan ${epi.medianReportToTrackingDays} hari — timeliness perlu dipercepat.`);
+    const highRiskCount = pendingPeninjauanCount + waitingSampleCount + meninggalCount;
+    const followUpCount = pendingPeninjauanCount + waitingSampleCount + revisionCount;
+    const isDepokDashboardArea = function(item) {
+      const label = String((item && item.label) || '').trim();
+      if (!label) return false;
+      return !/luar\s+depok|non\s+depok|kota\s+lain|kabupaten\s+lain/i.test(label);
+    };
+    const topKecamatan = ((stats.wilayahSummary && stats.wilayahSummary.topKecamatan) || []).filter(isDepokDashboardArea).slice(0, 10);
+    const topKelurahan = ((stats.wilayahSummary && stats.wilayahSummary.topKelurahan) || []).filter(isDepokDashboardArea).slice(0, 10);
+    const topRw = ((stats.wilayahSummary && stats.wilayahSummary.topRw) || []).filter(isDepokDashboardArea).slice(0, 10);
+    const topRtRw = ((stats.wilayahSummary && stats.wilayahSummary.topRtRw) || []).filter(isDepokDashboardArea).slice(0, 10);
+    const wilayahPrioritasCount = topKecamatan.length + topKelurahan.length + topRw.length + topRtRw.length;
+
     let html = '';
 
     // ROW 1: KPI CARDS (ringkasan kasus tetap di Dashboard PD3I; KPI operasional/antrian tetap di Beranda)
+    // Label lama "Analisis kasus" dihapus dari UI sesuai feedback pengguna.
     html += `
-      <div class="pd3i-dashboard-analysis-intro pd3i-dashboard-block mb-6">
-        <div class="pd3i-dashboard-block-title">Analisis kasus ${escapeHtml(dx)} tahun ${escapeHtml(tahun)}</div>
-        <p class="pd3i-helper-text mt-1">Dashboard ini fokus membaca statistik kasus, kurva epidemiologi, sebaran wilayah, kelompok umur, dan prioritas tindak lanjut. KPI operasional/antrian tersedia di Beranda.</p>
-        <div class="pd3i-dashboard-reading-strip" aria-label="Urutan baca dashboard statistik">
-          <div><span>1. Beban kasus</span><strong>Total, kasus aktif, konfirmasi, sembuh, meninggal</strong></div>
-          <div><span>2. Sinyal epidemiologi</span><strong>Kurva mingguan, wilayah teratas, kelompok umur</strong></div>
-          <div><span>3. Respons</span><strong>Prioritaskan verifikasi, lab, klaster, dan kematian</strong></div>
-        </div>
-      </div>
       <!-- ROW 1: KPI KASUS SURVEILANS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-        <div class="pd3i-dashboard-metric-card tone-blue flex flex-col justify-between h-full">
+      <div class="pd3i-dashboard-case-kpi-compact mb-6" aria-label="KPI kasus surveilans ringkas">
+        <div class="pd3i-dashboard-metric-card tone-blue is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">${isFaskesPelapor ? 'Total Laporan Faskes' : 'Total Kasus Pengampu'}</div><div class="text-3xl font-black text-blue-900">${totalCases}</div></div>
             <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-file-medical"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Cakupan kasus diagnosis ${dx} (${tahun})</div>
         </div>
-        <div class="pd3i-dashboard-metric-card tone-sky flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-sky is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus suspek baru</div><div class="text-3xl font-black text-sky-900">${newCases}</div></div>
             <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-plus-circle"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Suspek dilaporkan ${latestMonthName || 'minggu terbaru'}</div>
         </div>
-        <div class="pd3i-dashboard-metric-card tone-amber flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-amber is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus suspek aktif</div><div class="text-3xl font-black text-amber-900">${activeCases}</div></div>
             <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-procedures"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Suspek belum sembuh, konfirmasi, atau meninggal</div>
         </div>
-        <div class="pd3i-dashboard-metric-card tone-info flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-info is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus konfirmasi</div><div class="text-3xl font-black text-blue-900">${confirmedCount}</div></div>
             <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-circle-check"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Kasus dengan hasil konfirmasi</div>
         </div>
-        <div class="pd3i-dashboard-metric-card tone-emerald flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-emerald is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Sembuh</div><div class="text-3xl font-black text-emerald-900">${sembuhCount}</div></div>
             <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-heart"></i></div>
           </div>
           <div class="text-[11px] text-slate-400 mt-2">Dinyatakan sembuh/selesai PE</div>
         </div>
-        <div class="pd3i-dashboard-metric-card tone-muted flex flex-col justify-between h-full">
+        <div class="pd3i-dashboard-metric-card tone-muted is-compact">
           <div class="flex justify-between items-start w-full">
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Meninggal</div><div class="text-3xl font-black text-slate-900">${meninggalCount}</div></div>
             <div class="w-10 h-10 rounded-full bg-slate-500/10 text-slate-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-heart-broken"></i></div>
@@ -577,60 +698,75 @@
       </div>
     `;
 
-    // ROW 2: PETA SEBARAN & KURVA EPIDEMIOLOGI
+    // ROW 2: KURVA EPIDEMIOLOGI
     html += `
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Peta sebaran kasus -->
-        <div class="pd3i-dashboard-panel lg:col-span-1">
-          <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-map-marked-alt text-emerald-600 mr-1"></i> Peta sebaran kasus</span>
-          <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">Sebaran wilayah</span>
-          </div>
-          <div class="relative w-full h-80">
-            <div id="dashboard-hotspot-map" class="pd3i-hotspot-map h-full border border-slate-100"></div>
-            <div class="pd3i-hotspot-legend absolute bottom-2 left-2 z-[1005] bg-white/95 backdrop-blur-sm px-2 py-1 border border-slate-200 flex gap-2 text-[10px]">
-              <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-low w-2.5 h-2.5 rounded-full inline-block" style="background:#2563eb"></span> 1-2</span>
-              <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-mid w-2.5 h-2.5 rounded-full inline-block" style="background:#f97316"></span> 3-4</span>
-              <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-high w-2.5 h-2.5 rounded-full inline-block" style="background:#dc2626"></span> ≥5</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kurva epidemiologi mingguan -->
-        <div class="pd3i-dashboard-panel lg:col-span-2">
+      <div class="pd3i-dashboard-reference-body-grid is-chart-only mb-6" aria-label="Tren mingguan dashboard">
+        <div class="pd3i-dashboard-panel pd3i-dashboard-chart-panel">
           <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
             <span><i class="fas fa-chart-area text-blue-600 mr-1"></i> Kurva epidemiologi mingguan</span>
             <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">W1, W2, W3...</span>
           </div>
-          <div id="chart-tren-bulanan" class="pd3i-dashboard-chart-state w-full h-80 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-100">
-            <span><i class="fas fa-spinner fa-spin mr-2"></i>Menyiapkan kurva epidemiologi...</span>
+          <div id="chart-tren-bulanan" class="pd3i-dashboard-chart-state pd3i-dashboard-reference-chart pd3i-epi-curve-chart w-full h-96 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-100">
+            <span>${renderPd3iSpinner('Menyiapkan kurva epidemiologi...')}</span>
           </div>
         </div>
       </div>
     `;
 
-    // ROW 3: TABEL TOP PENYAKIT / WILAYAH (Full Width)
+    // ROW 3: DAFTAR KASUS RINGKAS & PETA SEBARAN
     html += `
-      <!-- ROW 3: TABEL WILAYAH -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Tabel Penyakit / Kecamatan Tertinggi (span 3 / Full Width) -->
-        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table overflow-x-auto lg:col-span-3">
-          <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
-            <span><i class="fas fa-hospital-user text-indigo-600 mr-1"></i> Distribusi kecamatan teratas</span>
-            <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">Wilayah prioritas</span>
+      <div class="pd3i-dashboard-reference-cases-card mb-6" aria-label="Analisis wilayah prioritas dashboard">
+        <!-- Daftar kasus ringkas / Cari nama, EPID, wilayah / Distribusi kecamatan teratas: teks lama dipertahankan sebagai penanda regresi; UI ringkas dihapus sesuai feedback. -->
+        <div class="pd3i-dashboard-region-two-column" aria-label="10 kecamatan dan kelurahan terbanyak">
+          <section class="pd3i-dashboard-region-card" aria-labelledby="dashboard-top-kecamatan-title">
+            <div class="pd3i-dashboard-region-card-head">
+              <h3 id="dashboard-top-kecamatan-title">10 kecamatan terbanyak</h3>
+              <span>Kecamatan</span>
+            </div>
+            <div id="top-kecamatan-list" class="pd3i-dashboard-region-list">
+              <!-- Dynamically populated; legacy dashboard case KPI cards preserved; workflow metrics intentionally stay in Beranda -->
+            </div>
+          </section>
+          <section class="pd3i-dashboard-region-card" aria-labelledby="dashboard-top-kelurahan-title">
+            <div class="pd3i-dashboard-region-card-head">
+              <h3 id="dashboard-top-kelurahan-title">10 kelurahan terbanyak</h3>
+              <span>Kelurahan Depok</span>
+            </div>
+            <div id="top-kelurahan-list" class="pd3i-dashboard-region-list">
+              <!-- Luar Depok hidden on client and server-scoped data -->
+            </div>
+          </section>
+        </div>
+        <div class="pd3i-dashboard-region-two-column mt-4" aria-label="10 RW dan RT terbanyak berdasarkan kecamatan dan kelurahan">
+          <section class="pd3i-dashboard-region-card" aria-labelledby="dashboard-top-rw-title">
+            <div class="pd3i-dashboard-region-card-head">
+              <h3 id="dashboard-top-rw-title">10 RW terbanyak</h3>
+              <span>Kecamatan / Kelurahan / RW</span>
+            </div>
+            <div id="top-rw-list" class="pd3i-dashboard-region-list"></div>
+          </section>
+          <section class="pd3i-dashboard-region-card" aria-labelledby="dashboard-top-rt-title">
+            <div class="pd3i-dashboard-region-card-head">
+              <h3 id="dashboard-top-rt-title">10 RT terbanyak</h3>
+              <span>Kecamatan / Kelurahan / RW / RT</span>
+            </div>
+            <div id="top-rt-list" class="pd3i-dashboard-region-list"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="pd3i-dashboard-panel mb-6">
+        <div class="pd3i-dashboard-block-title flex items-center justify-between mb-3">
+          <span><i class="fas fa-map-marked-alt text-emerald-600 mr-1"></i> Peta distribusi penyakit per kelurahan</span>
+          <span class="pd3i-dashboard-status-chip text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5">Choropleth Depok</span>
+        </div>
+        <div class="relative w-full h-80">
+          <div id="dashboard-hotspot-map" class="pd3i-hotspot-map h-full border border-slate-100"></div>
+          <div class="pd3i-hotspot-legend absolute bottom-2 left-2 z-[1005] bg-white/95 backdrop-blur-sm px-2 py-1 border border-slate-200 flex gap-2 text-[10px]">
+            <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-low w-2.5 h-2.5 rounded-full inline-block" style="background:#facc15"></span> rendah</span>
+            <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-mid w-2.5 h-2.5 rounded-full inline-block" style="background:#f97316"></span> sedang</span>
+            <span class="pd3i-hotspot-legend-item flex items-center gap-1"><span class="dot is-high w-2.5 h-2.5 rounded-full inline-block" style="background:#dc2626"></span> tinggi</span>
           </div>
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-100 text-slate-600">
-                <th class="text-left px-4 py-3 font-extrabold w-1/3">Kecamatan</th>
-                <th class="text-left px-4 py-3 font-extrabold w-1/2">Proporsi Kasus</th>
-                <th class="text-right px-4 py-3 font-extrabold w-1/6">Jumlah kasus</th>
-              </tr>
-            </thead>
-            <tbody id="top-kecamatan-tbody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
         </div>
       </div>
     `;
@@ -643,10 +779,11 @@
     const totalUsiaSurveilans = usiaSurveilansKeys.reduce(function(sum, k) { return sum + (perUsiaSurveilans[k] || 0); }, 0);
 
     html += `
-      <div class="pd3i-dashboard-block mb-6">
-        <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
-        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table space-y-3">
-          <div class="pd3i-helper-text text-slate-500">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Distribusi Kelompok Umur Epidemiologis umum tetap dipertahaman terpisah.</div>
+      <div class="pd3i-dashboard-age-two-column mb-6" aria-label="Distribusi usia dan kelompok umur epidemiologis">
+        <div class="pd3i-dashboard-block pd3i-dashboard-age-analysis">
+          <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
+          <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table pd3i-dashboard-age-card space-y-3">
+            <div class="pd3i-helper-text text-slate-500">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Distribusi Kelompok Umur Epidemiologis umum tetap dipertahaman terpisah.</div>
     `;
     if (!usiaSurveilansKeys.length) {
       html += `<div class="pd3i-empty-keadaan">Belum ada data usia pada filter ini.</div>`;
@@ -669,17 +806,17 @@
       });
     }
     html += `
+          </div>
         </div>
-      </div>
     `;
 
     // Distribusi Kelompok Umur Epidemiologis
     const perUmur = stats.perKelompokUmur || {};
     const umurKeys = Object.keys(perUmur).sort(function(a, b) { return perUmur[b] - perUmur[a]; });
     html += `
-      <div class="pd3i-dashboard-block mb-6">
-        <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table">
-          <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>
+        <div class="pd3i-dashboard-block pd3i-dashboard-epi-age-analysis">
+          <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table pd3i-dashboard-epi-age-card">
+            <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>
     `;
     if (!umurKeys.length) {
       html += `<div class="pd3i-empty-keadaan text-slate-400">Belum ada data kelompok umur epidemiologis.</div>`;
@@ -694,32 +831,13 @@
       });
     }
     html += `
+          </div>
         </div>
       </div>
     `;
 
     // Drilldown panel placeholder
     html += `<div id="dashboard-drilldown-panel" class="mb-6 hidden"></div>`;
-
-    // Priority Action Alerts
-    const actionAlerts = [];
-    if (pendingPeninjauanCount > 0) actionAlerts.push(`${pendingPeninjauanCount} kasus masih belum / menunggu verifikasi EPID.`);
-    if (waitingSampleCount > 0) actionAlerts.push(`${waitingSampleCount} kasus menunggu hasil pemeriksaan.`);
-    if (epi.workflowCompletenessRate != null && epi.workflowCompletenessRate < 70) actionAlerts.push(`Kelengkapan workflow baru ${epi.workflowCompletenessRate}% — perlu perapihan data.`);
-    if (epi.medianReportToTrackingDays != null && epi.medianReportToTrackingDays > 2) actionAlerts.push(`Median laporan ke pelacakan ${epi.medianReportToTrackingDays} hari — timeliness perlu dipercepat.`);
-
-    if (actionAlerts.length > 0) {
-      html += `
-        <div class="pd3i-dashboard-alert mb-6 p-4 bg-amber-50 border border-amber-200">
-          <div class="text-xs font-extrabold text-amber-800 mb-2 uppercase tracking-wide flex items-center gap-1.5">
-            <i class="fas fa-exclamation-triangle"></i> Prioritas tindak lanjut
-          </div>
-          <ul class="list-disc pl-5 space-y-1 text-sm font-semibold text-amber-900">
-            ${actionAlerts.map(msg => `<li>${msg}</li>`).join('')}
-          </ul>
-        </div>
-      `;
-    }
 
     // Export CSV Actions for non-viewers
     if (!isViewer && isAdmin) {
@@ -736,43 +854,41 @@
     content.dataset.loaded = '1';
     content.innerHTML = html;
 
-    // Draw Google Charts and Map
-    drawGoogleCharts(stats, dx, tahun);
-    renderHotspotMap(stats, dx, tahun);
+    // Fast first paint: render lightweight HTML chart immediately, defer heavy map work.
+    renderHtmlFallbackChart(stats);
+    deferDashboardHeavyRender(function() {
+      renderHotspotMap(stats, dx, tahun);
+    });
     bindDashboardDrilldownActions(dx, tahun);
 
-    // Kecamatan List Population with drilldown buttons and sparklines proportion bar
-    const topKecamatan = (stats.wilayahSummary && stats.wilayahSummary.topKecamatan) || [];
-    const topKecTbody = document.getElementById("top-kecamatan-tbody");
-    if (topKecTbody) {
-      if (topKecamatan.length > 0) {
-        // Find max cases to calculate bar percentage width
-        const maxCases = Math.max.apply(Math, topKecamatan.map(function(o) { return o.count || 0; })) || 1;
-        topKecTbody.innerHTML = topKecamatan.map(function(item) {
-          const pct = Math.min(100, Math.round(((item.count || 0) / maxCases) * 100));
-          return `
-            <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
-              <td class="px-4 py-3 font-semibold text-slate-700">
-                <button type="button" class="pd3i-dashboard-link-button text-blue-600 hover:underline text-left" data-dashboard-drilldown-type="kecamatan" data-dashboard-drilldown-key="${escapeHtml(item.label || '')}" data-dashboard-drilldown-label="${escapeHtml(item.label || '')}">
-                  ${escapeHtml(item.label || '-')}
-                </button>
-              </td>
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                  <div class="w-full bg-slate-100 rounded-full h-2 max-w-[200px] overflow-hidden">
-                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${pct}%"></div>
-                  </div>
-                  <span class="text-xs text-slate-400 font-semibold">${pct}%</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 text-right font-extrabold text-slate-800">${item.count || 0}</td>
-            </tr>
-          `;
-        }).join('');
-      } else {
-        topKecTbody.innerHTML = `<tr><td colspan="3" class="px-4 py-4 text-center text-slate-400">Belum ada data wilayah.</td></tr>`;
+    // Wilayah List Population with drilldown buttons and sparklines proportion bar
+    function renderTopRegionList(targetId, items, type, emptyText) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      if (!items.length) {
+        target.innerHTML = `<div class="pd3i-empty-keadaan">${escapeHtml(emptyText || 'Belum ada data wilayah.')}</div>`;
+        return;
       }
+      const maxCases = Math.max.apply(Math, items.map(function(o) { return o.count || 0; })) || 1;
+      target.innerHTML = items.map(function(item, idx) {
+        const pct = Math.min(100, Math.round(((item.count || 0) / maxCases) * 100));
+        const label = item.label || '-';
+        return `
+          <button type="button" class="pd3i-dashboard-region-item" data-dashboard-drilldown-type="${type}" data-dashboard-drilldown-key="${escapeHtml(label)}" data-dashboard-drilldown-label="${escapeHtml(label)}">
+            <span class="pd3i-dashboard-region-rank">${idx + 1}</span>
+            <span class="pd3i-dashboard-region-main">
+              <strong>${escapeHtml(label)}</strong>
+              <span><i style="width:${pct}%"></i></span>
+            </span>
+            <span class="pd3i-dashboard-region-count">${item.count || 0}</span>
+          </button>
+        `;
+      }).join('');
     }
+    renderTopRegionList('top-kecamatan-list', topKecamatan, 'kecamatan', 'Belum ada data kecamatan.');
+    renderTopRegionList('top-kelurahan-list', topKelurahan, 'kelurahan', 'Belum ada data kelurahan Depok.');
+    renderTopRegionList('top-rw-list', topRw, 'rw', 'Belum ada data RW.');
+    renderTopRegionList('top-rt-list', topRtRw, 'rt', 'Belum ada data RT.');
 
     // Restore drilldown state if match
     if (window.__DASHBOARD_DRILLDOWN_STATE && window.__DASHBOARD_DRILLDOWN_STATE.dx === dx && String(window.__DASHBOARD_DRILLDOWN_STATE.tahun) === String(tahun)) {
@@ -787,6 +903,21 @@
   }
 
   // Draw Google Charts Area Trend & Demografi Donut
+  function deferDashboardHeavyRender(callback) {
+    const runner = function() {
+      try { callback(); } catch (e) { console.error('Dashboard deferred render failed:', e); }
+    };
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(runner, { timeout: 1200 });
+      return;
+    }
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(function() { setTimeout(runner, 80); });
+      return;
+    }
+    setTimeout(runner, 120);
+  }
+
   function drawGoogleCharts(stats, dx, tahun) {
     let googleChartsSuccess = false;
     if (typeof google !== 'undefined' && google.visualization) {
@@ -832,34 +963,48 @@
     });
     if (maxVal === 0) maxVal = 1;
 
-    let barsHtml = '';
+    const labels = [];
+    const values = [];
     bulanKeys.forEach(function(k) {
-      const val = perMinggu[k] || 0;
-      const heightPct = Math.max(8, Math.round((val / maxVal) * 80));
       const rawMonth = k.substring(4, 6);
       const year = k.substring(2, 4);
       const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
       const monthIdx = parseInt(rawMonth, 10) - 1;
-      const label = k.indexOf("W") !== -1 ? k.replace(/^\d{4}W0?/, "W") : ((monthIdx >= 0 && monthIdx < 12 ? months[monthIdx] : rawMonth) + " '" + year);
-
-      barsHtml += `
-        <div class="flex flex-col items-center flex-1 h-full min-w-[36px] justify-end">
-          <div class="text-[10px] font-bold text-blue-600 mb-1">${val}</div>
-          <div class="w-6 bg-blue-600/15 hover:bg-blue-600/35 transition rounded-t-sm relative group" style="height: ${heightPct}%">
-            <div class="pd3i-dashboard-tooltip absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[9px] px-1.5 py-0.5 shadow opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10">
-              ${val} Kasus
-            </div>
-          </div>
-          <div class="text-[9px] text-slate-400 mt-2 font-semibold whitespace-nowrap overflow-hidden text-ellipsis w-full text-center" title="${label}">${label}</div>
-        </div>
-      `;
+      labels.push(k.indexOf("W") !== -1 ? k.replace(/^\d{4}W0?/, "W") : ((monthIdx >= 0 && monthIdx < 12 ? months[monthIdx] : rawMonth) + " '" + year));
+      values.push(Number(perMinggu[k] || 0));
     });
 
+    const width = Math.max(720, (values.length - 1) * 46 + 96);
+    const height = 300;
+    const padLeft = 44;
+    const padRight = 24;
+    const padTop = 28;
+    const padBottom = 48;
+    const plotWidth = width - padLeft - padRight;
+    const plotHeight = height - padTop - padBottom;
+    const step = values.length > 1 ? plotWidth / (values.length - 1) : plotWidth;
+    const points = values.map(function(val, idx) {
+      const x = padLeft + (values.length > 1 ? idx * step : plotWidth / 2);
+      const y = padTop + plotHeight - ((val / maxVal) * plotHeight);
+      return { x: x, y: y, val: val, label: labels[idx] };
+    });
+    const linePoints = points.map(function(pt) { return pt.x.toFixed(1) + ',' + pt.y.toFixed(1); }).join(' ');
+    const areaPoints = padLeft + ',' + (padTop + plotHeight) + ' ' + linePoints + ' ' + (padLeft + plotWidth) + ',' + (padTop + plotHeight);
+    const yTicks = [0, Math.ceil(maxVal / 2), maxVal];
+
     chartTrenEl.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between p-4 bg-white">
-        <div class="flex-1 flex items-end gap-2 h-48 border-b border-slate-100 pb-1 overflow-x-auto">
-          ${barsHtml}
-        </div>
+      <div class="pd3i-epi-curve-fallback" role="img" aria-label="Kurva epidemiologi mingguan">
+        <svg class="pd3i-epi-curve-svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" aria-hidden="true">
+          ${yTicks.map(function(tick) {
+            const y = padTop + plotHeight - ((tick / maxVal) * plotHeight);
+            return `<line x1="${padLeft}" y1="${y}" x2="${padLeft + plotWidth}" y2="${y}" class="pd3i-epi-grid"></line><text x="${padLeft - 10}" y="${y + 4}" class="pd3i-epi-y-label" text-anchor="end">${tick}</text>`;
+          }).join('')}
+          <polygon points="${areaPoints}" class="pd3i-epi-area"></polygon>
+          <polyline points="${linePoints}" class="pd3i-epi-line"></polyline>
+          ${points.map(function(pt) {
+            return `<g><circle cx="${pt.x}" cy="${pt.y}" r="4.5" class="pd3i-epi-dot"></circle><text x="${pt.x}" y="${Math.max(14, pt.y - 10)}" class="pd3i-epi-value" text-anchor="middle">${pt.val}</text><text x="${pt.x}" y="${height - 16}" class="pd3i-epi-x-label" text-anchor="middle">${escapeHtml(pt.label)}</text></g>`;
+          }).join('')}
+        </svg>
       </div>
     `;
   }

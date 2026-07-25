@@ -8,13 +8,6 @@
                       <div class="pd3i-card-eyebrow">Entri kasus baru</div>
                       <h3 class="pd3i-card-title"><i class="fas fa-file-circle-plus text-blue-600 mr-2"></i>Input kasus awal</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Input awal</span>
-                  </div>
-                  <div class="pd3i-helper-text">Gunakan ruang ini untuk membuat kasus baru. Koreksi, verifikasi, hasil pemeriksaan, dan status lanjutan dilakukan dari Daftar Kasus.</div>
-                  <div class="pd3i-input-entry-brief" aria-label="Checklist input kasus awal">
-                    <div><strong>Cek identitas</strong><span>Pastikan NIK, nama, tanggal lahir, alamat, dan kontak terbaca sebelum simpan.</span></div>
-                    <div><strong>Cek gejala awal</strong><span>Isi tanggal onset, diagnosis suspek, dan riwayat imunisasi sesuai laporan awal.</span></div>
-                    <div class="is-warning"><strong>Cek duplikasi</strong><span>Cari di Daftar Kasus bila pasien atau kejadian terlihat pernah dilaporkan.</span></div>
                   </div>
                 </section>
 <section id="input-draft-restore-card" class="pd3i-shell-card pd3i-form-card pd3i-form-card-highlight hidden">
@@ -23,7 +16,6 @@
                       <div class="pd3i-card-eyebrow">Draft input tersimpan</div>
                       <h3 class="pd3i-card-title"><i class="fas fa-clock-rotate-left text-amber-600 mr-2"></i>Lanjutkan draft sebelumnya?</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Draft restore</span>
                   </div>
                   <div id="input-draft-restore-text" class="pd3i-helper-text">Ada draft input yang tersimpan.</div>
                   <div class="pd3i-submit-stack mt-4">
@@ -42,7 +34,6 @@
                       <div class="pd3i-card-eyebrow">Langkah 1A</div>
                       <h3 class="pd3i-card-title"><i class="fas fa-hospital-user text-blue-600 mr-2"></i>Informasi Pelapor</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Sumber laporan & petugas</span>
                   </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pelapor-fields-container-input"></div>
                 </section>
@@ -53,7 +44,6 @@
                       <div class="pd3i-card-eyebrow">Langkah 1B</div>
                       <h3 class="pd3i-card-title"><i class="fas fa-address-card text-blue-600 mr-2"></i>Data Demografi Pasien</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Identitas & lokasi</span>
                   </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="pasien-fields-container-input"></div>
                 </section>
@@ -64,7 +54,6 @@
                       <div class="pd3i-card-eyebrow">Langkah 1C</div>
                       <h3 class="pd3i-card-title" id="specific-title-input"><i class="fas fa-stethoscope text-blue-600 mr-2"></i>Data Spesifik Kasus</h3>
                     </div>
-                    <span class="pd3i-badge-soft">Klinis, epi, imunisasi, outcome</span>
                   </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pd3i-field-grid" id="specific-fields-container-input"></div>
                 </section>
@@ -78,11 +67,6 @@
                   <div class="pd3i-card-eyebrow">Kontrol simpan</div>
                   <h3 class="pd3i-card-title">Review dan simpan input awal</h3>
                 </div>
-                <span class="pd3i-badge-soft">Review dan simpan input awal</span>
-              </div>
-              <div class="pd3i-action-panel-note">
-                <i class="fas fa-shield-heart"></i>
-                <span>Formulir ini hanya menyimpan tahap entri awal. Tahap verifikasi, hasil pemeriksaan, dan pembaruan status dilakukan dari data yang sudah tersimpan.</span>
               </div>
               <div class="pd3i-submit-stack">
                 <button type="button" id="btn-submit-input" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'input') : false">
@@ -93,7 +77,6 @@
                 </button>
               </div>
               <div id="workflow-submit-status-input" class="pd3i-helper-text hidden" role="status" aria-live="polite"></div>
-              <div class="pd3i-helper-text mt-3">Setelah tersimpan, lanjutkan verifikasi, pemeriksaan, dan status dari Daftar Kasus.</div>
             </div>
           </div>
         </section>

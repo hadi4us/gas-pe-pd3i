@@ -519,6 +519,17 @@ test('verification submit button has direct fallback handler and saves the activ
 });
 
 
+test('input form showIf lookup stays scoped so Pertusis specimen date fields can be shown', () => {
+  const pertConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_PERT.html'), 'utf8');
+  assert.match(pertConfigHtml, /id: "Spesimen pertusis diambil\?"/);
+  assert.match(pertConfigHtml, /id: "Tanggal ambil spesimen pertusis"[\s\S]*?type: "date"[\s\S]*?showIf: \{ field: "Spesimen pertusis diambil\?", values: \["Ya"\] \}/);
+  assert.match(pertConfigHtml, /id: "Tanggal kirim spesimen pertusis"[\s\S]*?type: "date"[\s\S]*?showIf: \{ field: "Spesimen pertusis diambil\?", values: \["Ya"\] \}/);
+  assert.match(appHtml, /const scope = getFormScopeForElement\(wrapper\);/);
+  assert.match(appHtml, /const parent = findScopedFieldControl\(parentId, scope\) \|\| document\.getElementById\(parentId\);/);
+  assert.match(appHtml, /const parentValue = getShowIfParentValue\(parentId, scope\);/);
+  assert.doesNotMatch(appHtml, /const parent = document\.getElementById\(parentId\);\s*const parentValue = getShowIfParentValue\(parentId\);/);
+});
+
 test('PERT PE print renders dynamic imunisasi and kontak erat tables', () => {
   const printPertHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'print_PERT.html'), 'utf8');
   assert.match(printPertHtml, /var imunRows=parseRows_\(pick_\(\['Riwayat Imunisasi'\]\)\)/);
@@ -938,7 +949,7 @@ test('Zero Reporting workspace runtime reveals native form internals', () => {
 });
 
 test('verification workspace is autonomous review-only with explicit action box', () => {
-  assert.match(workspaceVerifikasiHtml, /Ruang kerja ini otonom/);
+  assert.doesNotMatch(workspaceVerifikasiHtml, /Ruang kerja ini otonom/);
   assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Terverifikasi"[\s\S]*Approved/);
   assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Pending"[\s\S]*Pending/);
   assert.match(workspaceVerifikasiHtml, /data-pd3i-verifikasi-action="Perlu Revisi"[\s\S]*Tolak dan Perbaiki/);
@@ -989,6 +1000,25 @@ test('clearActiveRecordContext clears only requested workspace containers', () =
   assert.match(clearFn, /const containerIdsByWorkspace = \{/);
   assert.match(clearFn, /containerIdsByWorkspace\[targetWorkspace\]/);
   assert.doesNotMatch(clearFn, /\['pelapor-fields-container'[\s\S]*'status-fields-container-workspace'\]\.forEach/);
+});
+
+test('SARS submit requires session token and server-owned facility identity', () => {
+  const sarsSubmit = fs.readFileSync(path.join(__dirname, '..', 'src', 'SARS', 'submit_sars.js'), 'utf8');
+  const workspaceSars = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_sars.html'), 'utf8');
+  const standaloneSars = fs.readFileSync(path.join(__dirname, '..', 'src', 'SARS', 'index.html'), 'utf8');
+
+  assert.match(sarsSubmit, /function _getSarsSubmitSession_\(formData\)/);
+  assert.match(sarsSubmit, /const token = _sTrim_\(formData\.__token\)/);
+  assert.match(sarsSubmit, /const session = _getSessionFromToken_\(token\)/);
+  assert.match(sarsSubmit, /if \(!session\.ok \|\| !session\.user\)/);
+  assert.match(sarsSubmit, /const sessionFacility =/);
+  assert.match(sarsSubmit, /getSarsFacilityForActiveUser\(email\)/);
+  assert.match(sarsSubmit, /Fasilitas laporan tidak sesuai dengan akun login/);
+  assert.match(sarsSubmit, /const namaFasyankes = _sTrim_\(sessionFacility\.nama\)/);
+  assert.match(workspaceSars, /__token:\s*String\(/);
+  assert.match(standaloneSars, /__token:\s*String\(/);
+  assert.doesNotMatch(sarsSubmit, /const email\s*=\s*_sTrim_\(formData\.email\)/);
+  assert.doesNotMatch(sarsSubmit, /const namaFasyankes\s*=\s*_sTrim_\(formData\.asalFaskes\)/);
 });
 
 test('MR rejects duplicate campak case when NIK and fever onset date match', () => {

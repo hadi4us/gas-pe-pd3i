@@ -940,6 +940,22 @@ function getDashboardStats(dx, tahun, token) {
     const tahunNum = parseInt(tahun, 10);
     const filterTahun = !isNaN(tahunNum) && tahunNum > 0;
 
+    var dashboardStatsCache = null;
+    var dashboardStatsCacheKey = '';
+    try {
+      dashboardStatsCache = CacheService.getScriptCache();
+      const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+      const unit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
+      const kode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
+      const scope = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+      dashboardStatsCacheKey = ['dashboard-stats-v3', dx, filterTahun ? tahunNum : 'ALL', role, unit, kode, scope].join(':');
+      const cachedStatsRaw = dashboardStatsCache.get(dashboardStatsCacheKey);
+      if (cachedStatsRaw) return JSON.parse(cachedStatsRaw);
+    } catch (cacheReadErr) {
+      dashboardStatsCache = null;
+      dashboardStatsCacheKey = '';
+    }
+
     const sheetName = dx + "_Raw";
     const sheetData = _readSheetWithCache_(sheetName);
 
@@ -1346,7 +1362,7 @@ function getDashboardStats(dx, tahun, token) {
       points: hotspotPoints.slice(0, 500)
     };
 
-    return {
+    const dashboardStatsResult = {
       totalKasus: totalKasus,
       perKecamatan: perKecamatan,
       perKelurahan: perKelurahan,
@@ -1373,6 +1389,12 @@ function getDashboardStats(dx, tahun, token) {
       statusNotifikasiRevisi: statusNotifikasiRevisi,
       statusTelegramRevisi: statusTelegramRevisi
     };
+
+    if (dashboardStatsCache && dashboardStatsCacheKey) {
+      try { dashboardStatsCache.put(dashboardStatsCacheKey, JSON.stringify(dashboardStatsResult), 120); } catch (cacheWriteErr) {}
+    }
+
+    return dashboardStatsResult;
 
   } catch (e) {
     console.error("[getDashboardStats] Error:", e);

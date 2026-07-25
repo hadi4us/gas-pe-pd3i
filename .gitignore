@@ -4,3 +4,9 @@ node_modules/
 .env.*
 *.log
 .DS_Store
+
+# Local audit/import artifacts; never candidates for commit or deployment.
+/out/
+/log.txt
+/check-ss.js
+/import-data.py

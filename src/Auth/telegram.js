@@ -205,7 +205,9 @@ function _isOperationalWahaEnabled_() {
 
 function _sendOperationalWahaText_(chatId, lines) {
   if (!_isOperationalWahaEnabled_()) return { sent: false, reason: 'WAHA_DISABLED' };
-  const baseUrl = String(Config_Manager.getConfig('WAHA_BASE_URL') || '').trim().replace(/\/+$/, '');
+  const baseUrl = (typeof _currentWahaBaseUrl_ === 'function')
+    ? _currentWahaBaseUrl_(Config_Manager.getConfig('WAHA_BASE_URL'))
+    : String(Config_Manager.getConfig('WAHA_BASE_URL') || '').trim().replace(/\/+$/, '');
   const apiKey = String(Config_Manager.getConfig('WAHA_API_KEY') || '').trim();
   const session = String(Config_Manager.getConfig('WAHA_SESSION') || 'default').trim() || 'default';
   const target = String(chatId || Config_Manager.getConfig('WAHA_DINKES_CHAT_ID') || '').trim();

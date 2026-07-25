@@ -109,11 +109,11 @@
         title: "Informasi Spesimen",
         fields: [
           { id: "Apakah spesimen darah diambil", label: "Apakah spesimen darah diambil", type: "choice_buttons", options: OPT_YA_TIDAK, required: true },
-          { id: "Jenis Sampel Darah", label: "Jenis Sampel Darah", type: "select", required: true, options: ["Serum", "Darah lengkap", "Lainnya"], showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
+          { id: "Jenis Sampel Darah", label: "Jenis Sampel Darah", type: "choice_buttons", required: true, options: ["Serum", "Darah lengkap", "Lainnya"], showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen darah", label: "Tanggal ambil spesimen darah", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Tanggal pengiriman spesimen darah ke lab", label: "Tanggal pengiriman spesimen darah ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen darah diambil", values: ["Ya"] } },
           { id: "Apakah spesimen lain diambil", label: "Apakah spesimen lain diambil", type: "choice_buttons", options: OPT_YA_TIDAK },
-          { id: "Jenis Sampel Lain", label: "Jenis Sampel Lain", type: "select", required: true, options: ["Swab tenggorok", "Urine", "Lainnya"], showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
+          { id: "Jenis Sampel Lain", label: "Jenis Sampel Lain", type: "choice_buttons", required: true, options: ["Swab tenggorok", "Urine", "Lainnya"], showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
           { id: "Tanggal ambil spesimen lain", label: "Tanggal ambil spesimen lain", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } },
           { id: "Tanggal pengiriman spesimen lain ke lab", label: "Tanggal pengiriman spesimen lain ke lab", type: "date", required: true, showIf: { field: "Apakah spesimen lain diambil", values: ["Ya"] } }
         ]

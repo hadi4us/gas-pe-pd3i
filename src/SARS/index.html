@@ -687,6 +687,7 @@
       // autocomplete/session timing can leave client field temporarily blank.
       // Backend validates account, facility, and REF_FASKES before any write.
       const formData = {
+        __token: String((typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) || window.__PD3I_SESSION_TOKEN || '').trim(),
         email: String(document.getElementById('email').value || '').trim(),
         mingguEpid: parseInt(document.getElementById('mingguEpid').value, 10),
         namaPelapor: String(document.getElementById('namaPelapor').value || '').trim(),

@@ -347,3 +347,136 @@ Target: make queues feel like a surveillance workbench. Each case card/row shoul
 - Styling scoped to `.pd3i-dashboard-reading-strip`, light neutral official tone, responsive 3→1 column layout.
 - Validation: first `npm test` failed because new test regex was malformed; fixed test assertion, then `npm test` passed `241/241`; hygiene and endpoint security checks passed.
 - Deployment target: dedicated UI/UX deployment only; deployed @1278.
+
+
+## 2026-07-23 — UIUX dedicated @1279/@1280 — external reference dashboard skin correction
+
+Surface: Dashboard statistik PD3I.
+
+Source visual: MasBro supplied external preview screenshots for design direction only. Brand naming from the preview must not appear in SIMPEL Surveilans UI.
+
+Changes:
+- Added scoped dashboard visual skin based on external reference: soft mint background, white rounded cards, soft borders, subtle shadows, teal accents, compact filter/table styling.
+- Corrected borrowed brand exposure: changed mode/copy/classes from preview-specific naming to SIMPEL Surveilans neutral terms such as `Tampilan komando`, `Ringkasan komando`, and `pd3i-dashboard-reference-skin`.
+- Added regression test so preview brand text does not appear in dashboard HTML/JS.
+- Preserved dashboard backend, filters, chart IDs, drilldown behavior, export behavior, and existing dashboard content render path.
+
+Validation:
+- `npm test` passed 243/243.
+- Project hygiene passed.
+- Endpoint security passed.
+
+Deployment:
+- UI/UX dedicated deployment updated to `@1280` for brand removal.
+- Production not touched.
+- Development/core not touched.
+
+## 2026-07-23 — UIUX dedicated @1281 — dashboard reference command structure
+
+Surface: Dashboard statistik PD3I.
+
+Goal: move beyond surface colors toward screenshot-like dashboard structure while keeping SIMPEL Surveilans branding and existing data handlers.
+
+Changes:
+- Added `pd3i-dashboard-reference-command` block at top of rendered dashboard content.
+- Added command hero with breadcrumb-style kicker, summary copy, and priority alert card.
+- Added static summary filter bar for period, diagnosis, and active work area based on current dashboard filter/session role.
+- Added four reference-style KPI cards: total cases, follow-up, high risk, data completeness.
+- Added `Prioritas hari ini` mini-panel using existing dashboard alert logic, without new backend calls.
+- Preserved existing detailed KPI cards, map, weekly chart, top kecamatan table, drilldown panel, export button, and all IDs used by existing chart/map logic.
+
+Validation:
+- `npm test` passed 243/243 before deploy preparation.
+- Project hygiene passed.
+- Endpoint security passed.
+
+Deployment:
+- Target: UI/UX dedicated deployment only.
+- Production not touched.
+- Development/core not touched.
+
+### @1282 — dashboard reference body layout
+- Surface: Dashboard statistik PD3I.
+- Refactor body setelah command hero agar lebih dekat screenshot reference tanpa borrowed brand.
+- Chart mingguan diposisikan kiri dan `Prioritas hari ini` kanan dalam grid responsif.
+- Daftar kasus ringkas dibungkus card putih dengan search/filter visual dan table header soft gray.
+- Peta sebaran dipindah setelah daftar ringkas agar body tidak terasa dobel KPI/panel.
+- Backend, chart id `chart-tren-bulanan`, map id `dashboard-hotspot-map`, table body `top-kecamatan-tbody`, drilldown, dan export tetap dipertahankan.
+
+### @1283 — dashboard compact case KPI strip
+- Surface: Dashboard statistik PD3I.
+- Legacy 6 kartu KPI kasus tetap dipertahankan untuk konteks epidemiologi dan kompatibilitas test, tetapi dipadatkan menjadi strip ringkas agar tidak menyaingi 4 KPI command reference di hero.
+- Detail helper per kartu disembunyikan visual; label dan angka utama tetap terbaca.
+- Responsive: 6 kolom desktop, 3 kolom tablet, 2 kolom mobile.
+- Backend, filter, chart, peta, drilldown, export, dan ID runtime tetap dipertahankan.
+
+## 2026-07-23 — UI/UX Panduan Aplikasi operational FAQ intro (@1293)
+
+- Surface: Panduan Aplikasi.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after dashboard and route refinements.
+- Replaced decorative guide hero with operational intro card focused on: menu kerja, status kasus, and aksi aman.
+- Clarified guide search copy: local visual filter, does not read/write/change case data.
+- Preserved searchable FAQ input, topic chips, role-specific steps, guide cards, IDs, and local filtering runtime.
+- Styling scoped to `.pd3i-guide-page-intro` and `.pd3i-guide-intro-checks`, light neutral official tone, responsive 2→1 column layout.
+- Validation: `npm test` passed `253/253`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1293.
+- Production and Development/core deployments untouched.
+
+## 2026-07-23 — UI/UX Daftar Kasus registry orientation strip (@1294)
+
+- Surface: Daftar Kasus.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after Panduan Aplikasi phase 55.
+- Added operational orientation strip under workflow helper with three registry checks: `Identitas dulu`, `Status terbaca`, and `Aksi utama jelas`.
+- Reinforced blueprint intent: patient/case identity primary, status readable, and primary action clear before editing/opening records.
+- Preserved filter/search bar, workflow intent cards, core workflow guide, search result IDs, pagination/runtime handlers, and data APIs.
+- Styling scoped to `.pd3i-search-registry-orientation`, responsive 3→1 column layout.
+- Validation: `npm test` passed `254/254`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1294.
+- Production and Development/core deployments untouched.
+
+## 2026-07-23 — UI/UX Beranda next safe action on priority cards (@1295)
+
+- Surface: Beranda.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after Daftar Kasus phase 56.
+- Added `Langkah aman` microcopy to dynamic priority work cards for verification, revision, lab result, and status queues.
+- Reinforced canonical blueprint question: what is the next safe action?
+- Preserved summary API, task counts, workspace routing, cross-module cards, and Beranda default behavior after login.
+- Styling scoped to `.pd3i-overview-task-next`.
+- Validation: `npm test` passed `255/255`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1295.
+- Production and Development/core deployments untouched.
+
+## 2026-07-23 — UI/UX Administrasi sensitive decision gate (@1296)
+
+- Surface: Administrasi.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after Beranda phase 57.
+- Added a three-step decision gate before settings panels: validate requester, assess impact, save only when audit-ready.
+- Reinforced secure-console blueprint for sensitive runtime operations without changing any admin handlers or backend permissions.
+- Styling scoped to `.pd3i-admin-decision-gate` with mobile stack.
+- Validation: `npm test` passed `256/256`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1296.
+- Production and Development/core deployments untouched.
+
+## 2026-07-23 — UI/UX Zero Reporting weekly decision gate (@1297)
+
+- Surface: Zero Reporting weekly form.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after Administrasi phase 58.
+- Added a three-step weekly decision gate before the form: set period, audit case sources, send final decision.
+- Reinforced safe NIHIL behavior: check poli, IGD, inpatient, lab, and network reports before submitting nihil.
+- Preserved Zero Reporting runtime IDs, submit handler, disease rows, inline banner, and weekly form data flow.
+- Styling scoped to `.pd3i-zero-reporting-weekly-gate` with mobile stack.
+- Validation: `npm test` passed `257/257`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1297.
+- Production and Development/core deployments untouched.
+
+## 2026-07-23 — UI/UX Hasil Pemeriksaan next safe action before lab save (@1298)
+
+- Surface: Hasil Pemeriksaan / lab result save action.
+- Trigger: continue `UIUX_BLUEPRINT.md` backlog after Zero Reporting phase 59.
+- Added a next-safe-action panel immediately before `Simpan Hasil Pemeriksaan`.
+- Copy instructs operator to match case identity, sample type, examination date, and result interpretation; if result is doubtful, postpone save and confirm with lab.
+- Preserved workflow runtime IDs and submit handler (`btn-submit-sampel`, `__PD3I_SUBMIT_WORKFLOW_CLICK`).
+- Styling scoped to `.pd3i-sampel-next-action`.
+- Validation: `npm test` passed `258/258`; hygiene and endpoint security checks passed.
+- Deployment target: dedicated UI/UX deployment only; deployed @1298.
+- Production and Development/core deployments untouched.

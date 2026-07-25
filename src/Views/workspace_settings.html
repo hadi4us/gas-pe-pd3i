@@ -22,6 +22,11 @@
       <div><strong>Jejak audit</strong><span>Perubahan pengguna, integrasi, dan rule wajib bisa ditelusuri dari waktu, pelaku, dan dampak.</span></div>
       <div class="is-sensitive"><strong>Kontrol risiko</strong><span>Operasi setup, approve rule, dan super-admin dipakai hanya saat perlu.</span></div>
     </div>
+    <div class="pd3i-admin-decision-gate" aria-label="Gerbang keputusan administrasi sensitif">
+      <div><strong>1. Validasi pemohon</strong><span>Pastikan permintaan berasal dari penanggung jawab resmi atau admin berwenang.</span></div>
+      <div><strong>2. Nilai dampak</strong><span>Periksa dampak ke login, notifikasi, data kasus, dan workflow aktif sebelum menyimpan.</span></div>
+      <div class="is-sensitive"><strong>3. Simpan hanya bila siap diaudit</strong><span>Jika alasan, pelaku, atau dampak belum jelas, tunda perubahan.</span></div>
+    </div>
     <div class="pd3i-card-body">
       <div id="pie-settings-locked" class="pd3i-settings-surface p-3 border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
       
@@ -486,7 +491,7 @@ window.initSettingsWorkspace = function(){
   const loadUserList = function() {
     const tableBody = document.getElementById('user-table-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400"><i class="fas fa-spinner fa-spin"></i> Memuat data pengguna...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400" role="status" aria-live="polite"><span>'+renderPd3iSpinner('Memuat data pengguna...')+'</span></td></tr>';
     google.script.run.withSuccessHandler(function(res) {
       if (!res.ok) {
         tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';

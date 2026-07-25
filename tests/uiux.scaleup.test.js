@@ -533,12 +533,12 @@ test('SARING-PIE tabs isolate panels instead of showing one long page', () => {
   assert.match(styleHtml, /#section-pie \[data-pie-tab-section\]\[aria-hidden="true"\]/);
 });
 
-test('Zero Reporting form avoids duplicate page header under app breadcrumb', () => {
+test('Zero Reporting form avoids duplicate page header and accessory strip under app breadcrumb', () => {
   const sarsHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_sars.html'), 'utf8');
   assert.doesNotMatch(sarsHtml, /<h1>FORM Pelaporan Surveilans Aktif-PD3I<\/h1>/);
   assert.doesNotMatch(sarsHtml, /class="header"/);
-  assert.match(sarsHtml, /pd3i-local-status-strip/);
-  assert.match(sarsHtml, /Status formulir/);
+  assert.doesNotMatch(sarsHtml, /Status formulir/);
+  assert.doesNotMatch(sarsHtml, /format laporan nihil mingguan/);
   assert.match(styleHtml, /\.pd3i-local-status-strip/);
   assert.match(styleHtml, /App shell owns page title/);
 });
@@ -1176,10 +1176,10 @@ test('Dashboard statistik phase 2 follows epidemiology command panel blueprint',
   const dashboardJs = fs.readFileSync(path.join(root, 'src', 'Views', 'app.dashboard.js.html'), 'utf8');
   assert.match(dashboardJs, /KPI KASUS SURVEILANS/);
   assert.match(dashboardJs, /Analisis kasus/);
-  assert.match(dashboardJs, /KPI operasional\/antrian tersedia di Beranda/);
+  assert.doesNotMatch(dashboardJs, /KPI operasional\/antrian tersedia di Beranda/);
   assert.match(dashboardJs, /pd3i-dashboard-state is-loading/);
   assert.doesNotMatch(dashboardJs, /pd3i-dashboard-keadaan is-loading/);
-  assert.match(dashboardJs, /Peta sebaran kasus/);
+  assert.match(dashboardJs, /Peta distribusi penyakit per kelurahan|Peta sebaran kasus/);
   assert.match(dashboardJs, /Kurva epidemiologi mingguan/);
   assert.match(dashboardJs, /W1, W2, W3/);
   assert.match(dashboardJs, /curveType: 'function'/);
@@ -1194,14 +1194,12 @@ test('Dashboard statistik phase 2 follows epidemiology command panel blueprint',
 
 
 
-test('Dashboard statistik phase 44 follows reading order strip blueprint', () => {
-  assert.match(appDashboardJs, /pd3i-dashboard-reading-strip/);
-  ['1. Beban kasus', 'Total, kasus aktif, konfirmasi, sembuh, meninggal', '2. Sinyal epidemiologi', 'Kurva mingguan, wilayah teratas, kelompok umur', '3. Respons', 'Prioritaskan verifikasi, lab, klaster, dan kematian'].forEach((copy) => {
-    assert.ok(appDashboardJs.includes(copy), `missing dashboard copy: ${copy}`);
-  });
-  assert.match(styleHtml, /Dashboard statistik phase 44: reading order strip/);
-  assert.match(styleHtml, /\.pd3i-dashboard-reading-strip \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-dashboard-reading-strip \{[\s\S]*grid-template-columns: 1fr/);
+test('Dashboard statistik removes reading-order cards from analysis intro', () => {
+  assert.match(appDashboardJs, /Analisis kasus/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-reading-strip/);
+  assert.doesNotMatch(appDashboardJs, /Beban kasus/);
+  assert.doesNotMatch(appDashboardJs, /Epidemiologi<\/span>/);
+  assert.doesNotMatch(appDashboardJs, /Verifikasi, lab, klaster, kematian/);
 });
 
 test('Daftar Kasus phase 2 follows operational registry refinement blueprint', () => {
@@ -1232,7 +1230,7 @@ test('Form wizard phase 2 keeps guided clinical entry without visible stepper', 
   assert.doesNotMatch(formHtml, /Validasi data dan pengesahan EPID/);
   assert.match(formHtml, /Review dan simpan/);
   assert.match(inputFormHtml, /Input kasus awal/);
-  assert.match(inputFormHtml, /Gunakan ruang ini untuk membuat kasus baru/);
+  assert.doesNotMatch(inputFormHtml, /Gunakan ruang ini untuk membuat kasus baru/);
   assert.match(inputFormHtml, /Review dan simpan input awal/);
   assert.match(styleHtml, /Form wizard phase 13: guided clinical entry refinement/);
   assert.match(styleHtml, /#dynamic-form \.pd3i-submit-review-panel\.has-warning/);
@@ -1259,23 +1257,20 @@ test('Administrasi phase 2 follows secure operations refinement blueprint', () =
 });
 
 
-test('Zero Reporting phase 2 follows weekly surveillance reporting refinement blueprint', () => {
+test('Zero Reporting form stays focused without explanatory accessory cards', () => {
   const sarsHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_sars.html'), 'utf8');
-  assert.match(sarsHtml, /pd3i-zero-reporting-ops-summary/);
-  assert.match(sarsHtml, /Periode laporan/);
-  assert.match(sarsHtml, /Isi atau nihil/);
-  assert.match(sarsHtml, /Laporan segera/);
-  assert.match(sarsHtml, /pd3i-zero-reporting-review-brief/);
+  assert.doesNotMatch(sarsHtml, /pd3i-zero-reporting-ops-summary/);
+  assert.doesNotMatch(sarsHtml, /Periode laporan/);
+  assert.doesNotMatch(sarsHtml, /Isi atau nihil/);
+  assert.doesNotMatch(sarsHtml, /Laporan segera/);
+  assert.doesNotMatch(sarsHtml, /pd3i-zero-reporting-review-brief/);
   ['Cek minggu', 'Cek faskes', 'Cek nihil'].forEach((copy) => {
-    assert.match(sarsHtml, new RegExp(copy));
+    assert.doesNotMatch(sarsHtml, new RegExp(copy));
   });
   assert.match(sarsHtml, /Identitas laporan/);
   assert.match(sarsHtml, /Simpan dan kirim laporan/);
-  assert.match(styleHtml, /Zero Reporting phase 15: weekly surveillance reporting refinement/);
-  assert.match(styleHtml, /#section-zero-reporting-form \.pd3i-zero-reporting-ops-summary \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /#section-zero-reporting-form \.pd3i-zero-reporting-review-brief \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /#section-zero-reporting-form \.pd3i-zero-reporting-ops-item\.is-warning/);
-  assert.match(styleHtml, /#section-zero-reporting-form \.pd3i-zero-reporting-review-brief > div\.is-warning/);
+  assert.match(sarsHtml, /id="chipMode" class="hidden"/);
+  assert.match(sarsHtml, /id="chipUpdate" class="hidden"/);
   assert.match(styleHtml, /#section-zero-reporting-form \.pd3i-zero-reporting-host #submitBtn \{[\s\S]*?min-height: 44px/);
 });
 
@@ -1299,6 +1294,21 @@ test('SARING-PIE dashboard phase 2 follows epidemiology command refinement bluep
 });
 
 
+
+test('Dashboard statistik phase 45 follows external reference visual skin without borrowed brand', () => {
+  assert.match(workspaceDashboardHtml, /pd3i-dashboard-reference-skin/);
+  assert.doesNotMatch(workspaceDashboardHtml, /pd3i-dashboard-context-chips/);
+  ['Wilayah kerja aktif', 'Prioritas harian', 'Data surveilans', 'Tampilan komando'].forEach((copy) => {
+    assert.doesNotMatch(workspaceDashboardHtml, new RegExp(copy));
+  });
+  assert.match(appDashboardJs, /Ringkasan komando untuk memantau laporan faskes ini/);
+  assert.match(appDashboardJs, /Ringkasan komando untuk memantau kasus dalam wilayah pengampu/);
+  assert.match(styleHtml, /Dashboard statistik phase 45: external reference visual skin/);
+  assert.match(styleHtml, /--dashboard-ref-teal-900: #07343b/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-skin \.pd3i-dashboard-shell \{[\s\S]*background: var\(--dashboard-ref-page\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-skin \.pd3i-dashboard-metric-card::before/);
+});
+
 test('Dashboard statistik phase 3 keeps case KPI cards but removes operational KPI strip', () => {
   assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-situation-strip mb-4/);
   assert.doesNotMatch(appDashboardJs, /Ringkasan situasi dashboard PD3I/);
@@ -1309,8 +1319,8 @@ test('Dashboard statistik phase 3 keeps case KPI cards but removes operational K
   ['Total Kasus Pengampu', 'Kasus suspek baru', 'Kasus suspek aktif', 'Kasus konfirmasi', 'Sembuh', 'Meninggal'].forEach((copy) => {
     assert.match(appDashboardJs, new RegExp(copy));
   });
-  assert.match(appDashboardJs, /KPI operasional\/antrian tersedia di Beranda/);
-  assert.match(appDashboardJs, /Sebaran wilayah/);
+  assert.doesNotMatch(appDashboardJs, /KPI operasional\/antrian tersedia di Beranda/);
+  assert.match(appDashboardJs, /Choropleth Depok|Sebaran wilayah/);
   assert.match(appDashboardJs, /Kurva epidemiologi/);
   assert.match(appDashboardJs, /perMinggu/);
 });
@@ -1318,10 +1328,10 @@ test('Dashboard statistik phase 3 keeps case KPI cards but removes operational K
 
 test('Dashboard statistik phase 4 follows light command dashboard blueprint', () => {
   assert.match(workspaceDashboardHtml, /section-dashboard" class="pd3i-dashboard-section pd3i-dashboard-light-room/);
-  assert.match(workspaceDashboardHtml, /Dashboard light mode untuk membaca kurva epidemiologi/);
-  assert.match(workspaceDashboardHtml, /pd3i-dashboard-mode-chip">Light mode/);
-  assert.match(appDashboardJs, /Dashboard light mode untuk memantau laporan faskes ini/);
-  assert.match(appDashboardJs, /Dashboard light mode untuk memantau kasus dalam wilayah pengampu/);
+  assert.doesNotMatch(workspaceDashboardHtml, /(?:Dashboard light mode untuk membaca kurva epidemiologi|Ringkasan komando surveilans untuk membaca tren PD3I)/);
+  assert.doesNotMatch(workspaceDashboardHtml, /pd3i-dashboard-mode-chip">(?:Light mode|Tampilan komando)/);
+  assert.match(appDashboardJs, /(?:Dashboard light mode|Ringkasan komando) untuk memantau laporan faskes ini/);
+  assert.match(appDashboardJs, /(?:Dashboard light mode|Ringkasan komando) untuk memantau kasus dalam wilayah pengampu/);
   assert.match(styleHtml, /Dashboard statistik phase 4: light command dashboard foundation/);
   assert.match(styleHtml, /\.pd3i-dashboard-light-room \.pd3i-dashboard-shell \{[\s\S]*linear-gradient\(180deg, #ffffff 0%, #f8fafc 100%\)/);
   assert.match(styleHtml, /\.pd3i-dashboard-light-room \.pd3i-dashboard-mode-chip \{[\s\S]*#0f766e/);
@@ -1505,51 +1515,35 @@ test('Administrasi phase 15 follows secure guardrail strip blueprint', () => {
 });
 
 
-test('Hasil pemeriksaan phase 20 follows lab result safety brief blueprint', () => {
-  assert.match(workspaceSampelHtml, /pd3i-sampel-lab-brief/);
+test('Hasil pemeriksaan uses clean lab page without safety brief clutter', () => {
+  assert.doesNotMatch(workspaceSampelHtml, /pd3i-sampel-lab-brief/);
   ['Cek kasus', 'Cek sampel', 'Cek final'].forEach((copy) => {
-    assert.match(workspaceSampelHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceSampelHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Hasil pemeriksaan phase 20: lab result safety brief/);
-  assert.match(styleHtml, /\.pd3i-sampel-lab-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-sampel-lab-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-sampel-lab-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
-test('Status dan klasifikasi phase 21 follows status review brief blueprint', () => {
-  assert.match(workspaceStatusHtml, /pd3i-status-review-brief/);
+test('Status dan klasifikasi uses clean status page without review brief clutter', () => {
+  assert.doesNotMatch(workspaceStatusHtml, /pd3i-status-review-brief/);
   ['Cek kondisi akhir', 'Cek klasifikasi', 'Cek tindak lanjut'].forEach((copy) => {
-    assert.match(workspaceStatusHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceStatusHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Status dan klasifikasi phase 21: status review brief/);
-  assert.match(styleHtml, /\.pd3i-status-review-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-status-review-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-status-review-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
-test('Input Kasus phase 22 follows initial entry safety brief blueprint', () => {
-  assert.match(workspaceInputHtml, /pd3i-input-entry-brief/);
+test('Input Kasus uses clean entry page without safety brief clutter', () => {
+  assert.doesNotMatch(workspaceInputHtml, /pd3i-input-entry-brief/);
   ['Cek identitas', 'Cek gejala awal', 'Cek duplikasi'].forEach((copy) => {
-    assert.match(workspaceInputHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceInputHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Input Kasus phase 22: initial entry safety brief/);
-  assert.match(styleHtml, /\.pd3i-input-entry-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-input-entry-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-input-entry-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
-test('Verifikasi EPID phase 23 follows verification decision brief blueprint', () => {
-  assert.match(workspaceVerifikasiHtml, /pd3i-verifikasi-review-brief/);
+test('Verifikasi EPID keeps action box without review brief clutter', () => {
+  assert.doesNotMatch(workspaceVerifikasiHtml, /pd3i-verifikasi-review-brief/);
   ['Cek sumber laporan', 'Cek kelayakan EPID', 'Cek alasan revisi'].forEach((copy) => {
-    assert.match(workspaceVerifikasiHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceVerifikasiHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Verifikasi EPID phase 23: verification decision brief/);
-  assert.match(styleHtml, /\.pd3i-verifikasi-review-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-verifikasi-review-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-verifikasi-review-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
@@ -1566,38 +1560,26 @@ test('Detail kasus phase 24 follows edit correction review brief blueprint', () 
 });
 
 
-test('Beranda phase 25 follows operational priority brief blueprint', () => {
-  assert.match(workspaceOverviewHtml, /pd3i-overview-ops-brief/);
+test('Beranda uses clean operational page without priority brief clutter', () => {
+  assert.doesNotMatch(workspaceOverviewHtml, /pd3i-overview-ops-brief/);
   ['Cek antrian', 'Cek cakupan', 'Cek yang macet'].forEach((copy) => {
-    assert.match(workspaceOverviewHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceOverviewHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Beranda phase 25: operational priority brief/);
-  assert.match(styleHtml, /\.pd3i-overview-ops-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-overview-ops-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-overview-ops-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
-test('Dashboard statistik phase 26 follows analysis review brief blueprint', () => {
-  assert.match(workspaceDashboardHtml, /pd3i-dashboard-analysis-brief/);
+test('Dashboard statistik uses clean analysis page without analysis brief clutter', () => {
+  assert.doesNotMatch(workspaceDashboardHtml, /pd3i-dashboard-analysis-brief/);
   ['Cek tren', 'Cek wilayah', 'Cek sinyal bahaya'].forEach((copy) => {
-    assert.match(workspaceDashboardHtml, new RegExp(copy));
+    assert.doesNotMatch(workspaceDashboardHtml, new RegExp(copy));
   });
-  assert.match(styleHtml, /Dashboard statistik phase 26: analysis review brief/);
-  assert.match(styleHtml, /\.pd3i-dashboard-analysis-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-dashboard-analysis-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-dashboard-analysis-brief \{[\s\S]*grid-template-columns: 1fr/);
 });
 
 
-test('Shell phase 27 follows topbar session context blueprint', () => {
-  assert.match(indexHtml, /pd3i-session-context/);
-  assert.match(indexHtml, /Sesi aktif/);
-  assert.match(indexHtml, /Peran, unit, dan cakupan mengikuti akun masuk/);
-  assert.match(styleHtml, /Shell phase 27: topbar session context/);
-  assert.match(styleHtml, /\.pd3i-session-context \{[\s\S]*background: #eff6ff/);
-  assert.match(styleHtml, /\.pd3i-session-context-label \{[\s\S]*text-transform: uppercase/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-session-context \{[\s\S]*display: none/);
+test('Shell phase 27 keeps topbar clean without session context card', () => {
+  assert.doesNotMatch(indexHtml, /pd3i-session-context/);
+  assert.doesNotMatch(indexHtml, /Sesi aktif/);
+  assert.doesNotMatch(indexHtml, /Peran, unit, dan cakupan mengikuti akun masuk/);
 });
 
 
@@ -1751,4 +1733,195 @@ test('Verifikasi EPID phase 41 keeps verification action panel readable on mobil
   assert.match(styleHtml, /#dynamic-form-verifikasi #btn-submit-verifikasi \{[\s\S]*min-height: 44px;[\s\S]*white-space: normal/);
   assert.match(styleHtml, /#dynamic-form-verifikasi #workflow-submit-status-verifikasi \{[\s\S]*min-width: 0;[\s\S]*line-height: 1\.45/);
   assert.match(styleHtml, /@media \(max-width: 640px\) \{[\s\S]*#dynamic-form-verifikasi \.pd3i-action-panel-card \.pd3i-card-header-row,[\s\S]*#dynamic-form-verifikasi \.pd3i-submit-stack \{[\s\S]*display: grid;[\s\S]*grid-template-columns: 1fr;[\s\S]*#dynamic-form-verifikasi #btn-submit-verifikasi \{[\s\S]*width: 100%/);
+});
+
+test('Dashboard statistik phase 45 does not expose external preview brand in user UI', () => {
+  assert.doesNotMatch(workspaceDashboardHtml, /SIGAP|Sigap|sigap/);
+  assert.doesNotMatch(appDashboardJs, /SIGAP|Sigap|sigap/);
+});
+
+
+
+
+
+test('Dashboard statistik phase 48 compacts legacy case KPI cards after reference command KPIs', () => {
+  assert.match(appDashboardJs, /pd3i-dashboard-case-kpi-compact/);
+  assert.match(appDashboardJs, /aria-label="KPI kasus surveilans ringkas"/);
+  assert.match(appDashboardJs, /pd3i-dashboard-metric-card tone-blue is-compact/);
+  assert.match(appDashboardJs, /pd3i-dashboard-metric-card tone-muted is-compact/);
+  assert.doesNotMatch(appDashboardJs, /perKec/);
+  assert.match(appDashboardJs, /wilayahPrioritasCount/);
+  assert.match(styleHtml, /Dashboard statistik phase 48: compact legacy case KPI strip/);
+  assert.match(styleHtml, /\.pd3i-dashboard-case-kpi-compact \{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-case-kpi-compact \.pd3i-dashboard-metric-card\.is-compact \{[\s\S]*box-shadow: none/);
+  assert.match(styleHtml, /text-\\\[11px\\\]/);
+  assert.match(styleHtml, /display: none/);
+});
+test('Dashboard statistik phase 47 follows reference body and case table layout without borrowed brand', () => {
+  assert.match(appDashboardJs, /pd3i-dashboard-reference-body-grid/);
+  assert.match(appDashboardJs, /pd3i-dashboard-chart-panel/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-today-panel/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-command-priorities/);
+  assert.match(appDashboardJs, /pd3i-dashboard-reference-cases-card/);
+  assert.match(appDashboardJs, /Daftar kasus ringkas/);
+  assert.match(appDashboardJs, /Cari nama, EPID, wilayah/);
+  assert.match(appDashboardJs, /top-kecamatan-list/);
+  assert.match(appDashboardJs, /dashboard-hotspot-map/);
+  assert.doesNotMatch(appDashboardJs, /SIGAP|Sigap|sigap/);
+  assert.match(styleHtml, /Dashboard statistik phase 47: reference body and case table/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-body-grid \{[\s\S]*grid-template-columns: minmax\(0, 1\.65fr\) minmax\(300px, 0\.75fr\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-body-grid\.is-chart-only \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-cases-card \{[\s\S]*box-shadow: var\(--dashboard-ref-shadow\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-table thead tr \{[\s\S]*background: #f8fafc|\.pd3i-dashboard-region-card-head \{[\s\S]*background: #f8fafc/);
+  assert.match(styleHtml, /@media \(max-width: 960px\) \{[\s\S]*\.pd3i-dashboard-reference-body-grid \{[\s\S]*grid-template-columns: 1fr/);
+});
+
+test('Dashboard statistik uses fast first paint before heavy map render', () => {
+  assert.match(appDashboardJs, /renderHtmlFallbackChart\(stats\);/);
+  assert.match(appDashboardJs, /deferDashboardHeavyRender\(function\(\) \{[\s\S]*renderHotspotMap\(stats, dx, tahun\)/);
+  assert.match(appDashboardJs, /requestIdleCallback|requestAnimationFrame/);
+});
+
+test('Dashboard statistik removes duplicated surveillance summary command block', () => {
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-reference-command/);
+  assert.doesNotMatch(appDashboardJs, /Ringkasan surveilans/);
+  assert.doesNotMatch(appDashboardJs, /Monitor beban kasus, tindak lanjut, risiko tinggi, dan kelengkapan data/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-command-filterbar/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-command-kpis/);
+});
+
+test('Dashboard statistik phase 49 matches full screenshot hierarchy without duplicate priority alert', () => {
+  assert.match(appDashboardJs, /pd3i-dashboard-age-analysis/);
+  assert.match(appDashboardJs, /pd3i-dashboard-age-card/);
+  assert.match(appDashboardJs, /pd3i-dashboard-epi-age-card/);
+  assert.doesNotMatch(appDashboardJs, /Prioritas tindak lanjut/);
+  assert.doesNotMatch(appDashboardJs, /Prioritas hari ini/);
+  assert.doesNotMatch(appDashboardJs, /pd3i-dashboard-today-panel/);
+  assert.match(appDashboardJs, /pd3i-dashboard-reference-body-grid is-chart-only/);
+  assert.match(styleHtml, /Dashboard statistik phase 49: full-page screenshot parity spacing/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-body-grid\.is-chart-only \{[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-body-grid\.is-chart-only \.pd3i-dashboard-reference-chart \{[\s\S]*min-height: 24rem/);
+  assert.match(styleHtml, /\.pd3i-dashboard-age-card,[\s\S]*\.pd3i-dashboard-epi-age-card \{[\s\S]*padding: var\(--space-5\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-age-card \.pd3i-dashboard-month-row \{[\s\S]*padding: var\(--space-3\) 0/);
+  assert.match(styleHtml, /\.pd3i-dashboard-reference-skin \.pd3i-dashboard-alert \{[\s\S]*display: none !important/);
+});
+
+test('Dashboard statistik phase 50 places age distribution panels in two columns on desktop', () => {
+  assert.match(appDashboardJs, /pd3i-dashboard-age-two-column/);
+  assert.match(appDashboardJs, /aria-label="Distribusi usia dan kelompok umur epidemiologis"/);
+  assert.match(styleHtml, /Dashboard statistik phase 50: age distributions two-column layout/);
+  assert.match(styleHtml, /\.pd3i-dashboard-age-two-column \{[\s\S]*display: grid;[\s\S]*grid-template-columns: minmax\(0, 1\.35fr\) minmax\(320px, 0\.85fr\)/);
+  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*\.pd3i-dashboard-age-two-column \{[\s\S]*grid-template-columns: 1fr/);
+});
+
+test('Dashboard statistik phase 51 shows kecamatan and Depok kelurahan rankings in two clean columns', () => {
+  assert.match(appDashboardJs, /topKelurahan/);
+  assert.match(appDashboardJs, /pd3i-dashboard-region-two-column/);
+  assert.match(appDashboardJs, /10 kecamatan terbanyak/);
+  assert.match(appDashboardJs, /10 kelurahan terbanyak/);
+  assert.match(appDashboardJs, /luar\\s\+depok\|non\\s\+depok/);
+  assert.match(appDashboardJs, /top-kecamatan-list/);
+  assert.match(appDashboardJs, /top-kelurahan-list/);
+  assert.match(styleHtml, /Dashboard statistik phase 51: clean reference cards and two-column wilayah ranking/);
+  assert.match(styleHtml, /\.pd3i-dashboard-analysis-brief > div \{[\s\S]*overflow: hidden;[\s\S]*border: 1px solid var\(--dashboard-ref-border\) !important/);
+  assert.match(styleHtml, /\.pd3i-dashboard-region-two-column \{[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(styleHtml, /\.pd3i-dashboard-region-main strong \{[\s\S]*overflow-wrap: anywhere/);
+  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-dashboard-region-two-column \{[\s\S]*grid-template-columns: 1fr/);
+});
+
+test('Dashboard statistik phase 52 renders Depok kelurahan choropleth from shapefile asset', () => {
+  const geoAsset = fs.readFileSync(path.join(root, 'src', 'Views', 'depok_kelurahan.geojson.js.html'), 'utf8');
+  assert.match(indexHtml, /include\('depok_kelurahan\.geojson\.js'\)/);
+  assert.match(geoAsset, /PD3I_DEPOK_KELURAHAN_GEOJSON/);
+  assert.match(geoAsset, /"name":"depok_kelurahan_2010"/);
+  assert.match(geoAsset, /"DESA":"PENGASINAN"/);
+  assert.match(geoAsset, /"KABKOT":"DEPOK"/);
+  assert.match(appDashboardJs, /Peta distribusi penyakit per kelurahan/);
+  assert.match(appDashboardJs, /kelurahanCounts/);
+  assert.match(appDashboardJs, /window\.L\.geoJSON\(geojson/);
+  assert.match(appDashboardJs, /openDashboardDrilldown\('kelurahan'/);
+  assert.match(styleHtml, /Dashboard statistik phase 52: kelurahan choropleth map from Depok shapefile/);
+  assert.match(styleHtml, /\.pd3i-map-empty-overlay/);
+});
+
+test('Dashboard statistik phase 53 matches compact kelurahan names like BAKTIJAYA to spaced shapefile labels', () => {
+  assert.match(appDashboardJs, /normalizeMapCompactKey/);
+  assert.match(appDashboardJs, /addKelurahanCount\(desa, value\)/);
+  assert.match(appDashboardJs, /kelurahanCounts\[normalizeMapCompactKey\(desa\)\]/);
+});
+
+test('Route phase 54 keeps current workspace after browser refresh but defaults beranda after login', () => {
+  assert.match(appJs, /PD3I_LAST_WORKSPACE_KEY = 'pd3i:last-workspace:v1'/);
+  assert.match(appJs, /isBrowserReloadNavigation\(\) \? \(getLastWorkspace\(\) \|\| bootWorkspace \|\| 'overview'\) : bootWorkspace/);
+  assert.match(appJs, /if \(opts\.persist !== false\) saveLastWorkspace\(normalized\)/);
+  assert.match(appJs, /if \(normalized === 'overview'\) return appUrl/);
+  assert.match(appJs, /appUrl \? appUrl \+ '\?workspace=' \+ encodeURIComponent\(normalized\)/);
+  assert.match(appDashboardJs, /openSidebarWorkspace\('dashboard', \{ autoLoad: false, useRoute: true \}\)/);
+});
+
+test('Panduan Aplikasi phase 55 follows operational FAQ page intro without decorative hero', () => {
+  assert.match(workspaceGuideHtml, /pd3i-guide-page-intro/);
+  assert.match(workspaceGuideHtml, /Jawab cepat: menu apa yang dibuka, siapa yang bertindak, status apa yang dicek, dan langkah aman berikutnya/);
+  ['Menu kerja', 'Status kasus', 'Aksi aman'].forEach((copy) => {
+    assert.match(workspaceGuideHtml, new RegExp(copy));
+  });
+  assert.doesNotMatch(workspaceGuideHtml, /pd3i-hero-card pd3i-guide-hero/);
+  assert.match(workspaceGuideHtml, /Tidak membaca, menulis, atau mengubah data kasus/);
+  assert.match(styleHtml, /Panduan Aplikasi phase 55: operational FAQ page intro/);
+  assert.match(styleHtml, /\.pd3i-guide-page-intro \{[\s\S]*grid-template-columns: minmax\(0, 1\.35fr\) minmax\(260px, 0\.65fr\)/);
+  assert.match(styleHtml, /\.pd3i-guide-intro-checks span \{[\s\S]*min-height: 40px/);
+});
+
+test('Daftar Kasus uses clean registry without orientation strip clutter', () => {
+  assert.doesNotMatch(searchHtml, /pd3i-search-registry-orientation/);
+  ['Identitas dulu', 'Status terbaca', 'Aksi utama jelas'].forEach((copy) => {
+    assert.doesNotMatch(searchHtml, new RegExp(copy));
+  });
+});
+
+test('Beranda phase 57 shows next safe action on priority work cards', () => {
+  ['Langkah aman: buka verifikasi, cek kelengkapan, lalu putuskan EPID', 'Langkah aman: buka Daftar Kasus, cocokkan identitas, lalu koreksi field yang diminta', 'Langkah aman: buka lab, cocokkan kasus, lalu isi hasil sesuai dokumen pemeriksaan', 'Langkah aman: buka status, cek kondisi akhir, lalu simpan klasifikasi terbaru'].forEach((copy) => {
+    assert.match(appJs, new RegExp(copy));
+  });
+  assert.match(appJs, /pd3i-overview-task-next/);
+  assert.match(styleHtml, /Beranda phase 57: next safe action on priority cards/);
+  assert.match(styleHtml, /\.pd3i-overview-task-next \{[\s\S]*font-weight: 700/);
+});
+
+test('Administrasi phase 58 adds sensitive decision gate before system changes', () => {
+  const settingsHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_settings.html'), 'utf8');
+  assert.match(settingsHtml, /pd3i-admin-decision-gate/);
+  ['1. Validasi pemohon', '2. Nilai dampak', '3. Simpan hanya bila siap diaudit'].forEach((copy) => {
+    assert.match(settingsHtml, new RegExp(copy.replace('.', '\\.')));
+  });
+  assert.match(settingsHtml, /Jika alasan, pelaku, atau dampak belum jelas, tunda perubahan/);
+  assert.match(styleHtml, /Administrasi phase 58: sensitive decision gate/);
+  assert.match(styleHtml, /\.pd3i-admin-decision-gate \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(styleHtml, /\.pd3i-admin-decision-gate > div\.is-sensitive \{/);
+  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-admin-decision-gate \{[\s\S]*grid-template-columns: 1fr/);
+});
+
+test('Zero Reporting form removes weekly decision gate accessory copy', () => {
+  const zeroReportingHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_sars.html'), 'utf8');
+  assert.doesNotMatch(zeroReportingHtml, /pd3i-zero-reporting-weekly-gate/);
+  ['1. Tetapkan periode', '2. Audit sumber kasus', '3. Kirim keputusan akhir'].forEach((copy) => {
+    assert.doesNotMatch(zeroReportingHtml, new RegExp(copy.replace('.', '\\.')));
+  });
+  assert.doesNotMatch(zeroReportingHtml, /Cek register poli, IGD, rawat inap, laboratorium, dan laporan jejaring sebelum nihil/);
+  assert.doesNotMatch(zeroReportingHtml, /Centang nihil hanya setelah semua sumber dicek/);
+});
+
+test('Hasil pemeriksaan submit area stays clean without next-action note', () => {
+  const sampelHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_sampel_form.html'), 'utf8');
+  assert.doesNotMatch(sampelHtml, /pd3i-sampel-next-action/);
+  assert.doesNotMatch(sampelHtml, /Langkah aman sebelum simpan/);
+});
+
+test('Dashboard statistik never leaves spinner stuck when server stalls', () => {
+  const dashboardJs = fs.readFileSync(path.join(root, 'src', 'Views', 'app.dashboard.js.html'), 'utf8');
+  assert.match(dashboardJs, /const timeoutId = setTimeout\(function\(\) \{/);
+  assert.match(dashboardJs, /Dashboard belum merespons\. Klik Muat data lagi dalam beberapa detik\./);
+  assert.match(dashboardJs, /content\.dataset\.loadingKey = '';[\s\S]*content\.dataset\.loadingStarted = '';/);
+  assert.match(dashboardJs, /clearTimeout\(timeoutId\);/);
+  assert.doesNotMatch(dashboardJs, /createWorkspaceRuntimeGuard\('dashboard'\)/);
 });

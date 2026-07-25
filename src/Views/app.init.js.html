@@ -589,8 +589,7 @@
               return;
             }
 
-            btnRepairPertRaw.disabled = true;
-            btnRepairPertRaw.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Previewing...';
+            setPd3iButtonLoading(btnRepairPertRaw, true, 'Previewing...');
 
             google.script.run
               .withSuccessHandler(async function(previewRes) {
@@ -623,7 +622,7 @@
                   return;
                 }
 
-                btnRepairPertRaw.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Repairing...';
+                setPd3iButtonLoading(btnRepairPertRaw, true, 'Repairing...');
                 google.script.run
                   .withSuccessHandler(function(repairRes) {
                     btnRepairPertRaw.disabled = false;
@@ -667,8 +666,7 @@
             const retrySyncConfirmed = await pd3iConfirmDialog({ title: 'Retry sinkronisasi pengampu?', message: 'Jalankan retry untuk semua kasus MR yang belum SYNCED.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
             if (!retrySyncConfirmed) return;
 
-            btnRetrySync.disabled = true;
-            btnRetrySync.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+            setPd3iButtonLoading(btnRetrySync, true, 'Retrying...');
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -706,8 +704,7 @@
             const retryNotifyConfirmed = await pd3iConfirmDialog({ title: 'Retry notifikasi kasus baru?', message: 'Jalankan retry untuk semua kasus yang status email pengampunya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
             if (!retryNotifyConfirmed) return;
 
-            btnRetryNotify.disabled = true;
-            btnRetryNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+            setPd3iButtonLoading(btnRetryNotify, true, 'Retrying...');
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -745,8 +742,7 @@
             const retryTelegramConfirmed = await pd3iConfirmDialog({ title: 'Retry Telegram kasus baru?', message: 'Jalankan retry untuk semua kasus yang status Telegram-nya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
             if (!retryTelegramConfirmed) return;
 
-            btnRetryTelegram.disabled = true;
-            btnRetryTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+            setPd3iButtonLoading(btnRetryTelegram, true, 'Retrying...');
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -784,8 +780,7 @@
             const retryRevisionNotifyConfirmed = await pd3iConfirmDialog({ title: 'Retry notifikasi revisi?', message: 'Jalankan retry untuk semua kasus yang status email revisinya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
             if (!retryRevisionNotifyConfirmed) return;
 
-            btnRetryRevisionNotify.disabled = true;
-            btnRetryRevisionNotify.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+            setPd3iButtonLoading(btnRetryRevisionNotify, true, 'Retrying...');
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -823,8 +818,7 @@
             const retryRevisionTelegramConfirmed = await pd3iConfirmDialog({ title: 'Retry Telegram revisi?', message: 'Jalankan retry untuk semua kasus yang status Telegram revisinya belum SENT.', confirmLabel: 'Jalankan retry', cancelLabel: 'Batal' });
             if (!retryRevisionTelegramConfirmed) return;
 
-            btnRetryRevisionTelegram.disabled = true;
-            btnRetryRevisionTelegram.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Retrying...';
+            setPd3iButtonLoading(btnRetryRevisionTelegram, true, 'Retrying...');
 
             google.script.run
               .withSuccessHandler(function(res) {
@@ -1310,8 +1304,7 @@
         const btn = triggerButton && triggerButton.nodeType === 1 ? triggerButton : null;
         const originalHtml = btn ? btn.innerHTML : '';
         if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+          setPd3iButtonLoading(btn, true, 'Menghapus...');
         }
 
         google.script.run
@@ -1381,7 +1374,7 @@
           overlay.innerHTML = `
             <div style="width:min(92vw,420px);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.24);border:1px solid rgba(226,232,240,.95);padding:24px;text-align:center;color:#0f172a;margin-bottom:2rem;">
               <div style="width:54px;height:54px;margin:0 auto 14px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;font-size:24px;">
-                <i class="fas fa-spinner fa-spin"></i>
+                ${renderPd3iSpinner('', '')}
               </div>
               <div style="font-weight:900;font-size:18px;letter-spacing:-.01em;">Membuka formulir...</div>
               <div style="margin-top:6px;font-size:13px;font-weight:700;color:#64748b;line-height:1.45;">${escapeHtml(label || 'Mohon tunggu, data kasus sedang dimuat ke formulir.')}</div>
@@ -1401,19 +1394,15 @@
         function setOpenTriggerLoading() {
           if (triggerButton) {
             triggerButton.dataset.loadingRecord = '1';
-            triggerButton.disabled = true;
-            triggerButton.setAttribute('aria-busy', 'true');
-            triggerButton.classList.add('opacity-70', 'cursor-wait');
-            triggerButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Membuka...`;
+            setPd3iButtonLoading(triggerButton, true, 'Membuka...');
+            triggerButton.classList.add('opacity-70');
           }
           showOpenRecordLoadingOverlay('Formulir sedang disiapkan. Mohon tidak menekan tombol secara berulang.');
         }
         function resetOpenTriggerLoading() {
           if (triggerButton) {
-            triggerButton.disabled = false;
-            triggerButton.removeAttribute('aria-busy');
-            triggerButton.classList.remove('opacity-70', 'cursor-wait');
-            triggerButton.innerHTML = triggerButtonOriginalHtml || 'Buka';
+            setPd3iButtonLoading(triggerButton, false, '', triggerButtonOriginalHtml || 'Buka');
+            triggerButton.classList.remove('opacity-70');
             delete triggerButton.dataset.loadingRecord;
           }
           hideOpenRecordLoadingOverlay();
@@ -1424,8 +1413,7 @@
         }
         setOpenTriggerLoading();
         if (loadingButton) {
-          loadingButton.disabled = true;
-          loadingButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Memuat Data...`;
+          setPd3iButtonLoading(loadingButton, true, 'Memuat Data...');
         }
 
         const recordLoadRequestId = Date.now();
@@ -1781,6 +1769,65 @@
         ];
       }
 
+      function getPd3iSubmitReviewSections(activeForm) {
+        const form = activeForm && activeForm.querySelectorAll ? activeForm : document;
+        const sectionMap = [
+          { key: 'pelapor', title: 'Pelapor', selectors: ['.pd3i-form-card-pelapor'] },
+          { key: 'pasien', title: 'Pasien', selectors: ['.pd3i-form-card-pasien'] },
+          { key: 'specific', title: 'Klinis / diagnosis', selectors: ['.pd3i-form-card-specific'] },
+          { key: 'verifikasi', title: 'Verifikasi', selectors: ['.pd3i-form-card-verifikasi'] },
+          { key: 'sampel', title: 'Lab / sampel', selectors: ['.pd3i-form-card-sampel'] },
+          { key: 'status', title: 'Status', selectors: ['.pd3i-form-card-status'] }
+        ];
+        const pickLabel = function(el) {
+          const wrapper = el && el.closest && el.closest('.field-wrapper');
+          const labelEl = wrapper && wrapper.querySelector && wrapper.querySelector('label');
+          return String((labelEl && labelEl.textContent) || el.getAttribute('aria-label') || el.getAttribute('name') || el.id || 'Field').replace(/\s*\*\s*$/, '').trim();
+        };
+        const pickValue = function(el) {
+          if (!el) return '';
+          if (el.tagName === 'SELECT') {
+            const opt = el.options && el.selectedIndex >= 0 ? el.options[el.selectedIndex] : null;
+            return String((opt && opt.textContent) || el.value || '').trim();
+          }
+          if (el.type === 'checkbox' || el.type === 'radio') return el.checked ? (el.value || 'Ya') : '';
+          return String(el.value || '').trim();
+        };
+        return sectionMap.map(function(section) {
+          const roots = section.selectors.map(function(sel) { return form.querySelector(sel); }).filter(Boolean);
+          const items = [];
+          roots.forEach(function(root) {
+            Array.from(root.querySelectorAll('input[name], select[name], textarea[name]')).forEach(function(el) {
+              if (!el || el.disabled || el.type === 'hidden') return;
+              const wrapper = el.closest('.field-wrapper');
+              if (wrapper && wrapper.classList.contains('hidden')) return;
+              const label = pickLabel(el);
+              const value = pickValue(el);
+              const required = el.required || (wrapper && wrapper.getAttribute('data-required') === 'true');
+              const invalid = required && !value;
+              if (!value && !required) return;
+              items.push({ label: label, value: value || 'Belum diisi', invalid: invalid });
+            });
+          });
+          return { title: section.title, items: items.slice(0, 18) };
+        }).filter(function(section) { return section.items.length; });
+      }
+
+      function renderPd3iSubmitReviewDialogHtml(activeForm, readiness) {
+        const sections = getPd3iSubmitReviewSections(activeForm);
+        const warningHtml = readiness && readiness.errors && readiness.errors.length
+          ? '<div class="pd3i-submit-review-dialog-alert is-error"><strong>Blocker</strong><ul>' + readiness.errors.slice(0, 5).map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>'
+          : readiness && readiness.warnings && readiness.warnings.length
+            ? '<div class="pd3i-submit-review-dialog-alert"><strong>Catatan</strong><ul>' + readiness.warnings.slice(0, 5).map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul></div>'
+            : '';
+        const sectionHtml = sections.length ? sections.map(function(section) {
+          return '<section class="pd3i-submit-review-dialog-section"><h4>' + escapeHtml(section.title) + '</h4><div class="pd3i-submit-review-dialog-grid">' + section.items.map(function(item) {
+            return '<div class="pd3i-submit-review-dialog-row' + (item.invalid ? ' is-error' : '') + '"><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong></div>';
+          }).join('') + '</div></section>';
+        }).join('') : '<div class="pd3i-submit-review-ok">Belum ada data untuk direview.</div>';
+        return '<div class="pd3i-submit-review-dialog"><div class="pd3i-submit-review-dialog-state is-' + escapeHtml((readiness && readiness.state) || 'ready') + '"><strong>' + escapeHtml((readiness && readiness.label) || 'Review') + '</strong></div>' + warningHtml + sectionHtml + '</div>';
+      }
+
 
 
 
@@ -1994,10 +2041,22 @@
 
       async function pd3iReviewBeforeSubmit(submitMode, activeStageOnSubmit, warnings) {
         renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings);
+        const readiness = getPd3iSubmitReadinessState(warnings);
+        if (readiness.state === 'blocked') {
+          showWorkflowSubmitError(submitMode, readiness.message || 'Perbaiki blocker sebelum submit.');
+          return false;
+        }
         if (Array.isArray(warnings) && warnings.length && typeof showPd3iBanner === 'function') {
           showPd3iBanner(warnings.join(" "), { type: 'warning' });
         }
-        return true;
+        if (typeof pd3iConfirmDialog !== 'function') return true;
+        return await pd3iConfirmDialog({
+          title: 'Review sebelum simpan',
+          htmlMessage: renderPd3iSubmitReviewDialogHtml(window.__PD3I_REVIEW_ACTIVE_FORM__ || document, readiness),
+          confirmLabel: 'Simpan final',
+          cancelLabel: 'Kembali edit',
+          variant: 'primary'
+        });
       }
 
       const handleMainFormSubmit = async function(mode) {
@@ -2092,14 +2151,17 @@
           showPd3iBanner(warnings.join(" "), { type: 'warning' });
         }
 
-        renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings);
+        window.__PD3I_REVIEW_ACTIVE_FORM__ = activeFormElement;
+        if (!(await pd3iReviewBeforeSubmit(submitMode, activeStageOnSubmit, warnings))) {
+          activeSubmitButton.disabled = false;
+          resetSubmitButtonByMode(submitMode);
+          return;
+        }
 
         updateImunisasiSummary();
         syncStatusHistoryTimeline();
 
-        activeSubmitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...`;
-        activeSubmitButton.setAttribute('aria-busy', 'true');
-        activeSubmitButton.disabled = true;
+        setPd3iButtonLoading(activeSubmitButton, true, 'Menyimpan...');
         setWorkflowSubmitFeedback(submitMode, 'Menyimpan verifikasi ke server...', null);
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit), __submitMode: submitMode };

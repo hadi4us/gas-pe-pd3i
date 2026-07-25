@@ -1628,9 +1628,16 @@ function _isWahaEnabled_() {
   return String(Config_Manager.getConfig("WAHA_ENABLED") || '').trim().toLowerCase() === 'true';
 }
 
+function _currentWahaBaseUrl_(configuredUrl) {
+  const configured = String(configuredUrl || '').trim().replace(/\/$/, '');
+  // Tunnel URLs are temporary and must never be embedded in Production code.
+  if (!configured || /^https:\/\/[^/]+\.trycloudflare\.com$/i.test(configured)) return '';
+  return configured;
+}
+
 function _sendWahaText_(chatId, lines) {
   if (!_isWahaEnabled_()) return { sent: false, reason: "WAHA_DISABLED", target: String(chatId || '').trim() };
-  const baseUrl = String(Config_Manager.getConfig("WAHA_BASE_URL") || '').trim().replace(/\/$/, '');
+  const baseUrl = _currentWahaBaseUrl_(Config_Manager.getConfig("WAHA_BASE_URL"));
   const apiKey = String(Config_Manager.getConfig("WAHA_API_KEY") || '').trim();
   const session = String(Config_Manager.getConfig("WAHA_SESSION") || 'default').trim() || 'default';
   const targetChatId = String(chatId || '').trim();
