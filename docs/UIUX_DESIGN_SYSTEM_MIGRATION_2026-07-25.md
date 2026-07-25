@@ -83,4 +83,5 @@ Target:
 |---|---|---|---|
 | 2026-07-25 | Audit | Inventarisasi HTML, CSS inline, token, dan workspace | selesai |
 | 2026-07-25 | Batch 1 | Dokumentasi migration baseline | selesai |
-| 2026-07-25 | Batch 1 | Token bridge SARS | berikutnya |
+| 2026-07-25 | Batch 1 | Token bridge SARS | selesai |
+| 2026-07-25 | Batch 2 | SARS shared tokens: palette, font, radius, shadow | selesai lokal; visual browser check berikutnya |
