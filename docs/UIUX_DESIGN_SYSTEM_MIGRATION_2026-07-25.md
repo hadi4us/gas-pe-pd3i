@@ -98,6 +98,14 @@ Target:
 - Tone semantic tetap dipertahankan.
 - Tidak mengubah submit, validasi, session, atau workflow SARS.
 
+| 2026-07-26 | Batch 5 | Form/Input memakai semantic icon tokens; utility warna literal diganti | selesai lokal |
+
+## Catatan teknis Batch 5
+
+- Ditambahkan `.pd3i-icon-primary` dan `.pd3i-icon-warning` ke `src/Views/style.html`.
+- `workspace_form.html` dan `workspace_input_form.html` memakai class semantic untuk icon.
+- Struktur form, selector ID, onclick submit, dan alur draft tetap sama.
+
 
 ## Catatan teknis Batch 3
 
