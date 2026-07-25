@@ -143,6 +143,13 @@ Target:
 - Safety card memakai semantic info/warning tokens.
 - Pencarian panduan, anchor topic, role content, dan responsive layout tetap sama.
 
+## Audit final workspace — 2026-07-26
+
+- Workspace utama sudah memakai token canonical untuk surface, border, shadow, radius, dan icon semantic.
+- Temuan scoped diperbaiki pada dashboard, form terpisah, status, verifikasi, dan presearch banner Daftar Kasus.
+- PIE dan Administrasi masih memiliki utility legacy/inline CSS dalam jumlah besar; tidak diubah massal karena perlu batch khusus dengan inspeksi selector dan regression visual.
+- Tidak ditemukan perubahan logic, API, permission, atau workflow.
+
 
 ## Catatan teknis Batch 3
 
