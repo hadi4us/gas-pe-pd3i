@@ -116,6 +116,15 @@ Target:
 - `.pd3i-search-sort-select` memakai `--pd3i-surface`.
 - Gradient dan rgba lokal di area Daftar Kasus dihapus; filter, sorting, hasil, dan aksi kasus tetap sama.
 
+| 2026-07-26 | Batch 7 | Dashboard metric/panel/toolbar/status memakai surface, border, radius, dan shadow token canonical | selesai lokal |
+
+## Catatan teknis Batch 7
+
+- `workspace_dashboard.html` tidak memerlukan perubahan markup.
+- Dashboard shell, toolbar, metric card, panel, alert, dan status chip memakai token canonical.
+- Gradient metric card dihapus melalui `background-image: none` yang sudah ada.
+- Responsive grid, chart, loading state, error state, dan kalkulasi data tetap sama.
+
 
 ## Catatan teknis Batch 3
 
