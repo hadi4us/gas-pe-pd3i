@@ -2394,8 +2394,32 @@ function _getWorkflowStageAllowedUpdateFields_(workflowStage) {
 
 function _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess) {
   data = data || {};
-  const normalizedStage = _normalizeWorkflowStage_(data.__workflowStage);
-  if (!normalizedStage || normalizedStage === 'section-pelapor' || _isInitialReportEditPayload_(data)) return data;
+  const rawStage = String(data.__workflowStage || '').trim();
+  const normalizedStage = _normalizeWorkflowStage_(rawStage);
+  if (_isInitialReportEditPayload_(data)) return data;
+  if (rawStage && !normalizedStage) throw new Error('Tahap workflow tidak valid.');
+  if (!normalizedStage || normalizedStage === 'section-pelapor') {
+    const existing = _getExistingRecordForPayload_(dx, data, String(data.__token || '').trim()) || {};
+    const hasExisting = !!String(existing['ID Registrasi Kasus'] || '').trim();
+    const cleaned = Object.assign({}, data);
+    // Initial create cannot forge verification, EPID, or reviewer/admin fields.
+    ['Nomor EPID', 'Status Verifikasi EPID', 'Tanggal Verifikasi EPID', 'Petugas Verifikator',
+      'Review Admin Terakhir', 'Waktu Permintaan Revisi', 'Notifikasi Revisi Dibaca',
+      'Catatan Verifikasi EPID', 'Verifikasi EPID Diupdate Oleh',
+      'Role Pengupdate Verifikasi EPID', 'Waktu Update Verifikasi EPID'].forEach(function(field) {
+      delete cleaned[field];
+    });
+    if (hasExisting) {
+      cleaned['ID Registrasi Kasus'] = existing['ID Registrasi Kasus'];
+      cleaned['Nomor EPID'] = String(existing['Nomor EPID'] || '').trim();
+      cleaned['Status Verifikasi EPID'] = String(existing['Status Verifikasi EPID'] || 'Pending').trim() || 'Pending';
+    } else {
+      cleaned['Status Verifikasi EPID'] = 'Pending';
+      cleaned['Nomor EPID'] = '';
+    }
+    return cleaned;
+  }
+  if (!normalizedStage) return data;
   const allowed = {};
   _getWorkflowStageAllowedUpdateFields_(normalizedStage).forEach(function(field) { allowed[field] = true; });
   const cleaned = {};

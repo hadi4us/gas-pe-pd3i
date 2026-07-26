@@ -742,6 +742,12 @@ test('public write entry validates session token before sheet writes', () => {
   assert.match(routesJs, /function saveFormPayload_\(data\) \{\s*const token = String\(data\.__token \|\| ""\)\.trim\(\);\s*const sess = _getSessionFromToken_\(token\);\s*if \(!sess\.ok\) \{\s*return \{ status: "error", message: sess\.message \|\| "Sesi habis\. Silakan login ulang\." \};\s*\}\s*_requireWriteAccessFromSession_\(sess, data\.__workflowStage, data\);[\s\S]*?const saved = saveDxRecord_\(dx, data\);/);
 });
 
+test('initial create strips client-controlled verification and EPID fields', () => {
+  assert.match(routesJs, /function _sanitizeDedicatedWorkflowStagePayload_\(dx, data, sess\) \{[\s\S]*?if \(!normalizedStage \|\| normalizedStage === 'section-pelapor'\) \{[\s\S]*?delete cleaned\[field\];[\s\S]*?cleaned\['Status Verifikasi EPID'\] = 'Pending';[\s\S]*?cleaned\['Nomor EPID'\] = '';/);
+  assert.match(routesJs, /'Nomor EPID', 'Status Verifikasi EPID', 'Tanggal Verifikasi EPID', 'Petugas Verifikator'/);
+  assert.match(routesJs, /'Review Admin Terakhir', 'Waktu Permintaan Revisi', 'Notifikasi Revisi Dibaca'/);
+});
+
 test('public write entry caches identical successful submissions to reduce double-submit duplicates', () => {
   assert.match(routesJs, /function _buildSubmissionIdempotencyKey_\(dx, data, sess\)/);
   assert.match(routesJs, /actor: String\(\(sess && sess\.user && sess\.user\.username\) \|\| ''\)\.trim\(\)\.toLowerCase\(\)/);
