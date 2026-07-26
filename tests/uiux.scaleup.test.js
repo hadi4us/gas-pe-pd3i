@@ -1316,7 +1316,7 @@ test('Dashboard statistik phase 3 keeps case KPI cards but removes operational K
   assert.doesNotMatch(appDashboardJs, /Kelengkapan proses/);
   assert.doesNotMatch(appDashboardJs, /Kendali operasional admin dan pengampu/);
   assert.match(appDashboardJs, /KPI KASUS SURVEILANS/);
-  ['Total Kasus Pengampu', 'Kasus suspek baru', 'Kasus suspek aktif', 'Kasus konfirmasi', 'Sembuh', 'Meninggal'].forEach((copy) => {
+  ['Total Kasus Pengampu', 'Kasus suspek baru', 'Kasus aktif', 'Kasus konfirmasi', 'Sembuh', 'Meninggal'].forEach((copy) => {
     assert.match(appDashboardJs, new RegExp(copy));
   });
   assert.doesNotMatch(appDashboardJs, /KPI operasional\/antrian tersedia di Beranda/);
@@ -1748,7 +1748,7 @@ test('Dashboard statistik phase 48 compacts legacy case KPI cards after referenc
   assert.match(appDashboardJs, /pd3i-dashboard-case-kpi-compact/);
   assert.match(appDashboardJs, /aria-label="KPI kasus surveilans ringkas"/);
   assert.match(appDashboardJs, /pd3i-dashboard-metric-card tone-blue is-compact/);
-  assert.match(appDashboardJs, /pd3i-dashboard-metric-card tone-muted is-compact/);
+  assert.match(appDashboardJs, /pd3i-dashboard-metric-card tone-rose is-compact/);
   assert.doesNotMatch(appDashboardJs, /perKec/);
   assert.match(appDashboardJs, /wilayahPrioritasCount/);
   assert.match(styleHtml, /Dashboard statistik phase 48: compact legacy case KPI strip/);

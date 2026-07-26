@@ -905,11 +905,11 @@
         </div>
 
         <div class="right">
-          <button id="btnFirst" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('first')">«</button>
-          <button id="btnPrev" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('prev')">‹</button>
-          <span id="pageInfo" class="pageInfo">Halaman 1/1</span>
-          <button id="btnNext" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('next')">›</button>
-          <button id="btnLast" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" onclick="goPage('last')">»</button>
+          <button id="btnFirst" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" aria-label="Halaman pertama" title="Halaman pertama" onclick="goPage('first')">«</button>
+          <button id="btnPrev" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" aria-label="Halaman sebelumnya" title="Halaman sebelumnya" onclick="goPage('prev')">‹</button>
+          <span id="pageInfo" class="pageInfo" aria-live="polite">Halaman 1/1</span>
+          <button id="btnNext" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" aria-label="Halaman berikutnya" title="Halaman berikutnya" onclick="goPage('next')">›</button>
+          <button id="btnLast" class="pd3i-btn is-secondary pd3i-pagination-btn" type="button" aria-label="Halaman terakhir" title="Halaman terakhir" onclick="goPage('last')">»</button>
         </div>
       </div>
 
@@ -1141,7 +1141,7 @@
           note.textContent = '';
 
           if (!data){
-            setErr('Gagal memuat: server mengembalikan null.');
+            setErr('Dashboard belum bisa memuat data. Server tidak mengembalikan data.');
             return;
           }
           lastData = data;
@@ -1167,7 +1167,8 @@
         .withFailureHandler(function(err){
           btn.disabled = false;
           if (note) note.textContent = '';
-          setErr('Dashboard belum bisa memuat data. Coba klik Muat Data lagi atau cek koneksi/server. Detail: ' + (err && err.message ? err.message : err));
+          console.error('SARS dashboard load failed:', err);
+          setErr('Dashboard belum bisa memuat data. Coba klik Muat Data lagi atau cek koneksi/server.');
         })
         .getDashboardData(year, minggu, jenis, peng);
     }
@@ -1191,10 +1192,21 @@
       const completeness = (kpi.completeness !== undefined) ? Number(kpi.completeness) : (total ? (lapor/total*100) : 0);
       const timeliness = (kpi.timeliness !== undefined) ? Number(kpi.timeliness) : (lapor ? (onTime/lapor*100) : 0);
 
-      document.getElementById('completeness').textContent = `${fmt1(completeness)}%`;
+      const completenessEl = document.getElementById('completeness');
+      const timelinessEl = document.getElementById('timeliness');
+      const belumEl = document.getElementById('belum');
+      function setKpiTone_(el, tone){
+        if (!el) return;
+        el.classList.remove('is-good', 'is-warning', 'is-danger', 'is-neutral');
+        el.classList.add(tone);
+      }
+      setKpiTone_(completenessEl, completeness >= 90 ? 'is-good' : completeness >= 70 ? 'is-warning' : 'is-danger');
+      setKpiTone_(timelinessEl, timeliness >= 90 ? 'is-good' : timeliness >= 70 ? 'is-warning' : 'is-danger');
+      setKpiTone_(belumEl, belum === 0 ? 'is-good' : 'is-warning');
+      completenessEl.textContent = `${fmt1(completeness)}%`;
       document.getElementById('compSub').textContent = `${lapor} lapor / ${total} total`;
 
-      document.getElementById('timeliness').textContent = `${fmt1(timeliness)}%`;
+      timelinessEl.textContent = `${fmt1(timeliness)}%`;
       document.getElementById('timeSub').textContent = `${onTime} tepat waktu / ${lapor} yang lapor`;
 
       document.getElementById('total').textContent = `${total}`;
