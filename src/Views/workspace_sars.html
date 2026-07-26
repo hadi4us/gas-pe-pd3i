@@ -22,7 +22,7 @@
           <div>
             <label for="mingguEpid" class="pd3i-zero-reporting-required">Minggu epidemiologis</label>
             <input type="number" id="mingguEpid" min="1" max="53" value="" required placeholder="Contoh: 26">
-            <div class="pd3i-zero-reporting-help-text" id="mingguEpidHelp">Periode: memuat periode epidemiologi...</div>
+            <div class="pd3i-zero-reporting-help-text hidden" id="mingguEpidHelp" aria-hidden="true">Periode: memuat periode epidemiologi...</div>
           </div>
 
           <div>
@@ -71,7 +71,7 @@
 
         <!-- ===== Bagian penyakit (tidak diubah) ===== -->
         <div class="disease-section">
-          <div class="pd3i-zero-reporting-disease-header">AFP (Lumpuh layuh mendadak, bukan karena trauma, umur &lt;15 th)</div>
+          <div class="pd3i-zero-reporting-disease-header" aria-label="AFP">AFP</div>
           <div id="rows-afp"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Andi">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai lumpuh</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: lumpuh layuh mendadak">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Polio)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: AFP klinis">    </div>  </div></div></div>
           <div class="nihil-row">
             <div class="nihil-container">
@@ -83,7 +83,7 @@
         </div>
 
         <div class="disease-section">
-          <div class="pd3i-zero-reporting-disease-header">CAMPAK (Semua umur, demam dan rash)</div>
+          <div class="pd3i-zero-reporting-disease-header" aria-label="CAMPAK">CAMPAK</div>
           <div id="rows-mr"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Siti">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai rash</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: demam, rash makulopapular">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Campak Rubela)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Campak klinis">    </div>  </div></div></div>
           <div class="nihil-row">
             <div class="nihil-container">
@@ -95,7 +95,7 @@
         </div>
 
         <div class="disease-section">
-          <div class="pd3i-zero-reporting-disease-header">DIFTERI (ISPA, demam tidak tinggi, pseudomembran, stridor)</div>
+          <div class="pd3i-zero-reporting-disease-header" aria-label="DIFTERI">DIFTERI</div>
           <div id="rows-dif"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Rina">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Budi">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: pseudomembran, stridor">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT/DT/Td)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Difteri">    </div>  </div></div></div>
           <div class="nihil-row">
             <div class="nihil-container">
@@ -107,7 +107,7 @@
         </div>
 
         <div class="disease-section">
-          <div class="pd3i-zero-reporting-disease-header">TETANUS NEONATORUM (Bayi 3–28 hari, mulut mencucu, kejang rangsang)</div>
+          <div class="pd3i-zero-reporting-disease-header" aria-label="TETANUS NEONATORUM">TETANUS NEONATORUM</div>
           <div id="rows-tn"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama bayi</label>      <input type="text" name="nama" placeholder="Contoh: Bayi A">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama ibu</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Ibu Siti">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat ibu & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: mulut mencucu, kejang rangsang">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (TT Ibu)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong" placeholder="Contoh: Bidan Desa"><div class="pd3i-zero-reporting-help-text">* Isi "-" bila bukan bayi (Pertusis)</div></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Tetanus Neonatorum">    </div>  </div></div></div>
           <div class="nihil-row">
             <div class="nihil-container">
@@ -119,7 +119,7 @@
         </div>
 
         <div class="disease-section">
-          <div class="pd3i-zero-reporting-disease-header">PERTUSIS (Batuk terus menerus, apnea, batuk rejan, muntah setelah batuk)</div>
+          <div class="pd3i-zero-reporting-disease-header" aria-label="PERTUSIS">PERTUSIS</div>
           <div id="rows-pert"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama" placeholder="Contoh: Anak A">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu" placeholder="Contoh: Ibu Siti">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala" placeholder="Contoh: batuk rejan, apnea, muntah">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT)</label>      <input type="text" name="imunisasi" placeholder="Contoh: lengkap / tidak lengkap">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong" placeholder="Contoh: Bidan Desa"><div class="pd3i-zero-reporting-help-text">* Isi "-" bila bukan bayi (Pertusis)</div></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis" placeholder="Contoh: Suspek Pertusis">    </div>  </div></div></div>
           <div class="nihil-row">
             <div class="nihil-container">
@@ -133,7 +133,7 @@
         <button type="button" class="btn pd3i-btn is-primary" id="submitBtn" disabled onclick="return window.submitZeroReporting(event)"><i class="fas fa-save"></i> Simpan dan kirim laporan</button>
       </form>
 
-      <div class="pd3i-zero-reporting-footer-note">
+      <div class="pd3i-zero-reporting-footer-note hidden" aria-hidden="true">
         <p><strong>Catatan penting:</strong></p>
         <ul>
           <li><strong>Segera laporkan &lt;24 jam</strong> bila menemukan kasus suspek PD3I via WA/telepon ke <strong>+62 813-8630-2835</strong></li>
@@ -802,14 +802,7 @@
 
 <section id="section-zero-reporting-dashboard" class="pd3i-zero-reporting-section hidden mt-6" data-legacy-section-id="section-sars-dashboard">
   <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="dashboard">
-    <div class="pd3i-zero-reporting-host pd3i-zero-reporting-dashboard-host">
-
-  <div class="pd3i-local-status-strip" aria-label="Status dashboard Zero Reporting">
-    <div class="pd3i-local-status-copy">
-      <span class="pd3i-card-eyebrow">Status dashboard</span>
-      <span>Monitoring kelengkapan dan ketepatan laporan nihil mingguan.</span>
-    </div>
-  </div>
+    <div class="pd3i-zero-reporting-host pd3i-zero-reporting-dashboard-host" aria-label="Status dashboard Zero Reporting">
 
   <div class="wrap">
     <div id="err" class="error"></div>
