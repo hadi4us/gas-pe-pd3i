@@ -306,3 +306,19 @@
   .account-request-form-panel .pd3i-login-input { min-height: 46px; }
 }
 </style>
+
+<style>
+/* Account request actions: use available row width, remove dead space beside submit. */
+.account-request-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+}
+.account-request-actions .pd3i-login-submit {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 520px) {
+  .account-request-actions { grid-template-columns: 1fr 1.5fr; }
+}
+</style>
