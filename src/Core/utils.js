@@ -1,4 +1,5 @@
 const AUTH_CACHE = CacheService.getScriptCache();
+const SESSION_ABSOLUTE_TTL_SECONDS = 6 * 60 * 60;
 
 /**
  * Session_Manager — mengelola TTL sesi per role.
@@ -155,8 +156,16 @@ function _getSessionFromToken_(token) {
     return { ok: false, message: "Sesi tidak valid." };
   }
 
+  // Absolute session lifetime: refresh cannot extend token beyond issuance + 6 hours.
+  const nowTs = Date.now();
+  const issuedAt = Number(obj.issuedAt || obj.ts || 0);
+  const absoluteExpiresAt = Number(obj.absoluteExpiresAt || (issuedAt ? issuedAt + (SESSION_ABSOLUTE_TTL_SECONDS * 1000) : nowTs + (Session_Manager.getTtlForRole(obj.user && obj.user.role) * 1000)));
+  if (absoluteExpiresAt && nowTs >= absoluteExpiresAt) {
+    AUTH_CACHE.remove("TOKEN_" + token);
+    return { ok: false, message: "Sesi habis. Silakan login ulang." };
+  }
   // Req 11.3 & 11.4: gunakan TTL dari objek sesi; fallback ke getTtlForRole jika tidak ada
-  const ttl = obj.ttl || Session_Manager.getTtlForRole(obj.user && obj.user.role);
+  const ttl = Math.min(obj.ttl || Session_Manager.getTtlForRole(obj.user && obj.user.role), Math.max(1, Math.ceil((absoluteExpiresAt - nowTs) / 1000)));
   AUTH_CACHE.put("TOKEN_" + token, JSON.stringify(obj), ttl);
   return { ok: true, user: obj.user };
 }

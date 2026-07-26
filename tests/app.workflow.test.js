@@ -18,6 +18,7 @@ const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'st
 const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const endpointSecurityScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-endpoint-security.js'), 'utf8');
+const coreUtils = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'utils.js'), 'utf8');
 
 test('credential UI uses email OTP login like e-PWS Imunisasi', () => {
   assert.match(loginHtml, /Sistem Surveilans Penyakit yang Dapat Dicegah Dengan Imunisasi/);
@@ -689,6 +690,14 @@ test('OTP login does not stay stuck on mobile when google.script.run stalls', ()
   assert.match(routesJs, /if \(action === "verifyLoginOtp"\) \{\s*return responseJSON\(verifyLoginOtp\(data\.email, data\.otp\)\);\s*\}/);
 });
 
+test('session refresh keeps absolute six-hour expiry', () => {
+  assert.match(coreUtils, /const SESSION_ABSOLUTE_TTL_SECONDS = 6 \* 60 \* 60/);
+  assert.match(authJs, /absoluteExpiresAt: absoluteExpiresAt/);
+  assert.match(authJs, /if \(nowTs >= absoluteExpiresAt\)/);
+  assert.match(coreUtils, /if \(absoluteExpiresAt && nowTs >= absoluteExpiresAt\)/);
+  assert.match(coreUtils, /Math\.min\(obj\.ttl \|\| Session_Manager\.getTtlForRole/);
+});
+
 test('login session lasts 6 hours and is shared across same-browser tabs', () => {
   const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   const coreUtils = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'utils.js'), 'utf8');
@@ -703,7 +712,7 @@ test('login session lasts 6 hours and is shared across same-browser tabs', () =>
   assert.match(authHtml, /if \(savedUser\) \{[\s\S]*?SESSION_TOKEN = savedToken;[\s\S]*?setLoggedInUI\(SESSION_USER\);[\s\S]*?return;/);
   assert.match(authJs, /AUTH_CACHE\.put\("TOKEN_" \+ token, JSON\.stringify\(obj\), ttl\);[\s\S]*?token: token/);
   const authCheckBody = authJs.match(/function authCheck\(token\) \{[\s\S]*?\n\}\n\nfunction authLogout/)[0];
-  assert.doesNotMatch(authCheckBody, /AUTH_CACHE\.remove\("TOKEN_" \+ token\)/);
+  assert.match(authCheckBody, /AUTH_CACHE\.remove\("TOKEN_" \+ token\)/);
 });
 
 test('dynamic tables remain horizontally scrollable on mobile forms', () => {

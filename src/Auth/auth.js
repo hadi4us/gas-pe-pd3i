@@ -248,7 +248,8 @@ function verifyLoginOtp(email, otp) {
     const token = Utilities.getUuid();
     const ttl = Session_Manager.getTtlForRole(user.role);
     const nowTs = Date.now();
-    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: user, ts: nowTs, ttl: ttl }), ttl);
+    const absoluteExpiresAt = nowTs + (SESSION_ABSOLUTE_TTL_SECONDS * 1000);
+    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: user, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }), ttl);
     if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) Audit_Logger.logLogin(user);
     return { status: "success", token: token, user: user, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
@@ -350,7 +351,8 @@ function authLogin(username, pin) {
     const token = Utilities.getUuid();
     const ttl = Session_Manager.getTtlForRole(found.role);
     const nowTs = Date.now();
-    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: nowTs, ttl: ttl }), ttl);
+    const absoluteExpiresAt = nowTs + (SESSION_ABSOLUTE_TTL_SECONDS * 1000);
+    AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }), ttl);
 
     if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) {
       Audit_Logger.logLogin(found);
@@ -387,12 +389,21 @@ function authCheck(token) {
     if (!currentUser) return { status: "error", message: "Akun tidak ditemukan di REF_USER." };
     obj.user = currentUser;
 
-    const ttl = obj.ttl || Session_Manager.getTtlForRole(obj.user.role);
     const nowTs = Date.now();
+    const issuedAt = Number(obj.issuedAt || obj.ts || nowTs);
+    const absoluteExpiresAt = Number(obj.absoluteExpiresAt || (issuedAt + (SESSION_ABSOLUTE_TTL_SECONDS * 1000)));
+    if (nowTs >= absoluteExpiresAt) {
+      AUTH_CACHE.remove("TOKEN_" + token);
+      return { status: "error", message: "Sesi habis. Silakan login ulang." };
+    }
+    const configuredTtl = obj.ttl || Session_Manager.getTtlForRole(obj.user.role);
+    const ttl = Math.min(configuredTtl, Math.max(1, Math.ceil((absoluteExpiresAt - nowTs) / 1000)));
+    obj.issuedAt = issuedAt;
+    obj.absoluteExpiresAt = absoluteExpiresAt;
     obj.ts = nowTs;
     obj.ttl = ttl;
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify(obj), ttl);
-    return { status: "success", token: token, user: obj.user, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
+    return { status: "success", token: token, user: obj.user, ttlSec: ttl, issuedAt: issuedAt, expiresAt: nowTs + (ttl * 1000), absoluteExpiresAt: absoluteExpiresAt };
   } catch (e) {
     return _publicAuthError_(e, "Sesi belum bisa diperiksa. Silakan login ulang.");
   }
