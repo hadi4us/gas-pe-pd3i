@@ -1455,7 +1455,8 @@ test('Login phase 12 keeps Kirim OTP CTA readable', () => {
 
 test('Login phase 11 reduces decorative eyebrow density', () => {
   assert.doesNotMatch(authLoginHtml, /<div class="pd3i-login-kicker">SIMPEL Surveilans Kota Depok<\/div>/);
-  assert.match(authLoginHtml, /<strong>SIMPEL Surveilans Kota Depok<\/strong>/);
+  assert.match(authLoginHtml, /<h1 class="pd3i-login-title">SIMPEL Surveilans Kota Depok<\/h1>/);
+  assert.match(authLoginHtml, /<p class="pd3i-login-subtitle">Sistem Informasi Monitoring, Penyelidikan Epidemiologi, dan Laporan\.<\/p>/);
   assert.match(authLoginHtml, /pd3i-login-footer-compact/);
   assert.match(authLoginHtml, /Akses resmi berbasis peran. Data medis rahasia./);
   assert.match(authLoginHtml, /<div class="pd3i-login-trust-panel hidden" aria-hidden="true">/);
