@@ -560,7 +560,8 @@
         clearTimeout(timeoutId);
         content.dataset.loadingKey = '';
         content.dataset.loadingStarted = '';
-        content.innerHTML = '<div class="pd3i-dashboard-state is-error">Gagal memuat data: ' + String(err) + '</div>';
+        console.error('PD3I dashboard load failed:', err);
+        content.innerHTML = '<div class="pd3i-dashboard-state is-error">Dashboard belum bisa memuat data. Coba lagi atau periksa koneksi/server.</div>';
       })
       .getDashboardStats(dx, tahun, getSafeSessionToken());
   }
@@ -605,16 +606,11 @@
     const sembuhCount = getStatusCount(["Sembuh", "Selesai"]);
     const meninggalCount = getStatusCount(["Meninggal", "Mati"]);
 
-    // Kasus Baru (bulan aktif terakhir di tren perBulan)
-    const perMinggu = stats.perMinggu || stats.perBulan || {};
-    const bulanKeys = Object.keys(perMinggu).sort();
-    const newCases = bulanKeys.length > 0 ? (perMinggu[bulanKeys[bulanKeys.length - 1]] || 0) : 0;
-    const latestMonthName = bulanKeys.length > 0 ? (function() {
-      const k = bulanKeys[bulanKeys.length - 1];
-      const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
-      const mIdx = parseInt(k.substring(4, 6), 10) - 1;
-      return (months[mIdx] || "") + " " + k.substring(0, 4);
-    })() : "";
+    // Kasus baru: bucket minggu epidemiologi terbaru.
+    const perMinggu = stats.perMinggu || {};
+    const mingguKeys = Object.keys(perMinggu).sort();
+    const newCases = mingguKeys.length > 0 ? (perMinggu[mingguKeys[mingguKeys.length - 1]] || 0) : 0;
+    const latestWeekLabel = mingguKeys.length > 0 ? `ME ${mingguKeys[mingguKeys.length - 1]}` : "";
 
     // Kasus Aktif = Total - Sembuh - Meninggal - Discarded
     const activeCases = Math.max(0, totalCases - (sembuhCount + meninggalCount + discardedCount));
@@ -665,7 +661,7 @@
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kasus suspek baru</div><div class="text-3xl font-black text-sky-900">${newCases}</div></div>
             <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-plus-circle"></i></div>
           </div>
-          <div class="text-[11px] text-slate-400 mt-2">Suspek dilaporkan ${latestMonthName || 'minggu terbaru'}</div>
+          <div class="text-[11px] text-slate-400 mt-2">Kasus baru pada ${latestWeekLabel || 'minggu terbaru'}</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-amber is-compact">
           <div class="flex justify-between items-start w-full">
