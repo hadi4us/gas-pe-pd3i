@@ -137,25 +137,16 @@
   </div>
 
   <script>
-    var SPREADSHEET_ID = (typeof SPREADSHEET_ID !== "undefined" && SPREADSHEET_ID) ? SPREADSHEET_ID : "";
-    var APP_URL = (typeof APP_URL !== "undefined" && APP_URL) ? APP_URL : (document.body && document.body.dataset ? document.body.dataset.appUrl : "");
-    /* ===== Chip Update (seperti dashboard) ===== */
+    /* Compatibility update marker retained for shared shell contract. */
     (function(){
-      function formatUpdateID(d){
-        const months = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-        const dd = String(d.getDate()).padStart(2,'0');
-        const mm = months[d.getMonth()];
-        const yy = d.getFullYear();
-        const hh = String(d.getHours()).padStart(2,'0');
-        const mi = String(d.getMinutes()).padStart(2,'0');
-        return `Update: ${dd} ${mm} ${yy}, ${hh}.${mi}`;
-      }
-      try{
+      try {
         const el = document.getElementById('chipUpdate');
-        if (el) el.textContent = formatUpdateID(new Date());
-      }catch(e){}
+        if (el) el.textContent = 'Update: ' + new Date().toLocaleString('id-ID');
+      } catch (e) {}
     })();
 
+    var SPREADSHEET_ID = (typeof SPREADSHEET_ID !== "undefined" && SPREADSHEET_ID) ? SPREADSHEET_ID : "";
+    var APP_URL = (typeof APP_URL !== "undefined" && APP_URL) ? APP_URL : (document.body && document.body.dataset ? document.body.dataset.appUrl : "");
     // ========= DATA GLOBAL =========
     let MASTER_RS = [];
     let MASTER_KLINIK = [];
