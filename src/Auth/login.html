@@ -135,8 +135,9 @@
 </div>
 
 <style>
-  .pd3i-login-account-request { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #0f766e; font-weight: 700; cursor: pointer; }
-  .pd3i-login-account-request:hover { background: #f0fdfa; }
+  .pd3i-login-account-request { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; border: 1px solid rgba(37, 99, 235, .22); border-radius: 10px; background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%); color: #1e3a8a; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(37, 99, 235, .10); }
+  .pd3i-login-account-request:hover { background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 100%); border-color: rgba(15, 118, 110, .42); color: #115e59; }
+  .pd3i-login-account-request i { color: #0f766e; }
   #account-request-modal { display: none; position: fixed; inset: 0; z-index: 110; overflow-y: auto; align-items: flex-start; justify-content: center; padding: 1rem; background: rgba(15, 23, 42, .48); }
   #account-request-modal.is-open { display: flex !important; }
   #account-request-modal .pd3i-login-card { width: min(100%, 560px); margin: 1rem auto 2rem; }
