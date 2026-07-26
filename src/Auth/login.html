@@ -234,3 +234,44 @@
   .account-request-grid { grid-template-columns: 1fr; }
 }
 </style>
+
+<style>
+/* Account request: reduce secondary copy; keep task-critical fields and status only. */
+.account-request-brand,
+.account-request-guide .pd3i-login-kicker,
+.account-request-security-strip,
+.account-request-steps,
+.account-request-note,
+.account-request-form-summary,
+.account-request-admin-info,
+.account-request-telegram-info,
+.account-request-panel-head p {
+  display: none;
+}
+.account-request-guide {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+}
+.account-request-guide h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+.account-request-lead {
+  margin-top: .55rem;
+  font-size: .8rem;
+}
+.account-request-form-panel { padding-top: 1.65rem; }
+.account-request-panel-head { margin-bottom: .7rem; }
+.account-request-panel-head h3 { font-size: 1.15rem; }
+.account-request-form-panel .pd3i-login-form { gap: .6rem; }
+.account-request-routing-notice { margin-top: .05rem; }
+.account-request-consent { margin-top: .05rem; }
+.account-request-actions { margin-top: .35rem; }
+@media (max-width: 760px) {
+  .account-request-guide { min-height: auto; padding: 1.25rem 1.1rem; }
+  .account-request-guide h2 { font-size: 1.2rem; }
+  .account-request-form-panel { padding-top: 1.15rem; }
+}
+</style>
