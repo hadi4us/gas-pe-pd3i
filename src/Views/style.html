@@ -7725,11 +7725,6 @@ body.pd3i-body {
 .pd3i-login-submit:hover { background: var(--pd3i-action-primary-hover) !important; transform: translateY(-1px) !important; }
 #btn-login { background: var(--pd3i-action-success) !important; border-color: var(--pd3i-action-success) !important; }
 #btn-login:hover { background: var(--pd3i-action-success-hover) !important; }
-.pd3i-login-account-request {
-  min-height: 42px !important; border: 1px solid var(--pd3i-action-border) !important;
-  border-radius: 10px !important; background: #fff !important; color: var(--pd3i-action-success) !important;
-}
-.pd3i-login-account-request:hover { background: #f0fdfa !important; border-color: #5eead4 !important; }
 .account-request-clear { border-radius: 10px !important; border-color: var(--pd3i-action-border) !important; }
 .account-request-actions .pd3i-login-submit { background: var(--pd3i-action-success) !important; border-color: var(--pd3i-action-success) !important; }
 .pd3i-login-submit:disabled { background: #e2e8f0 !important; border-color: #cbd5e1 !important; color: #64748b !important; box-shadow: none !important; }
@@ -13261,16 +13256,6 @@ body.pd3i-body {
   box-shadow: 0 12px 24px rgba(15, 118, 110, 0.20) !important;
 }
 
-.pd3i-login-account-request {
-  border: 1px solid var(--pd3i-border) !important;
-  border-radius: var(--radius-lg) !important;
-  background: #ffffff !important;
-  color: var(--pd3i-primary) !important;
-}
-
-.pd3i-login-account-request:hover {
-  background: var(--color-primary-50) !important;
-}
 
 .pd3i-login-footer {
   color: var(--pd3i-text-soft) !important;
@@ -15449,14 +15434,6 @@ body.pd3i-body {
   background: #eff6ff !important;
 }
 
-#btn-account-request.pd3i-login-account-request {
-  min-height: 40px !important;
-  border-style: dashed !important;
-  color: #0f766e !important;
-  background: #ffffff !important;
-  box-shadow: none !important;
-}
-
 #login-card[data-login-stage="otp"] #btn-login {
   margin-top: .15rem !important;
 }
@@ -15552,10 +15529,10 @@ body.pd3i-body {
   border-radius: 14px !important;
 }
 
-#btn-account-request.pd3i-login-account-request {
-  min-height: 44px !important;
-  margin-top: 0 !important;
-  border-radius: 14px !important;
+.pd3i-login-primary-actions .pd3i-login-account-request {
+  min-height: 44px;
+  margin-top: 0;
+  border-radius: 14px;
 }
 
 #login-card[data-login-stage="email"] #otp-section {
@@ -17756,8 +17733,8 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   color: #bfdbfe !important; box-shadow: 0 14px 28px rgba(37, 99, 235, .24) !important;
 }
 .pd3i-login-mark i { font-size: 1.7rem !important; }
-.pd3i-login-title { font-size: 1.72rem !important; color: #0f172a !important; letter-spacing: -.035em !important; }
-.pd3i-login-subtitle { color: #475569 !important; font-size: .9rem !important; line-height: 1.5 !important; }
+.pd3i-login-title { font-size: 1.28rem !important; color: #102033 !important; line-height: 1.18 !important; font-weight: 850 !important; letter-spacing: -.025em !important; }
+.pd3i-login-subtitle { color: #5b6b7f !important; font-size: .82rem !important; line-height: 1.45 !important; font-weight: 600 !important; }
 .pd3i-login-form { margin-top: 1.4rem !important; gap: 1rem !important; }
 .pd3i-login-input { min-height: 48px !important; padding-top: .8rem !important; padding-bottom: .8rem !important; border-radius: 11px !important; }
 .pd3i-login-submit { min-height: 48px !important; border-radius: 11px !important; background: #2563eb !important; border-color: #2563eb !important; }
@@ -17768,19 +17745,22 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   .pd3i-login-card { width: min(100%, 28rem) !important; padding: 1.5rem 1.25rem !important; }
   .pd3i-login-hero { gap: .85rem !important; }
   .pd3i-login-mark { width: 3.6rem !important; height: 3.6rem !important; }
-  .pd3i-login-title { font-size: 1.42rem !important; }
+  .pd3i-login-title { font-size: 1.28rem !important; }
 }
 
 /* Login secondary CTA follows backdrop palette instead of plain white. */
-.pd3i-login-account-request {
-  border-color: rgba(37, 99, 235, .22) !important;
-  background: linear-gradient(135deg, #eff6ff 0%, #ecfeff 100%) !important;
-  color: #1e3a8a !important;
-  box-shadow: 0 6px 14px rgba(37, 99, 235, .10) !important;
+
+/* Login CTA: one token-driven rule; component class is source of truth. */
+.pd3i-login-primary-actions .pd3i-login-account-request {
+  min-height: 42px;
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-050);
+  color: var(--pd3i-primary);
+  box-shadow: var(--pd3i-shadow-soft);
 }
-.pd3i-login-account-request:hover {
-  border-color: rgba(15, 118, 110, .42) !important;
-  background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 100%) !important;
-  color: #115e59 !important;
+.pd3i-login-primary-actions .pd3i-login-account-request:hover {
+  background: var(--color-primary-050);
+  border-color: var(--pd3i-primary-dark);
+  color: var(--pd3i-primary-dark);
 }
-.pd3i-login-account-request i { color: #0f766e !important; }
