@@ -295,7 +295,7 @@
 .account-request-actions { gap: .85rem; }
 .account-request-clear,
 .account-request-actions .pd3i-login-submit { min-height: 48px; font-size: .9rem; }
-.account-request-actions .pd3i-login-submit { min-width: 205px; }
+.account-request-actions .pd3i-login-submit { min-width: 0; }
 @media (max-width: 760px) {
   .account-request-shell { width: min(100%, 42rem); }
   .account-request-guide { padding: 1.7rem 1.35rem; }
@@ -311,10 +311,10 @@
 /* Account request actions: use available row width, remove dead space beside submit. */
 .account-request-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: stretch;
 }
-.account-request-actions .account-request-clear,
+.account-request-actions .account-request-clear { width: auto; }
 .account-request-actions .pd3i-login-submit {
   width: 100%;
   min-width: 0;
