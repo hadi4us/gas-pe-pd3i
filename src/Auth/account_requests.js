@@ -1,6 +1,6 @@
 /* Account request workflow: pending request -> admin approval -> REF_USER active account. */
 const ACCOUNT_REQUEST_HEADERS_ = Object.freeze([
-  'RequestId','SubmittedAt','Nama','Gmail','JenisUnit','NamaFaskes','AlamatFaskes','Alamat Faskes','UnitKerja','KodeFaskes',
+  'RequestId','SubmittedAt','Nama','Gmail','NoWhatsapp','JenisUnit','NamaFaskes','AlamatFaskes','Alamat Faskes','UnitKerja','KodeFaskes',
   'FaskesKey','Kecamatan','Kelurahan','Pengampu','KodePuskesmas','StatusPermohonan',
   'ConsentAccepted','ReviewedAt','ReviewerEmail','FinalRole','FinalScopeLevel',
   'ReviewNote','UsernameCreated','UserCreatedAt','TelegramChatId','TelegramUsername'
@@ -109,13 +109,15 @@ function submitAccountRequest(payload){
     if(nama.length<3)return _accountPublicError_('Nama lengkap minimal 3 karakter.','VALIDATION');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)||email!==confirm)return _accountPublicError_('Email tidak valid atau konfirmasi tidak sama.','VALIDATION');
     if(!payload.unitKerja)return _accountPublicError_('Unit kerja wajib diisi.','VALIDATION');
+    const noWhatsapp=String(payload.noWhatsapp||'').trim();
+    if(!/^\+?[0-9\s()-]{8,20}$/.test(noWhatsapp))return _accountPublicError_('Nomor WhatsApp tidak valid.','VALIDATION');
     if(!String(payload.namaFaskes||'').trim()||!String(payload.kodeFaskes||payload.kodePuskesmas||payload.faskesKey||'').trim())return _accountPublicError_('Pilih nama faskes dari master. Jangan isi manual di luar daftar.','VALIDATION');
     if(payload.consent!==true)return _accountPublicError_('Persetujuan penggunaan data wajib dicentang.','VALIDATION');
     const lock=LockService.getScriptLock(); lock.waitLock(15000); try {
       const sh=_accountRequestSheet_(); if(_accountFindUserEmail_(email))return _accountPublicError_('Email sudah terdaftar sebagai pengguna.','EMAIL_ALREADY_REGISTERED');
       if(_accountPendingEmail_(sh,email))return _accountPublicError_('Permohonan email ini masih menunggu approval.','REQUEST_ALREADY_PENDING');
       const resolved=_accountResolveFaskes_(payload.kodeFaskes||payload.kodePuskesmas||payload.faskesKey||payload.namaFaskes||payload.unitKerja), faskesName=String(payload.namaFaskes||resolved.nama||payload.unitKerja||'').trim(), faskesCode=String(payload.kodeFaskes||payload.kodePuskesmas||payload.faskesKey||resolved.kode||'').trim();
-      const id=_accountRequestId_(), h=_accountHeaders_(sh), row=h.map(function(x){return ({RequestId:id,SubmittedAt:new Date(),Nama:nama,Gmail:email,JenisUnit:String(payload.jenisUnit||''),NamaFaskes:faskesName,AlamatFaskes:String(payload.alamatFaskes||payload.alamatUsulan||((payload.master&&payload.master.alamat)||'')).trim(),'Alamat Faskes':String(payload.alamatFaskes||payload.alamatUsulan||((payload.master&&payload.master.alamat)||'')).trim(),UnitKerja:String(payload.unitKerja||faskesName),KodeFaskes:faskesCode,FaskesKey:faskesCode,Kecamatan:String(payload.kecamatan||''),Kelurahan:String(payload.kelurahan||''),Pengampu:String(payload.pengampu||''),KodePuskesmas:faskesCode,StatusPermohonan:ACCOUNT_REQUEST_STATUS_.PENDING,ConsentAccepted:true,TelegramChatId:'',TelegramUsername:''}[x]||'');});
+      const id=_accountRequestId_(), h=_accountHeaders_(sh), row=h.map(function(x){return ({RequestId:id,SubmittedAt:new Date(),Nama:nama,Gmail:email,NoWhatsapp:noWhatsapp,JenisUnit:String(payload.jenisUnit||''),NamaFaskes:faskesName,AlamatFaskes:String(payload.alamatFaskes||payload.alamatUsulan||((payload.master&&payload.master.alamat)||'')).trim(),'Alamat Faskes':String(payload.alamatFaskes||payload.alamatUsulan||((payload.master&&payload.master.alamat)||'')).trim(),UnitKerja:String(payload.unitKerja||faskesName),KodeFaskes:faskesCode,FaskesKey:faskesCode,Kecamatan:String(payload.kecamatan||''),Kelurahan:String(payload.kelurahan||''),Pengampu:String(payload.pengampu||''),KodePuskesmas:faskesCode,StatusPermohonan:ACCOUNT_REQUEST_STATUS_.PENDING,ConsentAccepted:true,TelegramChatId:'',TelegramUsername:''}[x]||'');});
       sh.appendRow(row); const correctionId=_saveFacilityCorrection_(payload,id); SpreadsheetApp.flush();
       const notificationDetails = { caseCode: id, namaPemohon: nama, asalPemohon: faskesName || String(payload.unitKerja || '').trim(), action: 'Review permohonan akun baru', workspace: 'admin-akun', status: ACCOUNT_REQUEST_STATUS_.PENDING };
       try { sendAdminOperationalTelegramNotificationsOnce('PERMOHONAN_AKUN_BARU', notificationDetails); } catch (_e) {}

@@ -10,9 +10,7 @@
 
   <div id="sars-inline-banner" data-zero-reporting-id="zero-reporting-inline-banner" class="hidden" role="status" aria-live="polite"></div>
 
-  <div class="pd3i-shell-container">
-    <div class="pd3i-shell-card">
-      <form id="sarsForm" class="pd3i-form-section">
+      <form id="sarsForm" class="pd3i-form-section pd3i-zero-reporting-form" data-component="ZeroReportingForm">
         <input type="hidden" id="email" value="">
 
         <h2 class="pd3i-zero-reporting-section-title">Identitas laporan</h2>
@@ -44,7 +42,7 @@
           </div>
         </div>
 
-        <div class="pd3i-zero-reporting-grid pd3i-form-grid" style="margin-top:14px;">
+        <div class="pd3i-zero-reporting-grid pd3i-form-grid pd3i-zero-reporting-unit-row">
           <div class="span-3">
             <label for="unitPelapor" class="pd3i-zero-reporting-required">Unit surveilans / penanggung jawab laporan</label>
             <input type="text" id="unitPelapor" required placeholder="Rekam Medik / Poli Anak / Bangsal Anak / lainnya">
@@ -132,9 +130,6 @@
 
         <button type="button" class="btn pd3i-btn is-primary" id="submitBtn" disabled onclick="return window.submitZeroReporting(event)"><i class="fas fa-save"></i> Simpan dan kirim laporan</button>
       </form>
-
-    </div>
-  </div>
 
   <script>
     /* Compatibility update marker retained for shared shell contract. */

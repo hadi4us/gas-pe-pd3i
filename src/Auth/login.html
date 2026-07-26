@@ -19,6 +19,15 @@
         <div class="pd3i-login-kicker">Akses baru</div>
         <h2 id="account-request-title">Permohonan akun pengguna</h2>
         <p class="account-request-lead">Ajukan akses untuk membantu pelaporan dan pemantauan surveilans.</p>
+        <div class="account-request-submit-help" aria-label="Langkah permohonan akun">
+          <b><i class="fas fa-list-check"></i> Langkah permohonan</b>
+          <ol>
+            <li>Lengkapi nama, email, dan nomor WhatsApp.</li>
+            <li>Pilih faskes dari daftar master.</li>
+            <li>Periksa wilayah dan setujui pernyataan.</li>
+            <li>Kirim, lalu tunggu verifikasi administrator.</li>
+          </ol>
+        </div>
         <div class="account-request-security-strip" aria-label="Ringkasan keamanan permohonan akun">
           <span><b>1</b> Identitas</span>
           <span><b>2</b> Unit kerja</span>
@@ -42,6 +51,7 @@
         <form id="account-request-form" class="pd3i-login-form" novalidate>
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-name">Nama lengkap <em>*</em></label><input id="account-request-name" class="pd3i-login-input" required maxlength="120" placeholder="Nama sesuai identitas"></div>
           <div class="account-request-two-col"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-email">Email <em>*</em></label><input id="account-request-email" class="pd3i-login-input" type="email" required maxlength="180" placeholder="nama@domain.com"></div><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-email-confirm">Konfirmasi email <em>*</em></label><input id="account-request-email-confirm" class="pd3i-login-input" type="email" required maxlength="180" placeholder="Ulangi email"></div></div>
+          <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-whatsapp">Nomor WhatsApp <em>*</em></label><input id="account-request-whatsapp" class="pd3i-login-input" type="tel" inputmode="tel" required maxlength="20" placeholder="Contoh: 081234567890"></div>
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-unit">Nama unit kerja <em>*</em></label><input id="account-request-unit" class="pd3i-login-input" required maxlength="180" placeholder="Contoh: Laboratorium, Rekam Medis, Administrasi"></div>
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-faskes">Nama faskes <em>*</em></label><input id="account-request-faskes" class="pd3i-login-input" list="account-request-faskes-options" required autocomplete="off" placeholder="Ketik nama faskes, alias, kecamatan, atau kelurahan"><datalist id="account-request-faskes-options"></datalist><input id="account-request-faskes-key" type="hidden"><small class="text-xs text-slate-500">Pilih faskes master yang paling sesuai. Data yang kurang lengkap dapat dikoreksi di bawah.</small></div>
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-address">Alamat lengkap faskes</label><textarea id="account-request-address" class="pd3i-login-input" maxlength="500" rows="3" placeholder="Tuliskan alamat lengkap faskes"></textarea></div>
@@ -304,41 +314,5 @@
   .account-request-form-panel { padding: 1.6rem 1.35rem; }
   .account-request-form-panel .pd3i-login-label { font-size: .8rem; }
   .account-request-form-panel .pd3i-login-input { min-height: 46px; }
-}
-</style>
-
-<style>
-/* Account request actions: use available row width, remove dead space beside submit. */
-.account-request-actions {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: stretch;
-}
-.account-request-actions .account-request-clear { width: auto; }
-.account-request-actions .pd3i-login-submit {
-  width: 100%;
-  min-width: 0;
-}
-@media (max-width: 520px) {
-  .account-request-actions { grid-template-columns: 1fr 1.5fr; }
-}
-</style>
-
-<style>
-/* Account request page width: match content, remove oversized empty right area. */
-.account-request-shell {
-  width: min(100%, 900px);
-}
-.account-request-grid {
-  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
-}
-.account-request-form-panel {
-  min-width: 0;
-  padding-left: 2rem;
-  padding-right: 2rem;
-}
-@media (max-width: 760px) {
-  .account-request-shell { width: min(100%, 42rem); }
-  .account-request-form-panel { padding-left: 1.35rem; padding-right: 1.35rem; }
 }
 </style>

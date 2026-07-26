@@ -7287,6 +7287,86 @@ body.pd3i-body {
   .pd3i-zero-reporting-host .col-3 { grid-column: 1 / -1; }
 }
 
+/* Zero Reporting form uses same global shell, tokens, grid, controls, and responsive rules. */
+#section-zero-reporting-form .pd3i-zero-reporting-form,
+#section-zero-reporting-form .pd3i-zero-reporting-form * { box-sizing: border-box; }
+#section-zero-reporting-form .pd3i-zero-reporting-form {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--pd3i-surface);
+  border: 0;
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form .pd3i-zero-reporting-section-title {
+  margin-top: 0;
+  color: var(--pd3i-heading);
+  font-size: 1.05rem;
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form input:not([type="checkbox"]):not([type="radio"]),
+#section-zero-reporting-form .pd3i-zero-reporting-form select,
+#section-zero-reporting-form .pd3i-zero-reporting-form textarea {
+  min-height: 42px;
+  padding: .62rem .78rem;
+  border: 1px solid var(--pd3i-ui-border, var(--pd3i-border));
+  border-radius: 10px;
+  background: var(--pd3i-surface);
+  color: var(--pd3i-text);
+  font: inherit;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(15,23,42,.04));
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form input:not([type="checkbox"]):not([type="radio"]):focus,
+#section-zero-reporting-form .pd3i-zero-reporting-form select:focus,
+#section-zero-reporting-form .pd3i-zero-reporting-form textarea:focus {
+  border-color: var(--pd3i-primary);
+  outline: 0;
+  box-shadow: var(--pd3i-ui-focus, 0 0 0 3px rgba(37,99,235,.16));
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form input[type="checkbox"],
+#section-zero-reporting-form .pd3i-zero-reporting-form input[type="radio"] {
+  width: 1rem;
+  min-height: 1rem;
+  accent-color: var(--pd3i-primary);
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form button.pd3i-btn {
+  min-height: 40px;
+  padding: .58rem .9rem;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 750;
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form #submitBtn {
+  min-height: 44px;
+  border-radius: 10px;
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form .ac-popup {
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-lg);
+  background: var(--pd3i-surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--pd3i-text);
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form .ac-item {
+  padding: .65rem .8rem;
+  border-bottom: 1px solid var(--pd3i-border-soft, #eef2f7);
+}
+#section-zero-reporting-form .pd3i-zero-reporting-form .ac-item:hover { background: var(--pd3i-surface-soft); }
+.pd3i-zero-reporting-form .pd3i-zero-reporting-unit-row { margin-top: 0; }
+.pd3i-zero-reporting-form .disease-section {
+  margin-top: 0;
+  background: var(--pd3i-surface);
+  box-shadow: var(--shadow-sm);
+}
+.pd3i-zero-reporting-form .pd3i-zero-reporting-disease-header {
+  background: var(--pd3i-surface-soft);
+  color: var(--pd3i-heading);
+}
+.pd3i-zero-reporting-form .nihil-row { background: var(--pd3i-surface-soft); }
+.pd3i-zero-reporting-form .pd3i-zero-reporting-case-row { background: var(--pd3i-surface); }
+@media (max-width: 680px) {
+  .pd3i-zero-reporting-form { padding: var(--space-4); gap: var(--space-4); }
+  .pd3i-zero-reporting-form .pd3i-zero-reporting-case-row { padding: var(--space-3); }
+}
+
 /* ============================================================
    HOTFIX UI INTEGRATION — stop overlap, restore SARS form grid
    ============================================================ */
@@ -13277,6 +13357,10 @@ body.pd3i-body {
 .account-request-guide {
   background: linear-gradient(160deg, var(--color-primary-800), var(--color-primary-700) 55%, #164e63) !important;
 }
+.account-request-guide h2,
+.account-request-guide .account-request-lead {
+  color: #0f172a !important;
+}
 
 .account-request-brand-mark,
 .account-request-steps li:before {
@@ -13313,6 +13397,24 @@ body.pd3i-body {
   background: var(--color-info-bg) !important;
   color: var(--color-info) !important;
 }
+
+/* Account request action guidance uses global UI tokens and responsive layout. */
+.account-request-submit-help {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-lg);
+  background: var(--pd3i-surface-soft);
+  color: var(--pd3i-text);
+  font-size: .75rem;
+  line-height: 1.4;
+}
+.account-request-submit-help b { display: block; margin-bottom: var(--space-1); color: var(--color-primary-700); }
+.account-request-submit-help ol { margin: 0; padding-left: var(--space-4); }
+.account-request-submit-help li + li { margin-top: var(--space-1); }
+.account-request-actions .pd3i-login-submit,
+.account-request-actions .pd3i-login-submit span { color: #fff !important; }
+
 
 @media (max-width: 760px) {
   .account-request-shell {
@@ -17701,6 +17803,94 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   opacity: .55 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important;
 }
 
+/* Global content width contract: workflow forms use same readable application canvas. */
+#section-input-form-shell,
+#section-zero-reporting-form {
+  width: min(100%, 1280px);
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#section-input-form-shell .pd3i-form-layout,
+#section-input-form-shell .pd3i-form-main,
+#section-input-form-shell .pd3i-action-panel-fullwidth,
+#section-zero-reporting-form .pd3i-zero-reporting-card {
+  width: 100%;
+  max-width: none;
+}
+#section-input-form-shell .pd3i-form-shell,
+#section-zero-reporting-form .pd3i-zero-reporting-form-host,
+#section-zero-reporting-form #sarsForm {
+  width: 100%;
+  max-width: none;
+}
+@media (max-width: 1320px) {
+  #section-input-form-shell,
+  #section-zero-reporting-form { width: 100%; }
+}
+
+/* Global action color contract: ordinary actions blue; semantic states keep meaning. */
+.pd3i-body :where(.pd3i-btn-primary, .pd3i-sars-btn, .pd3i-sars-add-btn, .pd3i-sars-submit-btn,
+  .pd3i-primary-button, .pd3i-submit-button, #btn-login) {
+  background: var(--pd3i-ui-blue) !important;
+  border-color: var(--pd3i-ui-blue) !important;
+  color: #fff !important;
+}
+.pd3i-body :where(.pd3i-btn-primary, .pd3i-sars-btn, .pd3i-sars-add-btn, .pd3i-sars-submit-btn,
+  .pd3i-primary-button, .pd3i-submit-button, #btn-login):hover:not(:disabled) {
+  background: var(--pd3i-ui-blue-hover) !important;
+  border-color: var(--pd3i-ui-blue-hover) !important;
+  color: #fff !important;
+}
+.pd3i-body :where(.pd3i-btn-secondary, .pd3i-sars-btn-mini, .pd3i-sars-remove-btn) {
+  background: #fff !important;
+  border-color: var(--pd3i-ui-border) !important;
+  color: #334155 !important;
+}
+.pd3i-body :where(.pd3i-btn-danger, .pd3i-sars-remove-btn) {
+  background: var(--pd3i-ui-red) !important;
+  border-color: var(--pd3i-ui-red) !important;
+  color: #fff !important;
+}
+
+/* Input Kasus PD3I: same field geometry and tokens as other workflow forms. */
+#section-input-form-shell .pd3i-form-card,
+#section-input-form-shell .pd3i-action-panel-card {
+  border: 1px solid var(--pd3i-border) !important;
+  border-radius: var(--radius-card) !important;
+  background: var(--pd3i-surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+#section-input-form-shell .pd3i-form-card-section::before { background: var(--pd3i-primary) !important; }
+#section-input-form-shell .pd3i-field-card input,
+#section-input-form-shell .pd3i-field-card select,
+#section-input-form-shell .pd3i-field-card textarea,
+#section-input-form-shell .pd3i-generated-control {
+  min-height: 42px !important;
+  padding: .62rem .78rem !important;
+  border: 1px solid var(--pd3i-ui-border) !important;
+  border-radius: 10px !important;
+  background: var(--pd3i-surface) !important;
+  color: var(--pd3i-text) !important;
+  font: inherit !important;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(15,23,42,.04)) !important;
+}
+#section-input-form-shell .pd3i-field-card input:focus,
+#section-input-form-shell .pd3i-field-card select:focus,
+#section-input-form-shell .pd3i-field-card textarea:focus,
+#section-input-form-shell .pd3i-generated-control:focus {
+  border-color: var(--pd3i-primary) !important;
+  outline: 0 !important;
+  box-shadow: var(--pd3i-ui-focus) !important;
+}
+#section-input-form-shell .pd3i-submit-button,
+#section-input-form-shell .pd3i-cancel-button {
+  min-height: 40px !important;
+  border-radius: 10px !important;
+  font: inherit !important;
+  font-weight: 750 !important;
+}
+
 /* Logout: compact danger action, no fake dropdown indicator. */
 .pd3i-topbar .pd3i-admin-button.is-danger {
   min-height: 38px !important; padding: .52rem .78rem !important; gap: .42rem !important;
@@ -17775,4 +17965,107 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   .pd3i-login-mark { width: 3.25rem !important; height: 3.25rem !important; }
   .pd3i-login-title { font-size: 1.16rem !important; }
   .pd3i-login-subtitle { font-size: .74rem !important; }
+}
+
+/* Account request guide: scale-up visual hierarchy for first-time users. */
+.account-request-guide {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(2.2rem, 4vw, 3.5rem) clamp(1.8rem, 4vw, 3.2rem) !important;
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 34%),
+    linear-gradient(145deg, var(--pd3i-surface-soft), var(--pd3i-surface) 58%, var(--color-primary-050)) !important;
+  color: var(--pd3i-text) !important;
+}
+.account-request-guide::after {
+  content: '';
+  position: absolute;
+  width: 13rem;
+  height: 13rem;
+  right: -6rem;
+  bottom: -6rem;
+  border: 2rem solid color-mix(in srgb, var(--color-primary) 9%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.account-request-guide > * { position: relative; z-index: 1; }
+.account-request-brand {
+  color: var(--pd3i-text) !important;
+  margin-bottom: clamp(2rem, 5vw, 4rem) !important;
+}
+.account-request-brand small { color: var(--pd3i-text-soft) !important; }
+.account-request-brand-mark {
+  background: var(--color-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+.account-request-guide .pd3i-login-kicker {
+  color: var(--color-primary-700) !important;
+  font-weight: 850;
+}
+.account-request-guide h2 {
+  max-width: 21rem;
+  margin-top: .65rem !important;
+  color: var(--pd3i-text) !important;
+  font-size: clamp(1.8rem, 3vw, 2.45rem) !important;
+  letter-spacing: -.045em;
+}
+.account-request-guide .account-request-lead {
+  max-width: 24rem;
+  color: var(--pd3i-text-soft) !important;
+  font-size: .95rem;
+}
+.account-request-security-strip {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin: 1.4rem 0 1.7rem !important;
+}
+.account-request-security-strip span {
+  padding: .65rem .55rem;
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--pd3i-surface) 78%, transparent);
+  color: var(--pd3i-text-soft) !important;
+  font-size: .68rem;
+  font-weight: 750;
+  text-align: center;
+}
+.account-request-security-strip b {
+  display: block;
+  margin-bottom: .2rem;
+  color: var(--color-primary-700);
+  font-size: 1rem;
+}
+.account-request-steps {
+  display: grid !important;
+  gap: .7rem;
+  margin: 0 !important;
+}
+.account-request-steps li {
+  min-height: 3.5rem;
+  padding: .75rem .8rem .75rem 2.8rem !important;
+  border: 1px solid var(--pd3i-border) !important;
+  border-left: 1px solid var(--pd3i-border) !important;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--pd3i-surface) 82%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+.account-request-steps li:before {
+  left: .75rem !important;
+  top: 1rem !important;
+  background: var(--color-primary) !important;
+  color: #fff !important;
+}
+.account-request-steps b { color: var(--pd3i-text) !important; }
+.account-request-steps span { color: var(--pd3i-text-soft) !important; }
+.account-request-note {
+  color: var(--pd3i-text-soft) !important;
+  border-top-color: var(--pd3i-border) !important;
+}
+@media (max-width: 760px) {
+  .account-request-guide { padding: 1.7rem 1.35rem !important; }
+  .account-request-brand { margin-bottom: 1.7rem !important; }
+  .account-request-guide h2 { font-size: 1.7rem !important; }
+  .account-request-steps { grid-template-columns: 1fr !important; }
 }

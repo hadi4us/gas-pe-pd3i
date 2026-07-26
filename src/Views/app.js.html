@@ -3736,27 +3736,36 @@
 
   function updateSidebarActiveState(activeId) {
     syncSidebarRoleVisibility(SESSION_USER);
-    const workspace = normalizeSidebarWorkspace(activeId);
+    const workspace = normalizeSidebarWorkspace(activeId || ACTIVE_SIDEBAR_WORKSPACE || 'overview');
     const pieTab = String(window.__PIE_ACTIVE_TAB || 'screening').toLowerCase();
     const settingsTab = String(window.__SETTINGS_ACTIVE_TAB || 'config').toLowerCase();
-    let hasActivePd3iCase = false;
-    let hasActivePie = false;
-    let hasActiveAdmin = false;
+    let activeLink = null;
+
+    // Sidebar active state has one owner. Clear stale markup/state before applying current route.
+    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
+      link.classList.remove('is-active');
+      link.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('[data-nav-group]').forEach(function(group) {
+      group.classList.remove('is-expanded');
+    });
+
     document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
       const targetWorkspace = normalizeSidebarWorkspace(link.getAttribute('data-sidebar-workspace'));
       const linkPieTab = String(link.getAttribute('data-pie-tab') || '').toLowerCase();
       const linkSettingsTab = String(link.getAttribute('data-settings-tab') || '').toLowerCase();
-      const active = targetWorkspace === workspace && 
-                     (workspace !== 'pie' || !linkPieTab || linkPieTab === pieTab) &&
-                     (workspace !== 'settings' || !linkSettingsTab || linkSettingsTab === settingsTab);
-      link.classList.toggle('is-active', active);
-      if (active && link.closest('#pd3i-cases-nav-children')) hasActivePd3iCase = true;
-      if (active && link.closest('#pd3i-pie-nav-children')) hasActivePie = true;
-      if (active && link.closest('#pd3i-admin-nav-children')) hasActiveAdmin = true;
+      const active = !activeLink && targetWorkspace === workspace &&
+        (workspace !== 'pie' || !linkPieTab || linkPieTab === pieTab) &&
+        (workspace !== 'settings' || !linkSettingsTab || linkSettingsTab === settingsTab) &&
+        !link.hidden;
+      if (active) activeLink = link;
     });
-    if (hasActivePd3iCase) syncPd3iCasesNavExpanded(true);
-    if (hasActivePie) syncPd3iPieNavExpanded(true);
-    if (hasActiveAdmin) syncPd3iToolsNavExpanded(true);
+    if (!activeLink) return;
+    activeLink.classList.add('is-active');
+    activeLink.setAttribute('aria-current', 'page');
+    if (activeLink.closest('#pd3i-cases-nav-children')) syncPd3iCasesNavExpanded(true);
+    if (activeLink.closest('#pd3i-pie-nav-children')) syncPd3iPieNavExpanded(true);
+    if (activeLink.closest('#pd3i-admin-nav-children')) syncPd3iToolsNavExpanded(true);
   }
 
   function applyWorkspaceFormChrome(workspace) {

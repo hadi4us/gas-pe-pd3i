@@ -49,7 +49,7 @@
       </div>
       <div class="pd3i-sidebar-section">
         <nav class="pd3i-sidebar-nav" aria-label="Navigasi utama">
-          <a href="#section-overview" data-sidebar-workspace="overview" class="pd3i-nav-link is-active">
+          <a href="#section-overview" data-sidebar-workspace="overview" class="pd3i-nav-link">
             <i class="fas fa-house"></i>
             <span>Beranda</span>
           </a>
@@ -61,15 +61,15 @@
           <div id="pd3i-cases-nav-children" class="pd3i-nav-children" data-nav-group="pd3i-cases">
             <button id="btn-sidebar-dashboard" data-sidebar-workspace="dashboard" type="button" class="pd3i-nav-link pd3i-nav-child pd3i-nav-button">
               <i class="fas fa-chart-column"></i>
-              <span>Dasbor PD3I</span>
+              <span>Dashboard PD3I</span>
             </button>
-            <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link pd3i-nav-child">
-              <i class="fas fa-list-ul"></i>
-              <span>Daftar Kasus</span>
-            </a>
             <a href="#section-pelapor" data-sidebar-workspace="input" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-file-pen"></i>
               <span>Input Kasus</span>
+            </a>
+            <a href="#section-search-shell" data-sidebar-workspace="search" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-list-ul"></i>
+              <span>Daftar Kasus</span>
             </a>
             <a href="#section-verifikasi" data-sidebar-workspace="verifikasi" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-id-card-clip"></i>
@@ -83,13 +83,20 @@
               <i class="fas fa-list-check"></i>
               <span>Status dan Klasifikasi</span>
             </a>
+          </div>
+
+          <div class="pd3i-nav-group-label" data-nav-group-label="pd3i-reporting">
+            <span>Pelaporan Rutin</span>
+            <small>Pelaporan nihil mingguan</small>
+          </div>
+          <div id="pd3i-reporting-nav-children" class="pd3i-nav-children" data-nav-group="pd3i-reporting">
             <a href="#section-zero-reporting-form" data-sidebar-workspace="zero-reporting-form" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
               <i class="fas fa-clipboard-list"></i>
-              <span>Input Reporting</span>
+              <span>Input Zero Reporting</span>
             </a>
             <a href="#section-zero-reporting-dashboard" data-sidebar-workspace="zero-reporting-dashboard" class="pd3i-nav-link pd3i-nav-child pd3i-nav-link-zero-reporting">
               <i class="fas fa-chart-line"></i>
-              <span>Dasbor Reporting</span>
+              <span>Dashboard Zero Reporting</span>
             </a>
           </div>
 
@@ -104,7 +111,7 @@
             </a>
             <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="dashboard" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-chart-line"></i>
-              <span>Dasbor PIE</span>
+              <span>Dashboard PIE</span>
             </a>
             <a href="#section-pie" data-sidebar-workspace="pie" data-pie-tab="operations" class="pd3i-nav-link pd3i-nav-child">
               <i class="fas fa-list-check"></i>
@@ -125,13 +132,13 @@
               <i class="fas fa-user-check"></i>
               <span>Approval Permohonan Akun</span>
             </a>
-            <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="config" class="pd3i-nav-link pd3i-nav-child">
-              <i class="fas fa-sliders"></i>
-              <span>Konfigurasi Sistem</span>
-            </a>
             <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="users" class="pd3i-nav-link pd3i-nav-child pd3i-nav-sub-item">
               <i class="fas fa-user-gear"></i>
               <span>Kelola Pengguna</span>
+            </a>
+            <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="config" class="pd3i-nav-link pd3i-nav-child">
+              <i class="fas fa-sliders"></i>
+              <span>Konfigurasi Sistem</span>
             </a>
           </div>
 

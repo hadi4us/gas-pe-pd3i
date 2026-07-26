@@ -406,7 +406,7 @@ window.applyPieTab = function(tab){
   if(tab==='operations') window.applyPieOpsPanel(window.__PIE_ACTIVE_OPS_PANEL||'alerts');
   window.ensurePieActiveTabHasVisibleContent(tab);
   if(meta&&typeof setSummaryText==='function' && (!document.body || document.body.getAttribute('data-active-workspace') === 'pie')){ setSummaryText('pd3i-page-eyebrow',meta[0]); setSummaryText('pd3i-page-title',meta[1]); setSummaryText('pd3i-page-subtitle',meta[2]); }
-  if(typeof updateSidebarActiveState==='function') updateSidebarActiveState('pie');
+  if(typeof updateSidebarActiveState==='function' && (!document.body || document.body.getAttribute('data-active-workspace') === 'pie')) updateSidebarActiveState('pie');
 };
 
 document.addEventListener('click', function(e){ const t=e.target&&e.target.closest&&e.target.closest('[data-pie-ops-tab]'); if(!t) return; e.preventDefault(); window.applyPieOpsPanel(t.getAttribute('data-pie-ops-tab')); window.ensurePieActiveTabHasVisibleContent(window.__PIE_ACTIVE_TAB||'operations'); });

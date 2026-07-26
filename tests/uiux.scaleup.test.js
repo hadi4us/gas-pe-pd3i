@@ -35,7 +35,7 @@ test('scale-up UI/UX quick wins standardize PD3I sidebar labels without changing
 test('scale-up UI/UX quick wins keep PD3I sidebar grouped without dropdowns', () => {
   assert.match(indexHtml, /data-nav-group-label="pd3i-cases"[\s\S]*?<span>Surveilans PD3I<\/span>/);
   assert.match(indexHtml, /id="pd3i-cases-nav-children"/);
-  assert.match(indexHtml, /data-sidebar-workspace="dashboard"[\s\S]*?<span>Dasbor PD3I<\/span>/);
+  assert.match(indexHtml, /data-sidebar-workspace="dashboard"[\s\S]*?<span>Dashboard PD3I<\/span>/);
   assert.match(indexHtml, /class="pd3i-nav-link pd3i-nav-child"/);
   assert.doesNotMatch(indexHtml, /Navigasi Cepat/);
   assert.doesNotMatch(indexHtml, /id="pd3i-cases-nav-toggle"/);
@@ -298,7 +298,7 @@ test('SARING-PIE and Zero Reporting forms use reusable form hooks without changi
   assert.match(pieHtml, /class="form-label pd3i-form-field">(?:Nama pasien|<span class="pie-field-label-text">Nama pasien)/);
   assert.match(pieHtml, /shadow-sm pd3i-form-section pie-inner-card" data-pie-tab-section="screening"/);
   assert.match(pieHtml, /pd3i-form-grid/);
-  assert.match(sarsHtml, /<form id="sarsForm" class="pd3i-form-section">/);
+  assert.match(sarsHtml, /<form id="sarsForm" class="pd3i-form-section pd3i-zero-reporting-form"/);
   assert.match(sarsHtml, /class="pd3i-zero-reporting-grid pd3i-form-grid"/);
 });
 
@@ -352,10 +352,9 @@ test('dashboard search and SARING-PIE hotspots use skeleton loading', () => {
 });
 
 test('Zero Reporting terminology replaces user-facing SARS labels while preserving internal routes', () => {
-  assert.doesNotMatch(indexHtml, /Pelaporan Rutin/);
-  assert.match(indexHtml, /data-nav-group-label="pd3i-cases"[\s\S]*?<span>Surveilans PD3I<\/span>[\s\S]*?<span>Input Reporting<\/span>[\s\S]*?<span>Dasbor Reporting<\/span>/);
-  assert.doesNotMatch(indexHtml, /<span>Input Zero Reporting<\/span>/);
-  assert.doesNotMatch(indexHtml, /<span>Dashboard Zero Reporting<\/span>/);
+  assert.match(indexHtml, /data-nav-group-label="pd3i-reporting"[\s\S]*?<span>Pelaporan Rutin<\/span>[\s\S]*?<span>Input Zero Reporting<\/span>[\s\S]*?<span>Dashboard Zero Reporting<\/span>/);
+  assert.match(indexHtml, /<span>Input Zero Reporting<\/span>/);
+  assert.match(indexHtml, /<span>Dashboard Zero Reporting<\/span>/);
   assert.match(appJs, /'zero-reporting-form': 'Form Zero Reporting'/);
   assert.match(appJs, /'zero-reporting-dashboard': 'Dashboard Zero Reporting'/);
   assert.match(appJs, /'zero-reporting-form': \['ZERO REPORTING', 'Form Zero Reporting Mingguan'/);
