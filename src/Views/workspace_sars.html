@@ -810,7 +810,6 @@
     <div class="pd3i-shell-card sars-dashboard-filter">
       <div class="sars-filter-head">
         <div>
-          <div class="sars-filter-kicker">Filter Dashboard</div>
           <h2>Periode dan cakupan laporan</h2>
         </div>
         <button id="btnLoad" class="pd3i-btn is-secondary sars-filter-load" type="button" onclick="loadData(false)">
@@ -880,16 +879,15 @@
     </div>
 
     <div class="pd3i-shell-card pd3i-sars-section">
-      <h2>Ringkasan & Tren</h2>
+      <h2>Ringkasan</h2>
 
       <div class="grid-2">
         <div class="chartBox">
-          <div class="chartTitle">Ringkasan status (ME terpilih)</div>
           <div id="chartStatus" class="sars-chart sars-chart-status"></div>
         </div>
 
         <div class="chartBox">
-          <div class="chartTitle" id="trendTitle">Tren kelengkapan (ME 1–52/53) — sesuai filter</div>
+          <div class="chartTitle hidden" id="trendTitle" aria-hidden="true">Tren kelengkapan (ME 1–52/53) — sesuai filter</div>
           <div id="chartTrend" class="sars-chart sars-chart-trend"></div>
           <div id="trendEmpty" class="empty" style="display:none; margin-top:10px;">Data tren belum tersedia.</div>
         </div>
@@ -898,7 +896,6 @@
 
     <div class="pd3i-shell-card pd3i-sars-section">
       <h2>Rekap Per Pengampu</h2>
-      <div class="chartTitle">Status pada ME terpilih per pengampu (nama pengampu di sumbu X)</div>
       <div class="chartBox sars-chart-box-pengampu">
         <div id="chartPengampu" class="sars-chart sars-chart-pengampu"></div>
         <div id="pengEmpty" class="empty" style="display:none; margin-top:10px;">Tidak ada data rekap per pengampu untuk filter ini.</div>
@@ -907,7 +904,7 @@
 
     <div class="pd3i-shell-card pd3i-sars-section">
       <h2>Detail Fasyankes</h2>
-      <div class="chartTitle" id="detailHelp">
+      <div class="chartTitle hidden" id="detailHelp" aria-hidden="true">
         Denominator capaian tahunan (YTD) = ME terpilih. Contoh ME 50 → denom 50.
         Kelengkapan (thn) = minggu lapor / denom. Ketepatan (thn) = minggu tepat waktu / denom.
       </div>
