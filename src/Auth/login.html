@@ -323,3 +323,22 @@
   .account-request-actions { grid-template-columns: 1fr 1.5fr; }
 }
 </style>
+
+<style>
+/* Account request page width: match content, remove oversized empty right area. */
+.account-request-shell {
+  width: min(100%, 900px);
+}
+.account-request-grid {
+  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+}
+.account-request-form-panel {
+  min-width: 0;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+@media (max-width: 760px) {
+  .account-request-shell { width: min(100%, 42rem); }
+  .account-request-form-panel { padding-left: 1.35rem; padding-right: 1.35rem; }
+}
+</style>
