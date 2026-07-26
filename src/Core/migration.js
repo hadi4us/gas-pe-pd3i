@@ -293,7 +293,8 @@ function migrateReferenceSheetsToScopedAccessModel() {
   return _buildScopedAccessSheetsFromLegacy_(oldUser, oldPengampu);
 }
 
-function repairReferenceSheetsToScopedAccessModel() {
+function repairReferenceSheetsToScopedAccessModel(token) {
+  _requireAdminFromToken_(token);
   const legacyUser = _findLatestLegacySheet_('REF_USER_LEGACY_');
   const legacyPengampu = _findLatestLegacySheet_('REF_PENGAMPU_LEGACY_');
   if (!legacyUser || !legacyPengampu) {
@@ -374,10 +375,12 @@ function inspectRawSheetHeaders(token, dxList) {
 }
 
 function previewRawSheetHeaderReorder(token, dxList) {
+  _requireAdminFromToken_(token);
   return inspectRawSheetHeaders(token, dxList);
 }
 
 function previewRawSheetHeaderAppend(token, dxList) {
+  _requireAdminFromToken_(token);
   return inspectRawSheetHeaders(token, dxList);
 }
 

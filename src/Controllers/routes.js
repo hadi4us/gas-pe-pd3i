@@ -1506,6 +1506,7 @@ function retryRevisionTelegramNotification(recordKey, dx, token) {
  * @returns {{ status, byDx, durationMs }}
  */
 function retryAllPendingPengampuSync(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "sync", token);
 }
 
@@ -1518,6 +1519,7 @@ function retryAllPendingPengampuSync(token, dxList) {
  * @returns {{ status, byDx, durationMs }}
  */
 function retryAllFailedTelegramPd3iNotification(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "telegram", token);
 }
 
@@ -1530,18 +1532,22 @@ function retryAllFailedTelegramPd3iNotification(token, dxList) {
  * @returns {{ status, byDx, durationMs }}
  */
 function retryAllPendingPengampuNotification(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "notify", token);
 }
 
 function retryAllPendingWahaPd3iNotification(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "waha", token);
 }
 
 function retryAllPendingRevisionPengampuNotification(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "revision_notify", token);
 }
 
 function retryAllFailedRevisionTelegramNotification(token, dxList) {
+  _requireAdminFromToken_(token);
   return Batch_Processor.runBatch(dxList || ALL_DX, "revision_telegram", token);
 }
 

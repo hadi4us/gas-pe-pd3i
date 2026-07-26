@@ -81,6 +81,10 @@ test('verification save gives local feedback, timeout, and modal confirmation fo
 });
 
 const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'routes.js'), 'utf8');
+const migrationJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'migration.js'), 'utf8');
+const configJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'config.js'), 'utf8');
+const pieServiceJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'service.js'), 'utf8');
+const pieSchemaJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'PIE', 'schema.js'), 'utf8');
 const authJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Auth', 'auth.js'), 'utf8');
 const dashboardJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'dashboard.js'), 'utf8');
 const dataJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'DataWarehouse', 'data.js'), 'utf8');
@@ -433,7 +437,6 @@ test('verification workspace shows pending, approved, and rejected-returned case
 
 
 test('workflow marker backfill helpers are admin guarded, preview-first, and backup by default', () => {
-  const migrationJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'migration.js'), 'utf8');
   assert.match(migrationJs, /function previewWorkflowMarkerBackfill\(token, dxList, options\)/);
   assert.match(migrationJs, /function backfillWorkflowMarkers\(token, dxList, options\)/);
   assert.match(migrationJs, /previewWorkflowMarkerBackfill[\s\S]*?_requireAdminFromToken_\(token\)/);
@@ -745,6 +748,26 @@ test('quality gate includes endpoint security inventory with no review-needed ca
   assert.equal(byName.saveFormData.guard, 'token-or-save-payload');
   assert.equal(byName.getPdfPrintUrl.guard, 'token-scope');
   assert.equal(byName.setupConfig.guard, 'admin');
+});
+
+test('admin endpoints require admin-scoped token guard', () => {
+  const adminFunctions = [
+    'setupConfig', 'retryAllPendingPengampuSync', 'retryAllFailedTelegramPd3iNotification',
+    'retryAllPendingPengampuNotification', 'retryAllPendingWahaPd3iNotification',
+    'retryAllPendingRevisionPengampuNotification', 'retryAllFailedRevisionTelegramNotification',
+    'previewPertRawBlankHeaderRepair', 'repairPertRawBlankHeader', 'previewRawSheetHeaderReorder',
+    'previewRawSheetHeaderAppend', 'previewRawSheetAliasBackfill', 'previewWorkflowMarkerBackfill',
+    'repairReferenceSheetsToScopedAccessModel', 'setupPieSheets', 'pieGetNotificationConfigStatus',
+    'pieSetupTelegramConfig', 'pieSendTestNotification', 'pieGetPd3iNotificationConfigStatus'
+  ];
+  const sources = [routesJs, migrationJs, configJs, pieServiceJs, pieSchemaJs].join('\\n');
+  for (const name of adminFunctions) {
+    const start = sources.indexOf('function ' + name + '(');
+    assert.notEqual(start, -1, name + ' must exist');
+    const end = sources.indexOf('\nfunction ', start + 10);
+    const body = sources.slice(start, end === -1 ? sources.length : end);
+    assert.match(body, /(?:_requireAdminFromToken_|_requirePieSession_)\s*\(/, name + ' must require admin token');
+  }
 });
 
 test('public write entry validates session token before sheet writes', () => {
