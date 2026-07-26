@@ -17656,3 +17656,119 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
     position: fixed !important;
   }
 }
+
+<!-- Final UI standardization layer: keep all interactive controls on one visual system. -->
+<style>
+:root {
+  --pd3i-ui-navy: #0f172a;
+  --pd3i-ui-blue: #2563eb;
+  --pd3i-ui-blue-hover: #1d4ed8;
+  --pd3i-ui-teal: #0f766e;
+  --pd3i-ui-teal-hover: #115e59;
+  --pd3i-ui-red: #dc2626;
+  --pd3i-ui-red-hover: #b91c1c;
+  --pd3i-ui-border: #cbd5e1;
+  --pd3i-ui-focus: 0 0 0 3px rgba(37, 99, 235, .22);
+}
+
+/* Shared button contract */
+.pd3i-body :where(.pd3i-btn, .pd3i-action-btn, .pd3i-primary-button, .pd3i-ghost-button,
+  .pd3i-admin-button, .pd3i-submit-button, .pd3i-cancel-button, .pd3i-wizard-button,
+  .pd3i-queue-action-btn, .pd3i-search-page-btn, .pd3i-queue-page-btn, .pd3i-search-result-action,
+  .pd3i-state-action, .pd3i-action-button, .pd3i-filter-action, .pd3i-search-action,
+  .pd3i-choice-btn, .pd3i-date-picker-btn) {
+  min-height: 40px !important;
+  border: 1px solid var(--pd3i-ui-border) !important;
+  border-radius: 10px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .07) !important;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease !important;
+}
+.pd3i-body :where(.pd3i-btn, .pd3i-action-btn, .pd3i-primary-button, .pd3i-ghost-button,
+  .pd3i-admin-button, .pd3i-submit-button, .pd3i-cancel-button, .pd3i-wizard-button,
+  .pd3i-queue-action-btn, .pd3i-search-page-btn, .pd3i-queue-page-btn, .pd3i-search-result-action,
+  .pd3i-state-action, .pd3i-action-button, .pd3i-filter-action, .pd3i-search-action,
+  .pd3i-choice-btn, .pd3i-date-picker-btn):focus-visible {
+  outline: none !important;
+  box-shadow: var(--pd3i-ui-focus) !important;
+}
+.pd3i-body :where(.pd3i-btn, .pd3i-action-btn, .pd3i-primary-button, .pd3i-submit-button,
+  .pd3i-wizard-button.primary, .pd3i-filter-action.primary, .pd3i-search-action.primary,
+  .pd3i-search-result-action.is-primary, .pd3i-state-action.is-primary) {
+  background: var(--pd3i-ui-blue) !important; border-color: var(--pd3i-ui-blue) !important; color: #fff !important;
+}
+.pd3i-body :where(.pd3i-btn, .pd3i-action-btn, .pd3i-primary-button, .pd3i-submit-button,
+  .pd3i-wizard-button.primary, .pd3i-filter-action.primary, .pd3i-search-action.primary,
+  .pd3i-search-result-action.is-primary, .pd3i-state-action.is-primary):hover:not(:disabled) {
+  background: var(--pd3i-ui-blue-hover) !important; border-color: var(--pd3i-ui-blue-hover) !important; color: #fff !important; transform: translateY(-1px) !important;
+}
+.pd3i-body :where(.pd3i-btn.is-secondary, .pd3i-action-btn.is-secondary, .pd3i-ghost-button,
+  .pd3i-cancel-button, .pd3i-wizard-button.secondary, .pd3i-queue-action-btn,
+  .pd3i-search-page-btn, .pd3i-queue-page-btn, .pd3i-date-picker-btn) {
+  background: #fff !important; border-color: var(--pd3i-ui-border) !important; color: #334155 !important;
+}
+.pd3i-body :where(.pd3i-btn.is-secondary, .pd3i-action-btn.is-secondary, .pd3i-ghost-button,
+  .pd3i-cancel-button, .pd3i-wizard-button.secondary, .pd3i-queue-action-btn,
+  .pd3i-search-page-btn, .pd3i-queue-page-btn, .pd3i-date-picker-btn):hover:not(:disabled) {
+  background: #f8fafc !important; border-color: #94a3b8 !important; color: var(--pd3i-ui-navy) !important;
+}
+.pd3i-body :where(.pd3i-btn.is-danger, .pd3i-action-btn.is-danger, .pd3i-admin-button.is-danger,
+  .pd3i-search-result-action.is-danger, .pd3i-state-action.is-danger) {
+  background: var(--pd3i-ui-red) !important; border-color: var(--pd3i-ui-red) !important; color: #fff !important;
+}
+.pd3i-body :where(.pd3i-btn.is-danger, .pd3i-action-btn.is-danger, .pd3i-admin-button.is-danger,
+  .pd3i-search-result-action.is-danger, .pd3i-state-action.is-danger):hover:not(:disabled) {
+  background: var(--pd3i-ui-red-hover) !important; border-color: var(--pd3i-ui-red-hover) !important; color: #fff !important; transform: translateY(-1px) !important;
+}
+.pd3i-body :where(button, a)[disabled], .pd3i-body :where(.pd3i-btn, .pd3i-action-btn)[aria-disabled="true"] {
+  opacity: .55 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important;
+}
+
+/* Logout: compact danger action, no fake dropdown indicator. */
+.pd3i-topbar .pd3i-admin-button.is-danger {
+  min-height: 38px !important; padding: .52rem .78rem !important; gap: .42rem !important;
+  border-radius: 10px !important; background: #fff1f2 !important; border-color: #fecdd3 !important;
+  color: #be123c !important; box-shadow: 0 4px 10px rgba(190, 18, 60, .08) !important;
+}
+.pd3i-topbar .pd3i-admin-button.is-danger:hover {
+  background: #ffe4e6 !important; border-color: #fda4af !important; color: #9f1239 !important;
+}
+.pd3i-topbar .pd3i-admin-button.is-danger::after { display: none !important; }
+
+/* Login: stronger scale, calm background, coherent navy-blue-teal palette. */
+.pd3i-login-backdrop {
+  background: linear-gradient(135deg, rgba(239, 246, 255, .96), rgba(240, 253, 250, .94)) !important;
+  backdrop-filter: blur(8px) !important;
+}
+.pd3i-login-card {
+  width: min(100%, 30rem) !important; padding: 2rem 2.15rem !important;
+  border-radius: 24px !important; background: #fff !important; border: 1px solid #dbeafe !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .18) !important;
+}
+.pd3i-login-card::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 5px;
+  background: linear-gradient(90deg, #0f172a, #2563eb 52%, #0f766e) !important;
+}
+.pd3i-login-hero { gap: 1.25rem !important; margin: .35rem 0 1rem !important; }
+.pd3i-login-mark {
+  width: 4.35rem !important; height: 4.35rem !important; border-radius: 18px !important;
+  background: linear-gradient(145deg, #0f172a, #1d4ed8 58%, #0f766e) !important;
+  color: #bfdbfe !important; box-shadow: 0 14px 28px rgba(37, 99, 235, .24) !important;
+}
+.pd3i-login-mark i { font-size: 1.7rem !important; }
+.pd3i-login-title { font-size: 1.72rem !important; color: #0f172a !important; letter-spacing: -.035em !important; }
+.pd3i-login-subtitle { color: #475569 !important; font-size: .9rem !important; line-height: 1.5 !important; }
+.pd3i-login-form { margin-top: 1.4rem !important; gap: 1rem !important; }
+.pd3i-login-input { min-height: 48px !important; padding-top: .8rem !important; padding-bottom: .8rem !important; border-radius: 11px !important; }
+.pd3i-login-submit { min-height: 48px !important; border-radius: 11px !important; background: #2563eb !important; border-color: #2563eb !important; }
+#btn-login { background: #0f766e !important; border-color: #0f766e !important; }
+#btn-login:hover { background: #115e59 !important; border-color: #115e59 !important; }
+.pd3i-login-footer { margin-top: .65rem !important; color: #64748b !important; }
+@media (max-width: 640px) {
+  .pd3i-login-card { width: min(100%, 28rem) !important; padding: 1.5rem 1.25rem !important; }
+  .pd3i-login-hero { gap: .85rem !important; }
+  .pd3i-login-mark { width: 3.6rem !important; height: 3.6rem !important; }
+  .pd3i-login-title { font-size: 1.42rem !important; }
+}
+</style>
