@@ -294,7 +294,7 @@
         }
 
         if (refs.specificTitle) {
-          refs.specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${cfg.title || dx})`;
+          refs.specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${escapeHtml(cfg.title || dx)})`;
         }
         if (refs.specificContainer) {
           renderDiagnosisSections(cfg, refs.specificContainer);
@@ -1472,7 +1472,7 @@
               } else {
                 resetSubmitButtonByMode(openedWorkspace);
                 if (loadingButton === btnSubmit) {
-                  loadingButton.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data ${recordKey}`;
+                  loadingButton.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data ${escapeHtml(recordKey)}`;
                   loadingButton.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
                   loadingButton.classList.add("bg-yellow-600");
                 }

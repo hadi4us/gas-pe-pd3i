@@ -9,7 +9,7 @@
     {
       "name": "doPost",
       "file": "src/Controllers/routes.js",
-      "line": 137,
+      "line": 135,
       "guard": "token-or-save-payload"
     },
     {
@@ -39,151 +39,151 @@
     {
       "name": "saveFormData",
       "file": "src/Controllers/routes.js",
-      "line": 179,
+      "line": 177,
       "guard": "token-or-save-payload"
     },
     {
       "name": "createInitialCase",
       "file": "src/Controllers/routes.js",
-      "line": 226,
+      "line": 224,
       "guard": "token"
     },
     {
       "name": "getEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 230,
+      "line": 228,
       "guard": "token-scope"
     },
     {
       "name": "getEditableRecord",
       "file": "src/Controllers/routes.js",
-      "line": 235,
+      "line": 233,
       "guard": "token-scope"
     },
     {
       "name": "saveInitialReportEdit",
       "file": "src/Controllers/routes.js",
-      "line": 239,
+      "line": 237,
       "guard": "token"
     },
     {
       "name": "searchEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 243,
+      "line": 241,
       "guard": "token-scope"
     },
     {
       "name": "updateInitialReport",
       "file": "src/Controllers/routes.js",
-      "line": 247,
+      "line": 245,
       "guard": "token"
     },
     {
       "name": "deleteCaseRecord",
       "file": "src/Controllers/routes.js",
-      "line": 251,
+      "line": 249,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationQueue",
       "file": "src/Controllers/routes.js",
-      "line": 313,
+      "line": 311,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationRecord",
       "file": "src/Controllers/routes.js",
-      "line": 318,
+      "line": 316,
       "guard": "token-scope"
     },
     {
       "name": "saveVerificationDecision",
       "file": "src/Controllers/routes.js",
-      "line": 322,
+      "line": 320,
       "guard": "token"
     },
     {
       "name": "getSampleQueue",
       "file": "src/Controllers/routes.js",
-      "line": 326,
+      "line": 324,
       "guard": "token-scope"
     },
     {
       "name": "getSampleRecord",
       "file": "src/Controllers/routes.js",
-      "line": 331,
+      "line": 329,
       "guard": "token-scope"
     },
     {
       "name": "saveSampleResult",
       "file": "src/Controllers/routes.js",
-      "line": 335,
+      "line": 333,
       "guard": "token"
     },
     {
       "name": "getStatusQueue",
       "file": "src/Controllers/routes.js",
-      "line": 339,
+      "line": 337,
       "guard": "token-scope"
     },
     {
       "name": "getStatusRecord",
       "file": "src/Controllers/routes.js",
-      "line": 344,
+      "line": 342,
       "guard": "token-scope"
     },
     {
       "name": "saveCaseStatusUpdate",
       "file": "src/Controllers/routes.js",
-      "line": 348,
+      "line": 346,
       "guard": "token"
     },
     {
       "name": "getRecordByKey",
       "file": "src/Controllers/routes.js",
-      "line": 427,
+      "line": 425,
       "guard": "token-scope"
     },
     {
       "name": "getRecordByEpid",
       "file": "src/Controllers/routes.js",
-      "line": 484,
+      "line": 482,
       "guard": "token-scope"
     },
     {
       "name": "getRefImunisasi",
       "file": "src/Controllers/routes.js",
-      "line": 488,
+      "line": 486,
       "guard": "token"
     },
     {
       "name": "fetchRefImunData",
       "file": "src/Controllers/routes.js",
-      "line": 532,
+      "line": 530,
       "guard": "token"
     },
     {
       "name": "getFaskesFromSheet",
       "file": "src/Controllers/routes.js",
-      "line": 536,
+      "line": 534,
       "guard": "token"
     },
     {
       "name": "getWorkflowFilterOptions",
       "file": "src/Controllers/routes.js",
-      "line": 646,
+      "line": 644,
       "guard": "token-scope"
     },
     {
       "name": "searchRecords",
       "file": "src/Controllers/routes.js",
-      "line": 831,
+      "line": 829,
       "guard": "token-scope"
     },
     {
       "name": "resolveLatestSavedMeta",
       "file": "src/Controllers/routes.js",
-      "line": 1318,
+      "line": 1316,
       "guard": "token"
     },
     {
@@ -255,67 +255,67 @@
     {
       "name": "retryPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1372,
+      "line": 1370,
       "guard": "admin"
     },
     {
       "name": "retryTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1398,
+      "line": 1396,
       "guard": "admin"
     },
     {
       "name": "retryPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1426,
+      "line": 1424,
       "guard": "admin"
     },
     {
       "name": "retryRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1447,
+      "line": 1445,
       "guard": "admin"
     },
     {
       "name": "retryRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1474,
+      "line": 1472,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1510,
+      "line": 1508,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1522,
+      "line": 1520,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1534,
+      "line": 1532,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingWahaPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1538,
+      "line": 1536,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1542,
+      "line": 1540,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1546,
+      "line": 1544,
       "guard": "admin"
     },
     {

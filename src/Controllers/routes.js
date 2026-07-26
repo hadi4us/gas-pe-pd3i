@@ -43,11 +43,7 @@ function doGet(e) {
   try { if (typeof getDefaultFacilityType === "function") template.defaultFacilityType = getDefaultFacilityType() || "klinik"; } catch (err2) {}
   try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
 
-  return template
-    .evaluate()
-    .setTitle(view === "dashboard" ? "Dashboard Statistik SIMPEL Surveilans Kota Depok" : "SIMPEL Surveilans Kota Depok")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+  return finalizeHtmlOutput_(template.evaluate(), view === "dashboard" ? "Dashboard Statistik SIMPEL Surveilans Kota Depok" : "SIMPEL Surveilans Kota Depok", embedMode);
 }
 
 function renderSarsForm_(e) {
@@ -64,11 +60,8 @@ function renderSarsForm_(e) {
   try { if (typeof getDefaultWA === "function") template.defaultWA = getDefaultWA() || ""; } catch (err) {}
   try { if (typeof getDefaultFacilityType === "function") template.defaultFacilityType = getDefaultFacilityType() || "klinik"; } catch (err2) {}
   try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
-  return template
-    .evaluate()
-    .setTitle("Form SARS PD3I – Depok")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+  const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
+  return finalizeHtmlOutput_(template.evaluate(), "Form SARS PD3I – Depok", embedMode);
 }
 
 function renderSarsDashboard_(e) {
@@ -81,11 +74,16 @@ function renderSarsDashboard_(e) {
   template.DEFAULT_DASHBOARD_YEAR = Number(rep.year) || Number(new Date().getFullYear());
   template.DEFAULT_DASHBOARD_WEEK = Number(rep.week) || 1;
   try { template.SARS_CONFIG = (typeof getSarsConfig === "function") ? getSarsConfig() : {}; } catch (err) { template.SARS_CONFIG = {}; }
-  return template
-    .evaluate()
-    .setTitle("Dashboard SARS PD3I – Depok")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
-    .addMetaTag("viewport", "width=device-width, initial-scale=1");
+  const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
+  return finalizeHtmlOutput_(template.evaluate(), "Dashboard SARS PD3I – Depok", embedMode);
+}
+
+function finalizeHtmlOutput_(output, title, embedMode) {
+  output.setTitle(title).addMetaTag("viewport", "width=device-width, initial-scale=1");
+  if (String(embedMode || "").trim().toLowerCase() === "sites") {
+    output.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+  return output;
 }
 
 function safeActiveUserEmail_() {

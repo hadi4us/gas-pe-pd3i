@@ -339,17 +339,26 @@
   }
 
   function generateHTML(field) {
+    const htmlEscape = function(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+    const attrEscape = htmlEscape;
     if (field.type === "header") {
-      return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${field.label}</div>`;
+      return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
     }
 
     const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 lg:col-span-3" : "";
     const showIfAttr = field.showIf
-      ? `data-parent="${field.showIf.field}" data-parent-vals='${JSON.stringify(field.showIf.values)}' data-required="${field.required ? "true" : "false"}"`
+      ? `data-parent="${htmlEscape(field.showIf.field)}" data-parent-vals='${htmlEscape(JSON.stringify(field.showIf.values))}' data-required="${field.required ? "true" : "false"}"`
       : "";
 
     const wrapperClass = `${widthClass} field-wrapper pd3i-field-card ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
-    const fieldWrapperAttrs = `data-pd3i-field-wrapper="1" data-pd3i-field-id="${field.id}"`;
+    const fieldWrapperAttrs = `data-pd3i-field-wrapper="1" data-pd3i-field-id="${attrEscape(field.id)}"`;
     const cls = `pd3i-generated-control border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
       field.readonly
         ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
@@ -391,22 +400,22 @@
 
       return `<div class="${wrapperClass} pd3i-dynamic-card bg-white p-5 border border-slate-200 rounded-lg shadow-sm" ${fieldWrapperAttrs} ${showIfAttr}>
         <div class="flex justify-between items-center mb-4 gap-3 flex-wrap">
-          <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-wide">${field.label}</label>
-          <button type="button" onclick="addDynamicRow('${field.id}')"
+          <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-wide">${htmlEscape(field.label)}</label>
+          <button type="button" onclick="addDynamicRow('${attrEscape(field.id)}')"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-extrabold shadow-md hover:bg-blue-700 transition">
             <i class="fas fa-plus mr-2"></i> Tambah
           </button>
         </div>
         <div class="table-container pd3i-dynamic-table-container overflow-x-auto w-full border rounded-lg border-slate-200" role="region" aria-label="Geser tabel ${field.label} ke kanan/kiri">
           <div class="pd3i-table-scroll-hint md:hidden" aria-hidden="true"><i class="fas fa-arrows-left-right"></i> Geser tabel ke kanan/kiri</div>
-          <table class="pd3i-dynamic-table w-full text-sm text-left text-slate-500" data-dynamic-table="${field.id}">
+          <table class="pd3i-dynamic-table w-full text-sm text-left text-slate-500" data-dynamic-table="${attrEscape(field.id)}">
             <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
               <tr>
-                ${columns.map(c => `<th class="px-2 py-4 text-xs font-extrabold text-slate-600">${c.name}</th>`).join("")}
+                ${columns.map(c => `<th class="px-2 py-4 text-xs font-extrabold text-slate-600">${htmlEscape(c.name)}</th>`).join("")}
                 <th class="px-2 py-4 text-center">Aksi</th>
               </tr>
             </thead>
-            <tbody id="tbody-${field.id}"></tbody>
+            <tbody id="tbody-${attrEscape(field.id)}"></tbody>
           </table>
         </div>
         ${extraHtml}
@@ -415,7 +424,7 @@
 
     if (field.type === "geo_button") {
       return `<div class="${widthClass} space-y-3" ${fieldWrapperAttrs}>
-        <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${field.label}</label>
+        <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${htmlEscape(field.label)}</label>
         <div class="flex flex-wrap gap-2">
           <button type="button" id="btn-ambil-lokasi"
             class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center justify-center gap-2 text-xs w-fit">
@@ -448,32 +457,32 @@
     let inputHtml = "";
     const neutralName = _getNeutralFieldName_(field.id);
     const browserAutocomplete = isBrowserAutofillRiskFieldId(field.id) ? 'new-password' : 'off';
-    const browserHintAttrs = `autocomplete="${browserAutocomplete}" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-field-id="${field.id}"`;
+    const browserHintAttrs = `autocomplete="${browserAutocomplete}" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-field-id="${attrEscape(field.id)}"`;
 
     if (field.type === "select" || field.type === "search_select") {
-      inputHtml = `<select id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${browserHintAttrs}>
+      inputHtml = `<select id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls}" ${requiredAttr} ${browserHintAttrs}>
         <option value="">-- Pilih --</option>
-        ${(field.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
+        ${(field.options || []).map(o => `<option value="${attrEscape(o)}">${htmlEscape(o)}</option>`).join("")}
       </select>`;
     } else if (field.type === "multi_select") {
       const multiOptions = (field.options || []).filter(o => String(o || '').trim());
       inputHtml = `<div class="space-y-2">
-        <select id="${field.id}" name="${neutralName}" class="${cls} min-h-[9.5rem]" ${requiredAttr} ${browserHintAttrs} multiple data-multi-select="1" size="${Math.min(Math.max(multiOptions.length, 3), 7)}">
-          ${multiOptions.map(o => `<option value="${o}">${o}</option>`).join("")}
+        <select id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls} min-h-[9.5rem]" ${requiredAttr} ${browserHintAttrs} multiple data-multi-select="1" size="${Math.min(Math.max(multiOptions.length, 3), 7)}">
+          ${multiOptions.map(o => `<option value="${attrEscape(o)}">${htmlEscape(o)}</option>`).join("")}
         </select>
         <p class="text-xs font-semibold text-slate-500">Bisa pilih lebih dari satu. Gunakan Ctrl/⌘ atau Shift untuk multi-pilih.</p>
       </div>`;
     } else if (field.type === "choice_buttons") {
       inputHtml = `<div class="pd3i-choice-group">
-        <input type="hidden" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${browserHintAttrs} data-choice-group="1">
+        <input type="hidden" id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls}" ${requiredAttr} ${browserHintAttrs} data-choice-group="1">
         <div class="pd3i-choice-button-row">
           ${(field.options || []).map(function(o) {
-            return `<button type="button" class="pd3i-choice-btn" data-field-id="${field.id}" data-choice-value="${o}" aria-pressed="false">${o}</button>`;
+            return `<button type="button" class="pd3i-choice-btn" data-field-id="${attrEscape(field.id)}" data-choice-value="${attrEscape(o)}" aria-pressed="false">${htmlEscape(o)}</button>`;
           }).join('')}
         </div>
       </div>`;
     } else if (field.type === "textarea") {
-      inputHtml = `<textarea id="${field.id}" name="${neutralName}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
+      inputHtml = `<textarea id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
     } else {
       const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
       let maxAttr = field.max ? `max="${field.max}"` : "";
@@ -495,9 +504,9 @@
         maxAttr = `max="${today}"`;
       }
 
-      inputHtml = `<input type="${safeInputType}" id="${field.id}" name="${neutralName}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} ${dateAttrs} ${stepAttr}>`;
+      inputHtml = `<input type="${safeInputType}" id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${patternAttr} ${maxAttr} ${numericAttrs} ${browserHintAttrs} ${dateAttrs} ${stepAttr}>`;
       if (isDateField) {
-        inputHtml = `<div class="pd3i-date-control-wrap">${inputHtml}<button type="button" class="pd3i-date-picker-btn" data-pd3i-date-open="${field.id}" aria-label="Pilih tanggal ${field.label}"><i class="fas fa-calendar-days"></i></button></div>`;
+        inputHtml = `<div class="pd3i-date-control-wrap">${inputHtml}<button type="button" class="pd3i-date-picker-btn" data-pd3i-date-open="${attrEscape(field.id)}" aria-label="Pilih tanggal ${htmlEscape(field.label)}"><i class="fas fa-calendar-days"></i></button></div>`;
       }
     }
 
@@ -507,8 +516,8 @@
 
     return `<div class="${wrapperClass}" ${fieldWrapperAttrs} ${showIfAttr}>
       ${dependentMeta}
-      <label for="${field.id}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
-        ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+      <label for="${attrEscape(field.id)}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
+        ${htmlEscape(field.label)} ${field.required ? '<span class="text-red-500">*</span>' : ""}
       </label>
       ${inputHtml}
       ${numericHint ? `<p class="mt-2 text-[11px] font-semibold text-slate-500">${numericHint}</p>` : ""}
@@ -620,14 +629,14 @@
 
       if (["text", "date", "number", "tel", "email"].includes(col.type)) {
         rowHtml += `<td class="px-2 py-2">
-          <input type="${(col.type === 'email' || col.type === 'tel') ? 'text' : col.type}" data-name="${col.name}" class="${cls}" value="${value.replace(/"/g, '&quot;')}" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${(col.type === 'email') ? 'inputmode="email"' : ((col.type === 'tel') ? 'inputmode="tel"' : '')} ${col.readonly ? 'readonly tabindex="-1"' : ""}>
+          <input type="${(col.type === 'email' || col.type === 'tel') ? 'text' : col.type}" data-name="${htmlEscape(col.name)}" class="${cls}" value="${htmlEscape(value)}" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${(col.type === 'email') ? 'inputmode="email"' : ((col.type === 'tel') ? 'inputmode="tel"' : '')} ${col.readonly ? 'readonly tabindex="-1"' : ""}>
         </td>`;
       } else if (col.type === "textarea") {
         rowHtml += `<td class="px-2 py-2">
-          <textarea data-name="${col.name}" class="${cls} min-h-[4.5rem]" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${col.readonly ? 'readonly tabindex="-1"' : ""}>${value.replace(/&/g, '&amp;').replace(new RegExp('<', 'g'), '&lt;').replace(/>/g, '&gt;')}</textarea>
+          <textarea data-name="${htmlEscape(col.name)}" class="${cls} min-h-[4.5rem]" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${col.readonly ? 'readonly tabindex="-1"' : ""}>${htmlEscape(value)}</textarea>
         </td>`;
       } else {
-        const opts = (col.options || []).map(o => `<option value="${o}" ${o === value ? "selected" : ""}>${o}</option>`).join("");
+        const opts = (col.options || []).map(o => `<option value="${htmlEscape(o)}" ${o === value ? "selected" : ""}>${htmlEscape(o)}</option>`).join("");
         rowHtml += `<td class="px-2 py-2">
           <select data-name="${col.name}" class="${cls}" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore="true">
             <option value="">-</option>${opts}
@@ -2210,7 +2219,7 @@
     const textEl = document.getElementById('input-draft-restore-text');
     if (!card || !textEl || !draft) return false;
     const savedTime = draft.savedAt ? new Date(draft.savedAt).toLocaleString('id-ID') : 'sebelumnya';
-    textEl.innerHTML = `Ada draft input <strong>${String(draft.dx || '').trim().toUpperCase()}</strong> yang tersimpan <strong>${savedTime}</strong>. Pilih <strong>Lanjutkan Draft</strong> untuk memulihkan isian lama, atau <strong>Buka Kosong</strong> untuk membuang draft dan mulai input baru.`;
+    textEl.innerHTML = `Ada draft input <strong>${escapeHtml(String(draft.dx || '').trim().toUpperCase())}</strong> yang tersimpan <strong>${escapeHtml(savedTime)}</strong>. Pilih <strong>Lanjutkan Draft</strong> untuk memulihkan isian lama, atau <strong>Buka Kosong</strong> untuk membuang draft dan mulai input baru.`;
     card.classList.remove('hidden');
     return true;
   }

@@ -572,7 +572,7 @@
 
     if (!stats || stats.status === "error") {
       content.dataset.loaded = '';
-      content.innerHTML = '<div class="pd3i-dashboard-state is-error">' + (stats && stats.message || "Gagal memuat data.") + '</div>';
+      content.innerHTML = '<div class="pd3i-dashboard-state is-error">' + escapeHtml((stats && stats.message) || "Gagal memuat data.") + '</div>';
       return;
     }
 
@@ -654,7 +654,7 @@
             <div><div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">${isFaskesPelapor ? 'Total Laporan Faskes' : 'Total Kasus Pengampu'}</div><div class="text-3xl font-black text-blue-900">${totalCases}</div></div>
             <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-700 flex items-center justify-center text-base shrink-0"><i class="fas fa-file-medical"></i></div>
           </div>
-          <div class="text-[11px] text-slate-400 mt-2">Cakupan kasus diagnosis ${dx} (${tahun})</div>
+          <div class="text-[11px] text-slate-400 mt-2">Cakupan kasus diagnosis ${escapeHtml(dx)} (${escapeHtml(tahun)})</div>
         </div>
         <div class="pd3i-dashboard-metric-card tone-sky is-compact">
           <div class="flex justify-between items-start w-full">
@@ -840,7 +840,7 @@
       html += `
         <div class="pd3i-dashboard-exportbar flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
           <button type="button" onclick="handleExportCsv()" class="pd3i-primary-button pd3i-dashboard-export">
-            <i class="fas fa-file-csv mr-1.5"></i> Export CSV ${dx} ${tahun}
+            <i class="fas fa-file-csv mr-1.5"></i> Export CSV ${escapeHtml(dx)} ${escapeHtml(tahun)}
           </button>
         </div>
       `;
