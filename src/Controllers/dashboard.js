@@ -1069,15 +1069,15 @@ function getDashboardStats(dx, tahun, token) {
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
+      const trackingDateRaw = idxTglPelacakan !== -1 ? row[idxTglPelacakan] : null;
+      const trackingDateStr = idxTglPelacakan !== -1 ? _formatDateValue_(trackingDateRaw) : "";
 
       // Req 6.4: filter berdasarkan kolom "Tanggal Pelacakan"
       if (filterTahun && idxTglPelacakan !== -1) {
-        const tglRaw = row[idxTglPelacakan];
-        const tglStr = _formatDateValue_(tglRaw);
-        if (!tglStr) continue; // skip baris tanpa tanggal pelacakan
+        if (!trackingDateStr) continue; // skip baris tanpa tanggal pelacakan
 
         // Ambil tahun dari string yyyy-MM-dd
-        const rowTahun = parseInt(tglStr.substring(0, 4), 10);
+        const rowTahun = parseInt(trackingDateStr.substring(0, 4), 10);
         if (rowTahun !== tahunNum) continue;
       }
 
@@ -1093,14 +1093,12 @@ function getDashboardStats(dx, tahun, token) {
 
       // Req 6.3: distribusi per bulan (key format YYYYMM)
       if (idxTglPelacakan !== -1) {
-        const tglRaw = row[idxTglPelacakan];
-        const tglStr = _formatDateValue_(tglRaw);
-        if (tglStr && tglStr.length >= 7) {
+        if (trackingDateStr && trackingDateStr.length >= 7) {
           // Format: "2025-01-15" → key "202501"
-          const bulanKey = tglStr.substring(0, 4) + tglStr.substring(5, 7);
+          const bulanKey = trackingDateStr.substring(0, 4) + trackingDateStr.substring(5, 7);
           perBulan[bulanKey] = (perBulan[bulanKey] || 0) + 1;
         }
-        const mingguKey = _dashboardWeekKey_(tglStr);
+        const mingguKey = _dashboardWeekKey_(trackingDateStr);
         if (mingguKey) {
           perMinggu[mingguKey] = (perMinggu[mingguKey] || 0) + 1;
         }
@@ -1159,7 +1157,7 @@ function getDashboardStats(dx, tahun, token) {
       }
 
       const surveillanceAgeGroup = idxTanggalLahir !== -1
-        ? _classifySurveillanceAgeGroup_(_ageTotalDaysForDashboard_(row[idxTanggalLahir], idxTglPelacakan !== -1 ? row[idxTglPelacakan] : null))
+        ? _classifySurveillanceAgeGroup_(_ageTotalDaysForDashboard_(row[idxTanggalLahir], trackingDateStr))
         : "Usia tidak diketahui";
       _incrementCounter_(perKelompokUsiaSurveilans, surveillanceAgeGroup);
 

@@ -995,8 +995,11 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
     if (!values || values.length < 2) return;
     var headers = values[0].map(function(h) { return String(h || '').trim(); });
     var rows = values.slice(1);
+    var rawDxIndex = headers.indexOf('dx');
 
     rows.forEach(function(row, rowIdx) {
+      if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && rawDxIndex !== -1 &&
+          String(row[rawDxIndex] || '').trim().toUpperCase() !== diagnosisNeedle) return;
       const record = _buildSearchProjectionRecord_(headers, row);
       record.RAW_ROW_NUMBER = rowIdx + 2;
 
@@ -1005,7 +1008,7 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
       const item = _mapSearchResultItem_(dxItem, record);
       item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
       if (String(item.deletedAt || '').trim()) return;
-      if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
+      if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && rawDxIndex === -1 && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
       if (!item.recordKey) item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
       if (!item.recordKey) return;
       if (!_searchItemMatchesKeyword_(item, keywordNeedle)) return;
