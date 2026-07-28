@@ -5652,7 +5652,7 @@
       html += '<div class="mt-4"><div class="pd3i-helper-text font-extrabold uppercase text-red-700">Kasus ditolak / perlu perbaikan</div><div class="mt-2">';
       html += renderQueueTable(visibleRevision.map(function(item) {
         return Object.assign({}, item, { __queueBucket: 'revision' });
-      }), { title: 'Kasus ditolak / perlu perbaikan', pageKey: workspace + '-revision', emptyText: 'Belum ada kasus ditolak/perlu perbaikan.', workspace: workspace });
+      }), { title: 'Kasus ditolak / perlu perbaikan', pageKey: workspace + '-revision', emptyText: 'Belum ada kasus ditolak/perlu perbaikan.', workspace: workspace, actionLabel: 'Edit' });
       html += '</div></div>';
     }
 
