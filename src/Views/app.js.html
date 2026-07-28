@@ -7333,7 +7333,7 @@
     });
   }
 
-  function getWorkflowSaveActionForMode(submitMode) {
+  function getWorkflowSaveActionForMode(submitMode, payload) {
     const mode = normalizeSidebarWorkspace(submitMode || 'search');
     const actions = {
       input: 'createInitialCase',
@@ -7343,7 +7343,7 @@
       status: 'saveCaseStatusUpdate',
       search: 'saveInitialReportEdit'
     };
-    if (mode === 'edit' && window.__PD3I_APPROVAL_REQUEST_MODE__) return 'requestInitialReportEdit';
+    if (mode === 'edit' && ((payload && payload.__approvalRequest) || window.__PD3I_APPROVAL_REQUEST_MODE__)) return 'requestInitialReportEdit';
     return actions[mode] || 'saveFormData';
   }
 
@@ -7354,7 +7354,7 @@
         return;
       }
 
-      const action = getWorkflowSaveActionForMode(payload && payload.__submitMode);
+      const action = getWorkflowSaveActionForMode(payload && payload.__submitMode, payload);
       const runner = google.script.run
         .withSuccessHandler(resolve)
         .withFailureHandler(reject);

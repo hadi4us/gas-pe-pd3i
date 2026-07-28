@@ -2188,7 +2188,9 @@
         if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') {
           dataObj.__editMode = 'initial_report';
           if (window.__PD3I_APPROVAL_REQUEST_MODE__) {
+            dataObj.__approvalRequest = true;
             dataObj['Edit Reason'] = window.prompt('Alasan perubahan wajib diisi:') || '';
+            dataObj['Edit Diff Summary'] = 'Perubahan diajukan melalui form edit pascaverifikasi';
             if (!String(dataObj['Edit Reason']).trim()) {
               showWorkflowSubmitError(submitMode, 'Alasan perubahan wajib diisi untuk permintaan approval admin.');
               resetSubmitButtonByMode(submitMode);
