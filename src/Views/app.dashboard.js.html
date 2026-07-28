@@ -208,7 +208,6 @@
                 <strong>${escapeHtml(item.nama || '-')}</strong>
                 <small>${escapeHtml(item.recordId || item.epid || '-')} • ${escapeHtml([item.kecamatan, item.kelurahan, item.rw ? 'RW ' + item.rw : '', item.rt ? 'RT ' + item.rt : ''].filter(Boolean).join(' / ') || '-')}</small>
               </div>
-              <button type="button" class="pd3i-search-result-action" onclick='window.__openAdminQueueRecord && window.__openAdminQueueRecord(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-folder-open"></i> Buka</button>
             </div>
             <div class="pd3i-admin-queue-meta">
               ${item.statusVerifikasi ? `<span class="pd3i-admin-queue-pill">${escapeHtml(item.statusVerifikasi)}</span>` : ''}
