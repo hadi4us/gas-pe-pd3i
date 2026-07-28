@@ -7333,7 +7333,8 @@
     });
   }
 
-  function getWorkflowSaveActionForMode(submitMode, payload) {
+  function getWorkflowSaveActionForMode(submitMode) {
+    const payload = arguments[1] || {};
     const mode = normalizeSidebarWorkspace(submitMode || 'search');
     const actions = {
       input: 'createInitialCase',

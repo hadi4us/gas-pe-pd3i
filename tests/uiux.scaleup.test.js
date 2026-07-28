@@ -1547,16 +1547,17 @@ test('Verifikasi EPID keeps action box without review brief clutter', () => {
 });
 
 
-test('Detail kasus phase 24 follows edit correction review brief blueprint', () => {
-  const formHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_form.html'), 'utf8');
-  assert.match(formHtml, /pd3i-edit-review-brief/);
-  ['Cek perubahan', 'Cek tahapan', 'Cek dampak data'].forEach((copy) => {
-    assert.match(formHtml, new RegExp(copy));
-  });
-  assert.match(styleHtml, /Detail kasus phase 24: edit correction review brief/);
-  assert.match(styleHtml, /\.pd3i-edit-review-brief \{[\s\S]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-edit-review-brief > div\.is-warning \{/);
-  assert.match(styleHtml, /@media \(max-width: 900px\) \{[\s\S]*\.pd3i-edit-review-brief \{[\s\S]*grid-template-columns: 1fr/);
+test('Detail kasus pascaverifikasi memakai approval workflow, bukan edit langsung', () => {
+  const routesHtml = fs.readFileSync(path.join(root, 'src', 'Controllers', 'routes.js'), 'utf8');
+  const appHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'app.js.html'), 'utf8');
+  const initHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'app.init.js.html'), 'utf8');
+  assert.match(routesHtml, /function requestInitialReportEdit\s*\(/);
+  assert.match(routesHtml, /Kasus sudah terverifikasi\. Ajukan permintaan perubahan kepada admin\./);
+  assert.match(routesHtml, /function approveInitialReportEdit\s*\(/);
+  assert.match(routesHtml, /function rejectInitialReportEdit\s*\(/);
+  assert.match(appHtml, /requestInitialReportEdit/);
+  assert.match(appHtml, /__approvalRequest/);
+  assert.match(initHtml, /Ajukan perubahan/);
 });
 
 
