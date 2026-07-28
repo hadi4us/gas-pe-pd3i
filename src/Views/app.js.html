@@ -5352,6 +5352,7 @@
     }
     if (workspace === 'status') return 'Tentukan klasifikasi akhir';
     if (bucket && bucket.className === 'is-muted') return 'Perbaiki data wajib';
+    if (bucket && bucket.className === 'is-revision') return 'Perbaiki data wajib';
     return label;
   }
 
@@ -5400,7 +5401,7 @@
       const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
       const noteText = String(item && item.catatanVerifikasi || '').trim();
       const queueAgeText = getQueueAgeText(item);
-      const nextActionText = getQueueNextActionText(item, actionWorkspace, actionLabel);
+      const nextActionText = bucket.className === 'is-revision' ? '' : getQueueNextActionText(item, actionWorkspace, actionLabel);
       const rowNumber = startIndex + visibleIndex + 1;
 
       html += `<tr class="pd3i-queue-table-row ${bucket.className}">
@@ -5421,7 +5422,7 @@
           </div>
         </td>
         <td class="pd3i-queue-cell" data-label="Status">
-          <div class="pd3i-queue-cell-value pd3i-queue-multifield"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span><div class="pd3i-queue-next-action">${escapeHtml(nextActionText)}</div><button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: ${JSON.stringify(actionWorkspace)} })'>${escapeHtml(actionLabel)}</button></div>
+          <div class="pd3i-queue-cell-value pd3i-queue-multifield"><span class="pd3i-queue-status ${bucket.className}"><span class="dot"></span>${escapeHtml(bucket.label)}</span>${nextActionText ? `<div class="pd3i-queue-next-action">${escapeHtml(nextActionText)}</div>` : ''}<button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: ${JSON.stringify(actionWorkspace)} })'>${escapeHtml(actionLabel)}</button></div>
         </td>
         <td class="pd3i-queue-cell" data-label="Update"><div class="pd3i-queue-cell-value">${escapeHtml(updateText)}</div></td>
       </tr>`;

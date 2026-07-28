@@ -2455,13 +2455,7 @@
         return false;
       };
 
-      if (btnSubmit && !btnSubmit.dataset.boundSubmit) {
-        btnSubmit.dataset.boundSubmit = '1';
-        btnSubmit.addEventListener('click', function() {
-          const mode = (typeof ACTIVE_SIDEBAR_WORKSPACE !== 'undefined' && ACTIVE_SIDEBAR_WORKSPACE === 'edit') ? 'edit' : 'search';
-          safeHandleMainFormSubmit(mode);
-        });
-      }
+      // btn-submit uses inline workflow handler; do not bind second click handler.
       if (btnSubmitInput && !btnSubmitInput.dataset.boundSubmit) {
         btnSubmitInput.dataset.boundSubmit = '1';
         btnSubmitInput.addEventListener('click', function() {
