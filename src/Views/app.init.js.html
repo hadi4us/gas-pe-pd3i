@@ -1871,7 +1871,10 @@
         return {
           state: state,
           label: state === 'blocked' ? 'Belum siap simpan' : state === 'warning' ? 'Siap dengan catatan' : 'Siap simpan',
-          message: state === 'blocked' ? 'Perbaiki blocker sebelum submit.' : state === 'warning' ? 'Data bisa disimpan, tapi cek catatan validasi.' : 'Tidak ada blocker atau peringatan aktif dari aturan UI.',
+          message: state === 'blocked'
+            ? (errors.length ? errors.slice(0, 3).join(' ') : 'Lengkapi field wajib yang ditandai sebelum menyimpan.')
+            : state === 'warning' ? 'Data bisa disimpan, tapi cek catatan validasi.'
+            : 'Tidak ada kesalahan validasi.'
           errors: errors,
           warnings: warn,
           firstBlockerId: firstBlockerId
@@ -2047,7 +2050,7 @@
         renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings);
         const readiness = getPd3iSubmitReadinessState(warnings);
         if (readiness.state === 'blocked') {
-          showWorkflowSubmitError(submitMode, readiness.message || 'Perbaiki blocker sebelum submit.');
+          showWorkflowSubmitError(submitMode, readiness.message || 'Lengkapi field wajib yang ditandai sebelum menyimpan.');
           return false;
         }
         if (Array.isArray(warnings) && warnings.length && typeof showPd3iBanner === 'function') {
