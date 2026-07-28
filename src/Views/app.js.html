@@ -5401,7 +5401,8 @@
       const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
       const noteText = String(item && item.catatanVerifikasi || '').trim();
       const queueAgeText = getQueueAgeText(item);
-      const nextActionText = bucket.className === 'is-revision' ? '' : getQueueNextActionText(item, actionWorkspace, actionLabel);
+      const isRevisionQueue = String(item && item.__queueBucket || '').toLowerCase() === 'revision';
+      const nextActionText = isRevisionQueue ? '' : getQueueNextActionText(item, actionWorkspace, actionLabel);
       const rowNumber = startIndex + visibleIndex + 1;
 
       html += `<tr class="pd3i-queue-table-row ${bucket.className}">
