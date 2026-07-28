@@ -2047,6 +2047,8 @@
       }
 
       async function pd3iReviewBeforeSubmit(submitMode, activeStageOnSubmit, warnings) {
+        // Edit Kasus saves directly after validation. No review card/dialog remains in edit flow.
+        if (submitMode === 'edit' || normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') return true;
         renderPd3iSubmitReviewPanel(submitMode, activeStageOnSubmit, warnings);
         const readiness = getPd3iSubmitReadinessState(warnings);
         if (readiness.state === 'blocked') {
@@ -2456,7 +2458,8 @@
       if (btnSubmit && !btnSubmit.dataset.boundSubmit) {
         btnSubmit.dataset.boundSubmit = '1';
         btnSubmit.addEventListener('click', function() {
-          safeHandleMainFormSubmit('search');
+          const mode = (typeof ACTIVE_SIDEBAR_WORKSPACE !== 'undefined' && ACTIVE_SIDEBAR_WORKSPACE === 'edit') ? 'edit' : 'search';
+          safeHandleMainFormSubmit(mode);
         });
       }
       if (btnSubmitInput && !btnSubmitInput.dataset.boundSubmit) {
