@@ -722,6 +722,14 @@ function saveDxRecord_(dx, data) {
   }
 
   let recordId = String(data["ID Registrasi Kasus"] || "").trim();
+  const rawRowNumber = String(data.RAW_ROW_NUMBER || '').trim();
+  const rawRowMatch = rawRowNumber.match(/^ROW:(\d+)$/i);
+  const requestedRowIndex = rawRowMatch ? Number(rawRowMatch[1]) : (rawRowNumber && /^\d+$/.test(rawRowNumber) ? Number(rawRowNumber) : -1);
+  if (!recordId && requestedRowIndex > 1 && requestedRowIndex <= sheet.getLastRow()) {
+    const rawRowValues = sheet.getRange(requestedRowIndex, 1, 1, headers.length).getValues()[0];
+    recordId = String(rawRowValues[idxRecordId] || '').trim();
+    if (recordId) data["ID Registrasi Kasus"] = recordId;
+  }
   if (!recordId) {
     recordId = generateCaseRegistrationId_(dx);
     data["ID Registrasi Kasus"] = recordId;
@@ -743,6 +751,20 @@ function saveDxRecord_(dx, data) {
         rowIndex = li + 2;
         break;
       }
+    }
+  }
+  if (rowIndex === -1 && requestedRowIndex > 1 && requestedRowIndex <= lastRowForLookup) {
+    rowIndex = requestedRowIndex;
+  }
+  if (rowIndex !== -1) {
+    const matchedRow = sheet.getRange(rowIndex, 1, 1, Math.max(idxRecordId, idxEpid) + 1).getValues()[0];
+    if (!recordId) {
+      recordId = String(matchedRow[idxRecordId] || '').trim();
+      data["ID Registrasi Kasus"] = recordId;
+    }
+    if (!epidValue) {
+      epidValue = String(matchedRow[idxEpid] || '').trim();
+      data["Nomor EPID"] = epidValue;
     }
   }
 
