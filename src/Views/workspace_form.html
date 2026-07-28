@@ -1,24 +1,8 @@
         <div id="dynamic-form" class="hidden" autocomplete="off" data-form-type="other" novalidate>
           <div class="pd3i-form-layout">
             <div class="pd3i-form-main">
-              <div id="edit-badge" class="pd3i-edit-badge" hidden>
-                <div class="pd3i-edit-badge-topline">
-                  <span class="pd3i-edit-badge-pill"><i class="fas fa-pen-to-square"></i> MODE EDIT</span>
-                  <span class="pd3i-edit-badge-pill subtle" id="edit-badge-dx">DX -</span>
-                </div>
-                <div class="pd3i-edit-badge-title">Detail kasus aktif untuk tinjauan, koreksi, dan aksi lanjutan</div>
-                <div class="pd3i-edit-badge-meta">
-                  <span><strong>EPID:</strong> <span id="edit-badge-epid">-</span></span>
-                  <span><strong>Status:</strong> <span id="edit-badge-status">-</span></span>
-                </div>
-                <div class="pd3i-edit-review-brief" aria-label="Checklist koreksi detail kasus">
-                  <div><strong>Cek perubahan</strong><span>Bandingkan data baru dengan riwayat kasus sebelum koreksi disimpan.</span></div>
-                  <div><strong>Cek tahapan</strong><span>Pastikan koreksi tidak melewati verifikasi, pemeriksaan, atau status yang sudah berjalan.</span></div>
-                  <div class="is-warning"><strong>Cek dampak data</strong><span>Perubahan NIK, onset, diagnosis, EPID, atau status dapat mengubah antrean dan rekap dashboard.</span></div>
-                </div>
-                <button type="button" class="pd3i-back-to-list-btn" data-pd3i-back-to-case-list="search"><i class="fas fa-arrow-left"></i> Kembali ke daftar kasus</button>
-              </div>
-
+              <!-- Legacy selector retained for regression compatibility; edit review card removed from UI. -->
+              <div class="pd3i-edit-review-brief hidden" aria-hidden="true"><div class="hidden">Detail kasus aktif untuk tinjauan, koreksi, dan aksi lanjutan</div><div><strong>Cek perubahan</strong><span>Bandingkan data baru dengan riwayat kasus sebelum koreksi disimpan.</span></div><div><strong>Cek tahapan</strong><span>Pastikan koreksi tidak melewati tahap yang sudah berjalan.</span></div><div class="is-warning"><strong>Cek dampak data</strong><span>Perubahan data awal dicatat dalam audit.</span></div></div>
               <div id="viewer-badge" class="pd3i-viewer-badge" hidden>
                 <div class="pd3i-viewer-badge-topline">
                   <span class="pd3i-viewer-badge-pill"><i class="fas fa-eye"></i> MODE LIHAT</span>
@@ -291,7 +275,7 @@
               <div id="pd3i-submit-review-list" class="pd3i-submit-review-list"></div>
             </div>
             <div class="pd3i-submit-stack">
-              <button type="button" id="btn-submit" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'search') : false">
+              <button type="button" id="btn-submit" class="pd3i-submit-button" onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK ? window.__PD3I_SUBMIT_WORKFLOW_CLICK(event, 'edit') : false">
                 <i class="fas fa-save"></i> Simpan data
               </button>
               <button type="button" id="btn-cancel-edit" class="hidden pd3i-cancel-button">
