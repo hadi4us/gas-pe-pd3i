@@ -1202,6 +1202,9 @@
               .trim()
               .toUpperCase()
               .replace(/\s+/g, ' ');
+            const isVerifiedCase = normalizedVerificationStatus === 'TERVERIFIKASI';
+            const isNonAdminCaseUser = !isAdminMode && !isViewerMode;
+            const caseActionLabel = isViewerMode ? 'Buka / Lihat' : (isVerifiedCase && isNonAdminCaseUser ? 'Ajukan perubahan' : workflowActionLabel);
             const isPendingVerification = !normalizedVerificationStatus || ['PENDING', 'BELUM DIVERIFIKASI', 'BELUM VERIFIKASI'].includes(normalizedVerificationStatus);
             const canDeleteRecord = item.canDelete === true || (typeof item.canDelete === 'undefined' && !isViewerMode && (isAdminMode || isPendingVerification));
             const getStatusTone = function(value) {
@@ -1244,8 +1247,8 @@
               <div class="pd3i-search-result-cta-wrap">
                 <div class="pd3i-search-result-action-label">Tindak lanjut</div>
                 <!-- Legacy regression anchor: class="pd3i-search-result-action is-edit"; pd3i-search-result-action is-edit pd3i-action-btn is-secondary; isViewerMode ? 'Buka / Lihat' : 'Edit' -->
-                <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(workflowActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true })'>
-                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-arrow-up-right-from-square'}"></i> ${safeEscape(isViewerMode ? 'Buka / Lihat' : workflowActionLabel)}
+                <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(caseActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true })'>
+                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-arrow-up-right-from-square'}"></i> ${safeEscape(caseActionLabel)}
                 </button>
                 ${printUrl ? `<a class="pd3i-search-result-action pd3i-action-btn is-secondary" href="${safeEscape(printUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-pdf"></i> Dokumen PE</a>` : ''}
                 ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger pd3i-action-btn" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}
