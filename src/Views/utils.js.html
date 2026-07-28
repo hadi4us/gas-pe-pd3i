@@ -564,7 +564,7 @@
   function setCaptchaQuestion(elementId, questionText) {
     const el = byId(elementId);
     if (!el) {
-      console.warn("Captcha element not found:", elementId);
+      // Login/PIN views share utility bundle; missing other view's CAPTCHA is expected.
       return false;
     }
     el.textContent = questionText || "...";
@@ -849,10 +849,14 @@
 
   function ensureCaptchaVisible() {
     const el = document.getElementById("captcha-question");
-    if (!el || el.textContent === "..." || el.textContent.trim() === "") {
+    // Jangan generate CAPTCHA login pada halaman aplikasi/PIN yang tidak punya elemennya.
+    if (!el) return;
+    if (el.textContent === "..." || el.textContent.trim() === "") {
       makeLocalCaptcha("login");
     }
   }
 
-  setTimeout(ensureCaptchaVisible, 300);
+  if (document.getElementById("captcha-question")) {
+    setTimeout(ensureCaptchaVisible, 300);
+  }
 </script>
