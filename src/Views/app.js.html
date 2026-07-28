@@ -8,6 +8,15 @@
   window.__PD3I_WORKFLOW_LIST_COLLAPSED__ = window.__PD3I_WORKFLOW_LIST_COLLAPSED__ || {};
   const SEARCH_RESULTS_PAGE_SIZE = 10;
 
+  window.htmlEscape = window.htmlEscape || function(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  };
+
   // ============================================================
   // RENDER FIELD
   // ============================================================
@@ -339,14 +348,7 @@
   }
 
   function generateHTML(field) {
-    const htmlEscape = function(value) {
-      return String(value == null ? "" : value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    };
+    const htmlEscape = window.htmlEscape;
     const attrEscape = htmlEscape;
     if (field.type === "header") {
       return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
