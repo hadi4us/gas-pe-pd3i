@@ -872,19 +872,17 @@ function searchRecords(dx, filters, token) {
     var headers = [];
     var rows = [];
 
-    if (typeof _readSheetWithCache_ === 'function') {
-      var sheetData = _readSheetWithCache_(dxItem + '_Raw');
-      if (!sheetData || !sheetData.headers || !sheetData.rows || !sheetData.rows.length) return;
-      headers = sheetData.headers;
-      rows = sheetData.rows;
-    } else {
-      var sheet = getSheetOrNull_(dxItem + '_Raw');
-      if (!sheet) return;
-      var values = sheet.getDataRange().getValues();
-      if (!values || values.length < 2) return;
-      headers = values[0].map(function(h) { return String(h || '').trim(); });
-      rows = values.slice(1);
-    }
+    // Search result must use live sheet data. Cache can contain pre-save rows;
+    // rendering cached name with live ROW key can open a different case.
+    var sheet = getSheetOrNull_(dxItem + '_Raw');
+    if (!sheet) return;
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow < 2 || lastCol < 1) return;
+    var values = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+    if (!values || values.length < 2) return;
+    headers = values[0].map(function(h) { return String(h || '').trim(); });
+    rows = values.slice(1);
 
     rows.forEach(function(row, rowIdx) {
       const record = _buildSearchProjectionRecord_(headers, row);
@@ -896,9 +894,9 @@ function searchRecords(dx, filters, token) {
       item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
       if (String(item.deletedAt || '').trim()) return;
       if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
-      if (!item.recordKey) {
-        item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
-      }
+      // Search result must bind to exact physical row. ID/EPID can duplicate
+      // or be stale in legacy data; value keys can open another case.
+      item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
       if (!item.recordKey) return;
       if (!_searchItemMatchesKeyword_(item, keywordNeedle)) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;
@@ -1009,7 +1007,9 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
       item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
       if (String(item.deletedAt || '').trim()) return;
       if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && rawDxIndex === -1 && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
-      if (!item.recordKey) item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
+      // Search result must bind to exact physical row. ID/EPID can duplicate
+      // or be stale in legacy data; value keys can open another case.
+      item.recordKey = 'ROW:' + String(record.RAW_ROW_NUMBER || '');
       if (!item.recordKey) return;
       if (!_searchItemMatchesKeyword_(item, keywordNeedle)) return;
       if (!_searchIncludes_(item.epid + ' ' + item.recordId, epidNeedle)) return;

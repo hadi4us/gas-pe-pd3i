@@ -555,10 +555,11 @@ const INTERNAL_TRACKING_HEADERS_ = [
 
 function generateCaseRegistrationId_(dx) {
   dx = String(dx || 'PD3I').trim().toUpperCase();
+  // UUID gives practical uniqueness; timestamp remains useful for operators.
   const tz = Session.getScriptTimeZone() || 'Asia/Jakarta';
   const stamp = Utilities.formatDate(new Date(), tz, 'yyyyMMddHHmmss');
-  const rand = Math.floor(100 + Math.random() * 900);
-  return 'REG-' + dx + '-' + stamp + '-' + rand;
+  const uuid = Utilities.getUuid().replace(/-/g, '').substring(0, 20).toUpperCase();
+  return 'REG-' + dx + '-' + stamp + '-' + uuid;
 }
 
 function _deriveEpidBaseCode_(data) {
