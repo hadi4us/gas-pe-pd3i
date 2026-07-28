@@ -14,6 +14,10 @@
               </div>
 
               <div id="alert-box" class="pd3i-alert-card" hidden></div>
+              <div id="pd3i-validation-summary" class="pd3i-validation-summary is-clear" role="status" aria-live="polite">
+                <div class="pd3i-validation-summary-head"><strong>Validasi formulir</strong><span id="pd3i-validation-summary-badge">Siap</span></div>
+                <ul id="pd3i-validation-summary-list"></ul>
+              </div>
 
               <section id="section-pelapor" class="pd3i-shell-card pd3i-form-card pd3i-form-card-section pd3i-form-card-pelapor">
                 <div class="pd3i-card-header-row">
@@ -79,6 +83,13 @@
 
           </div>
 
+          <div id="pd3i-submit-review-panel" class="pd3i-submit-review-panel" data-collapsed="false">
+            <div class="pd3i-submit-review-head"><strong>Review sebelum simpan</strong><button type="button" id="pd3i-submit-review-toggle" aria-expanded="true" aria-controls="pd3i-submit-review-list">Detail</button></div>
+            <div id="pd3i-submit-review-list"></div>
+          </div>
+          <div id="pd3i-mobile-submit-bar" class="pd3i-mobile-submit-bar" data-first-blocker-id="">
+            <strong id="pd3i-mobile-submit-state">Siap</strong><span id="pd3i-mobile-submit-detail">Periksa data sebelum simpan.</span><button type="button" id="pd3i-mobile-submit-jump">Review</button>
+          </div>
           <div id="action-panel" class="pd3i-shell-card pd3i-action-panel-card pd3i-action-panel-fullwidth">
             <div id="action-panel-header" class="pd3i-card-header-row compact">
               <div>

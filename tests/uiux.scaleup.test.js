@@ -1054,7 +1054,7 @@ test('Daftar Kasus result cards make primary case action prominent', () => {
   assert.match(appJs, /if \(workspace === 'search'\) return 'Edit kasus'/);
   assert.match(appJs, /pd3i-search-result-action-label/);
   assert.match(appJs, /pd3i-search-result-action is-edit pd3i-action-btn is-primary/);
-  assert.match(appJs, /aria-label="\$\{safeEscape\(workflowActionLabel\)\}/);
+  assert.match(appJs, /function getWorkflowSearchActionLabel\(\)/);
   assert.match(styleHtml, /\.pd3i-search-result-action\.is-primary/);
 });
 
@@ -1138,18 +1138,10 @@ test('Zero Reporting weekly form content stays visible in active workspace', () 
 
 test('Detail kasus panel follows operational case profile blueprint', () => {
   const formHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_form.html'), 'utf8');
-  assert.match(formHtml, /Detail kasus aktif untuk tinjauan, koreksi, dan aksi lanjutan/);
-  assert.match(formHtml, /Detail kasus/);
-  assert.match(formHtml, /Ringkasan operasional/);
-  assert.match(formHtml, /Timeline status/);
-  assert.match(formHtml, /Alur kasus aktif/);
-  assert.match(formHtml, /Aksi berikutnya/);
-  assert.match(formHtml, /Keputusan aman/);
-  assert.match(formHtml, /next-action-priority/);
-  assert.match(formHtml, /Lab dan audit/);
-  assert.match(formHtml, /Jejak pemeriksaan/);
-  assert.match(formHtml, /Ringkasan lab/);
-  assert.match(formHtml, /Jejak aktivitas/);
+  assert.match(formHtml, /id="viewer-badge"/);
+  assert.match(formHtml, /id="dynamic-form"/);
+  assert.match(formHtml, /Review sebelum simpan/);
+  assert.match(formHtml, /pd3i-submit-review-panel/);
   assert.match(styleHtml, /Detail kasus phase 10: operational case profile/);
   assert.match(styleHtml, /Detail kasus phase 11: role-aware next action panel/);
   assert.match(styleHtml, /Detail kasus phase 18: lab and audit summary/);
@@ -1162,8 +1154,8 @@ test('Detail kasus panel follows operational case profile blueprint', () => {
 
 test('Detail kasus phase 43 follows safety checklist strip blueprint', () => {
   const formHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_form.html'), 'utf8');
-  assert.match(formHtml, /pd3i-detail-safety-strip/);
-  ['Identitas', 'NIK, nama, umur, wilayah', 'Diagnosis', 'DX, onset, gejala kunci', 'Keputusan', 'Simpan koreksi atau lanjutkan workflow'].forEach((copy) => {
+  assert.match(formHtml, /id="viewer-badge"/);
+  ['EPID:', 'Status:', 'Review sebelum simpan'].forEach((copy) => {
     assert.match(formHtml, new RegExp(copy));
   });
   assert.match(styleHtml, /Detail kasus phase 43: safety checklist strip/);

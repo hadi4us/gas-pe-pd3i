@@ -4603,6 +4603,7 @@
   }
 
   function getWorkflowSearchActionLabel() {
+    // Keep action label centralized for accessible result-card markup.
     const workspace = normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'search');
     if (workspace === 'search') return 'Edit kasus';
     return getWorkflowIntentConfig(WORKFLOW_SEARCH_INTENT).actionLabel || "Buka / Edit";
