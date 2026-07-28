@@ -199,6 +199,10 @@ function _routeDedicatedWorkflowAction_(action, payload) {
     case 'getEditableRecords': return getEditableRecords(token, dx, filters);
     case 'getEditableRecord': return getEditableRecord(token, dx, recordKey);
     case 'saveInitialReportEdit': return saveInitialReportEdit(token, payload);
+    case 'requestInitialReportEdit': return requestInitialReportEdit(token, payload);
+    case 'getChangeRequests': return getChangeRequests(token, payload);
+    case 'approveInitialReportEdit': return approveInitialReportEdit(token, payload);
+    case 'rejectInitialReportEdit': return rejectInitialReportEdit(token, payload);
     case 'deleteCaseRecord': return deleteCaseRecord(token, payload);
     case 'getVerificationQueue': return getVerificationQueue(dx, token, filters);
     case 'getVerificationRecord': return getVerificationRecord(dx, recordKey, token);
@@ -234,8 +238,78 @@ function getEditableRecord(token, dx, recordKey) {
   return getRecordByKey(dx, recordKey, token);
 }
 
+function _getChangeRequestSheet_() {
+  const ss = getSpreadsheet_();
+  const name = 'PD3I_CHANGE_REQUEST';
+  let sh = ss.getSheetByName(name);
+  const headers = ['Change Request ID','ID Registrasi Kasus','DX','Status Permintaan Perubahan','Diajukan Oleh','Waktu Pengajuan','Alasan Perubahan','Diff Perubahan','Payload Perubahan','Diproses Oleh','Waktu Keputusan','Catatan Admin'];
+  if (!sh) sh = ss.insertSheet(name);
+  const current = sh.getLastColumn() ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String) : [];
+  if (!current.length || current.every(function(v){ return !String(v).trim(); })) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  else { const missing = headers.filter(function(h){ return current.indexOf(h) === -1; }); if (missing.length) sh.getRange(1, current.length + 1, 1, missing.length).setValues([missing]); }
+  return sh;
+}
+
+function requestInitialReportEdit(token, payload) {
+  const sess = _getSessionFromToken_(token);
+  if (!sess.ok || !sess.user) throw new Error(sess.message || 'Sesi tidak valid.');
+  if (_isAdminRole_(sess.user.role)) throw new Error('Admin gunakan edit langsung dengan audit admin.');
+  payload = Object.assign({}, payload || {});
+  const dx = String(payload.dx || '').trim().toUpperCase();
+  const recordKey = String(payload['ID Registrasi Kasus'] || payload.RAW_ROW_NUMBER || payload['Nomor EPID'] || '').trim();
+  if (!dx || !recordKey) throw new Error('Identitas kasus wajib diisi.');
+  const existing = getRecordByKey(dx, recordKey, token);
+  if (!existing) throw new Error('Kasus tidak ditemukan.');
+  if (String(existing['Status Verifikasi EPID'] || '').trim().toUpperCase() !== 'TERVERIFIKASI') throw new Error('Approval hanya diperlukan untuk kasus yang sudah terverifikasi.');
+  const sh = _getChangeRequestSheet_();
+  const values = sh.getDataRange().getValues();
+  const h = values[0].map(String); const key = h.indexOf('ID Registrasi Kasus'); const status = h.indexOf('Status Permintaan Perubahan'); const dxIdx = h.indexOf('DX');
+  for (let i = 1; i < values.length; i++) if (String(values[i][key] || '').trim() === recordKey && String(values[i][dxIdx] || '').trim() === dx && String(values[i][status] || '').trim() === 'Menunggu Approval') throw new Error('Masih ada permintaan perubahan menunggu approval admin.');
+  const id = 'CR-' + Utilities.getUuid().slice(0, 8).toUpperCase();
+  const actor = String(sess.user.nama || sess.user.username || 'unknown');
+  const row = h.map(function(field) { return field === 'Change Request ID' ? id : field === 'ID Registrasi Kasus' ? recordKey : field === 'DX' ? dx : field === 'Status Permintaan Perubahan' ? 'Menunggu Approval' : field === 'Diajukan Oleh' ? actor : field === 'Waktu Pengajuan' ? new Date() : field === 'Alasan Perubahan' ? String(payload['Edit Reason'] || payload.__editReason || '').trim() : field === 'Diff Perubahan' ? String(payload['Edit Diff Summary'] || '').trim() : field === 'Payload Perubahan' ? JSON.stringify(payload) : ''; });
+  sh.appendRow(row);
+  return { status: 'success', changeRequestId: id, message: 'Permintaan perubahan dikirim ke admin.' };
+}
+
 function saveInitialReportEdit(token, payload) {
+  const sess = _getSessionFromToken_(token);
+  const existing = _getExistingRecordForPayload_(String(payload && payload.dx || '').trim().toUpperCase(), payload || {}, token);
+  if (sess.ok && sess.user && !_isAdminRole_(sess.user.role) && existing && String(existing['Status Verifikasi EPID'] || '').trim().toUpperCase() === 'TERVERIFIKASI') throw new Error('Kasus sudah terverifikasi. Ajukan permintaan perubahan kepada admin.');
   return _saveDedicatedWorkflowPayload_(token, payload, 'section-pelapor', { __editMode: 'initial_report' });
+}
+
+function getChangeRequests(token) {
+  _requireAdminFromToken_(token);
+  const sh = _getChangeRequestSheet_();
+  const values = sh.getDataRange().getValues();
+  if (values.length < 2) return { status: 'success', requests: [] };
+  const headers = values[0].map(String);
+  return { status: 'success', requests: values.slice(1).map(function(row) { const o = {}; headers.forEach(function(h,i){ o[h] = row[i]; }); return o; }).filter(function(o){ return String(o['Status Permintaan Perubahan'] || '') === 'Menunggu Approval'; }) };
+}
+
+function approveInitialReportEdit(token, payload) {
+  const admin = _requireAdminFromToken_(token);
+  const id = String(payload && (payload.changeRequestId || payload['Change Request ID']) || '').trim();
+  if (!id) throw new Error('Change Request ID wajib diisi.');
+  const sh = _getChangeRequestSheet_(); const values = sh.getDataRange().getValues(); const headers = values[0].map(String); const idx = headers.indexOf('Change Request ID');
+  const row = values.slice(1).findIndex(function(r){ return String(r[idx] || '').trim() === id; });
+  if (row < 0) throw new Error('Permintaan perubahan tidak ditemukan.');
+  const sheetRow = row + 2; const obj = {}; headers.forEach(function(h,i){ obj[h] = values[row + 1][i]; });
+  if (String(obj['Status Permintaan Perubahan']) !== 'Menunggu Approval') throw new Error('Permintaan ini sudah diproses.');
+  let changePayload; try { changePayload = JSON.parse(String(obj['Payload Perubahan'] || '{}')); } catch (e) { throw new Error('Payload perubahan rusak.'); }
+  changePayload.__token = token; changePayload.__alreadyLocked = true; changePayload['Status Verifikasi EPID'] = 'Perlu Revisi';
+  const result = _saveDedicatedWorkflowPayload_(token, changePayload, 'section-pelapor', { __editMode: 'initial_report' });
+  const map = {}; map['Status Permintaan Perubahan'] = 'Disetujui'; map['Diproses Oleh'] = String(admin.nama || admin.username || 'admin'); map['Waktu Keputusan'] = new Date(); map['Catatan Admin'] = String(payload.catatan || '').trim();
+  headers.forEach(function(h,i){ if (map[h] !== undefined) sh.getRange(sheetRow, i + 1).setValue(map[h]); });
+  return { status: 'success', message: 'Permintaan perubahan disetujui dan kasus masuk antrean verifikasi ulang.', result: result };
+}
+
+function rejectInitialReportEdit(token, payload) {
+  const admin = _requireAdminFromToken_(token); const id = String(payload && (payload.changeRequestId || payload['Change Request ID']) || '').trim(); if (!id) throw new Error('Change Request ID wajib diisi.');
+  const sh = _getChangeRequestSheet_(); const values = sh.getDataRange().getValues(); const headers = values[0].map(String); const idx = headers.indexOf('Change Request ID'); const row = values.slice(1).findIndex(function(r){ return String(r[idx] || '').trim() === id; }); if (row < 0) throw new Error('Permintaan perubahan tidak ditemukan.');
+  const sheetRow = row + 2; headers.forEach(function(h,i){ if (h === 'Status Permintaan Perubahan') sh.getRange(sheetRow,i+1).setValue('Ditolak'); if (h === 'Diproses Oleh') sh.getRange(sheetRow,i+1).setValue(String(admin.nama || admin.username || 'admin')); if (h === 'Waktu Keputusan') sh.getRange(sheetRow,i+1).setValue(new Date()); if (h === 'Catatan Admin') sh.getRange(sheetRow,i+1).setValue(String(payload.catatan || '').trim()); });
+  return { status: 'success', message: 'Permintaan perubahan ditolak.' };
 }
 
 function searchEditableRecords(token, dx, filters) {

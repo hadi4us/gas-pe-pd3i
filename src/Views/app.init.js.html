@@ -1458,6 +1458,8 @@
             }
 
             isEditMode = !isViewer;
+            const verifiedRecordForApproval = String(record['Status Verifikasi EPID'] || '').trim().toUpperCase() === 'TERVERIFIKASI';
+            window.__PD3I_APPROVAL_REQUEST_MODE__ = verifiedRecordForApproval && !isAdminUiRole(SESSION_USER && SESSION_USER.role);
             if (editBadge) {
               editBadge.hidden = !!isViewer || !['search', 'edit'].includes(openedWorkspace);
             }
@@ -1474,7 +1476,7 @@
               } else {
                 resetSubmitButtonByMode(openedWorkspace);
                 if (loadingButton === btnSubmit) {
-                  loadingButton.innerHTML = `<i class="fas fa-pen-to-square"></i> Perbarui Data ${escapeHtml(recordKey)}`;
+                  loadingButton.innerHTML = `<i class="fas fa-pen-to-square"></i> ${window.__PD3I_APPROVAL_REQUEST_MODE__ ? 'Ajukan perubahan' : 'Perbarui Data ' + escapeHtml(recordKey)}`;
                   loadingButton.classList.remove("bg-blue-600", "opacity-60", "cursor-not-allowed");
                   loadingButton.classList.add("bg-yellow-600");
                 }
@@ -2185,6 +2187,14 @@
         dataObj.__action = getWorkflowSaveActionForMode(submitMode);
         if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') {
           dataObj.__editMode = 'initial_report';
+          if (window.__PD3I_APPROVAL_REQUEST_MODE__) {
+            dataObj['Edit Reason'] = window.prompt('Alasan perubahan wajib diisi:') || '';
+            if (!String(dataObj['Edit Reason']).trim()) {
+              showWorkflowSubmitError(submitMode, 'Alasan perubahan wajib diisi untuk permintaan approval admin.');
+              resetSubmitButtonByMode(submitMode);
+              return;
+            }
+          }
         }
         activeFormElement.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
           const fieldKey = _getSemanticFieldKey_(el);
@@ -2361,7 +2371,10 @@
               showPd3iToast(res.nextWorkflowLabel + '. Daftar kerja sudah diperbarui.', { type: 'success' });
             }
 
-            if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') {
+            if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit' && window.__PD3I_APPROVAL_REQUEST_MODE__) {
+              showPd3iToast('Permintaan perubahan dikirim ke admin. Data utama belum diubah.', { type: 'success' });
+              window.__PD3I_APPROVAL_REQUEST_MODE__ = false;
+            } else if (normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE) === 'edit') {
               showPd3iToast('Edit inputan awal berhasil disimpan dengan audit perubahan. Tahap verifikasi/sampel/status tidak ikut diubah.', { type: 'success' });
               showSuccessModal(
                 res.message || 'Edit inputan berhasil disimpan.',
