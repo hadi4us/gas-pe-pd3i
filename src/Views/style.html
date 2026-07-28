@@ -18095,3 +18095,19 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
 .pd3i-edit-case-mode #edit-badge .pd3i-edit-badge-title {
   font-size: 1rem;
 }
+
+/* Kalender Epidemiologi: standalone administrasi surface, tidak bercampur dengan panel PIE. */
+#section-settings.is-epid-calendar > .pd3i-card > .pd3i-local-status-strip,
+#section-settings.is-epid-calendar > .pd3i-card > .pd3i-admin-ops-summary,
+#section-settings.is-epid-calendar > .pd3i-card > .pd3i-admin-guardrail-strip,
+#section-settings.is-epid-calendar > .pd3i-card > .pd3i-admin-audit-brief,
+#section-settings.is-epid-calendar > .pd3i-card > .pd3i-admin-decision-gate,
+#section-settings.is-epid-calendar #pie-settings-locked,
+#section-settings.is-epid-calendar #settings-panel-config,
+#section-settings.is-epid-calendar #settings-panel-users,
+#section-settings.is-epid-calendar .account-approval-panel,
+#section-settings.is-epid-calendar .user-management-panel { display:none !important; }
+#section-settings.is-epid-calendar #settings-panel-epid-calendar { display:block !important; }
+#section-settings.is-epid-calendar #settings-panel-epid-calendar > .pd3i-settings-surface { border-color:var(--pd3i-border,#dbe3ee); box-shadow:0 8px 24px rgba(15,23,42,.06); }
+#section-settings.is-epid-calendar #epid-calendar-weeks > .pd3i-settings-surface { min-height:78px; transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease; }
+#section-settings.is-epid-calendar #epid-calendar-weeks > .pd3i-settings-surface:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(15,23,42,.08); }

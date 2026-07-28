@@ -313,18 +313,36 @@ window.showSettingsResult = function(x){ const out=document.getElementById('sett
 window.applySettingsTab = function(tabName) {
   const activeTab = String(tabName || window.__SETTINGS_ACTIVE_TAB || 'config').toLowerCase();
   window.__SETTINGS_ACTIVE_TAB = activeTab;
+  const settingsSection = document.getElementById('section-settings');
+  if (settingsSection) settingsSection.classList.toggle('is-epid-calendar', activeTab === 'epid-calendar');
   
   const panelConfig = document.getElementById('settings-panel-config');
   const panelUsers = document.getElementById('settings-panel-users');
   const panelEpidCalendar = document.getElementById('settings-panel-epid-calendar');
+  document.querySelectorAll('#section-settings .pd3i-settings-panel').forEach(function(panel) {
+    panel.classList.toggle('hidden', panel.id !== 'settings-panel-' + activeTab && !(activeTab === 'account-approval' && panel.id === 'settings-panel-users'));
+  });
   
   if (panelConfig) panelConfig.classList.toggle('hidden', activeTab !== 'config');
   if (panelUsers) panelUsers.classList.toggle('hidden', !['users','account-approval'].includes(activeTab));
+  if (activeTab === 'epid-calendar') {
+    if (panelConfig) panelConfig.classList.add('hidden');
+    if (panelUsers) panelUsers.classList.add('hidden');
+  }
   if (panelEpidCalendar) panelEpidCalendar.classList.toggle('hidden', activeTab !== 'epid-calendar');
+  document.querySelectorAll('#section-settings .pd3i-settings-panel').forEach(function(panel) {
+    const isCalendar = panel.id === 'settings-panel-epid-calendar';
+    const isVisible = isCalendar ? activeTab === 'epid-calendar' : panel.classList.contains('hidden') === false;
+    if (isCalendar && !isVisible) panel.classList.add('hidden');
+  });
   const approval = document.querySelector('.account-approval-panel');
   const users = document.querySelector('.user-management-panel');
   if (approval) approval.classList.toggle('hidden', activeTab !== 'account-approval');
   if (users) users.classList.toggle('hidden', activeTab !== 'users');
+  if (activeTab === 'epid-calendar') {
+    if (approval) approval.classList.add('hidden');
+    if (users) users.classList.add('hidden');
+  }
   if (activeTab === 'account-approval' && window.__SETTINGS_WORKSPACE_BOUND && typeof window.loadSettingsAccountApproval === 'function') {
     window.loadSettingsAccountApproval();
   }
