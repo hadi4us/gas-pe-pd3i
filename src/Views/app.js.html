@@ -3871,6 +3871,8 @@
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
+    document.body.classList.toggle('pd3i-edit-case-mode', normalized === 'edit' && hasOpenRecord);
+
     function setWorkspaceSectionVisibility(sectionEl, shouldShow) {
       if (!sectionEl) return;
       sectionEl.classList.toggle('hidden', !shouldShow);
