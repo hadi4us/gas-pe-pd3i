@@ -129,6 +129,37 @@
     });
   }
 
+  function pd3iFormatDateYmd_(value) {
+    const raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    const m = raw.match(/^(\\d{4})[-\\/](\\d{1,2})[-\\/](\\d{1,2})/);
+    if (m) return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+    const dmy = raw.match(/^(\\d{1,2})[-\\/](\\d{1,2})[-\\/](\\d{4})$/);
+    if (dmy) return dmy[3] + '-' + String(dmy[2]).padStart(2, '0') + '-' + String(dmy[1]).padStart(2, '0');
+    return '';
+  }
+
+  function pd3iSyncDatePickerValue_(inputEl, value) {
+    if (!inputEl) return '';
+    const formatted = pd3iFormatDateYmd_(value) || (value instanceof Date ? value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0') + '-' + String(value.getDate()).padStart(2, '0') : '');
+    if (!formatted) return String(inputEl.value || '').trim();
+    inputEl.value = formatted;
+    inputEl.dataset.pd3iDateValue = formatted;
+    inputEl.dataset.pd3iLastDateValue = formatted;
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    inputEl.dispatchEvent(new CustomEvent('changeDate', { bubbles: true, detail: { value: formatted, field: inputEl.id || inputEl.dataset.fieldId || '' } }));
+    if (typeof inputEl.onSelect === 'function') inputEl.onSelect(formatted);
+    return formatted;
+  }
+
+  function pd3iBindDatePickerTarget_(picker, inputEl) {
+    if (!picker || !inputEl) return;
+    picker.__pd3iDateTarget = inputEl;
+    picker.onSelect = function(value) { pd3iSyncDatePickerValue_(inputEl, value); };
+    picker.changeDate = picker.onSelect;
+  }
+
   function pd3iOpenDatePicker_(inputEl) {
     if (!inputEl || inputEl.disabled || inputEl.readOnly) return;
     let modal = document.getElementById('pd3i-date-picker-modal');
@@ -150,10 +181,7 @@
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
-      inputEl.value = yyyy + '-' + mm + '-' + dd;
-      inputEl.dataset.pd3iLastDateValue = inputEl.value;
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+      pd3iSyncDatePickerValue_(inputEl, yyyy + '-' + mm + '-' + dd);
       setTimeout(function() { if (!inputEl.value && inputEl.dataset.pd3iLastDateValue) inputEl.value = inputEl.dataset.pd3iLastDateValue; }, 80);
       modal.classList.add('hidden');
     }
@@ -194,10 +222,11 @@
       const scope = getFormScopeForElement(btn);
       const inputEl = rowInput || findScopedFieldControl(btn.getAttribute('data-pd3i-date-open'), scope);
       pd3iOpenDatePicker_(inputEl);
+      if (inputEl) pd3iBindDatePickerTarget_(document.getElementById('pd3i-date-picker-modal'), inputEl);
     });
     document.addEventListener('change', function(evt) {
       const el = evt.target;
-      if (el && el.matches && el.matches('input[type="date"][data-pd3i-date-control]') && el.value) el.dataset.pd3iLastDateValue = el.value;
+      if (el && el.matches && el.matches('input[type="date"][data-pd3i-date-control]') && el.value) pd3iSyncDatePickerValue_(el, el.value);
     });
   }
 
