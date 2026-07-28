@@ -3872,7 +3872,22 @@
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
-    document.body.classList.toggle('pd3i-edit-case-mode', normalized === 'edit' && hasOpenRecord);
+    const editOnlyHideSelectors = [
+      '.pd3i-form-sidebar', '#action-panel-header', '#pd3i-mobile-submit-bar',
+      '#section-verifikasi', '#section-sampel', '#section-status', '#form-stepper-card',
+      '#case-summary-panel', '#wizard-panel', '#workflow-panel', '#case-lab-audit-panel',
+      '#case-next-action-panel', '#pd3i-submit-review-panel', '.pd3i-edit-review-brief'
+    ];
+    const isActiveEditCase = normalized === 'edit' && hasOpenRecord;
+    document.body.classList.toggle('pd3i-edit-case-mode', isActiveEditCase);
+    if (isActiveEditCase && editorForm) {
+      editOnlyHideSelectors.forEach(function(selector) {
+        editorForm.querySelectorAll(selector).forEach(function(el) {
+          el.hidden = true;
+          el.style.setProperty('display', 'none', 'important');
+        });
+      });
+    }
 
     function setWorkspaceSectionVisibility(sectionEl, shouldShow) {
       if (!sectionEl) return;
