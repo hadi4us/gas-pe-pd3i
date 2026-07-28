@@ -259,7 +259,7 @@ function _approvalSnapshotHash_(record, fields) {
   return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text));
 }
 function _approvalDiff_(existing, payload, fields) {
-  return fields.map(function(field) { const before = String((existing || {})[field] || '').trim(); const after = String((payload || {})[field] || '').trim(); return before === after ? '' : field + ': ' + (before || '(kosong)') + ' → ' + (after || '(kosong)'); }).filter(Boolean).slice(0, 30).join('\\n');
+  return fields.map(function(field) { const before = String((existing || {})[field] || '').trim(); const after = String((payload || {})[field] || '').trim(); return before === after ? '' : field + ': ' + (before || '(kosong)') + ' → ' + (after || '(kosong)'); }).filter(Boolean).slice(0, 30).join('\n');
 }
 
 function requestInitialReportEdit(token, payload) {
@@ -287,6 +287,16 @@ function requestInitialReportEdit(token, payload) {
   const actor = String(sess.user.nama || sess.user.username || 'unknown');
   const row = h.map(function(field) { return field === 'Change Request ID' ? id : field === 'ID Registrasi Kasus' ? recordKey : field === 'DX' ? dx : field === 'Status Permintaan Perubahan' ? 'Menunggu Approval' : field === 'Diajukan Oleh' ? actor : field === 'Waktu Pengajuan' ? new Date() : field === 'Alasan Perubahan' ? String(payload['Edit Reason'] || payload.__editReason || '').trim() : field === 'Diff Perubahan' ? diff : field === 'Snapshot Hash' ? snapshotHash : field === 'Payload Perubahan' ? JSON.stringify(cleanPayload) : ''; });
   sh.appendRow(row);
+  try {
+    sendAdminOperationalTelegramNotificationsOnce('PERMINTAAN_PERUBAHAN_PASCA_VERIFIKASI', {
+      caseCode: recordKey,
+      diagnosisCode: dx,
+      action: 'Review permintaan perubahan pascaverifikasi',
+      workspace: 'search',
+      status: 'Menunggu Approval',
+      reason: String(payload['Edit Reason'] || payload.__editReason || '').trim()
+    });
+  } catch (notificationError) { console.warn('Approval notification failed:', notificationError); }
   return { status: 'success', changeRequestId: id, message: 'Permintaan perubahan dikirim ke admin.' };
 }
 

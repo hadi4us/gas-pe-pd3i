@@ -5726,13 +5726,15 @@
     if (!panel || !isAdminUiRole(SESSION_USER && SESSION_USER.role) || !safeGsRun() || !SESSION_TOKEN) return;
     google.script.run.withSuccessHandler(function(res) {
       const requests = Array.isArray(res && res.requests) ? res.requests : [];
+      const badge = document.getElementById('pd3i-change-approval-badge');
+      if (badge) { badge.textContent = String(requests.length); badge.classList.toggle('hidden', !requests.length); }
       panel.classList.toggle('hidden', !requests.length);
       panel.innerHTML = requests.length ? '<div class="pd3i-shell-card border border-amber-200 bg-amber-50 p-4"><h3 class="pd3i-card-title">Permintaan perubahan pascaverifikasi</h3>' + requests.map(function(item) {
         const id = escapeHtml(item['Change Request ID'] || '');
         return '<div class="border-t border-amber-200 mt-3 pt-3"><strong>' + id + '</strong><div class="text-sm mt-1">Kasus: ' + escapeHtml(item['ID Registrasi Kasus'] || '-') + ' • ' + escapeHtml(item.DX || '-') + '</div><div class="text-sm mt-1">Alasan: ' + escapeHtml(item['Alasan Perubahan'] || '-') + '</div><div class="text-sm mt-1 whitespace-pre-wrap">' + escapeHtml(item['Diff Perubahan'] || '-') + '</div><div class="mt-2 flex gap-2"><button type="button" class="pd3i-primary-button pd3i-inline-button" data-change-approve="' + id + '">Setujui</button><button type="button" class="pd3i-ghost-button pd3i-inline-button" data-change-reject="' + id + '">Tolak</button></div></div>';
       }).join('') + '</div>' : '';
       panel.querySelectorAll('[data-change-approve],[data-change-reject]').forEach(function(btn) { btn.onclick = function() { const approve = btn.hasAttribute('data-change-approve'); const requestId = btn.getAttribute(approve ? 'data-change-approve' : 'data-change-reject'); const note = window.prompt('Catatan admin (opsional):') || ''; const runner = google.script.run.withSuccessHandler(function(){ showPd3iToast(approve ? 'Permintaan disetujui.' : 'Permintaan ditolak.', {type:'success'}); refreshChangeApprovalPanel(); }).withFailureHandler(function(err){ showPd3iBanner(err && err.message ? err.message : 'Aksi approval gagal.', {type:'error'}); }); (approve ? runner.approveInitialReportEdit : runner.rejectInitialReportEdit).call(runner, SESSION_TOKEN, { changeRequestId: requestId, catatan: note }); }; });
-    }).withFailureHandler(function(err) { console.error('getChangeRequests failed:', err); }).getChangeRequests(SESSION_TOKEN);
+    }).withFailureHandler(function(err) { const badge = document.getElementById('pd3i-change-approval-badge'); if (badge) badge.classList.add('hidden'); console.error('getChangeRequests failed:', err); }).getChangeRequests(SESSION_TOKEN);
   }
 
   function refreshWorkflowInbox(options) {
