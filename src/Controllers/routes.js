@@ -1708,6 +1708,15 @@ function _getNotificationLocationLabel_(data) {
   return kel + ' / ' + kec;
 }
 
+function _maskNotificationPatientName_(value) {
+  const parts = String(value || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '-';
+  return parts.map(function(part) {
+    if (part.length <= 2) return part.charAt(0) + '***';
+    return part.substring(0, 3).toUpperCase() + '***';
+  }).join(' ');
+}
+
 function _buildNotificationSubject_(type, dx, data, saved, notifyCtx) {
   const dxLabel = _getDxNotificationLabel_(dx);
   const shortDx = String(dx || '').trim().toUpperCase() || '-';
@@ -1735,25 +1744,19 @@ function _buildCaseNotificationLines_(dx, data, saved, notifyCtx, options) {
   const pelaporLabel = String((data && data["Nama unit pelapor"]) || '-').trim() || '-';
   const pengampuLabel = String((notifyCtx && notifyCtx.puskesmasPengampu) || (data && data["Puskesmas Pengampu"]) || '-').trim() || '-';
   const tanggalLacak = String((data && data["Tanggal Pelacakan"]) || '-').trim() || '-';
-  const alamat = String((data && data["Alamat"]) || '-').trim() || '-';
-  const nama = String((data && data["Nama"]) || '-').trim() || '-';
-  const jk = String((data && data["JK"]) || '-').trim() || '-';
-  const tanggalLahir = String((data && data["Tanggal Lahir"]) || '-').trim() || '-';
+  const nama = _maskNotificationPatientName_((data && data["Nama"]) || '');
 
   lines.push(`Diagnosis: ${dxLabel} (${dxCode})`);
   lines.push(`ID Registrasi: ${recordLabel}`);
   lines.push(`Nomor EPID: ${epidLabel}`);
   lines.push(`Nama Pasien: ${nama}`);
-  lines.push(`Jenis Kelamin: ${jk}`);
-  lines.push(`Tanggal Lahir: ${tanggalLahir}`);
   lines.push(`Domisili: ${_getNotificationLocationLabel_(data)}`);
-  lines.push(`Alamat: ${alamat}`);
   lines.push(`Pelapor: ${pelaporLabel}`);
   lines.push(`Puskesmas Pengampu: ${pengampuLabel}`);
   lines.push(`Status Routing: ${String((notifyCtx && notifyCtx.statusRouting) || (data && data["Status Routing Pengampu"]) || '-').trim() || '-'}`);
   lines.push(`Status Verifikasi: ${verificationLabel}`);
   lines.push(`Tanggal Pelacakan: ${tanggalLacak}`);
-  if (opts.includePrintUrl && opts.printUrl) lines.push(`Link PDF: ${opts.printUrl}`);
+  lines.push('Identitas pasien telah disamarkan. Informasi lengkap hanya tersedia di SIMPEL Surveilans.');
   return lines;
 }
 
@@ -1812,7 +1815,7 @@ function _sendTelegramPd3iNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `📢 *Kasus ${dxLabel} (${dxCode}) terverifikasi*`,
+      `✅ *Laporan ${dxLabel} telah terverifikasi*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
@@ -1846,7 +1849,7 @@ function _sendWahaPd3iNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `📢 Kasus ${dxLabel} (${dxCode}) terverifikasi`,
+      `✅ Laporan ${dxLabel} telah terverifikasi`
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
@@ -1869,7 +1872,7 @@ function _sendRevisionWahaNotification_(dx, data, saved) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🛠️ Revisi data kasus ${dxLabel} (${dxCode})`,
+      `📝 *Laporan ${dxLabel} memerlukan revisi*`
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
@@ -1893,7 +1896,7 @@ function _sendNewCaseWahaNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🆕 Kasus baru ${dxLabel} (${dxCode}) masuk — status PENDING`,
+      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
@@ -1984,7 +1987,7 @@ function _sendRevisionTelegramNotification_(dx, data, saved) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🛠️ *Revisi data kasus ${dxLabel} (${dxCode})*`,
+      `📝 *Laporan ${dxLabel} memerlukan revisi*`
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
@@ -2010,7 +2013,7 @@ function _sendNewCaseTelegramNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🆕 *Kasus baru ${dxLabel} (${dxCode}) masuk — status PENDING*`,
+      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
