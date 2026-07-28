@@ -15226,16 +15226,6 @@ body.pd3i-body {
   }
 }
 
-/* ============================================================
-   Detail kasus phase 24: edit correction review brief
-   ============================================================ */
-.pd3i-edit-review-brief {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-
 .pd3i-edit-review-brief > div {
   border: 1px solid rgba(14, 116, 144, 0.18);
   border-radius: var(--radius-lg);
@@ -18068,38 +18058,6 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   .account-request-brand { margin-bottom: 1.7rem !important; }
   .account-request-guide h2 { font-size: 1.7rem !important; }
   .account-request-steps { grid-template-columns: 1fr !important; }
-}
-
-/* Edit Kasus: fokus pada data awal, tanpa kartu workflow lanjutan. */
-.pd3i-edit-case-mode .pd3i-form-sidebar,
-.pd3i-edit-case-mode #action-panel-header,
-.pd3i-edit-case-mode #pd3i-mobile-submit-bar,
-.pd3i-edit-case-mode #section-verifikasi,
-.pd3i-edit-case-mode #section-sampel,
-.pd3i-edit-case-mode #section-status,
-.pd3i-edit-case-mode #form-stepper-card,
-.pd3i-edit-case-mode #case-summary-panel,
-.pd3i-edit-case-mode #wizard-panel,
-.pd3i-edit-case-mode #workflow-panel,
-.pd3i-edit-case-mode #case-lab-audit-panel,
-.pd3i-edit-case-mode #case-next-action-panel,
-.pd3i-edit-case-mode #pd3i-submit-review-panel,
-.pd3i-edit-case-mode .pd3i-edit-review-brief {
-  display: none !important;
-}
-
-.pd3i-edit-case-mode #edit-badge {
-  padding-bottom: .75rem;
-}
-
-/* Review detail tampil setelah klik Simpan, bukan sebagai field permanen di form. */
-#pd3i-submit-review-panel,
-#pd3i-mobile-submit-bar {
-  display: none !important;
-}
-
-.pd3i-edit-case-mode #edit-badge .pd3i-edit-badge-title {
-  font-size: 1rem;
 }
 
 /* Kalender Epidemiologi: standalone administrasi surface, tidak bercampur dengan panel PIE. */

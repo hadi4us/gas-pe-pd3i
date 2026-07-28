@@ -3787,9 +3787,7 @@
     const editBadge = document.getElementById('edit-badge');
     const viewerBadge = document.getElementById('viewer-badge');
     const stepperCard = document.getElementById('form-stepper-card');
-    const summaryPanel = document.getElementById('case-summary-panel');
     const wizardPanel = document.getElementById('wizard-panel');
-    const workflowPanel = document.getElementById('workflow-panel');
     const actionPanel = document.getElementById('action-panel');
     const actionHeader = document.getElementById('action-panel-header');
     const actionNote = document.getElementById('action-panel-note');
@@ -3798,9 +3796,7 @@
     if (editBadge) editBadge.hidden = !hasOpenRecord || isViewerSession() || isDeferredWorkspace;
     if (viewerBadge) viewerBadge.hidden = !isViewerSession() || isDeferredWorkspace;
     if (stepperCard) stepperCard.classList.toggle('hidden', isDeferredWorkspace);
-    if (summaryPanel) summaryPanel.classList.toggle('hidden', isDeferredWorkspace);
     if (wizardPanel) wizardPanel.classList.toggle('hidden', isDeferredWorkspace);
-    if (workflowPanel) workflowPanel.classList.toggle('hidden', isDeferredWorkspace);
     if (actionPanel) actionPanel.classList.toggle('is-stage-minimal', isDeferredWorkspace);
     if (actionHeader) actionHeader.classList.toggle('hidden', isDeferredWorkspace);
     if (actionNote) actionNote.classList.toggle('hidden', isDeferredWorkspace);
@@ -3872,22 +3868,7 @@
     const hasOpenRecord = isEditMode || isViewerSession();
     const hasDx = !!String(document.getElementById('form-selector')?.value || '').trim();
 
-    const editOnlyHideSelectors = [
-      '.pd3i-form-sidebar', '#action-panel-header', '#pd3i-mobile-submit-bar',
-      '#section-verifikasi', '#section-sampel', '#section-status', '#form-stepper-card',
-      '#case-summary-panel', '#wizard-panel', '#workflow-panel', '#case-lab-audit-panel',
-      '#case-next-action-panel', '#pd3i-submit-review-panel', '.pd3i-edit-review-brief'
-    ];
-    const isActiveEditCase = normalized === 'edit' && hasOpenRecord;
-    document.body.classList.toggle('pd3i-edit-case-mode', isActiveEditCase);
-    if (isActiveEditCase && editorForm) {
-      editOnlyHideSelectors.forEach(function(selector) {
-        editorForm.querySelectorAll(selector).forEach(function(el) {
-          el.hidden = true;
-          el.style.setProperty('display', 'none', 'important');
-        });
-      });
-    }
+    document.body.classList.toggle('pd3i-edit-case-mode', normalized === 'edit' && hasOpenRecord);
 
     function setWorkspaceSectionVisibility(sectionEl, shouldShow) {
       if (!sectionEl) return;
@@ -4312,7 +4293,7 @@
     const review = e.target && e.target.closest && e.target.closest('[data-input-wizard-review]');
     if (!review) return;
     e.preventDefault();
-    const panel = document.getElementById('pd3i-submit-review-panel') || document.getElementById('action-panel-input');
+    const panel = document.getElementById('action-panel-input');
     if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     schedulePd3iSubmitReviewRefresh('immediate');
   });
