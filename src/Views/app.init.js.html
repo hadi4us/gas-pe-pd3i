@@ -2056,6 +2056,8 @@
         if (Array.isArray(warnings) && warnings.length && typeof showPd3iBanner === 'function') {
           showPd3iBanner(warnings.join(" "), { type: 'warning' });
         }
+        // Verifikasi disimpan langsung setelah validasi; tanpa popup review umum.
+        if (submitMode === 'verifikasi') return true;
         if (typeof pd3iConfirmDialog !== 'function') return true;
         return await pd3iConfirmDialog({
           title: 'Review sebelum simpan',
