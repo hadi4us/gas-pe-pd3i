@@ -18111,3 +18111,21 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
 #section-settings.is-epid-calendar #settings-panel-epid-calendar > .pd3i-settings-surface { border-color:var(--pd3i-border,#dbe3ee); box-shadow:0 8px 24px rgba(15,23,42,.06); }
 #section-settings.is-epid-calendar #epid-calendar-weeks > .pd3i-settings-surface { min-height:78px; transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease; }
 #section-settings.is-epid-calendar #epid-calendar-weeks > .pd3i-settings-surface:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(15,23,42,.08); }
+
+/* Kalender Epidemiologi glow-up: gunakan token dan pola global PD3I. */
+#section-settings.is-epid-calendar #settings-panel-epid-calendar { max-width: 1180px; margin: 0 auto; }
+#section-settings.is-epid-calendar .pd3i-epi-hero { display:flex; justify-content:space-between; gap:1.25rem; align-items:flex-end; flex-wrap:wrap; padding:1.25rem; border:1px solid var(--pd3i-border,#dbe3ee); border-radius:var(--pd3i-radius-lg,18px); background:linear-gradient(135deg,#f8fbff,#eef6ff); }
+#section-settings.is-epid-calendar .pd3i-epi-title { margin:.2rem 0 .35rem; font-size:clamp(1.35rem,2.5vw,2rem); letter-spacing:-.02em; }
+#section-settings.is-epid-calendar .pd3i-epi-subtitle { margin:0; color:var(--pd3i-text-muted,#64748b); font-size:.875rem; }
+#section-settings.is-epid-calendar .pd3i-epi-controls { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+#section-settings.is-epid-calendar .pd3i-epi-controls select { min-width:7.5rem; }
+#section-settings.is-epid-calendar .pd3i-epi-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; margin:1rem 0 1.25rem; }
+#section-settings.is-epid-calendar .pd3i-epi-summary .pd3i-admin-ops-item { margin:0; border:1px solid var(--pd3i-border,#dbe3ee); border-radius:14px; background:var(--pd3i-surface,#fff); padding:.85rem 1rem; }
+#section-settings.is-epid-calendar .pd3i-epi-summary .pd3i-admin-ops-item strong { display:block; color:var(--pd3i-text,#0f172a); }
+#section-settings.is-epid-calendar .pd3i-epi-summary .pd3i-admin-ops-item span { color:var(--pd3i-text-muted,#64748b); font-size:.8rem; }
+#section-settings.is-epid-calendar .pd3i-epi-section-head { display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap; margin-bottom:.75rem; }
+#section-settings.is-epid-calendar .pd3i-epi-legend { color:var(--pd3i-text-muted,#64748b); font-size:.78rem; }
+#section-settings.is-epid-calendar .pd3i-epi-legend i { display:inline-block; width:.55rem; height:.55rem; border-radius:50%; background:var(--pd3i-primary,#2563eb); margin-right:.3rem; }
+#section-settings.is-epid-calendar .pd3i-epi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:.7rem; }
+#section-settings.is-epid-calendar .pd3i-epi-grid > .pd3i-settings-surface { min-height:84px; border-radius:14px; padding:.85rem; background:var(--pd3i-surface,#fff); border:1px solid var(--pd3i-border,#dbe3ee); }
+@media (max-width:640px){ #section-settings.is-epid-calendar .pd3i-epi-summary { grid-template-columns:1fr; } #section-settings.is-epid-calendar .pd3i-epi-controls { width:100%; } #section-settings.is-epid-calendar .pd3i-epi-controls select { flex:1; } }

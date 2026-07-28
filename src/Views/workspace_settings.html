@@ -30,8 +30,8 @@
     <div class="pd3i-card-body">
       <div id="settings-panel-epid-calendar" class="hidden pd3i-settings-panel">
         <div class="pd3i-settings-surface p-3 border bg-white">
-          <div class="flex items-start justify-between gap-3 flex-wrap mb-3"><div><span class="pd3i-card-eyebrow">Referensi waktu surveilans</span><h3 class="font-semibold mb-1">Kalender Epidemiologi</h3><p class="text-xs text-slate-500">Standar MMWR/CDC: Minggu–Sabtu; Minggu 1 memuat 4 Januari.</p></div><div class="flex gap-2 items-center"><label class="text-xs text-slate-500" for="epid-calendar-year">Tahun</label><select id="epid-calendar-year" class="pd3i-shell-select"></select><button type="button" id="epid-calendar-current" class="pd3i-btn pd3i-btn-secondary">Tahun ini</button></div></div>
-          <div id="epid-calendar-summary" class="pd3i-admin-ops-summary mb-3" aria-live="polite"></div><div class="flex items-center justify-between gap-2 flex-wrap mb-2"><h4 id="epid-calendar-title" class="font-semibold mb-0"></h4><span class="text-xs text-slate-500">Biru = minggu berjalan</span></div><div id="epid-calendar-weeks" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" aria-live="polite"></div>
+          <div class="pd3i-epi-hero"><div><span class="pd3i-card-eyebrow">Referensi waktu surveilans</span><h3 class="pd3i-epi-title">Kalender Epidemiologi</h3><p class="pd3i-epi-subtitle">Standar MMWR/CDC · Minggu–Sabtu · ME 1 memuat 4 Januari.</p></div><div class="pd3i-epi-controls"><button type="button" id="epid-calendar-prev" class="pd3i-btn pd3i-btn-secondary" aria-label="Tahun sebelumnya">‹</button><select id="epid-calendar-year" class="pd3i-shell-select" aria-label="Pilih tahun"></select><button type="button" id="epid-calendar-next" class="pd3i-btn pd3i-btn-secondary" aria-label="Tahun berikutnya">›</button><button type="button" id="epid-calendar-current" class="pd3i-btn pd3i-btn-primary">Tahun ini</button></div></div>
+          <div id="epid-calendar-summary" class="pd3i-epi-summary" aria-live="polite"></div><div class="pd3i-epi-section-head"><h4 id="epid-calendar-title" class="font-semibold mb-0"></h4><span class="pd3i-epi-legend"><i></i> Minggu berjalan</span></div><div id="epid-calendar-weeks" class="pd3i-epi-grid" aria-live="polite"></div>
         </div>
       </div>
       <div id="pie-settings-locked" class="pd3i-settings-surface p-3 border bg-amber-50 text-sm text-amber-700 hidden">Pengaturan hanya bisa diakses role SUPER-ADMIN.</div>
@@ -642,6 +642,8 @@ window.initSettingsWorkspace = function(){
     for (let y = cy - 5; y <= cy + 5; y++) yearEl.add(new Option(String(y), String(y), y === cy, y === cy));
     yearEl.addEventListener('change', () => render(Number(yearEl.value)));
     document.getElementById('epid-calendar-current')?.addEventListener('click', () => render(cy));
+    document.getElementById('epid-calendar-prev')?.addEventListener('click', () => render(Number(yearEl.value) - 1));
+    document.getElementById('epid-calendar-next')?.addEventListener('click', () => render(Number(yearEl.value) + 1));
     render(cy);
   }());
 
