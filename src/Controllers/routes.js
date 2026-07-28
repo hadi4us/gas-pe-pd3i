@@ -1872,7 +1872,7 @@ function _sendRevisionWahaNotification_(dx, data, saved) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `📝 *Laporan ${dxLabel} memerlukan revisi*`
+      `📝 *Laporan ${dxLabel} memerlukan revisi*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
@@ -1896,7 +1896,7 @@ function _sendNewCaseWahaNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`
+      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
@@ -1987,7 +1987,7 @@ function _sendRevisionTelegramNotification_(dx, data, saved) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `📝 *Laporan ${dxLabel} memerlukan revisi*`
+      `📝 *Laporan ${dxLabel} memerlukan revisi*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: false }),
       '',
@@ -2013,7 +2013,7 @@ function _sendNewCaseTelegramNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`
+      `🔎 *Kasus baru ${dxLabel} perlu ditinjau*`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
