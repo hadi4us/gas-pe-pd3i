@@ -1280,6 +1280,8 @@
         }
       }
 
+      window.__PD3I_RENDER_SEARCH_RESULTS_LIST = _renderSearchResultsList;
+
       async function deleteCaseRecordFromList(recordKey, dx, triggerButton) {
         recordKey = String(recordKey || '').trim();
         dx = String(dx || '').trim().toUpperCase();

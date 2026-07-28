@@ -5540,6 +5540,24 @@
     const visibleStatus = workspace === 'status' ? filterQueueItemsForWorkspace(statusQueue, workspace) : [];
     const visibleStatusDone = workspace === 'status' ? filterQueueItemsForWorkspace(statusDone, workspace) : [];
 
+    // Daftar Kasus memakai renderer kartu yang sama untuk antrean revisi.
+    if (workspace === 'search' && visibleRevision.length && typeof window.__PD3I_RENDER_SEARCH_RESULTS_LIST === 'function') {
+      const searchBox = document.getElementById('search-results');
+      if (searchBox) {
+        const revisionItems = visibleRevision.map(function(item) {
+          return Object.assign({}, item, {
+            statusKasus: item.statusKasus || 'Perlu perbaikan',
+            statusVerifikasi: item.statusVerifikasi || 'Ditolak / perlu perbaikan',
+            __queueBucket: 'revision'
+          });
+        });
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        window.__PD3I_RENDER_SEARCH_RESULTS_LIST({ results: revisionItems, total: revisionItems.length, page: 1, pageSize: revisionItems.length || 1, totalPages: 1 }, getEffectiveDxScopeForWorkspace(workspace));
+        return;
+      }
+    }
+
     if (!visiblePending.length && !visibleRevision.length && !visibleSample.length && !visibleSampleDone.length && !visibleVerified.length && !visibleStatus.length && !visibleStatusDone.length) {
       if (workspace === 'verifikasi' || workspace === 'sampel' || workspace === 'status') {
         let emptyTitle = 'Belum ada kasus di antrian kerja';
