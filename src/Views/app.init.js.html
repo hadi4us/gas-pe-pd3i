@@ -2099,7 +2099,11 @@
           showWorkflowSubmitError(submitMode, 'Form aktif tidak tersedia.');
           return;
         }
-        if (activeSubmitButton.getAttribute('aria-busy') === 'true') {
+        // Edit page can retain stale aria-busy after old duplicate handler. Clear it before fresh edit save.
+        if (submitMode === 'edit') {
+          activeSubmitButton.disabled = false;
+          activeSubmitButton.removeAttribute('aria-busy');
+        } else if (activeSubmitButton.getAttribute('aria-busy') === 'true') {
           showWorkflowSubmitError(submitMode, 'Proses simpan sebelumnya masih berjalan. Tunggu sebentar, atau refresh halaman jika lebih dari 1 menit.');
           return;
         }
