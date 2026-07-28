@@ -1555,6 +1555,10 @@ test('Detail kasus pascaverifikasi memakai approval workflow, bukan edit langsun
   assert.match(routesHtml, /Kasus sudah terverifikasi\. Ajukan permintaan perubahan kepada admin\./);
   assert.match(routesHtml, /function approveInitialReportEdit\s*\(/);
   assert.match(routesHtml, /function rejectInitialReportEdit\s*\(/);
+  assert.match(routesHtml, /function cancelInitialReportEdit\s*\(/);
+  assert.match(routesHtml, /Snapshot Hash/);
+  assert.match(routesHtml, /Tidak ada perubahan data untuk diajukan/);
+  assert.match(routesHtml, /Data kasus berubah setelah permintaan diajukan/);
   assert.match(appHtml, /requestInitialReportEdit/);
   assert.match(appHtml, /__approvalRequest/);
   assert.match(initHtml, /Ajukan perubahan/);

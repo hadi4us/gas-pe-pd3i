@@ -203,6 +203,7 @@ function _routeDedicatedWorkflowAction_(action, payload) {
     case 'getChangeRequests': return getChangeRequests(token, payload);
     case 'approveInitialReportEdit': return approveInitialReportEdit(token, payload);
     case 'rejectInitialReportEdit': return rejectInitialReportEdit(token, payload);
+    case 'cancelInitialReportEdit': return cancelInitialReportEdit(token, payload);
     case 'deleteCaseRecord': return deleteCaseRecord(token, payload);
     case 'getVerificationQueue': return getVerificationQueue(dx, token, filters);
     case 'getVerificationRecord': return getVerificationRecord(dx, recordKey, token);
@@ -242,12 +243,23 @@ function _getChangeRequestSheet_() {
   const ss = getSpreadsheet_();
   const name = 'PD3I_CHANGE_REQUEST';
   let sh = ss.getSheetByName(name);
-  const headers = ['Change Request ID','ID Registrasi Kasus','DX','Status Permintaan Perubahan','Diajukan Oleh','Waktu Pengajuan','Alasan Perubahan','Diff Perubahan','Payload Perubahan','Diproses Oleh','Waktu Keputusan','Catatan Admin'];
+  const headers = ['Change Request ID','ID Registrasi Kasus','DX','Status Permintaan Perubahan','Diajukan Oleh','Waktu Pengajuan','Alasan Perubahan','Diff Perubahan','Snapshot Hash','Payload Perubahan','Diproses Oleh','Waktu Keputusan','Catatan Admin'];
   if (!sh) sh = ss.insertSheet(name);
   const current = sh.getLastColumn() ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String) : [];
   if (!current.length || current.every(function(v){ return !String(v).trim(); })) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   else { const missing = headers.filter(function(h){ return current.indexOf(h) === -1; }); if (missing.length) sh.getRange(1, current.length + 1, 1, missing.length).setValues([missing]); }
   return sh;
+}
+
+function _approvalEditableFields_(dx) {
+  return _getInitialReportStageOnlyFields_(dx).filter(function(field) { return !['Status Verifikasi EPID','Nomor EPID','ID Registrasi Kasus','RAW_ROW_NUMBER'].includes(String(field)); });
+}
+function _approvalSnapshotHash_(record, fields) {
+  const text = fields.map(function(field) { return field + '=' + String((record || {})[field] || '').trim(); }).join('|');
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text));
+}
+function _approvalDiff_(existing, payload, fields) {
+  return fields.map(function(field) { const before = String((existing || {})[field] || '').trim(); const after = String((payload || {})[field] || '').trim(); return before === after ? '' : field + ': ' + (before || '(kosong)') + ' → ' + (after || '(kosong)'); }).filter(Boolean).slice(0, 30).join('\\n');
 }
 
 function requestInitialReportEdit(token, payload) {
@@ -261,13 +273,19 @@ function requestInitialReportEdit(token, payload) {
   const existing = getRecordByKey(dx, recordKey, token);
   if (!existing) throw new Error('Kasus tidak ditemukan.');
   if (String(existing['Status Verifikasi EPID'] || '').trim().toUpperCase() !== 'TERVERIFIKASI') throw new Error('Approval hanya diperlukan untuk kasus yang sudah terverifikasi.');
+  const fields = _approvalEditableFields_(dx);
+  const cleanPayload = { dx: dx, 'ID Registrasi Kasus': existing['ID Registrasi Kasus'] || recordKey, RAW_ROW_NUMBER: existing.RAW_ROW_NUMBER || payload.RAW_ROW_NUMBER };
+  fields.forEach(function(field) { if (Object.prototype.hasOwnProperty.call(payload, field)) cleanPayload[field] = payload[field]; });
+  const diff = _approvalDiff_(existing, cleanPayload, fields);
+  if (!diff) throw new Error('Tidak ada perubahan data untuk diajukan.');
+  const snapshotHash = _approvalSnapshotHash_(existing, fields);
   const sh = _getChangeRequestSheet_();
   const values = sh.getDataRange().getValues();
   const h = values[0].map(String); const key = h.indexOf('ID Registrasi Kasus'); const status = h.indexOf('Status Permintaan Perubahan'); const dxIdx = h.indexOf('DX');
   for (let i = 1; i < values.length; i++) if (String(values[i][key] || '').trim() === recordKey && String(values[i][dxIdx] || '').trim() === dx && String(values[i][status] || '').trim() === 'Menunggu Approval') throw new Error('Masih ada permintaan perubahan menunggu approval admin.');
   const id = 'CR-' + Utilities.getUuid().slice(0, 8).toUpperCase();
   const actor = String(sess.user.nama || sess.user.username || 'unknown');
-  const row = h.map(function(field) { return field === 'Change Request ID' ? id : field === 'ID Registrasi Kasus' ? recordKey : field === 'DX' ? dx : field === 'Status Permintaan Perubahan' ? 'Menunggu Approval' : field === 'Diajukan Oleh' ? actor : field === 'Waktu Pengajuan' ? new Date() : field === 'Alasan Perubahan' ? String(payload['Edit Reason'] || payload.__editReason || '').trim() : field === 'Diff Perubahan' ? String(payload['Edit Diff Summary'] || '').trim() : field === 'Payload Perubahan' ? JSON.stringify(payload) : ''; });
+  const row = h.map(function(field) { return field === 'Change Request ID' ? id : field === 'ID Registrasi Kasus' ? recordKey : field === 'DX' ? dx : field === 'Status Permintaan Perubahan' ? 'Menunggu Approval' : field === 'Diajukan Oleh' ? actor : field === 'Waktu Pengajuan' ? new Date() : field === 'Alasan Perubahan' ? String(payload['Edit Reason'] || payload.__editReason || '').trim() : field === 'Diff Perubahan' ? diff : field === 'Snapshot Hash' ? snapshotHash : field === 'Payload Perubahan' ? JSON.stringify(cleanPayload) : ''; });
   sh.appendRow(row);
   return { status: 'success', changeRequestId: id, message: 'Permintaan perubahan dikirim ke admin.' };
 }
@@ -298,11 +316,27 @@ function approveInitialReportEdit(token, payload) {
   const sheetRow = row + 2; const obj = {}; headers.forEach(function(h,i){ obj[h] = values[row + 1][i]; });
   if (String(obj['Status Permintaan Perubahan']) !== 'Menunggu Approval') throw new Error('Permintaan ini sudah diproses.');
   let changePayload; try { changePayload = JSON.parse(String(obj['Payload Perubahan'] || '{}')); } catch (e) { throw new Error('Payload perubahan rusak.'); }
+  const dx = String(obj.DX || '').trim().toUpperCase();
+  const currentRecord = getRecordByKey(dx, String(obj['ID Registrasi Kasus'] || '').trim(), token);
+  const approvalFields = _approvalEditableFields_(dx);
+  const expectedHash = String(obj['Snapshot Hash'] || '').trim();
+  if (expectedHash && _approvalSnapshotHash_(currentRecord || {}, approvalFields) !== expectedHash) throw new Error('Data kasus berubah setelah permintaan diajukan. Periksa ulang sebelum menyetujui.');
+  const sanitizedPayload = { dx: dx, 'ID Registrasi Kasus': obj['ID Registrasi Kasus'] };
+  approvalFields.forEach(function(field) { if (Object.prototype.hasOwnProperty.call(changePayload, field)) sanitizedPayload[field] = changePayload[field]; });
+  changePayload = sanitizedPayload;
   changePayload.__token = token; changePayload.__alreadyLocked = true; changePayload['Status Verifikasi EPID'] = 'Perlu Revisi';
   const result = _saveDedicatedWorkflowPayload_(token, changePayload, 'section-pelapor', { __editMode: 'initial_report' });
   const map = {}; map['Status Permintaan Perubahan'] = 'Disetujui'; map['Diproses Oleh'] = String(admin.nama || admin.username || 'admin'); map['Waktu Keputusan'] = new Date(); map['Catatan Admin'] = String(payload.catatan || '').trim();
   headers.forEach(function(h,i){ if (map[h] !== undefined) sh.getRange(sheetRow, i + 1).setValue(map[h]); });
   return { status: 'success', message: 'Permintaan perubahan disetujui dan kasus masuk antrean verifikasi ulang.', result: result };
+}
+
+function cancelInitialReportEdit(token, payload) {
+  const sess = _getSessionFromToken_(token); if (!sess.ok || !sess.user) throw new Error('Sesi tidak valid.');
+  const id = String(payload && (payload.changeRequestId || payload['Change Request ID']) || '').trim(); if (!id) throw new Error('Change Request ID wajib diisi.');
+  const sh = _getChangeRequestSheet_(); const values = sh.getDataRange().getValues(); const headers = values[0].map(String); const ix = headers.indexOf('Change Request ID'); const row = values.slice(1).findIndex(function(r){ return String(r[ix] || '').trim() === id; }); if (row < 0) throw new Error('Permintaan perubahan tidak ditemukan.');
+  const requester = String(values[row + 1][headers.indexOf('Diajukan Oleh')] || '').trim(); const actor = String(sess.user.nama || sess.user.username || '').trim(); if (requester && requester !== actor && !_isAdminRole_(sess.user.role)) throw new Error('Hanya pengaju atau admin yang dapat membatalkan permintaan.');
+  const sr = row + 2; headers.forEach(function(h,i){ if (h === 'Status Permintaan Perubahan') sh.getRange(sr,i+1).setValue('Dibatalkan'); if (h === 'Diproses Oleh') sh.getRange(sr,i+1).setValue(actor); if (h === 'Waktu Keputusan') sh.getRange(sr,i+1).setValue(new Date()); }); return {status:'success', message:'Permintaan perubahan dibatalkan.'};
 }
 
 function rejectInitialReportEdit(token, payload) {
