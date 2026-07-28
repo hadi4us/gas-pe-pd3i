@@ -1849,7 +1849,7 @@ function _sendWahaPd3iNotification_(dx, data, saved, printUrl) {
     const dxLabel = _getDxNotificationLabel_(dx);
     const dxCode = String(dx || '').trim().toUpperCase() || '-';
     const lines = [
-      `✅ Laporan ${dxLabel} telah terverifikasi`
+      `✅ Laporan ${dxLabel} telah terverifikasi`,
       '',
       ..._buildCaseNotificationLines_(dx, data, saved, notifyCtx, { includePrintUrl: true, printUrl: printUrl }),
       '',
