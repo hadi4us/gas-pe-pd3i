@@ -143,11 +143,14 @@
     if (!inputEl) return '';
     const formatted = pd3iFormatDateYmd_(value) || (value instanceof Date ? value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0') + '-' + String(value.getDate()).padStart(2, '0') : '');
     if (!formatted) return String(inputEl.value || '').trim();
+    const changed = String(inputEl.value || '').trim() !== formatted;
     inputEl.value = formatted;
     inputEl.dataset.pd3iDateValue = formatted;
     inputEl.dataset.pd3iLastDateValue = formatted;
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    if (changed) {
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     inputEl.dispatchEvent(new CustomEvent('changeDate', { bubbles: true, detail: { value: formatted, field: inputEl.id || inputEl.dataset.fieldId || '' } }));
     if (typeof inputEl.onSelect === 'function') inputEl.onSelect(formatted);
     return formatted;
@@ -226,7 +229,14 @@
     });
     document.addEventListener('change', function(evt) {
       const el = evt.target;
-      if (el && el.matches && el.matches('input[type="date"][data-pd3i-date-control]') && el.value) pd3iSyncDatePickerValue_(el, el.value);
+      if (el && el.matches && el.matches('input[type="date"][data-pd3i-date-control]') && el.value) {
+        const formatted = pd3iFormatDateYmd_(el.value);
+        if (formatted && formatted !== el.value) {
+          el.value = formatted;
+          el.dataset.pd3iDateValue = formatted;
+          el.dataset.pd3iLastDateValue = formatted;
+        }
+      }
     });
   }
 
@@ -531,7 +541,7 @@
       const isDateField = field.type === 'date';
       const safeInputType = (field.type === 'email' || field.type === 'tel') ? 'text' : field.type;
       const stepAttr = (safeInputType === 'number') ? 'step="any"' : '';
-      const dateAttrs = isDateField ? 'data-pd3i-date-control="1"' : '';
+      const dateAttrs = isDateField ? `data-pd3i-date-control="1" data-pd3i-date-target="${attrEscape(field.id)}"` : '';
 
       if (field.id === "Tanggal Lahir") {
         const today = new Date().toISOString().split("T")[0];
