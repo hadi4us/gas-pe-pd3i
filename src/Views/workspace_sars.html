@@ -645,7 +645,11 @@
       const range = String(data.rangeLabel || data.label || `Tahun ${year}, ME ${week}`);
       const input = document.getElementById('mingguEpid');
       const help = document.getElementById('mingguEpidHelp');
-      if (input && !input.value) input.value = String(week);
+      if (input) {
+        input.placeholder = `ME ${week} · ${year}`;
+        input.setAttribute('aria-label', `Minggu epidemiologi pelaporan: ME ${week} tahun ${year}`);
+        if (!input.value) input.value = String(week);
+      }
       if (help) help.textContent = `Periode: ${range}`;
     }
 
