@@ -1851,7 +1851,11 @@
         let errors = [];
         let warn = Array.isArray(warnings) ? warnings.slice() : [];
         try {
-          const activeForm = document.getElementById('dynamic-form') || document;
+          const activeForm = window.__PD3I_REVIEW_ACTIVE_FORM__
+            || (getWorkspaceFormRefs(normalizeSidebarWorkspace(ACTIVE_SIDEBAR_WORKSPACE || 'input')) || {}).formElement
+            || document.getElementById('dynamic-form-input')
+            || document.getElementById('dynamic-form')
+            || document;
           const rule = validateDxBusinessRules(activeForm) || {};
           errors = (rule.errors || []).map(function(item) { return String(item || '').trim(); }).filter(Boolean);
           if (!Array.isArray(warnings)) warn = (rule.warnings || []).map(function(item) { return String(item || '').trim(); }).filter(Boolean);
