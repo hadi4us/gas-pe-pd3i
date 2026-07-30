@@ -410,6 +410,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
     const idxEpid = headers.indexOf('Nomor EPID');
     const idxNama = headers.indexOf('Nama');
     const idxKabKota = _findFirstHeaderIndex_(headers, ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota']);
+    const idxAlamat = _findFirstHeaderIndex_(headers, ['Alamat', 'Alamat Domisili', 'Alamat Lengkap']);
     const idxKecamatan = headers.indexOf('Kecamatan');
     const idxKelurahan = headers.indexOf('Kelurahan');
     const idxVerifikasiList = _findHeaderIndexes_(headers, 'Status Verifikasi EPID');
@@ -459,6 +460,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
       const kabKota = idxKabKota !== -1 ? String(row[idxKabKota] || '').trim() : '';
       const kecamatan = idxKecamatan !== -1 ? String(row[idxKecamatan] || '').trim() : '';
       const kelurahan = idxKelurahan !== -1 ? String(row[idxKelurahan] || '').trim() : '';
+      const alamat = idxAlamat !== -1 ? String(row[idxAlamat] || '').trim() : '';
       // Direct match: "Nama unit pelapor" vs user unitKerja (covers all faskes types)
       const normalizedUnitPelapor = String(namaUnitPelapor || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
       const normalizedUserUnit = String(userUnit || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -524,6 +526,7 @@ function _buildWorkflowInboxData_(sess, dx, options) {
         epid: epid,
         epidMain: epidMain,
         nama: idxNama !== -1 ? String(row[idxNama] || '').trim() : '',
+        alamat: alamat,
         kecamatan: kecamatan,
         kelurahan: kelurahan,
         statusVerifikasi: statusVerifikasi || 'Pending',

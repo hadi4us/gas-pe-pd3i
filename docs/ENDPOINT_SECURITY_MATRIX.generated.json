@@ -45,181 +45,181 @@
     {
       "name": "createInitialCase",
       "file": "src/Controllers/routes.js",
-      "line": 224,
+      "line": 229,
       "guard": "token"
     },
     {
       "name": "getEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 228,
+      "line": 233,
       "guard": "token-scope"
     },
     {
       "name": "getEditableRecord",
       "file": "src/Controllers/routes.js",
-      "line": 233,
+      "line": 238,
       "guard": "token-scope"
     },
     {
       "name": "saveInitialReportEdit",
       "file": "src/Controllers/routes.js",
-      "line": 237,
+      "line": 303,
       "guard": "token"
     },
     {
       "name": "searchEditableRecords",
       "file": "src/Controllers/routes.js",
-      "line": 241,
+      "line": 359,
       "guard": "token-scope"
     },
     {
       "name": "updateInitialReport",
       "file": "src/Controllers/routes.js",
-      "line": 245,
+      "line": 363,
       "guard": "token"
     },
     {
       "name": "deleteCaseRecord",
       "file": "src/Controllers/routes.js",
-      "line": 249,
+      "line": 367,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationQueue",
       "file": "src/Controllers/routes.js",
-      "line": 311,
+      "line": 429,
       "guard": "token-scope"
     },
     {
       "name": "getVerificationRecord",
       "file": "src/Controllers/routes.js",
-      "line": 316,
+      "line": 434,
       "guard": "token-scope"
     },
     {
       "name": "saveVerificationDecision",
       "file": "src/Controllers/routes.js",
-      "line": 320,
+      "line": 438,
       "guard": "token"
     },
     {
       "name": "getSampleQueue",
       "file": "src/Controllers/routes.js",
-      "line": 324,
+      "line": 442,
       "guard": "token-scope"
     },
     {
       "name": "getSampleRecord",
       "file": "src/Controllers/routes.js",
-      "line": 329,
+      "line": 447,
       "guard": "token-scope"
     },
     {
       "name": "saveSampleResult",
       "file": "src/Controllers/routes.js",
-      "line": 333,
+      "line": 451,
       "guard": "token"
     },
     {
       "name": "getStatusQueue",
       "file": "src/Controllers/routes.js",
-      "line": 337,
+      "line": 455,
       "guard": "token-scope"
     },
     {
       "name": "getStatusRecord",
       "file": "src/Controllers/routes.js",
-      "line": 342,
+      "line": 460,
       "guard": "token-scope"
     },
     {
       "name": "saveCaseStatusUpdate",
       "file": "src/Controllers/routes.js",
-      "line": 346,
+      "line": 464,
       "guard": "token"
     },
     {
       "name": "getRecordByKey",
       "file": "src/Controllers/routes.js",
-      "line": 425,
+      "line": 543,
       "guard": "token-scope"
     },
     {
       "name": "getRecordByEpid",
       "file": "src/Controllers/routes.js",
-      "line": 482,
+      "line": 600,
       "guard": "token-scope"
     },
     {
       "name": "getRefImunisasi",
       "file": "src/Controllers/routes.js",
-      "line": 486,
+      "line": 604,
       "guard": "token"
     },
     {
       "name": "fetchRefImunData",
       "file": "src/Controllers/routes.js",
-      "line": 530,
+      "line": 648,
       "guard": "token"
     },
     {
       "name": "getFaskesFromSheet",
       "file": "src/Controllers/routes.js",
-      "line": 534,
+      "line": 652,
       "guard": "token"
     },
     {
       "name": "getWorkflowFilterOptions",
       "file": "src/Controllers/routes.js",
-      "line": 644,
+      "line": 762,
       "guard": "token-scope"
     },
     {
       "name": "searchRecords",
       "file": "src/Controllers/routes.js",
-      "line": 829,
+      "line": 947,
       "guard": "token-scope"
     },
     {
       "name": "resolveLatestSavedMeta",
       "file": "src/Controllers/routes.js",
-      "line": 1316,
+      "line": 1437,
       "guard": "token"
     },
     {
       "name": "previewRecommendedEpid",
       "file": "src/DataWarehouse/data.js",
-      "line": 680,
+      "line": 689,
       "guard": "token"
     },
     {
       "name": "getWorkflowInbox",
       "file": "src/Controllers/dashboard.js",
-      "line": 716,
+      "line": 719,
       "guard": "token"
     },
     {
       "name": "getOverviewSummary",
       "file": "src/Controllers/dashboard.js",
-      "line": 786,
+      "line": 789,
       "guard": "token"
     },
     {
       "name": "getDashboardStats",
       "file": "src/Controllers/dashboard.js",
-      "line": 927,
+      "line": 930,
       "guard": "token"
     },
     {
       "name": "getDashboardDrilldown",
       "file": "src/Controllers/dashboard.js",
-      "line": 1405,
+      "line": 1406,
       "guard": "token"
     },
     {
       "name": "exportToCsv",
       "file": "src/Controllers/dashboard.js",
-      "line": 1504,
+      "line": 1505,
       "guard": "token"
     },
     {
@@ -255,67 +255,67 @@
     {
       "name": "retryPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1370,
+      "line": 1491,
       "guard": "admin"
     },
     {
       "name": "retryTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1396,
+      "line": 1517,
       "guard": "admin"
     },
     {
       "name": "retryPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1424,
+      "line": 1545,
       "guard": "admin"
     },
     {
       "name": "retryRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1445,
+      "line": 1566,
       "guard": "admin"
     },
     {
       "name": "retryRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1472,
+      "line": 1593,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1508,
+      "line": 1629,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1521,
+      "line": 1642,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1534,
+      "line": 1655,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingWahaPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1539,
+      "line": 1660,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1544,
+      "line": 1665,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1549,
+      "line": 1670,
       "guard": "admin"
     },
     {

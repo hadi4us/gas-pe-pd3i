@@ -272,13 +272,19 @@
 
         refs.formElement.classList.remove('hidden');
 
+        const makeInputFieldMandatory = function(field) {
+          if (!field || normalizedMode !== 'input') return field;
+          // Questions mandatory; system-generated/read-only controls and tables stay optional.
+          if (field.readonly || ['header', 'dynamic_table', 'geo_button'].includes(field.type)) return field;
+          return Object.assign({}, field, { required: true });
+        };
         if (refs.pelaporContainer) {
-          refs.pelaporContainer.innerHTML = (COMMON.pelapor || []).map(generateHTML).join('');
+          refs.pelaporContainer.innerHTML = (COMMON.pelapor || []).map(makeInputFieldMandatory).map(generateHTML).join('');
         }
         if (refs.pasienContainer) {
           refs.pasienContainer.innerHTML = (COMMON.pasien || []).filter(function(f) {
             return !f.hideInWorkspaces || f.hideInWorkspaces.indexOf(normalizedMode) === -1;
-          }).map(generateHTML).join('');
+          }).map(makeInputFieldMandatory).map(generateHTML).join('');
         }
         if (refs.verifikasiContainer) {
           refs.verifikasiContainer.innerHTML = (COMMON.verifikasi || []).map(generateHTML).join('');
@@ -297,7 +303,18 @@
           refs.specificTitle.innerHTML = `<i class="fas fa-stethoscope text-blue-600"></i> Data Spesifik (${escapeHtml(cfg.title || dx)})`;
         }
         if (refs.specificContainer) {
-          renderDiagnosisSections(cfg, refs.specificContainer);
+          if (normalizedMode === 'input') {
+            const mandatoryCfg = Object.assign({}, cfg, {
+              sections: (cfg.sections || []).map(function(section) {
+                return Object.assign({}, section, {
+                  fields: (section.fields || []).map(makeInputFieldMandatory)
+                });
+              })
+            });
+            renderDiagnosisSections(mandatoryCfg, refs.specificContainer);
+          } else {
+            renderDiagnosisSections(cfg, refs.specificContainer);
+          }
         }
         if (normalizedMode === 'sampel') {
           renderSampelCaseSummary(null);
@@ -2206,6 +2223,14 @@
           if (!fieldKey) return;
           dataObj[fieldKey] = el.value;
         });
+        // Choice buttons are source of truth. Hidden input can be stale after
+        // hydration/autofill, which previously turned MR Demam/Ruam "Ya" into
+        // "Tidak" on the server fallback.
+        activeFormElement.querySelectorAll('.pd3i-choice-btn[data-field-id][aria-pressed="true"]').forEach((btn) => {
+          const fieldKey = String(btn.getAttribute('data-field-id') || '').trim();
+          const choiceValue = String(btn.getAttribute('data-choice-value') || '').trim();
+          if (fieldKey && choiceValue) dataObj[fieldKey] = choiceValue;
+        });
 
         if (!dataObj["ID Registrasi Kasus"] && window.__PD3I_ACTIVE_RECORD_META && window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"]) {
           dataObj["ID Registrasi Kasus"] = window.__PD3I_ACTIVE_RECORD_META["ID Registrasi Kasus"];
@@ -2486,12 +2511,8 @@
           safeHandleMainFormSubmit('input');
         });
       }
-      if (btnSubmitVerifikasi && !btnSubmitVerifikasi.dataset.boundSubmit) {
-        btnSubmitVerifikasi.dataset.boundSubmit = '1';
-        btnSubmitVerifikasi.addEventListener('click', function() {
-          safeHandleMainFormSubmit('verifikasi');
-        });
-      }
+      // Verifikasi button already uses inline handler in workspace_verifikasi_form.html.
+      // Avoid duplicate listeners that race and leave button looking unresponsive.
       if (btnSubmitSampel && !btnSubmitSampel.dataset.boundSubmit) {
         btnSubmitSampel.dataset.boundSubmit = '1';
         btnSubmitSampel.addEventListener('click', function() {

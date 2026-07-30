@@ -12,7 +12,7 @@
   ];
 
   const COMMON_PASIEN_FIELDS = [
-    { id: "Nomor EPID", label: "Nomor EPID", type: "text", group: "pasien", readonly: true, hideInWorkspaces: ["input"] },
+    { id: "Nomor EPID", label: "Nomor EPID", type: "text", group: "pasien", readonly: true, hideInWorkspaces: ["input", "verifikasi"] },
     { id: "NIK", label: "NIK Pasien", type: "text", pattern: "^[0-9]{16}$", group: "pasien" },
     { id: "Nama", label: "Nama Lengkap Pasien", type: "text", group: "pasien", required: true },
     { id: "JK", label: "Jenis Kelamin", type: "select", options: OPT_JK, group: "pasien", required: true },

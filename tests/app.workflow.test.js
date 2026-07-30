@@ -559,7 +559,7 @@ test('Hasil Sampel workspace shows a case summary instead of the full initial in
   assert.match(appHtml, /function renderSampelCaseSummary\(record\)/);
   assert.match(appHtml, /pelaporContainer:\s*null,[\s\S]*?pasienContainer:\s*null,[\s\S]*?specificContainer:\s*null/);
   assert.match(appHtml, /if \(refs\.pelaporContainer\) \{[\s\S]*?COMMON\.pelapor/);
-  assert.match(appHtml, /if \(refs\.specificContainer\) \{\s*renderDiagnosisSections\(cfg, refs\.specificContainer\);\s*\}/);
+  assert.match(appHtml, /if \(refs\.specificContainer\) \{[\s\S]*?normalizedMode === 'input'[\s\S]*?makeInputFieldMandatory[\s\S]*?renderDiagnosisSections\(mandatoryCfg, refs\.specificContainer\);/);
   assert.match(appHtml, /if \(openedWorkspace === 'sampel'\) \{\s*renderSampelCaseSummary\(record\);\s*\}/);
 });
 
@@ -593,15 +593,15 @@ test('sample result fields adapt labels and specimen options to the active diagn
 
 test('initial input workspace does not render Nomor EPID because EPID is assigned during verification', () => {
   const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
-  assert.match(commonConfigHtml, /id: "Nomor EPID"[\s\S]*?hideInWorkspaces: \["input"\]/);
-  assert.match(appHtml, /COMMON\.pasien \|\| \[\]\)\.filter\(function\(f\) \{\s*return !f\.hideInWorkspaces \|\| f\.hideInWorkspaces\.indexOf\(normalizedMode\) === -1;\s*\}\)\.map\(generateHTML\)\.join\(''\)/);
+  assert.match(commonConfigHtml, /id: "Nomor EPID"[\s\S]*?hideInWorkspaces: \["input", "verifikasi"\]/);
+  assert.match(appHtml, /COMMON\.pasien \|\| \[\]\)\.filter\(function\(f\) \{\s*return !f\.hideInWorkspaces \|\| f\.hideInWorkspaces\.indexOf\(normalizedMode\) === -1;\s*\}\)\.map\(makeInputFieldMandatory\)\.map\(generateHTML\)\.join\(''\)/);
   assert.match(appHtml, /findScopedFieldControl\('Nomor EPID'/);
   assert.match(appHtml, /findScopedFieldControl\('Nomor EPID'/);
 });
 
 test('performance tuning avoids repeated DOM reparsing and full row deserialization in search lists', () => {
   assert.doesNotMatch(appHtml, /refs\.(pelaporContainer|pasienContainer|verifikasiContainer|sampelContainer|statusContainer)\.innerHTML \+= generateHTML/);
-  assert.match(appHtml, /refs\.pelaporContainer\.innerHTML = \(COMMON\.pelapor \|\| \[\]\)\.map\(generateHTML\)\.join\(''\)/);
+  assert.match(appHtml, /refs\.pelaporContainer\.innerHTML = \(COMMON\.pelapor \|\| \[\]\)\.map\(makeInputFieldMandatory\)\.map\(generateHTML\)\.join\(''\)/);
   assert.match(appHtml, /refs\.sampelContainer\.innerHTML = sampleFields\.map\(generateHTML\)\.join\(''\)/);
   assert.match(routesJs, /function _buildSearchProjectionRecord_\(headers, row\)/);
   assert.match(routesJs, /function _getSearchProjectionIndexMap_\(headers\)/);

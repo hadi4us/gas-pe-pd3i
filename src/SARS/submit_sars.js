@@ -488,6 +488,7 @@ function submitSARS(formData) {
       caseCode: 'SARS-ME' + me + '-' + faskesKey + '-' + firstWriteRow,
       action: 'Review input zero reporting baru',
       workspace: 'zero-reporting',
+      namaFasyankes: namaFasyankes,
       count: rowsToAppend.length,
     status: 'BARU'
   };

@@ -76,6 +76,7 @@ function _buildOperationalNotificationLines_(eventType, details) {
   _pushOperationalLine_(lines, 'Asal pemohon', details.asalPemohon);
   _pushOperationalLine_(lines, 'Nama pasien', maskedNamaPasien);
   _pushOperationalLine_(lines, 'Asal faskes', details.asalFaskes);
+  _pushOperationalLine_(lines, 'Nama faskes pelapor', details.namaFasyankes || details.namaFaskes || details.namaFaskesPelapor);
   _pushOperationalLine_(lines, 'Puskesmas pengampu', details.pengampu);
   _pushOperationalLine_(lines, 'Jumlah data', details.count);
   _pushOperationalLine_(lines, 'Status', status);

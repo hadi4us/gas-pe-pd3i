@@ -259,20 +259,28 @@ function _applyHeaderAliases_(dx, data, headers) {
   putIfMissing("Tempat persalinan lainnya", ["Tempat persalinan - Lainnya"]);
 
   if (headers.includes("Demam?")) {
-    const demamValue = String(data["Demam?"] || "").trim();
+    const demamValue = String(data["Demam?"] || data["Demam"] || data["demam"] || "").trim();
     const demamDateValue = String(data["Tanggal mulai demam"] || "").trim();
     if (!demamValue) {
       data["Demam?"] = demamDateValue ? "Ya" : "Tidak";
-    } else if (dx === "MR" && demamDateValue && demamValue.toLowerCase() !== "ya") {
+    } else if (demamValue.toLowerCase() === "ya") {
+      data["Demam?"] = "Ya";
+    } else if (demamValue.toLowerCase() === "tidak") {
+      data["Demam?"] = "Tidak";
+    } else if (dx === "MR" && demamDateValue) {
       data["Demam?"] = "Ya";
     }
   }
   if (headers.includes("Ruam Makulopapular?")) {
-    const ruamValue = String(data["Ruam Makulopapular?"] || "").trim();
+    const ruamValue = String(data["Ruam Makulopapular?"] || data["Ruam Makulopapular"] || data["ruam"] || "").trim();
     const ruamDateValue = String(data["Tanggal mulai ruam"] || "").trim();
     if (!ruamValue) {
       data["Ruam Makulopapular?"] = ruamDateValue ? "Ya" : "Tidak";
-    } else if (dx === "MR" && ruamDateValue && ruamValue.toLowerCase() !== "ya") {
+    } else if (ruamValue.toLowerCase() === "ya") {
+      data["Ruam Makulopapular?"] = "Ya";
+    } else if (ruamValue.toLowerCase() === "tidak") {
+      data["Ruam Makulopapular?"] = "Tidak";
+    } else if (dx === "MR" && ruamDateValue) {
       data["Ruam Makulopapular?"] = "Ya";
     }
   }

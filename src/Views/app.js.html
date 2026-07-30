@@ -284,6 +284,8 @@
     const raw = String(value).trim();
     if (!raw) return '';
     if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const compact = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
+    if (compact) return `${compact[1]}-${compact[2]}-${compact[3]}`;
 
     let match = raw.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
     if (match) {
@@ -667,11 +669,12 @@
     let rowHtml = "";
     def.columns.forEach(col => {
       const cls = `${col.readonly ? "bg-slate-100 cursor-not-allowed font-extrabold" : "bg-slate-50"} border border-slate-300 text-xs rounded block w-full p-1.5 ${col.width || ""}`;
-      const value = presetRow && presetRow[col.name] !== undefined ? String(presetRow[col.name]) : "";
+      const rawValue = presetRow && presetRow[col.name] !== undefined ? presetRow[col.name] : "";
+      const value = col.type === "date" ? normalizeDateInputValue(rawValue) : String(rawValue == null ? "" : rawValue);
 
       if (["text", "date", "number", "tel", "email"].includes(col.type)) {
         rowHtml += `<td class="px-2 py-2">
-          <input type="${(col.type === 'email' || col.type === 'tel') ? 'text' : col.type}" data-name="${htmlEscape(col.name)}" class="${cls}" value="${htmlEscape(value)}" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${(col.type === 'email') ? 'inputmode="email"' : ((col.type === 'tel') ? 'inputmode="tel"' : '')} ${col.readonly ? 'readonly tabindex="-1"' : ""}>
+          <input type="${(col.type === 'email' || col.type === 'tel') ? 'text' : col.type}" data-name="${htmlEscape(col.name)}" ${col.type === 'date' ? 'data-pd3i-date-control="1"' : ''} class="${cls}" value="${htmlEscape(value)}" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${(col.type === 'email') ? 'inputmode="email"' : ((col.type === 'tel') ? 'inputmode="tel"' : '')} ${col.readonly ? 'readonly tabindex="-1"' : ""}>
         </td>`;
       } else if (col.type === "textarea") {
         rowHtml += `<td class="px-2 py-2">
@@ -2486,7 +2489,7 @@
 
   function isNumericOnlyFieldId(fieldId) {
     const id = _normalizeFieldId_(fieldId);
-    if (!id) return false;
+    if (!id || id.startsWith('tanggal ')) return false;
 
     if (NUMERIC_ONLY_EXACT_IDS.some(x => _normalizeFieldId_(x) === id)) return true;
     if (id === "rt" || id === "rw") return true;
@@ -2527,7 +2530,8 @@
   }
 
   function enforceNumericOnlyInput(el, options) {
-    if (!el || !el.id || !isNumericOnlyFieldId(el.id)) return;
+    if (!el || el.type === 'date' || (el.matches && el.matches('input[data-name="Tanggal"]'))) return;
+    if (!el.id || !isNumericOnlyFieldId(el.id)) return;
     const opts = options || {};
     const onBlur = opts.onBlur === true;
 
@@ -5325,6 +5329,8 @@
             if (reviewEl) reviewEl.value = actorName ? `Perlu revisi oleh ${actorName}` : 'Perlu revisi';
       if (currentMainEpidEl) currentMainEpidEl.value = '';
     }
+    // Hide EPID until admin chooses Terverifikasi; then show recommendation field.
+    if (typeof applyAllShowIf === 'function') applyAllShowIf();
     syncVerificationActionButtons(formScope);
   }
 
