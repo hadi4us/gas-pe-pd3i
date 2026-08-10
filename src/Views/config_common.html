@@ -105,12 +105,13 @@
       { id: "Pemeriksaan Sampel Dilakukan", label: "Pemeriksaan Sampel Dilakukan", type: "choice_buttons", options: ["Ya", "Tidak"] },
       {
         id: "Rincian Hasil Sampel",
-        label: "Rincian jenis spesimen / nomor / tanggal hasil / hasil pemeriksaan",
+        label: "Rincian spesimen / jam pengambilan / nomor / tanggal hasil / hasil pemeriksaan",
         type: "dynamic_table",
         fullWidth: true,
         showIf: SAMPLE_FIELD_SHOW_IF_YA,
         columns: [
           { name: "Jenis Spesimen", type: "select", width: "w-56", options: cfg.specimenOptions },
+          { name: "Jam Pengambilan Spesimen", type: "time", width: "w-32", label: "Jam pengambilan (HH:mm WIB)" },
           { name: "Nomor Spesimen", type: "text", width: "w-44", label: cfg.labNumberLabel },
           { name: "Tanggal Hasil", type: "date", width: "w-40" },
           { name: "Hasil", type: "textarea", width: "w-72", label: cfg.resultLabel }

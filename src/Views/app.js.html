@@ -410,7 +410,13 @@
         ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
         : "bg-white focus:ring-blue-500 focus:border-blue-500"
     }`;
-    const requiredAttr = (field.required && !field.showIf) ? "required" : "";
+    // Tanggal pemeriksaan/sampel/spesimen bersifat opsional saat input awal.
+    // Tanggal meninggal AFP juga opsional; jangan diwariskan required dari konfigurasi lama/cache.
+    const fieldSemanticText = [field.id, field.label, field.sectionKey, field.sectionTitle].filter(Boolean).join(' ');
+    const isOptionalExaminationDate = String(field.type || '').toLowerCase() === 'date'
+      && /(pemeriksaan|sampel|spesimen)/i.test(fieldSemanticText);
+    const isOptionalField = String(field.id || '') === 'Tanggal meninggal AFP' || isOptionalExaminationDate;
+    const requiredAttr = (field.required && !field.showIf && !isOptionalField) ? "required" : "";
 
     if (field.type === "dynamic_table") {
       let tableDef = field;
@@ -561,7 +567,7 @@
     return `<div class="${wrapperClass}" ${fieldWrapperAttrs} ${showIfAttr}>
       ${dependentMeta}
       <label for="${attrEscape(field.id)}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
-        ${htmlEscape(field.label)} ${field.required ? '<span class="text-red-500">*</span>' : ""}
+        ${htmlEscape(field.label)} ${(field.required && !isOptionalField) ? '<span class="text-red-500">*</span>' : ""}
       </label>
       ${inputHtml}
       ${numericHint ? `<p class="mt-2 text-[11px] font-semibold text-slate-500">${numericHint}</p>` : ""}
@@ -670,9 +676,9 @@
     def.columns.forEach(col => {
       const cls = `${col.readonly ? "bg-slate-100 cursor-not-allowed font-extrabold" : "bg-slate-50"} border border-slate-300 text-xs rounded block w-full p-1.5 ${col.width || ""}`;
       const rawValue = presetRow && presetRow[col.name] !== undefined ? presetRow[col.name] : "";
-      const value = col.type === "date" ? normalizeDateInputValue(rawValue) : String(rawValue == null ? "" : rawValue);
+      const value = col.type === "date" ? normalizeDateInputValue(rawValue) : (col.type === "time" ? String(rawValue == null ? "" : rawValue).replace(/\s*WIB\s*$/i, "") : String(rawValue == null ? "" : rawValue));
 
-      if (["text", "date", "number", "tel", "email"].includes(col.type)) {
+      if (["text", "date", "time", "number", "tel", "email"].includes(col.type)) {
         rowHtml += `<td class="px-2 py-2">
           <input type="${(col.type === 'email' || col.type === 'tel') ? 'text' : col.type}" data-name="${htmlEscape(col.name)}" ${col.type === 'date' ? 'data-pd3i-date-control="1"' : ''} class="${cls}" value="${htmlEscape(value)}" autocomplete="new-password" aria-autocomplete="none" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" data-form-type="other" data-lpignore="true" data-1p-ignore="true" ${(col.type === 'email') ? 'inputmode="email"' : ((col.type === 'tel') ? 'inputmode="tel"' : '')} ${col.readonly ? 'readonly tabindex="-1"' : ""}>
         </td>`;
@@ -2178,7 +2184,8 @@
     table.querySelectorAll("tbody tr").forEach(row => {
       const rowObj = {};
       row.querySelectorAll("input, select, textarea").forEach(i => {
-        rowObj[i.getAttribute("data-name")] = i.value;
+        const name = i.getAttribute("data-name");
+        rowObj[name] = name === "Jam Pengambilan Spesimen" && i.value ? i.value + " WIB" : i.value;
       });
       if (tableId === "Riwayat Imunisasi") rowObj.__kode = row.dataset.kodeImun || "";
       rows.push(rowObj);
@@ -3164,6 +3171,7 @@
       dashboard: 'Dashboard statistik',
       'zero-reporting-form': 'Form Zero Reporting',
       'zero-reporting-dashboard': 'Dashboard Zero Reporting',
+      'weekly-report-detail': 'Detail Laporan Mingguan',
       'sars-form': 'Form Zero Reporting',
       'sars-dashboard': 'Dashboard Zero Reporting',
       pie: 'SARING-PIE',
@@ -3185,6 +3193,7 @@
       dashboard: ['ANALITIK', 'Dashboard statistik PD3I', 'Pantau tren, distribusi kasus, indikator operasional, dan kualitas data.'],
       'zero-reporting-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
       'zero-reporting-dashboard': ['ZERO REPORTING', 'Dashboard Zero Reporting', 'Ringkasan dan pemantauan laporan nihil mingguan.'],
+      'weekly-report-detail': ['ZERO REPORTING', 'Detail Laporan Mingguan', 'Lihat laporan sudah/belum dikirim tiap minggu serta ketepatan waktu per faskes.'],
       'sars-form': ['ZERO REPORTING', 'Form Zero Reporting Mingguan', 'Input laporan nihil mingguan sesuai format operasional.'],
       'sars-dashboard': ['ZERO REPORTING', 'Dashboard Zero Reporting', 'Ringkasan dan pemantauan laporan nihil mingguan.'],
       pie: ['SARING-PIE', 'Skrining PIE/Zoonosis', 'Skrining cepat penyakit infeksi emerging/zoonosis, alert risiko, dan tindak lanjut PE.'],
@@ -3449,6 +3458,10 @@
     WORKSPACE_SEARCH_RESULT_CACHE[key] = { at: Date.now(), data: data || null };
   }
 
+  function clearWorkspaceSearchResultCache() {
+    WORKSPACE_SEARCH_RESULT_CACHE = {};
+  }
+
   function getWorkspaceInboxCache(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace || ACTIVE_SIDEBAR_WORKSPACE || 'overview');
     return WORKFLOW_INBOX_CACHE_BY_WORKSPACE[normalized] || null;
@@ -3515,6 +3528,8 @@
       'section-sars-dashboard': 'zero-reporting-dashboard',
       'zero-reporting-dashboard': 'zero-reporting-dashboard',
       'section-zero-reporting-dashboard': 'zero-reporting-dashboard',
+      'weekly-report-detail': 'weekly-report-detail',
+      'section-weekly-report-detail': 'weekly-report-detail',
       pie: 'pie',
       'section-pie': 'pie',
       settings: 'settings',
@@ -3526,7 +3541,7 @@
   }
 
   function isWorkspaceRestorable(workspace) {
-    return ['overview', 'search', 'edit', 'input', 'verifikasi', 'sampel', 'status', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'settings', 'guide'].includes(normalizeSidebarWorkspace(workspace));
+    return ['overview', 'search', 'edit', 'input', 'verifikasi', 'sampel', 'status', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'weekly-report-detail', 'pie', 'settings', 'guide'].includes(normalizeSidebarWorkspace(workspace));
   }
 
   function saveLastWorkspace(workspace) {
@@ -3589,7 +3604,11 @@
   function beginWorkspaceRuntime(workspace) {
     ACTIVE_SIDEBAR_WORKSPACE = normalizeSidebarWorkspace(workspace);
     WORKFLOW_INBOX_CACHE = getWorkspaceInboxCache(ACTIVE_SIDEBAR_WORKSPACE);
-    if (typeof window !== 'undefined') window.__PD3I_ACTIVE_RECORD_META = getWorkspaceActiveRecordMeta(ACTIVE_SIDEBAR_WORKSPACE);
+    if (typeof window !== 'undefined') {
+      window.__PD3I_ACTIVE_RECORD_META = getWorkspaceActiveRecordMeta(ACTIVE_SIDEBAR_WORKSPACE);
+      window.__PD3I_ACTIVE_WORKSPACE = ACTIVE_SIDEBAR_WORKSPACE;
+      window.__PD3I_ACTIVE_SIDEBAR_WORKSPACE = ACTIVE_SIDEBAR_WORKSPACE;
+    }
     try {
       if (document && document.body) {
         document.body.setAttribute('data-active-workspace', ACTIVE_SIDEBAR_WORKSPACE);
@@ -3640,7 +3659,7 @@
 
   function getEffectiveDxScopeForWorkspace(workspace) {
     const normalized = normalizeSidebarWorkspace(workspace);
-    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'settings', 'guide'].includes(normalized)) return '';
+    if (['search', 'verifikasi', 'sampel', 'status', 'overview', 'dashboard', 'zero-reporting-form', 'zero-reporting-dashboard', 'weekly-report-detail', 'pie', 'settings', 'guide'].includes(normalized)) return '';
     return String(document.getElementById('form-selector')?.value || '').trim();
   }
 
@@ -3692,14 +3711,19 @@
     const urlWorkspace = getUrlRequestedWorkspace();
     const bootWorkspace = boot.initialView === 'dashboard' ? 'dashboard' : boot.initialWorkspace;
     const requestedWorkspace = urlWorkspace || (isBrowserReloadNavigation() ? (getLastWorkspace() || bootWorkspace || 'overview') : bootWorkspace);
-    if (requestedWorkspace === 'settings') {
+    // Iframe Apps Script kadang salah lapor navigation type; pulihkan workspace tersimpan.
+    const restoredWorkspace = getLastWorkspace();
+    const requestedWorkspaceFinal = (!urlWorkspace && restoredWorkspace && requestedWorkspace === bootWorkspace)
+      ? restoredWorkspace : requestedWorkspace;
+    const routeWorkspace = requestedWorkspaceFinal;
+    if (routeWorkspace === 'settings') {
       try {
         const routeSettingsTab = String(new URL(window.location.href).searchParams.get('settingsTab') || new URL(window.location.href).searchParams.get('settings_tab') || '').trim().toLowerCase();
         if (routeSettingsTab) window.__SETTINGS_ACTIVE_TAB = routeSettingsTab;
       } catch (e) {}
     }
     if (!SESSION_USER) {
-      return openSidebarWorkspace(requestedWorkspace, {
+      return openSidebarWorkspace(routeWorkspace, {
         scroll: false,
         useRoute: true,
         autoLoad: false,
@@ -3707,7 +3731,7 @@
       });
     }
     const currentRole = String((SESSION_USER && SESSION_USER.role) || '').trim().toLowerCase();
-    if (requestedWorkspace === 'dashboard' && currentRole !== 'admin') {
+    if (routeWorkspace === 'dashboard' && currentRole !== 'admin') {
       try {
         const fallbackUrl = buildWorkspaceRouteUrl('overview');
         if (fallbackUrl && window.history && window.history.replaceState) {
@@ -3720,10 +3744,10 @@
       openSidebarWorkspace('overview', { scroll: false, useRoute: false });
       return 'overview';
     }
-    return openSidebarWorkspace(requestedWorkspace, {
+    return openSidebarWorkspace(routeWorkspace, {
       scroll: false,
       useRoute: true,
-      autoLoad: requestedWorkspace === 'dashboard',
+      autoLoad: routeWorkspace === 'dashboard',
       replaceRoute: true
     });
   }
@@ -3812,7 +3836,7 @@
       const active = !activeLink && targetWorkspace === workspace &&
         (workspace !== 'pie' || !linkPieTab || linkPieTab === pieTab) &&
         (workspace !== 'settings' || !linkSettingsTab || linkSettingsTab === settingsTab) &&
-        !link.hidden;
+        !link.hidden && !link.classList.contains('hidden') && link.getAttribute('aria-hidden') !== 'true';
       if (active) activeLink = link;
     });
     if (!activeLink) return;
@@ -3896,6 +3920,7 @@
     const dashboardSection = document.getElementById('section-dashboard');
     const sarsFormSection = document.getElementById('section-zero-reporting-form');
     const sarsDashboardSection = document.getElementById('section-zero-reporting-dashboard');
+    const weeklyDetailSection = document.getElementById('section-weekly-report-detail');
     const pieSection = document.getElementById('section-pie');
     const settingsSection = document.getElementById('section-settings');
     const guideSection = document.getElementById('section-guide');
@@ -3904,7 +3929,7 @@
     const isSearchWorkspace = ['search', 'edit'].includes(normalized);
     const isDashboardWorkspace = normalized === 'dashboard';
     const isSarsFormWorkspace = normalized === 'zero-reporting-form';
-    const isSarsDashboardWorkspace = normalized === 'zero-reporting-dashboard';
+    const isSarsDashboardWorkspace = normalized === 'zero-reporting-dashboard' || normalized === 'weekly-report-detail';
     const isPieWorkspace = normalized === 'pie';
     const isSettingsWorkspace = normalized === 'settings';
     const isGuideWorkspace = normalized === 'guide';
@@ -3957,7 +3982,15 @@
     setWorkspaceSectionVisibility(dashboardSection, isDashboardWorkspace);
     setWorkspaceSectionVisibility(sarsFormSection, isSarsFormWorkspace);
     if (isSarsFormWorkspace) revealZeroReportingFormWorkspace();
-    setWorkspaceSectionVisibility(sarsDashboardSection, isSarsDashboardWorkspace);
+    setWorkspaceSectionVisibility(sarsDashboardSection, isSarsDashboardWorkspace && normalized !== 'weekly-report-detail');
+    setWorkspaceSectionVisibility(weeklyDetailSection, normalized === 'weekly-report-detail');
+    const weeklyDetailMode = normalized === 'weekly-report-detail';
+    window.__PD3I_WEEKLY_DETAIL_MODE = weeklyDetailMode;
+    if (sarsDashboardSection) sarsDashboardSection.classList.toggle('pd3i-weekly-report-detail-mode', weeklyDetailMode);
+    document.body.classList.toggle('pd3i-weekly-report-detail-mode', weeklyDetailMode);
+    // Prevent stale active classes from duplicate route handlers.
+    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace].is-active').forEach(function(link){ link.classList.remove('is-active'); link.removeAttribute('aria-current'); });
+    updateSidebarActiveState(normalized);
     setWorkspaceSectionVisibility(pieSection, isPieWorkspace);
     setWorkspaceSectionVisibility(settingsSection, isSettingsWorkspace);
     setWorkspaceSectionVisibility(guideSection, isGuideWorkspace);
@@ -4023,7 +4056,7 @@
       return normalized;
     }
 
-    if (normalized === 'zero-reporting-form' || normalized === 'zero-reporting-dashboard') {
+    if (normalized === 'zero-reporting-form' || normalized === 'zero-reporting-dashboard' || normalized === 'weekly-report-detail') {
       setWorkflowSearchIntent('section-pelapor', { focusSearch: false, focusForm: false, skipStageSync: true });
       updateFormStepperState('section-pelapor');
       applySidebarWorkspaceLayout(normalized);
@@ -4039,6 +4072,9 @@
         } catch (e) {
           console.error('Gagal memuat dashboard Zero Reporting:', e);
         }
+      }
+      if (normalized === 'weekly-report-detail' && typeof window.initWeeklyReportDetail === 'function') {
+        window.initWeeklyReportDetail();
       }
       if (opts.scroll !== false) document.getElementById(normalized === 'zero-reporting-form' ? 'section-zero-reporting-form' : 'section-zero-reporting-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return normalized;
@@ -5134,7 +5170,7 @@
                     setCrossModuleCount('zero-reporting', belum, false);
                   })
                   .withFailureHandler(function() { setCrossModuleCount('zero-reporting', 0, true); })
-                  .getDashboardData(reportYear, reportWeek, 'all', 'all');
+                  .getDashboardData(reportYear, reportWeek, 'all', 'all', sessionToken);
               })
               .withFailureHandler(function() { setCrossModuleCount('zero-reporting', 0, true); })
               .getEpiMetaForDashboard(new Date().getFullYear());
@@ -5232,6 +5268,13 @@
       }
       payload[fieldKey] = el.value;
     });
+    // Choice button is source of truth. Hidden input can be overwritten by
+    // browser autofill/hydration timing; never let stale hidden value win.
+    root.querySelectorAll('.pd3i-choice-btn[data-field-id][aria-pressed="true"]').forEach(function(btn) {
+      const fieldKey = String(btn.getAttribute('data-field-id') || '').trim();
+      const choiceValue = String(btn.getAttribute('data-choice-value') || '').trim();
+      if (fieldKey && choiceValue) payload[fieldKey] = choiceValue;
+    });
     return payload;
   }
 
@@ -5246,7 +5289,7 @@
     }
     if (!Array.isArray(rows)) rows = [];
     const nonEmptyRows = rows.filter(function(row) {
-      return row && (String(row["Jenis Spesimen"] || '').trim() || String(row["Nomor Spesimen"] || '').trim() || String(row["Tanggal Hasil"] || '').trim() || String(row["Hasil"] || '').trim());
+      return row && (String(row["Jenis Spesimen"] || '').trim() || String(row["Jam Pengambilan Spesimen"] || '').trim() || String(row["Nomor Spesimen"] || '').trim() || String(row["Tanggal Hasil"] || '').trim() || String(row["Hasil"] || '').trim());
     });
     const joinUnique = function(values) {
       const seen = {};
@@ -5258,14 +5301,19 @@
       }).join('; ');
     };
     dataObj["Jenis Sampel Diuji"] = joinUnique(nonEmptyRows.map(function(row) { return row["Jenis Spesimen"]; }));
+    dataObj["Jam Pengambilan Spesimen"] = joinUnique(nonEmptyRows.map(function(row) {
+      const jam = String(row["Jam Pengambilan Spesimen"] || '').trim();
+      return jam && !/WIB$/i.test(jam) ? jam + ' WIB' : jam;
+    }));
     dataObj["Nomor Sampel / Lab"] = joinUnique(nonEmptyRows.map(function(row) { return row["Nomor Spesimen"]; }));
     dataObj["Tanggal Hasil Sampel"] = joinUnique(nonEmptyRows.map(function(row) { return row["Tanggal Hasil"]; }));
     dataObj["Hasil Pemeriksaan Sampel"] = nonEmptyRows.map(function(row) {
       const jenis = String(row["Jenis Spesimen"] || '').trim();
       const nomor = String(row["Nomor Spesimen"] || '').trim();
+      const jam = String(row["Jam Pengambilan Spesimen"] || '').trim();
       const tanggal = String(row["Tanggal Hasil"] || '').trim();
       const hasil = String(row["Hasil"] || '').trim();
-      const label = [jenis, nomor, tanggal].filter(Boolean).join(' / ');
+      const label = [jenis, jam ? jam + ' WIB' : '', nomor, tanggal].filter(Boolean).join(' / ');
       if (label && hasil) return label + ': ' + hasil;
       return hasil || label;
     }).filter(Boolean).join('; ');
@@ -5506,7 +5554,10 @@
     rows.forEach(function(item, idx) {
       const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
       const dxArg = JSON.stringify(String(item && item.dx || ''));
-      const printUrl = buildClientPrintUrl(item && item.dx, item && item.epid, SESSION_TOKEN);
+      const printDx = String((item && (item.dx || item.DX || item.diagnosis || item.kodeDx || item.kode_diagnosis)) || document.getElementById('form-selector')?.value || '').trim().toUpperCase();
+      const printKey = String((item && (item.recordKey || item.recordId || item.epid)) || '').trim();
+      const printUrl = buildClientPrintUrl(printDx, item && item.epid, SESSION_TOKEN, printKey);
+      const exportPdfUrl = printUrl ? printUrl.replace('action=print', 'action=exportpdf') : '';
       const wilayahText = [item && item.dx, item && item.kecamatan, item && item.kelurahan].filter(Boolean).join(' • ') || '-';
       const statusText = String(item && (item.__queueStatusLabel || item.statusVerifikasi || 'Terverifikasi') || 'Terverifikasi');
       html += `<tr class="pd3i-queue-table-row is-success">
@@ -5523,9 +5574,9 @@
         <td class="pd3i-queue-cell is-action" data-label="Aksi">
           <div class="pd3i-queue-cell-value"><div class="flex flex-wrap gap-2">
             <button type="button" class="pd3i-queue-action-btn" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this })'>Input hasil</button>
-            ${item && item.epid && printUrl
-              ? `<a class="pd3i-queue-action-btn" href="${escapeHtml(printUrl)}" target="_blank" rel="noopener noreferrer">Cetak Form PE</a>`
-              : '<span class="pd3i-helper-text">Nomor EPID belum tersedia</span>'}
+            ${printUrl
+              ? `<button type="button" class="pd3i-queue-action-btn" onclick="downloadPePdf_(${JSON.stringify(printDx)}, ${JSON.stringify(String(item && item.epid || ''))}, this, ${JSON.stringify(printKey)})"><i class="fas fa-file-arrow-down"></i> Download Dokumen PE</button>`
+              : '<span class="pd3i-helper-text">Dokumen PE belum tersedia</span>'}
           </div></div>
         </td>
       </tr>`;
@@ -6329,7 +6380,7 @@
   function getAllowedSidebarWorkspacesForUser(user) {
     const role = normalizeUiRole(user && user.role);
     const caps = getRoleCapabilities(user);
-    const allowed = new Set(['overview', 'search', 'edit', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide']);
+    const allowed = new Set(['overview', 'search', 'edit', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'weekly-report-detail', 'pie', 'guide']);
     if (isSuperAdminUiRole(role)) allowed.add('settings');
 
     if (isAdminUiRole(role)) {
@@ -6516,7 +6567,10 @@
 
     cfg.sections.forEach(section => {
       const fieldsHtml = (section.fields || []).map(function(field) {
-        return generateHTML(field);
+        return generateHTML(Object.assign({}, field, {
+          sectionKey: section.key,
+          sectionTitle: section.title
+        }));
       }).join("");
 
       container.innerHTML += `
@@ -7276,6 +7330,53 @@
       return "";
     }
   }
+
+  function downloadPePdf_(dx, epid, button, recordKey) {
+    if (!window.google || !google.script || !google.script.run) {
+      alert('Fitur export PDF hanya tersedia dari aplikasi utama.');
+      return;
+    }
+    const original = button ? button.innerHTML : '';
+    if (button) { button.disabled = true; button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyiapkan PDF...'; }
+    google.script.run
+      .withSuccessHandler(function(result) {
+        try {
+          if (result && result.driveUrl) {
+            const anchor = document.createElement('a');
+            anchor.href = result.driveUrl;
+            anchor.target = '_blank';
+            anchor.rel = 'noopener noreferrer';
+            anchor.textContent = 'Buka PDF di Google Drive';
+            anchor.className = 'pd3i-drive-pdf-link';
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            if (button) { button.disabled = false; button.innerHTML = original; }
+            return;
+          }
+          const binary = atob(String(result && result.base64 || ''));
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          const blobUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+          const anchor = document.createElement('a');
+          anchor.href = blobUrl;
+          anchor.download = String(result.name || ('Dokumen_PE_' + epid + '.pdf'));
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 1500);
+        } catch (err) {
+          alert('File PDF gagal diproses di browser.');
+        }
+        if (button) { button.disabled = false; button.innerHTML = original; }
+      })
+      .withFailureHandler(function(err) {
+        alert((err && err.message) || 'Gagal membuat file PDF. Silakan buka ulang dari aplikasi.');
+        if (button) { button.disabled = false; button.innerHTML = original; }
+      })
+      .exportPdfDocument(dx, epid, SESSION_TOKEN, recordKey);
+  }
+  window.downloadPePdf_ = downloadPePdf_;
 
   function showSuccessModal(message, printUrl, fallbackMeta) {
     const modal = document.getElementById("success-modal");

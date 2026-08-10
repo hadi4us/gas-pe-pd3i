@@ -16,6 +16,7 @@ const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src'
 const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_search.html'), 'utf8');
 const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
 const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
+const configMr = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_MR.html'), 'utf8');
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const endpointSecurityScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-endpoint-security.js'), 'utf8');
 const coreUtils = fs.readFileSync(path.join(__dirname, '..', 'src', 'Core', 'utils.js'), 'utf8');
@@ -187,10 +188,10 @@ test('Edit Inputan has its own workspace and safe initial-report save marker', (
 });
 
 test('workflow route exposes one Daftar Kasus workspace while preserving internal edit saves and stage-specific queues', () => {
-  assert.match(routesJs, /"overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "sars-form", "sars-dashboard", "guide", "pie"/);
+  assert.match(routesJs, /"overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "weekly-report-detail", "sars-form", "sars-dashboard", "guide", "pie"/);
   assert.doesNotMatch(routesJs, /"overview", "search", "input", "edit", "verifikasi", "sampel", "status", "guide"/);
   assert.match(appHtml, /\['search', 'edit', 'verifikasi', 'sampel', 'status'\]\.includes\(normalized\)/);
-  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'edit', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'pie', 'guide'\]\)/);
+  assert.match(appHtml, /const allowed = new Set\(\['overview', 'search', 'edit', 'input', 'zero-reporting-form', 'zero-reporting-dashboard', 'weekly-report-detail', 'pie', 'guide'\]\)/);
   assert.match(appHtml, /if \(isSuperAdminUiRole\(role\)\) allowed\.add\('settings'\)/);
   assert.match(appHtml, /requestedWorkspace === 'edit' \? 'edit' : 'search'/);
 });
@@ -264,10 +265,10 @@ test('sample workspace lists admin-verified cases and offers PE print only when 
   assert.match(appHtml, /const visibleVerified = \['verifikasi', 'sampel'\]\.includes\(workspace\) \? filterQueueItemsForWorkspace\(verificationDone, workspace\) : \[\]/);
   assert.match(appHtml, /Kasus sudah diverifikasi admin/);
   assert.match(appHtml, /function renderVerifiedSampleCaseTable\(items\)/);
-  assert.match(appHtml, /buildClientPrintUrl\(item && item\.dx, item && item\.epid, SESSION_TOKEN\)/);
+  assert.match(appHtml, /const printDx = String\(\(item && \(item\.dx \|\| item\.DX \|\| item\.diagnosis \|\| item\.kodeDx \|\| item\.kode_diagnosis\)\) \|\| document\.getElementById\('form-selector'\)\?\.value \|\| ''\)/);
   assert.doesNotMatch(dashboardJs, /Nomor EPID Final/);
   assert.match(dashboardJs, /const epid = epidMain/);
-  assert.match(appHtml, /item && item\.epid[\s\S]*?Cetak Form PE/);
+  assert.match(appHtml, /item && item\.epid[\s\S]*?Dokumen PE/);
   assert.match(appHtml, /Nomor EPID belum tersedia/);
 });
 
@@ -316,7 +317,7 @@ test('Daftar Kasus search uses short client cache and refined loading skeleton',
   assert.match(appHtmlRaw, /let WORKSPACE_SEARCH_RESULT_CACHE = \{\}/);
   assert.match(appHtmlRaw, /function getWorkspaceSearchResultCache\(workspace, dx, filters\)/);
   assert.match(appHtmlRaw, /Date\.now\(\) - entry\.at\) > 20000/);
-  assert.match(appInitHtmlRaw, /const cachedSearchData = typeof getWorkspaceSearchResultCache === 'function'/);
+  assert.match(appInitHtmlRaw, /const cachedSearchData = workspace === 'search' \? null : \(typeof getWorkspaceSearchResultCache === 'function'/);
   assert.match(appInitHtmlRaw, /setWorkspaceSearchResultCache\(workspace, dx, filters, data\)/);
   assert.match(appInitHtmlRaw, /Memuat daftar kasus halaman/);
   assert.match(utilsHtml, /pd3i-skeleton-spinner/);
@@ -499,6 +500,18 @@ test('verification helper updates and EPID recommendation use the active form sc
   assert.match(appHtml, /const payload = collectCurrentFormPayload\(formScope\)/);
   assert.match(appHtml, /updateVerificationSectionState\(openedFormRoot\)/);
   assert.match(appHtml, /refreshRecommendedEpidPreview\(\{ silentLoading: true \}, openedFormRoot\)/);
+});
+
+test('all choice-button fields submit selected button value, not stale hidden input', () => {
+  assert.match(appHtml, /function collectCurrentFormPayload\(scope\)[\s\S]*?pd3i-choice-btn\[data-field-id\]\[aria-pressed="true"\][\s\S]*?payload\[fieldKey\] = choiceValue/);
+  assert.match(appHtml, /activeFormElement\.querySelectorAll\('\.pd3i-choice-btn\[data-field-id\]\[aria-pressed="true"\]'\)/);
+  assert.match(configMr, /id: "Demam\?"[\s\S]*?type: "choice_buttons"/);
+  assert.match(configMr, /id: "Ruam Makulopapular\?"[\s\S]*?type: "choice_buttons"/);
+});
+
+test('MR showIf date evidence overrides stale Tidak choice values server-side', () => {
+  assert.match(dataJs, /if \(dx === "MR" && demamDateValue\) \{[\s\S]*?data\["Demam\?"\] = "Ya"/);
+  assert.match(dataJs, /if \(dx === "MR" && ruamDateValue\) \{[\s\S]*?data\["Ruam Makulopapular\?"\] = "Ya"/);
 });
 
 test('verification workspace keeps address and GPS context fields editable for admin correction', () => {
@@ -812,7 +825,7 @@ test('public endpoints sanitize unexpected exception messages before returning t
 test('sample result specimen field supports more than one examination type in one save', () => {
   const commonConfigHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_common.html'), 'utf8');
   assert.match(commonConfigHtml, /id: "Rincian Hasil Sampel"[\s\S]*?type: "dynamic_table"/);
-  assert.match(commonConfigHtml, /name: "Jenis Spesimen"[\s\S]*?name: "Nomor Spesimen"[\s\S]*?name: "Tanggal Hasil"[\s\S]*?name: "Hasil"/);
+  assert.match(commonConfigHtml, /name: "Jenis Spesimen"[\s\S]*?name: "Jam Pengambilan Spesimen"[\s\S]*?name: "Nomor Spesimen"[\s\S]*?name: "Tanggal Hasil"[\s\S]*?name: "Hasil"/);
   assert.match(appHtml, /tableId === "Rincian Hasil Sampel"[\s\S]*?getSampleFieldsForDx\(dx\)/);
   assert.match(appHtml, /hydrateDynamicTableByJson\("Rincian Hasil Sampel", record\["Rincian Hasil Sampel"\], formRoot\)/);
   assert.match(appHtml, /if \(rowObj\["Jenis Spesimen"\] \|\| rowObj\["Nomor Spesimen"\] \|\| rowObj\["Tanggal Hasil"\] \|\| rowObj\["Hasil"\]\) tableData\.push\(rowObj\)/);
@@ -820,7 +833,7 @@ test('sample result specimen field supports more than one examination type in on
   assert.match(appHtml, /dataObj\["Jenis Sampel Diuji"\] = joinUnique\(nonEmptyRows\.map\(function\(row\) \{ return row\["Jenis Spesimen"\]; \}\)\)/);
   assert.match(appHtml, /dataObj\["Hasil Pemeriksaan Sampel"\] = nonEmptyRows\.map/);
   assert.match(dataJs, /"Rincian Hasil Sampel"/);
-  assert.match(routesJs, /'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jenis Sampel Diuji'/);
+  assert.match(routesJs, /'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jam Pengambilan Spesimen', 'Jenis Sampel Diuji'/);
 });
 
 test('PIE quality data insight card is full-width below dashboard cards', () => {

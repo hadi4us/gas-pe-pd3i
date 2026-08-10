@@ -11,6 +11,20 @@ td,th{border:1px solid #111;padding:4px 6px;vertical-align:top}
 th{background:#f8fafc}
 .sec{font-weight:900;text-transform:uppercase;text-align:center;letter-spacing:.2px;background:#ccfbf1}
 .small{font-size:9.8px;color:#444}
+
+/* Allow browser print engine to paginate full PE document. */
+html,body{height:auto!important;min-height:0!important;overflow:visible!important}
+table{page-break-inside:auto}
+tr{page-break-inside:avoid;page-break-after:auto}
+thead{display:table-header-group}
+tfoot{display:table-footer-group}
+@media print{
+  html,body{height:auto!important;overflow:visible!important}
+  body{margin:0!important}
+  .kop{break-inside:avoid;page-break-inside:avoid}
+  table{break-inside:auto;page-break-inside:auto}
+  tr{break-inside:avoid;page-break-inside:avoid}
+}
 </style></head><body>
 <? var data=(typeof DATA!=='undefined'?DATA:{}),meta=(typeof META!=='undefined'?META:{}); function s(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(new RegExp('<','g'),'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');} function t(v){return String(v==null?'':v).trim();} function pick_(){for(var i=0;i<arguments.length;i++){var k=arguments[i];if(Object.prototype.toString.call(k)==='[object Array]'){for(var j=0;j<k.length;j++){var kk=k[j];if(data[kk]!=null&&data[kk]!=='')return data[kk];if(meta[kk]!=null&&meta[kk]!=='')return meta[kk];}}else{if(data[k]!=null&&data[k]!=='')return data[k];if(meta[k]!=null&&meta[k]!=='')return meta[k];}}return '';} function d(v){v=t(v); if(!v)return '-'; var m=v.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return m[3]+'-'+m[2]+'-'+m[1]; return s(v);} function yn(v){v=t(v).toLowerCase();if(['ya','y','yes','1','true'].indexOf(v)!==-1)return 'Ya';if(['tidak','n','no','0','false'].indexOf(v)!==-1)return 'Tidak';return v||'-';} ?>
 <div class="kop"><div class="title">FORM TN-01 — PELACAKAN KASUS SUSPEK TETANUS NEONATORUM</div><div class="sub">Output PDF otomatis aplikasi PD3I (format ditingkatkan)</div><div class="hr"></div></div>

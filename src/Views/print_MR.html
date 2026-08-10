@@ -148,7 +148,21 @@
     .mt8{ margin-top:8px; }
     .mt12{ margin-top:12px; }
     .footnote{ margin-top:10px; font-size:9.8px; color:#444; }
-  </style>
+
+/* Allow browser print engine to paginate full PE document. */
+html,body{height:auto!important;min-height:0!important;overflow:visible!important}
+table{page-break-inside:auto}
+tr{page-break-inside:avoid;page-break-after:auto}
+thead{display:table-header-group}
+tfoot{display:table-footer-group}
+@media print{
+  html,body{height:auto!important;overflow:visible!important}
+  body{margin:0!important}
+  .kop{break-inside:avoid;page-break-inside:avoid}
+  table{break-inside:auto;page-break-inside:auto}
+  tr{break-inside:avoid;page-break-inside:avoid}
+}
+</style>
 </head>
 
 <body>

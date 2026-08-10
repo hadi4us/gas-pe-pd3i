@@ -11,6 +11,20 @@ table{width:100%;border-collapse:collapse}td,th{border:1px solid #111;padding:4p
 th{background:#f8fafc}
 .section{font-weight:900;text-transform:uppercase;text-align:center;letter-spacing:.2px;background:#ede9fe}
 .small{font-size:9.8px;color:#444}
+
+/* Allow browser print engine to paginate full PE document. */
+html,body{height:auto!important;min-height:0!important;overflow:visible!important}
+table{page-break-inside:auto}
+tr{page-break-inside:avoid;page-break-after:auto}
+thead{display:table-header-group}
+tfoot{display:table-footer-group}
+@media print{
+  html,body{height:auto!important;overflow:visible!important}
+  body{margin:0!important}
+  .kop{break-inside:avoid;page-break-inside:avoid}
+  table{break-inside:auto;page-break-inside:auto}
+  tr{break-inside:avoid;page-break-inside:avoid}
+}
 </style></head><body>
 <?
 var data=(typeof DATA!=='undefined'?DATA:{}), meta=(typeof META!=='undefined'?META:{});

@@ -272,10 +272,27 @@
 
         refs.formElement.classList.remove('hidden');
 
-        const makeInputFieldMandatory = function(field) {
+        const isOptionalExaminationDate = function(field, section) {
+          if (!field || String(field.type || '').toLowerCase() !== 'date') return false;
+          const haystack = [
+            field.id, field.label,
+            section && section.key,
+            section && section.title
+          ].filter(Boolean).join(' ').toLowerCase();
+          return /(pemeriksaan|sampel|spesimen)/i.test(haystack);
+        };
+        const makeInputFieldMandatory = function(field, section) {
           if (!field || normalizedMode !== 'input') return field;
           // Questions mandatory; system-generated/read-only controls and tables stay optional.
           if (field.readonly || ['header', 'dynamic_table', 'geo_button'].includes(field.type)) return field;
+          // Tanggal pemeriksaan/sampel/spesimen diisi bila tersedia, bukan blocker input awal.
+          if (isOptionalExaminationDate(field, section)) return Object.assign({}, field, {
+            required: false,
+            sectionKey: section && section.key,
+            sectionTitle: section && section.title
+          });
+          // Tanggal meninggal AFP opsional saat input awal, walau semua pertanyaan lain mandatory.
+          if (String(field.id || '') === 'Tanggal meninggal AFP') return Object.assign({}, field, { required: false });
           return Object.assign({}, field, { required: true });
         };
         if (refs.pelaporContainer) {
@@ -307,7 +324,9 @@
             const mandatoryCfg = Object.assign({}, cfg, {
               sections: (cfg.sections || []).map(function(section) {
                 return Object.assign({}, section, {
-                  fields: (section.fields || []).map(makeInputFieldMandatory)
+                fields: (section.fields || []).map(function(field) {
+                  return makeInputFieldMandatory(field, section);
+                })
                 });
               })
             });
@@ -1211,10 +1230,11 @@
             const sampelState = String(item.sampelDilakukan || "").trim().toUpperCase() === "YA"
               ? (item.interpretasiSampel || "Menunggu hasil")
               : "Tidak ada sampel";
-            const resolvedDx = String(item.dx || dx || '').trim();
+            const resolvedDx = String(item.dx || item.DX || item.diagnosis || item.kodeDx || item.kode_diagnosis || dx || '').trim().toUpperCase();
             const dxArg = JSON.stringify(resolvedDx);
             const printRecordKey = String(item.recordKey || item.recordId || item.epid || "").trim();
             const printUrl = (typeof buildClientPrintUrl === 'function') ? buildClientPrintUrl(resolvedDx, item.epid, SESSION_TOKEN, printRecordKey) : '';
+            const exportPdfUrl = printUrl ? printUrl.replace('action=print', 'action=exportpdf') : '';
             const normalizedVerificationStatus = String(statusVerifikasi || '')
               .trim()
               .toUpperCase()
@@ -1267,7 +1287,9 @@
                 <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(caseActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true })'>
                   <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-arrow-up-right-from-square'}"></i> ${safeEscape(caseActionLabel)}
                 </button>
-                ${printUrl ? `<a class="pd3i-search-result-action pd3i-action-btn is-secondary" href="${safeEscape(printUrl)}" target="_blank" rel="noopener noreferrer"><i class="fas fa-file-pdf"></i> Dokumen PE</a>` : ''}
+                ${printUrl
+                  ? `<button type="button" class="pd3i-search-result-action pd3i-action-btn is-secondary" onclick='downloadPePdf_(${dxArg}, ${JSON.stringify(String(item.epid || ''))}, this, ${JSON.stringify(printRecordKey)})'><i class="fas fa-file-arrow-down"></i> Download Dokumen PE</button>`
+                  : `<span class="pd3i-search-result-action pd3i-action-btn is-secondary is-disabled" aria-disabled="true" title="Dokumen PE belum tersedia"><i class="fas fa-file-circle-xmark"></i> Dokumen PE belum tersedia <small>(Nomor EPID belum tersedia)</small></span>`}
                 ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger pd3i-action-btn" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}
               </div>
             </div>`;
@@ -2318,7 +2340,8 @@
           table.querySelectorAll("tbody tr").forEach(row => {
             const rowObj = {};
             row.querySelectorAll("input, select, textarea").forEach(i => {
-              rowObj[i.getAttribute("data-name")] = i.value;
+              const name = i.getAttribute("data-name");
+              rowObj[name] = name === "Jam Pengambilan Spesimen" && i.value ? i.value + " WIB" : i.value;
             });
 
             if (tableId === "Riwayat Imunisasi") {
@@ -2388,6 +2411,7 @@
             pd3iDebugLog_("Resolved print params:", { epidSaved, dxSaved, printUrl });
 
             clearFormDraft();
+            if (typeof clearWorkspaceSearchResultCache === 'function') clearWorkspaceSearchResultCache();
             if (epidSaved && submitMode !== 'input') {
               isEditMode = true;
               updateFormStepperState(document.querySelector(".pd3i-stepper-item.is-active")?.getAttribute("data-step-target") || "section-pelapor");
