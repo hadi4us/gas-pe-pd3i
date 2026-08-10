@@ -166,6 +166,20 @@
     /* SECTION */
     .pd3i-sars-section{ margin-top:16px; padding:16px; }
     .pd3i-sars-section h2{ margin:0 0 10px 0; font-size:16px; font-weight:500; }
+    /* Detail Laporan Mingguan: tabel operasional saja. */
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-kpi-row,
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#chartStatus),
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#chartTrend),
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#chartPengampu),
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-kpi-row,
+    .pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#chartStatus),
+    .pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#chartPengampu),
+    .pd3i-weekly-report-detail-mode #detailHelp,
+    .pd3i-weekly-report-detail-mode .pd3i-sars-chart-title{ display:none !important; }
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#table){ display:block !important; margin-top:0; }
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-chart-box{ display:none !important; }
+    body.pd3i-weekly-report-detail-mode .pd3i-sars-section:has(#table) .pd3i-sars-table-wrap{ display:block !important; }
+    .pd3i-weekly-report-detail-mode #table{ display:block !important; }
 
     .pd3i-sars-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     @media(max-width:980px){ .pd3i-sars-grid{ grid-template-columns:1fr; } }
@@ -653,15 +667,69 @@
           sarsNote.textContent = '';
           setErr('Error server: ' + (err && err.message ? err.message : err));
         })
-        .getDashboardData(year, minggu, jenis, peng);
+        .getDashboardData(year, minggu, jenis, peng, String((typeof SESSION_TOKEN !== 'undefined' && SESSION_TOKEN) || window.__PD3I_SESSION_TOKEN || '').trim());
     }
 
     function drawAll(data){
+      const tableOnly = !!(window.__PD3I_WEEKLY_DETAIL_MODE || document.getElementById('section-zero-reporting-dashboard')?.classList.contains('pd3i-weekly-report-detail-mode'));
+      applyDetailModeDom_(tableOnly);
+      if (tableOnly) {
+        renderSubmittedReportTable(Array.isArray(data.submittedRows) ? data.submittedRows : []);
+        return;
+      }
       drawKPI(data);
       drawStatusChart(data);
       drawTrendChart(data);
       drawPengampuChart(data);
       renderTable(Array.isArray(data.detail) ? data.detail : [], data.denomWeeks || 0);
+    }
+
+    function applyDetailModeDom_(tableOnly){
+      const root = document.querySelector('.pd3i-sars-dashboard-host');
+      if (!root) return;
+      root.classList.toggle('pd3i-weekly-report-detail-mode', !!tableOnly);
+      root.querySelectorAll('.pd3i-sars-kpi-row, .pd3i-sars-section').forEach(function(el){
+        const keep = el.querySelector('#table');
+        el.style.setProperty('display', tableOnly ? (keep ? '' : 'none') : '', 'important');
+      });
+      ['chartStatus','chartTrend','chartPengampu','trendEmpty','pengEmpty','completeness','timeliness','total','belum'].forEach(function(id){
+        const el = document.getElementById(id);
+        if (el) el.style.setProperty('display', tableOnly ? 'none' : '', 'important');
+      });
+      root.querySelectorAll('.sars-dashboard-filter').forEach(function(el){ el.style.display = ''; });
+      if (tableOnly) root.querySelectorAll('#detailHelp, .pd3i-sars-section:has(#table) .pd3i-sars-chart-title').forEach(function(el){ el.style.display = 'none'; });
+    }
+
+    function renderSubmittedReportTable(rows){
+      const tableEl = document.getElementById('table');
+      const selectedMe = Number(document.getElementById('weekSel')?.value || 0);
+      const safe = rows.filter(r => !selectedMe || Number(r.me) === selectedMe).slice().sort((a,b) => String(b.waktuSubmit || '').localeCompare(String(a.waktuSubmit || '')));
+      pageState.totalRows = safe.length;
+      pageState.totalPages = Math.max(1, Math.ceil(pageState.totalRows / pageState.perPage));
+      pageState.page = Math.max(1, Math.min(pageState.page, pageState.totalPages));
+      updatePagerUI_();
+      if (!safe.length) { tableEl.innerHTML = '<div style="padding:14px;color:#5f6368;font-style:italic;">Tidak ada laporan dikirim faskes pada filter ini.</div>'; return; }
+      const start = (pageState.page - 1) * pageState.perPage;
+      const rowsPage = safe.slice(start, start + pageState.perPage);
+      const cols = [
+        ['waktuSubmit','Waktu Kirim'], ['me','ME'], ['namaFasyankes','Fasyankes'],
+        ['jenisFasyankes','Jenis'], ['namaPetugas','Petugas'], ['namaPenyakit','Nama Penyakit'],
+        ['nihil','Nihil'], ['namaKasus','Nama Kasus'], ['tglLahir','Tgl Lahir'],
+        ['jenisKelamin','JK'], ['alamat','Alamat & No Telp'], ['tanggalMulai','Tanggal Mulai'],
+        ['gejala','Gejala'], ['diagnosis','Diagnosis'], ['statusImunisasi','Status Imunisasi'],
+        ['keadaan','Keadaan'], ['spesimen','Spesimen / Penolong']
+      ];
+      let html = '<table><thead><tr><th>No</th>' + cols.map(c => '<th>' + esc(c[1]) + '</th>').join('') + '</tr></thead><tbody>';
+      rowsPage.forEach((r,i) => {
+        html += '<tr><td>' + (start+i+1) + '</td>' + cols.map(c => '<td>' + esc(c[0] === 'waktuSubmit' ? formatReportDate_(r[c[0]]) : (r[c[0]] || '')) + '</td>').join('') + '</tr>';
+      });
+      tableEl.innerHTML = html + '</tbody></table>';
+    }
+
+    function formatReportDate_(v){
+      if (!v) return '';
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? String(v) : d.toLocaleString('id-ID', {dateStyle:'short', timeStyle:'short'});
     }
 
     function drawKPI(data){

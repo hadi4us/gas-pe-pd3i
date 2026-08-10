@@ -41,6 +41,20 @@ function sarsDash_cfg_() {
   return { tz, ssid, sheetMaster, sheetData, dlHour, dlMin };
 }
 
+function sarsDash_dataSheet_(ss) {
+  const cfg = sarsDash_cfg_();
+  const preferred = [String(cfg.sheetData || '').trim(), 'SARS', 'DATA_SARS'];
+  for (const name of [...new Set(preferred)].filter(Boolean)) {
+    const sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 1) continue;
+    const headers = sh.getRange(1, 1, 1, Math.min(sh.getLastColumn(), 30)).getDisplayValues()[0].map(sarsDash_clean_);
+    const hasSubmit = headers.some(h => ['WAKTU SUBMIT','WAKTUSUBMIT','TIMESTAMP'].includes(String(h).toUpperCase()));
+    const hasMe = headers.some(h => ['ME','MINGGU EPID','MINGGUEPID','MINGGU EPIDEMIOLOGI'].includes(String(h).toUpperCase()));
+    if (hasSubmit && hasMe) return name;
+  }
+  return String(cfg.sheetData || 'SARS').trim();
+}
+
 function sarsDash_open_() {
   if (typeof openSarsSpreadsheet === "function") return openSarsSpreadsheet();
   const cfg = sarsDash_cfg_();
@@ -213,17 +227,22 @@ function sarsDash_readSheetCached_(ss, sheetName, ttlSec) {
   const name = String(sheetName || '').trim();
   if (!name) return [];
   const key = 'SARS_DASH_SHEET_' + name;
-  try {
-    const cached = CacheService.getScriptCache().get(key);
-    if (cached) return JSON.parse(cached);
-  } catch (e) {}
+  const bypassCache = Number(ttlSec) === 0;
+  if (!bypassCache) {
+    try {
+      const cached = CacheService.getScriptCache().get(key);
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
   const sh = ss.getSheetByName(name);
   if (!sh) return [];
   const values = sh.getDataRange().getValues();
-  try {
-    const json = JSON.stringify(values);
-    if (json.length < 95000) CacheService.getScriptCache().put(key, json, Number(ttlSec || 300));
-  } catch (e) {}
+  if (!bypassCache) {
+    try {
+      const json = JSON.stringify(values);
+      if (json.length < 95000) CacheService.getScriptCache().put(key, json, Number(ttlSec || 300));
+    } catch (e) {}
+  }
   return values;
 }
 
@@ -292,7 +311,7 @@ function sarsDash_readRefPengampu_(ss) {
   return out;
 }
 
-function sarsDash_readMaster_(ss, jenisFilter, pengFilter) {
+function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
   const cfg = sarsDash_cfg_();
   const sh = ss.getSheetByName(cfg.sheetMaster);
   if (!sh) throw new Error('Sheet "' + cfg.sheetMaster + '" tidak ditemukan.');
@@ -344,6 +363,17 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter) {
     if (jenisFilter !== "ALL" && jen !== jenisFilter) continue;
     if (pengFilter !== "all" && peng !== pengFilter) continue;
 
+    // Scope wajib dipaksa server-side. Admin/super-admin sudah diberi allowAll.
+    if (accessScope && !accessScope.allowAll) {
+      const normUnit = sarsDash_normKey_(accessScope.unitKerja || '');
+      const normName = sarsDash_normKey_(nama);
+      const normKey = sarsDash_normFaskesKey_(key);
+      const normPeng = sarsDash_normKey_(peng);
+      const isOwnFaskes = normUnit && (normUnit === normName || normUnit === normKey);
+      const isPengampu = normUnit && normUnit === normPeng;
+      if (!isOwnFaskes && !isPengampu) continue;
+    }
+
     faskes.push({ key, nama, jenis: jen, pengampu: peng, email });
 
     if (peng && peng !== "-" && peng !== "(Tanpa pengampu)") pengSet[peng] = true;
@@ -373,10 +403,11 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter) {
 /** ======================= SARS: index setahun (epiYear) ======================= */
 function sarsDash_buildYearIndex_(ss, targetEpiYear, nameToKey) {
   const cfg = sarsDash_cfg_();
-  const sh = ss.getSheetByName(cfg.sheetData);
-  if (!sh) throw new Error('Sheet "' + cfg.sheetData + '" tidak ditemukan.');
+  const dataSheet = sarsDash_dataSheet_(ss);
+  const sh = ss.getSheetByName(dataSheet);
+  if (!sh) throw new Error('Sheet data SARS tidak ditemukan (dicari SARS/DATA_SARS).');
 
-  const values = sarsDash_readSheetCached_(ss, cfg.sheetData, 180);
+  const values = sarsDash_readSheetCached_(ss, dataSheet, 180);
   if (!values || values.length < 2) return { byKey: {}, weekSet: {}, weekOnTimeSet: {}, debug: {} };
 
   const headers = (values[0] || []).map(sarsDash_clean_);
@@ -391,6 +422,7 @@ function sarsDash_buildYearIndex_(ss, targetEpiYear, nameToKey) {
   if (iME < 0) throw new Error('SARS: header "ME" tidak ditemukan.');
 
   const byKey = {};
+  const submittedRows = [];
   const weekSet = {};
   const weekOnTimeSet = {};
 
@@ -434,7 +466,54 @@ function sarsDash_buildYearIndex_(ss, targetEpiYear, nameToKey) {
       else if (nk) unmatchedNames[nk] = (unmatchedNames[nk] || 0) + 1;
     }
 
-    if (!key) { skippedNoKey++; continue; }
+    if (!key) {
+      skippedNoKey++;
+      // Detail laporan tetap menampilkan laporan asli walau mapping FaskesKey
+      // belum tersedia. Mapping hanya wajib untuk KPI/reka p dashboard.
+      submittedRows.push({
+        waktuSubmit: submitDate,
+        me: me,
+        namaFasyankes: iNamaFx >= 0 ? sarsDash_clean_(row[iNamaFx]) : '',
+        jenisFasyankes: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Jenis Fasyankes', 'JenisFaskes'])]),
+        namaPetugas: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Petugas'])]),
+        emailPetugas: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Email Petugas'])]),
+        namaPenyakit: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Penyakit'])]),
+        nihil: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nihil'])]),
+        namaKasus: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Kasus'])]),
+        tglLahir: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Tgl Lahir', 'Tanggal Lahir'])]),
+        jenisKelamin: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Jenis Kelamin'])]),
+        alamat: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Alamat & No Telp', 'Alamat'])]),
+        tanggalMulai: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Tanggal Mulai'])]),
+        gejala: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Gejala'])]),
+        diagnosis: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Diagnosis Medis/Banding', 'Diagnosis'])]),
+        statusImunisasi: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Status Imunisasi'])]),
+        keadaan: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Keadaan (H/M)', 'Keadaan'])]),
+        spesimen: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Spesimen / Penolong', 'Spesimen'])])
+      });
+      continue;
+    }
+
+    // Simpan baris laporan asli untuk menu Detail Laporan Mingguan.
+    submittedRows.push({
+      waktuSubmit: submitDate,
+      me: me,
+      namaFasyankes: iNamaFx >= 0 ? sarsDash_clean_(row[iNamaFx]) : '',
+      jenisFasyankes: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Jenis Fasyankes', 'JenisFaskes'])]),
+      namaPetugas: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Petugas'])]),
+      emailPetugas: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Email Petugas'])]),
+      namaPenyakit: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Penyakit'])]),
+      nihil: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nihil'])]),
+      namaKasus: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Nama Kasus'])]),
+      tglLahir: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Tgl Lahir', 'Tanggal Lahir'])]),
+      jenisKelamin: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Jenis Kelamin'])]),
+      alamat: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Alamat & No Telp', 'Alamat'])]),
+      tanggalMulai: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Tanggal Mulai'])]),
+      gejala: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Gejala'])]),
+      diagnosis: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Diagnosis Medis/Banding', 'Diagnosis'])]),
+      statusImunisasi: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Status Imunisasi'])]),
+      keadaan: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Keadaan (H/M)', 'Keadaan'])]),
+      spesimen: sarsDash_clean_(row[sarsDash_pickIndex_(headers, ['Spesimen / Penolong', 'Spesimen'])])
+    });
 
     // optional sanity: jika target tahun hanya 52 minggu, tapi data ME 53 tetap kita simpan.
     // (dashboard akan menampilkan ME sesuai weeksInEpiYear(targetYear))
@@ -470,6 +549,7 @@ function sarsDash_buildYearIndex_(ss, targetEpiYear, nameToKey) {
 
   return {
     byKey,
+    submittedRows,
     weekSet,
     weekOnTimeSet,
     debug: {
@@ -511,11 +591,91 @@ function sarsDash_aggregatePerPengampu_(detail) {
  * @param {string} jenis            ALL/RS/KLINIK/TPMD/PMB/LAIN
  * @param {string} pengampu         "all" atau nama pengampu
  */
-function getDashboardData(year, minggu, jenis, pengampu) {
+function getDashboardData(year, minggu, jenis, pengampu, token) {
+  try {
+    return _getDashboardData_(year, minggu, jenis, pengampu, token);
+  } catch (e) {
+    try { console.error('getDashboardData failed:', e && e.stack ? e.stack : e); } catch (ignore) {}
+    const msg = String((e && e.message) || e || 'Kesalahan server').trim();
+    throw new Error('Dashboard SARS gagal: ' + msg);
+  }
+}
+
+// Raw SARS rows for weekly detail. No REF_FASKES/master mapping required.
+function getWeeklySubmittedRows(year, minggu, token) {
+  const sess = (typeof _getSessionFromToken_ === 'function') ? _getSessionFromToken_(token) : null;
+  if (!sess || !sess.ok || !sess.user) throw new Error('Sesi tidak valid atau sudah berakhir.');
+  const role = (typeof _normalizePd3iRole_ === 'function') ? _normalizePd3iRole_(sess.user.role) : String(sess.user.role || '').toLowerCase();
+  const scopeLevel = String(sess.user.scopeLevel || '').toLowerCase().replace(/[_\s]+/g, '-');
+  const allowAll = role === 'admin' || role === 'super-admin' || role === 'superadmin' || scopeLevel === 'dinkes';
+  const unitKey = sarsDash_normKey_(sess.user.unitKerja || sess.user.namaFaskes || '');
+  const ss = sarsDash_open_();
+  const cfg = sarsDash_cfg_();
+  // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
+  // FaskesPengampu as code while session unitKerja stores puskesmas name.
+  // Matching raw pengampu text alone drops those rows from puskesmas detail.
+  const scopedMaster = allowAll ? null : sarsDash_readMaster_(ss, 'ALL', 'all', {
+    allowAll: false,
+    unitKerja: String(sess.user.unitKerja || sess.user.namaFaskes || '')
+  });
+  const scopedNames = {};
+  const scopedKeys = {};
+  (scopedMaster && scopedMaster.faskes || []).forEach(function(f) {
+    scopedNames[sarsDash_normKey_(f.nama)] = true;
+    scopedKeys[sarsDash_normFaskesKey_(f.key)] = true;
+  });
+  const dataSheet = sarsDash_dataSheet_(ss);
+  const sh = ss.getSheetByName(dataSheet);
+  if (!sh) throw new Error('Sheet SARS tidak ditemukan.');
+  // Display values preserve sheet text/date formatting. Detail must not
+  // discard rows because Date serial parsing differs between XLSX/Sheets.
+  const values = sh.getDataRange().getDisplayValues();
+  if (!values || values.length < 2) return [];
+  const headers = values[0].map(sarsDash_clean_);
+  const ix = function(names){ return sarsDash_pickIndex_(headers, names); };
+  const iSubmit=ix(['Waktu Submit','WaktuSubmit','Timestamp','Waktu','Submit Time']);
+  const iME=ix(['ME','Minggu Epid','MingguEpid','Minggu Epidemiologi']);
+  if (iSubmit < 0 || iME < 0) throw new Error('Header Waktu Submit/ME tidak ditemukan.');
+  const wMatch=String(minggu == null ? '' : minggu).match(/\d+/);
+  const w=wMatch ? Number(wMatch[0]) : 1;
+  const field = function(row,names){ const i=ix(names); return i >= 0 ? sarsDash_clean_(row[i]) : ''; };
+  const out = values.slice(1).map(function(row){
+    const rawMe = sarsDash_clean_(row[iME]);
+    const meMatch = rawMe.match(/\d+/);
+    const me = meMatch ? Number(meMatch[0]) : NaN;
+    // Detail source filter is ME only. SARS rows may use submit date/year
+    // differing from reporting epi-year (late entry, backfill, migration).
+    if (Number(me)!==w) return null;
+    const namaFaskes=field(row,['Nama Fasyankes','NamaFasyankes','Nama Faskes']);
+    const faskesKey=field(row,['FaskesKey','KodeFaskes','Kode Faskes']);
+    const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);
+    const belongs = allowAll
+      || sarsDash_normKey_(namaFaskes) === unitKey
+      || sarsDash_normKey_(pengampu) === unitKey
+      || !!scopedNames[sarsDash_normKey_(namaFaskes)]
+      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)];
+    if (!belongs) return null;
+    const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
+    const status = /^(1|ya|yes|nihil)$/i.test(nihil) ? 'Nihil' : (namaKasus ? 'Ada kasus' : 'Tidak jelas');
+    const onTime=field(row,['OnTime','On Time']);
+    const anomaly=[]; if (!isFinite(me)) anomaly.push('ME tidak valid'); if (!field(row,['Waktu Submit','WaktuSubmit','Timestamp'])) anomaly.push('Waktu kirim kosong'); if (!namaFaskes) anomaly.push('Fasyankes kosong'); if (status === 'Tidak jelas') anomaly.push('Status nihil/kasus tidak jelas');
+    return {waktuSubmit:field(row,['Waktu Submit','WaktuSubmit','Timestamp']),me:me,namaFasyankes:namaFaskes,jenisFasyankes:field(row,['Jenis Fasyankes','JenisFaskes']),namaPetugas:field(row,['Nama Petugas']),emailPetugas:field(row,['Email Petugas']),namaPenyakit:field(row,['Nama Penyakit']),nihil:nihil,status:status,namaKasus:namaKasus,tglLahir:field(row,['Tgl Lahir','Tanggal Lahir']),jenisKelamin:field(row,['Jenis Kelamin']),alamat:field(row,['Alamat & No Telp','Alamat']),tanggalMulai:field(row,['Tanggal Mulai']),gejala:field(row,['Gejala']),diagnosis:field(row,['Diagnosis Medis/Banding','Diagnosis']),statusImunisasi:field(row,['Status Imunisasi']),keadaan:field(row,['Keadaan (H/M)','Keadaan']),spesimen:field(row,['Spesimen / Penolong','Spesimen']),pengampu:pengampu,onTime:onTime,anomaly:anomaly};
+  }).filter(Boolean);
+  return out;
+}
+
+function _getDashboardData_(year, minggu, jenis, pengampu, token) {
+  const sess = (typeof _getSessionFromToken_ === 'function') ? _getSessionFromToken_(token) : null;
+  if (!sess || !sess.ok || !sess.user) throw new Error('Sesi tidak valid atau sudah berakhir.');
+  const role = (typeof _normalizePd3iRole_ === 'function') ? _normalizePd3iRole_(sess.user.role) : String(sess.user.role || '').toLowerCase();
+  const accessScope = {
+    allowAll: role === 'admin' || role === 'super-admin' || role === 'superadmin',
+    unitKerja: String(sess.user.unitKerja || sess.user.namaFaskes || '').trim()
+  };
   const y = Number(sarsDash_stripQuotes_(year)) || new Date().getFullYear();
   const jenisFilter = sarsDash_normJenisFilter_(jenis);
   const pengFilter = sarsDash_clean_(pengampu) || "all";
-  const resultCacheKey = ['SARS_DASH_RESULT', y, minggu, jenisFilter, pengFilter].join('|');
+  const resultCacheKey = ['SARS_DASH_RESULT', y, minggu, jenisFilter, pengFilter, accessScope.allowAll ? 'ALL' : sarsDash_normKey_(accessScope.unitKerja)].join('|');
   const cachedResult = sarsDash_cacheGetJson_(resultCacheKey);
   if (cachedResult) {
     cachedResult.cached = true;
@@ -531,7 +691,7 @@ function getDashboardData(year, minggu, jenis, pengampu) {
   const ss = sarsDash_open_();
 
   // MASTER sesuai filter + mapping
-  const masterObj = sarsDash_readMaster_(ss, jenisFilter, pengFilter);
+  const masterObj = sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope);
   const faskes = masterObj.faskes || [];
   const pengampuList = masterObj.pengampuList || [];
   const nameToKey = masterObj.nameToKey || {};
@@ -649,7 +809,7 @@ function getDashboardData(year, minggu, jenis, pengampu) {
 }
 
 /** Kompatibilitas lama */
-function getData(minggu, jenis, pengampu) {
+function getData(minggu, jenis, pengampu, token) {
   const year = new Date().getFullYear();
-  return getDashboardData(year, minggu, jenis, pengampu);
+  return getDashboardData(year, minggu, jenis, pengampu, token);
 }

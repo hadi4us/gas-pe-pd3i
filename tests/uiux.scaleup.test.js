@@ -1072,7 +1072,7 @@ test('Overview task inbox includes Zero Reporting and SARING-PIE indicators', ()
   assert.match(appJs, /SARING-PIE E3\/EX/);
   assert.match(appJs, /PIE PE\/lab pending/);
   assert.match(appJs, /getEpiMetaForDashboard\(new Date\(\)\.getFullYear\(\)\)/);
-  assert.match(appJs, /getDashboardData\(reportYear, reportWeek, 'all', 'all'\)/);
+  assert.match(appJs, /getDashboardData\(reportYear, reportWeek, 'all', 'all'(?:, sessionToken)?\)/);
   assert.match(appJs, /pieGetOperationalDashboard\(sessionToken\)/);
   assert.match(appJs, /data-overview-task-tab/);
   assert.match(styleHtml, /\.pd3i-overview-task-card\.is-cross-module/);

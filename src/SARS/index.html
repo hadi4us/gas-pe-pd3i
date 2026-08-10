@@ -217,6 +217,45 @@
       .pd3i-sars-form-grid{ grid-template-columns: 1fr !important; }
     }
 
+    /* Mobile browser: keep standalone form inside phone viewport. */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; }
+    .pd3i-sars-form-container,
+    .pd3i-sars-form-card,
+    #sarsForm { width: 100%; max-width: 100%; min-width: 0; }
+    #sarsForm { overflow: hidden; }
+    input, select, textarea, button { max-width: 100%; }
+    @media(max-width: 520px){
+      .pd3i-sars-form-container { padding: 8px !important; }
+      .pd3i-sars-form-card { padding: 12px !important; }
+      .pd3i-sars-form-header > div { padding: 0 10px !important; }
+      .pd3i-sars-form-header h1 { max-width: 100%; overflow-wrap: anywhere; line-height: 1.25 !important; }
+      .pd3i-sars-header-top { align-items: flex-start; }
+      .pd3i-sars-header-right { width: 100%; flex-wrap: wrap; }
+      .pd3i-sars-form-grid { width: 100% !important; min-width: 0 !important; gap: 12px !important; }
+      .pd3i-sars-form-grid > div,
+      .pd3i-sars-span-2,
+      .pd3i-sars-span-3 { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0 !important; }
+      .pd3i-sars-form-grid input,
+      .pd3i-sars-form-grid select,
+      .pd3i-sars-form-grid textarea { width: 100% !important; min-width: 0 !important; }
+      .pd3i-sars-disease-header { white-space: normal !important; overflow-wrap: anywhere; }
+      .pd3i-sars-nihil-row { display: block !important; }
+      .pd3i-sars-nihil-container,
+      .pd3i-sars-add-btn,
+      .pd3i-sars-submit-btn { width: 100% !important; max-width: 100% !important; margin-top: 8px; }
+      .pd3i-sars-case-row { width: 100% !important; min-width: 0 !important; overflow: hidden; }
+      .pd3i-sars-case-grid { display: grid !important; grid-template-columns: 1fr !important; width: 100% !important; min-width: 0 !important; gap: 10px !important; }
+      .pd3i-sars-case-grid > div,
+      .pd3i-sars-case-span-1,
+      .pd3i-sars-case-span-2,
+      .pd3i-sars-case-span-3 { grid-column: 1 / -1 !important; width: 100% !important; min-width: 0 !important; }
+      .pd3i-sars-case-grid input,
+      .pd3i-sars-case-grid select,
+      .pd3i-sars-case-grid textarea { width: 100% !important; min-width: 0 !important; }
+      .pd3i-sars-footer-note { overflow-wrap: anywhere; }
+    }
+
     /* Tombol */
     .pd3i-sars-submit-btn{
       border-radius: 10px !important;
@@ -299,7 +338,7 @@
         <div class="pd3i-sars-form-grid">
           <div>
             <label for="mingguEpid" class="pd3i-sars-required">Minggu Epidemiologis</label>
-            <input type="number" id="mingguEpid" min="1" max="53" value="<?= epidInfo.week ?>" pd3i-sars-required placeholder="Contoh: 26">
+            <input type="number" id="mingguEpid" min="1" max="53" value="<?= epidInfo.week ?>" pd3i-sars-required placeholder="Minggu epidemiologi berjalan -1: <?= epidInfo.week ?>">
             <div class="pd3i-sars-help-text">Periode kasus: <?= epidInfo.rangeLabel ?></div>
           </div>
 
