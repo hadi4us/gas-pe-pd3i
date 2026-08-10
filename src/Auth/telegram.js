@@ -211,7 +211,10 @@ function _sendOperationalWahaText_(chatId, lines) {
     : String(Config_Manager.getConfig('WAHA_BASE_URL') || '').trim().replace(/\/+$/, '');
   const apiKey = String(Config_Manager.getConfig('WAHA_API_KEY') || '').trim();
   const session = String(Config_Manager.getConfig('WAHA_SESSION') || 'default').trim() || 'default';
-  const target = String(chatId || Config_Manager.getConfig('WAHA_DINKES_CHAT_ID') || '').trim();
+  // Admin operational alerts must use notification group, not WAHA account's own chat.
+  // Keep Script Properties override, but recover from stale/missing target after WAHA reset.
+  const configuredTarget = String(chatId || Config_Manager.getConfig('WAHA_DINKES_CHAT_ID') || '').trim();
+  const target = /@g\.us$/i.test(configuredTarget) ? configuredTarget : '120363404877183787@g.us';
   if (!baseUrl) return { sent: false, reason: 'WAHA_BASE_URL_NOT_CONFIGURED' };
   if (!apiKey) return { sent: false, reason: 'WAHA_API_KEY_NOT_CONFIGURED' };
   if (!target) return { sent: false, reason: 'WAHA_TARGET_NOT_CONFIGURED' };

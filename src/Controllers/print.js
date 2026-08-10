@@ -63,6 +63,78 @@ function _resolveScopedPrintToken_(printToken, dx, epid) {
   };
 }
 
+/** One-time admin authorization check for Drive-backed PE PDF export. */
+function authorizePdfDrive() {
+  return { ok: true, driveName: DriveApp.getRootFolder().getName() };
+}
+
+function exportPdfDocument(dx, epid, token, recordKey) {
+  const auth = _getSessionFromToken_(token);
+  if (!auth.ok) throw new Error(auth.message || "Sesi tidak valid.");
+  dx = String(dx || "").trim().toUpperCase();
+  epid = String(epid || "").trim();
+  recordKey = String(recordKey || "").trim();
+  if (!dx || (!epid && !recordKey)) throw new Error("dx/epid wajib.");
+  const data = recordKey ? getRecordByKey(dx, recordKey, token) : getRecordByEpid(dx, epid, token);
+  if (!data) throw new Error("Data tidak ditemukan atau di luar wilayah kerja.");
+  const contactsRaw = data["Kontak Erat"] || data["KontakEratJSON"] || data["KontakEratJson"] || data["kontakEratJSON"] || "";
+  let contacts = [];
+  try { contacts = contactsRaw ? JSON.parse(contactsRaw) : []; } catch (e) { contacts = []; }
+  if (!Array.isArray(contacts)) contacts = Array.isArray(contacts.rows) ? contacts.rows : [];
+  const template = createTemplateFromFile_(getPrintTemplateName_(dx));
+  template.DATA = data;
+  epid = String(data["Nomor EPID"] || epid).trim();
+  template.META = { dx: dx, epid: epid, printedAt: new Date(), user: auth.user || {} };
+  template.CONTACTS = contacts;
+  const htmlOutput = template.evaluate().setTitle("Cetak PDF " + epid);
+  let pdf;
+  try {
+    pdf = htmlOutput.getAs(MimeType.PDF);
+  } catch (primaryErr) {
+    // Some Apps Script runtimes reject HtmlOutput.getAs(PDF); convert rendered HTML blob instead.
+    pdf = Utilities.newBlob(htmlOutput.getContent(), MimeType.HTML, "Dokumen_PE_" + epid + ".html").getAs(MimeType.PDF);
+  }
+  const code = String(data["Nomor EPID"] || epid).replace(/[^A-Za-z0-9_-]+/g, "_");
+  const name = "Dokumen_PE_" + code + ".pdf";
+  const propertyKey = "PE_PDF_DRIVE_" + dx + "_" + code;
+  const props = PropertiesService.getScriptProperties();
+  const existingId = String(props.getProperty(propertyKey) || "").trim();
+  if (existingId) {
+    try {
+      const existingFile = DriveApp.getFileById(existingId);
+      // Repair PDFs created before link-sharing was enabled.
+      existingFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      return { name: existingFile.getName(), mimeType: "application/pdf", fileId: existingId, driveUrl: "https://drive.google.com/file/d/" + existingId + "/view" };
+    } catch (lookupErr) {
+      props.deleteProperty(propertyKey);
+    }
+  }
+  let file;
+  try {
+    file = DriveApp.createFile(pdf.setName(name));
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (driveErr) {
+    console.error('PE PDF Drive authorization/write error:', driveErr);
+    throw new Error('PDF belum dapat dibuat karena akses Google Drive belum diotorisasi oleh admin aplikasi. Silakan hubungi admin.');
+  }
+  props.setProperty(propertyKey, file.getId());
+  return { name: name, mimeType: "application/pdf", fileId: file.getId(), driveUrl: "https://drive.google.com/file/d/" + file.getId() + "/view" };
+}
+
+function handlePdfExportRequest_(e) {
+  try {
+    const dx = String((e.parameter.dx || "")).trim().toUpperCase();
+    const epid = String((e.parameter.epid || "")).trim();
+    const token = String((e.parameter.token || e.parameter.sessionToken || "")).trim();
+    const result = exportPdfDocument(dx, epid, token);
+    const safeName = _printFallbackEscape_(result.name);
+    const safeBase64 = result.base64;
+    return HtmlService.createHtmlOutput("<!doctype html><html><head><meta charset='utf-8'><title>Download Dokumen PE</title></head><body><p>Menyiapkan file PDF...</p><script>(function(){var b='" + safeBase64 + "',bin=atob(b),bytes=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));a.download='" + safeName + "';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);},1000);})();</script></body></html>").setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (err) {
+    return HtmlService.createHtmlOutput("<h3>Gagal membuat file PDF. Silakan buka ulang dari aplikasi.</h3>");
+  }
+}
+
 function getPdfPrintUrl(dx, epid, token) {
   const auth = _getSessionFromToken_(token);
   if (!auth.ok) throw new Error(auth.message || "Sesi tidak valid.");

@@ -48,6 +48,7 @@ const RAW_SCHEMA_COMMON_ = {
   "sampel": [
     "Pemeriksaan Sampel Dilakukan",
     "Rincian Hasil Sampel",
+    "Jam Pengambilan Spesimen",
     "Jenis Sampel Diuji",
     "Nomor Sampel / Lab",
     "Tanggal Hasil Sampel",

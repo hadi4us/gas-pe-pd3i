@@ -6,6 +6,9 @@ function doGet(e) {
   if (action === "print") {
     return handlePrintRequest_(e);
   }
+  if (action === "exportpdf") {
+    return handlePdfExportRequest_(e);
+  }
 
   if (page === "sars" || page === "sars-form" || page === "zero-reporting" || page === "zero-reporting-form") {
     return renderSarsForm_(e);
@@ -14,7 +17,7 @@ function doGet(e) {
     return renderSarsDashboard_(e);
   }
 
-  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "sars-form", "sars-dashboard", "guide", "pie", "settings"];
+  const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "weekly-report-detail", "sars-form", "sars-dashboard", "guide", "pie", "settings"];
   const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
     ? "dashboard"
     : "app";
@@ -976,7 +979,7 @@ function searchRecords(dx, filters, token) {
       allowedVerificationStatuses = [explicitStatus];
     } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
       allowedVerificationStatuses = ['PENDING', 'TERVERIFIKASI', 'PERLU REVISI', 'DITOLAK'];
-    } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
+    } else if (workspace === 'edit' || (workspace !== 'search' && workflowIntent === 'section-pelapor')) {
       allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
     } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
       allowedVerificationStatuses = ['TERVERIFIKASI'];
@@ -1094,7 +1097,7 @@ function _searchRecordsDirectFromSheet_(dx, filters, token) {
       allowedVerificationStatuses = [explicitStatus];
     } else if (workflowIntent === 'section-verifikasi' || workspace === 'verifikasi') {
       allowedVerificationStatuses = ['PENDING', 'TERVERIFIKASI', 'PERLU REVISI', 'DITOLAK'];
-    } else if (workspace === 'edit' || workflowIntent === 'section-pelapor') {
+    } else if (workspace === 'edit' || (workspace !== 'search' && workflowIntent === 'section-pelapor')) {
       allowedVerificationStatuses = ['PERLU REVISI', 'DITOLAK'];
     } else if (workflowIntent === 'section-sampel' || workspace === 'sampel' || workflowIntent === 'section-status' || workspace === 'status') {
       allowedVerificationStatuses = ['TERVERIFIKASI'];
@@ -1754,18 +1757,30 @@ function _isWahaEnabled_() {
 }
 
 function _currentWahaBaseUrl_(configuredUrl) {
-  const configured = String(configuredUrl || '').trim().replace(/\/$/, '');
-  // Tunnel URLs are temporary and must never be embedded in Production code.
-  if (!configured || /^https:\/\/[^/]+\.trycloudflare\.com$/i.test(configured)) return '';
-  return configured;
+  // WAHA endpoint lives in Script Properties, not source code. Quick Tunnel URLs
+  // are temporary but valid for Development/runtime checks; reject only empty values.
+  return String(configuredUrl || '').trim().replace(/\/$/, '');
+}
+
+function _normalizeWahaChatId_(chatId) {
+  const raw = String(chatId || '').trim();
+  if (!raw) return '';
+  // WAHA expects WhatsApp JID. Keep group/LID/JID values unchanged;
+  // normalize plain Indonesian/international phone input to user JID.
+  if (/@/.test(raw)) return raw;
+  const digits = raw.replace(/[^0-9]/g, '');
+  if (!digits) return raw;
+  const intl = digits.indexOf('0') === 0 ? '62' + digits.slice(1) : digits;
+  return intl + '@c.us';
 }
 
 function _sendWahaText_(chatId, lines) {
-  if (!_isWahaEnabled_()) return { sent: false, reason: "WAHA_DISABLED", target: String(chatId || '').trim() };
+  const rawTarget = String(chatId || '').trim();
+  if (!_isWahaEnabled_()) return { sent: false, reason: "WAHA_DISABLED", target: rawTarget };
   const baseUrl = _currentWahaBaseUrl_(Config_Manager.getConfig("WAHA_BASE_URL"));
   const apiKey = String(Config_Manager.getConfig("WAHA_API_KEY") || '').trim();
   const session = String(Config_Manager.getConfig("WAHA_SESSION") || 'default').trim() || 'default';
-  const targetChatId = String(chatId || '').trim();
+  const targetChatId = _normalizeWahaChatId_(rawTarget);
   if (!baseUrl || !targetChatId) return { sent: false, reason: "WAHA_NOT_CONFIGURED", target: targetChatId };
   const payload = { session: session, chatId: targetChatId, text: (lines || []).join("\n") };
   const headers = { "Content-Type": "application/json" };
@@ -2510,7 +2525,7 @@ function _getWorkflowStageAllowedUpdateFields_(workflowStage) {
       'Verifikasi EPID Diupdate Oleh', 'Role Pengupdate Verifikasi EPID', 'Waktu Update Verifikasi EPID'
     ],
     'section-sampel': [
-      'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jenis Sampel Diuji', 'Nomor Sampel / Lab', 'Tanggal Hasil Sampel',
+      'Pemeriksaan Sampel Dilakukan', 'Rincian Hasil Sampel', 'Jam Pengambilan Spesimen', 'Jenis Sampel Diuji', 'Nomor Sampel / Lab', 'Tanggal Hasil Sampel',
       'Hasil Pemeriksaan Sampel', 'Interpretasi Hasil Sampel',
       'Hasil Pemeriksaan Diupdate Oleh', 'Role Pengupdate Hasil Pemeriksaan', 'Waktu Update Hasil Pemeriksaan'
     ],

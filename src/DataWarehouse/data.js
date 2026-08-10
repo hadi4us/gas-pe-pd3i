@@ -261,7 +261,11 @@ function _applyHeaderAliases_(dx, data, headers) {
   if (headers.includes("Demam?")) {
     const demamValue = String(data["Demam?"] || data["Demam"] || data["demam"] || "").trim();
     const demamDateValue = String(data["Tanggal mulai demam"] || "").trim();
-    if (!demamValue) {
+    // MR date is conditional evidence of fever. A stale hidden choice value
+    // must not override a date entered through the showIf field.
+    if (dx === "MR" && demamDateValue) {
+      data["Demam?"] = "Ya";
+    } else if (!demamValue) {
       data["Demam?"] = demamDateValue ? "Ya" : "Tidak";
     } else if (demamValue.toLowerCase() === "ya") {
       data["Demam?"] = "Ya";
@@ -274,7 +278,10 @@ function _applyHeaderAliases_(dx, data, headers) {
   if (headers.includes("Ruam Makulopapular?")) {
     const ruamValue = String(data["Ruam Makulopapular?"] || data["Ruam Makulopapular"] || data["ruam"] || "").trim();
     const ruamDateValue = String(data["Tanggal mulai ruam"] || "").trim();
-    if (!ruamValue) {
+    // Same invariant for MR rash date and stale hidden choice value.
+    if (dx === "MR" && ruamDateValue) {
+      data["Ruam Makulopapular?"] = "Ya";
+    } else if (!ruamValue) {
       data["Ruam Makulopapular?"] = ruamDateValue ? "Ya" : "Tidak";
     } else if (ruamValue.toLowerCase() === "ya") {
       data["Ruam Makulopapular?"] = "Ya";
