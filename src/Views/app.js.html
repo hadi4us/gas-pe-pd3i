@@ -7089,6 +7089,18 @@
       initChoicesRumahSakit(String(record["Nama Rumah Sakit"] || '').trim());
     }
 
+    // Re-assert choice-button fields after all hydration/dependent-field work.
+    // Some async dropdown/autofill handlers can touch hidden controls after the
+    // first pass; button state remains source of truth for Ya/Tidak fields.
+    ['Demam?', 'Ruam Makulopapular?'].forEach(function(fieldId) {
+      const choiceEl = findScopedFieldControl(fieldId, hydrateRoot);
+      const recordValue = pickRecordValueByAliases(record, [fieldId, fieldId.replace('?', ''), fieldId === 'Ruam Makulopapular?' ? 'ruam' : 'demam']);
+      const canonicalValue = String(recordValue == null ? '' : recordValue).trim();
+      if (choiceEl && canonicalValue) {
+        choiceEl.value = canonicalValue;
+        syncChoiceButtons(choiceEl);
+      }
+    });
     applyAllShowIf();
     [120, 320, 700].forEach(function(delayMs) {
       setTimeout(function() {
