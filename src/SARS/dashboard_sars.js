@@ -636,7 +636,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const iSubmit=ix(['Waktu Submit','WaktuSubmit','Timestamp','Waktu','Submit Time']);
   const iME=ix(['ME','Minggu Epid','MingguEpid','Minggu Epidemiologi']);
   if (iSubmit < 0 || iME < 0) throw new Error('Header Waktu Submit/ME tidak ditemukan.');
-  const wMatch=String(minggu == null ? '' : minggu).match(/\d+/);
+  const weekValue = String(minggu == null ? '' : minggu).trim().toUpperCase();
+  const allWeeks = weekValue === 'ALL' || weekValue === 'SEMUA' || weekValue === '*';
+  const wMatch=weekValue.match(/\d+/);
   const w=wMatch ? Number(wMatch[0]) : 1;
   const field = function(row,names){ const i=ix(names); return i >= 0 ? sarsDash_clean_(row[i]) : ''; };
   const out = values.slice(1).map(function(row){
@@ -645,7 +647,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const me = meMatch ? Number(meMatch[0]) : NaN;
     // Detail source filter is ME only. SARS rows may use submit date/year
     // differing from reporting epi-year (late entry, backfill, migration).
-    if (Number(me)!==w) return null;
+    if (!allWeeks && Number(me)!==w) return null;
     const namaFaskes=field(row,['Nama Fasyankes','NamaFasyankes','Nama Faskes']);
     const faskesKey=field(row,['FaskesKey','KodeFaskes','Kode Faskes']);
     const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);

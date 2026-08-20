@@ -326,7 +326,9 @@ function _checkDuplicate_(sheet, hmap, me, faskesKey) {
   if (lastRow < 2) return;
 
   const colME = hmap["ME"];
-  const colKey = hmap["KodeFaskes"];
+  const colKey = hmap["KodeFaskes"] !== undefined
+    ? hmap["KodeFaskes"]
+    : (hmap["FaskesKey"] !== undefined ? hmap["FaskesKey"] : hmap["Faskes Key"]);
   if (colME === undefined || colKey === undefined) return;
 
   const meVals  = sheet.getRange(2, colME + 1, lastRow - 1, 1).getValues();
@@ -394,9 +396,13 @@ function submitSARS(formData) {
     "Waktu Submit","Email Petugas","ME","Nama Petugas","No Whatsapp","Unit Surveilans",
     "Jenis Fasyankes","Nama Fasyankes","Nama Penyakit","Nihil",
     "Tgl Lahir","Spesimen / Penolong","Diagnosis Medis/Banding",
-    "Deadline","OnTime","KodeFaskes"
+    "Deadline","OnTime"
   ];
   MUST.forEach(h => _sRequire_(h in hmap, `Header "${h}" tidak ditemukan di sheet ${shData.getName()}.`));
+  _sRequire_(
+    hmap["KodeFaskes"] !== undefined || hmap["FaskesKey"] !== undefined || hmap["Faskes Key"] !== undefined,
+    `Header "KodeFaskes" tidak ditemukan di sheet ${shData.getName()}. Gunakan "KodeFaskes" atau "FaskesKey".`
+  );
   _sRequire_(hmap["KodeFaskes Pengampu"] !== undefined || hmap["FaskesPengampu"] !== undefined,
     `Header "KodeFaskes Pengampu" tidak ditemukan di sheet ${shData.getName()}.`);
 

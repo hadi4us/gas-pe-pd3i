@@ -1121,7 +1121,7 @@
       if (!yearEl || !weekEl) return;
       const year = Number(window.DEFAULT_DASHBOARD_YEAR || new Date().getFullYear());
       yearEl.innerHTML = '<option value="' + year + '">' + year + '</option>';
-      weekEl.innerHTML = Array.from({length: 52}, function(_, i){ return '<option value="' + (i + 1) + '">ME ' + (i + 1) + '</option>'; }).join('');
+      weekEl.innerHTML = '<option value="ALL">Semua minggu</option>' + Array.from({length: 53}, function(_, i){ return '<option value="' + (i + 1) + '">ME ' + (i + 1) + '</option>'; }).join('');
       weekEl.value = String(Number(window.DEFAULT_DASHBOARD_WEEK || 1));
       yearEl.onchange = loadWeeklyReportDetail;
       weekEl.onchange = loadWeeklyReportDetail;
@@ -1131,7 +1131,8 @@
 
     function loadWeeklyReportDetail(){
       const year = Number(document.getElementById('weeklyDetailYear')?.value || new Date().getFullYear());
-      const week = Number(document.getElementById('weeklyDetailWeek')?.value || 1);
+      const weekValue = String(document.getElementById('weeklyDetailWeek')?.value || 1);
+      const week = weekValue === 'ALL' ? 'ALL' : Number(weekValue);
       const note = document.getElementById('weeklyDetailNote');
       window.__WEEKLY_DETAIL_ROWS = [];
       var downloadBtn = document.getElementById('btnDownloadWeeklyDetail'); if (downloadBtn) downloadBtn.disabled = true;
@@ -1153,7 +1154,7 @@
       const target = document.getElementById('weeklyDetailTable');
       if (!target) return;
       const cols = [['waktuSubmit','Waktu Kirim'],['me','ME'],['namaFasyankes','Fasyankes'],['jenisFasyankes','Jenis'],['namaPetugas','Petugas'],['namaPenyakit','Penyakit'],['nihil','Nihil'],['namaKasus','Nama Kasus'],['tglLahir','Tgl Lahir'],['jenisKelamin','JK'],['alamat','Alamat'],['tanggalMulai','Mulai Sakit'],['gejala','Gejala'],['diagnosis','Diagnosis'],['statusImunisasi','Imunisasi'],['keadaan','Keadaan'],['spesimen','Spesimen']];
-      var summary = document.getElementById('weeklyDetailSummary'); if (summary) { var nihil=rows.filter(function(r){return r.status==='Nihil';}).length, kasus=rows.filter(function(r){return r.status==='Ada kasus';}).length, faskes={}; rows.forEach(function(r){faskes[r.namaFasyankes||''] = 1;}); summary.innerHTML = '<strong>' + rows.length + '</strong> laporan <span>• ' + Object.keys(faskes).filter(Boolean).length + ' faskes</span><span>• ' + nihil + ' nihil</span><span>• ' + kasus + ' ada kasus</span><span>• ME ' + esc(document.getElementById('weeklyDetailWeek')?.value || '') + '</span>'; }
+      var summary = document.getElementById('weeklyDetailSummary'); if (summary) { var nihil=rows.filter(function(r){return r.status==='Nihil';}).length, kasus=rows.filter(function(r){return r.status==='Ada kasus';}).length, faskes={}; rows.forEach(function(r){faskes[r.namaFasyankes||''] = 1;}); summary.innerHTML = '<strong>' + rows.length + '</strong> laporan <span>• ' + Object.keys(faskes).filter(Boolean).length + ' faskes</span><span>• ' + nihil + ' nihil</span><span>• ' + kasus + ' ada kasus</span><span>• ' + (document.getElementById('weeklyDetailWeek')?.value === 'ALL' ? 'Semua ME' : 'ME ' + esc(document.getElementById('weeklyDetailWeek')?.value || '')) + '</span>'; }
       var downloadBtn = document.getElementById('btnDownloadWeeklyDetail'); if (downloadBtn) downloadBtn.disabled = !rows.length;
       if (!rows.length) { target.innerHTML = '<div class="note">Tidak ada laporan faskes pada ME terpilih.</div>'; return; }
       var compact = [['waktuSubmit','Waktu Kirim'],['namaFasyankes','Fasyankes'],['status','Status'],['namaPenyakit','Penyakit'],['namaKasus','Nama Kasus'],['keadaan','Keadaan'],['diagnosis','Diagnosis'],['onTime','Tepat Waktu']];
