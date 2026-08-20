@@ -15,25 +15,25 @@
     {
       "name": "authLogin",
       "file": "src/Auth/auth.js",
-      "line": 260,
+      "line": 324,
       "guard": "public-login"
     },
     {
       "name": "authCheck",
       "file": "src/Auth/auth.js",
-      "line": 367,
+      "line": 431,
       "guard": "token"
     },
     {
       "name": "authLogout",
       "file": "src/Auth/auth.js",
-      "line": 438,
+      "line": 502,
       "guard": "token"
     },
     {
       "name": "authChangePin",
       "file": "src/Auth/auth.js",
-      "line": 471,
+      "line": 535,
       "guard": "token"
     },
     {
@@ -225,7 +225,7 @@
     {
       "name": "getPdfPrintUrl",
       "file": "src/Controllers/print.js",
-      "line": 136,
+      "line": 144,
       "guard": "token-scope"
     },
     {
@@ -237,7 +237,7 @@
     {
       "name": "handlePrintRequest_",
       "file": "src/Controllers/print.js",
-      "line": 155,
+      "line": 163,
       "guard": "token-scope"
     },
     {
