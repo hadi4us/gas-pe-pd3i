@@ -108,7 +108,12 @@ function _authOtpCooldownKey_(email) {
 }
 
 function _normalizeGmail_(email) {
-  return String(email || "").trim().toLowerCase();
+  return String(email == null ? "" : email)
+    .replace(/[\u0000-\u001F\u007F\u00A0\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .replace(/^mailto:/i, "")
+    .trim()
+    .toLowerCase();
 }
 
 function _hashOtpValue_(email, otp) {
@@ -122,6 +127,54 @@ function _hashOtpValue_(email, otp) {
 
 function _generateLoginOtp_() {
   return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+/** Run once from Apps Script editor to authorize MailApp scope. */
+function authorizeMailScope() {
+  return { service: "Brevo", configured: !!PropertiesService.getScriptProperties().getProperty("BREVO_API_KEY") };
+}
+
+function testBrevoConnection() {
+  const props = PropertiesService.getScriptProperties();
+  const apiKey = String(props.getProperty("BREVO_API_KEY") || "").replace(/[\\r\\n\\t]/g, "").trim();
+  const senderEmail = String(props.getProperty("BREVO_SENDER_EMAIL") || "").replace(/[\\r\\n\\t]/g, "").trim();
+  if (!apiKey || !senderEmail) return { status: "error", configured: false, hasApiKey: !!apiKey, hasSenderEmail: !!senderEmail };
+  const response = UrlFetchApp.fetch("https://api.brevo.com/v3/account", {
+    method: "get",
+    headers: { "api-key": apiKey, "accept": "application/json" },
+    muteHttpExceptions: true
+  });
+  const code = response.getResponseCode();
+  let body = response.getContentText() || "";
+  try {
+    const obj = JSON.parse(body);
+    body = obj.message || obj.code || (obj.email ? "account_ok" : "response_received");
+  } catch (e) { body = body.slice(0, 200); }
+  return { status: code >= 200 && code < 300 ? "success" : "error", httpCode: code, configured: true, senderEmail: senderEmail, brevoMessage: body };
+}
+
+function _sendOtpViaBrevo_(to, otp) {
+  const props = PropertiesService.getScriptProperties();
+  const apiKey = String(props.getProperty("BREVO_API_KEY") || "").replace(/[\\r\\n\\t]/g, "").trim();
+  const senderEmail = String(props.getProperty("BREVO_SENDER_EMAIL") || "").replace(/[\\r\\n\\t]/g, "").trim();
+  const senderName = "SIMPEL Surveilans Dinkes Kota Depok";
+  if (!apiKey || !senderEmail) throw new Error("BREVO_API_KEY atau BREVO_SENDER_EMAIL belum diset di Script Properties.");
+  const response = UrlFetchApp.fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "post",
+    contentType: "application/json",
+    headers: { "api-key": apiKey, "accept": "application/json" },
+    payload: JSON.stringify({
+      sender: { email: senderEmail, name: senderName },
+      to: [{ email: String(to).trim() }],
+      subject: "Kode OTP SIMPEL Surveilans",
+      textContent: "Kode OTP Anda adalah: " + otp + "\n\nKode berlaku selama 5 menit. Jangan bagikan kode ini."
+    }),
+    muteHttpExceptions: true
+  });
+  const status = response.getResponseCode();
+  const body = response.getContentText();
+  if (status < 200 || status >= 300) throw new Error("Brevo HTTP " + status + ": " + body.slice(0, 300));
+  return body;
 }
 
 function _findUserByEmail_(email) {
@@ -218,11 +271,22 @@ function requestLoginOtp(email) {
       }
     }
 
-    MailApp.sendEmail({
-      to: email,
-      subject: "Kode OTP SS PD3I",
-      body: "Kode OTP Anda adalah: " + otp + "\n\nKode berlaku selama 5 menit.\n\nAbaikan email ini jika Anda tidak meminta OTP."
-    });
+    try {
+      _sendOtpViaBrevo_(email, otp);
+    } catch (mailErr) {
+      // Keep OTP value private; expose actionable service failure only.
+      let detail = String(mailErr && mailErr.message || mailErr || '').trim();
+      let message = "OTP email gagal dikirim. ";
+      if (/^Brevo HTTP\s+401\b/i.test(detail)) message += "API key Brevo tidak valid atau sudah dicabut.";
+      else if (/^Brevo HTTP\s+400\b/i.test(detail)) message += "Sender Brevo belum terverifikasi atau payload email tidak valid.";
+      else if (/^Brevo HTTP\s+403\b/i.test(detail)) message += "API key Brevo tidak punya izin SMTP.";
+      else if (/^Brevo HTTP\s+429\b/i.test(detail)) message += "Brevo sedang membatasi pengiriman. Coba lagi nanti.";
+      else if (/too many times|quota|limit/i.test(detail)) message += "Quota/rate limit layanan email tercapai.";
+      else if (/(invalid\s+(argument|email|recipient)|invalid.*(recipient|email address)|recipient.*invalid|bad.*email)/i.test(detail)) message += "Alamat email penerima ditolak layanan email.";
+      else message += "Layanan email menolak pengiriman. Cek detail Apps Script Executions.";
+      try { console.error("OTP email send failed:", { email: email, detail: detail, fallbackReason: fallbackReason }); } catch (logErr) {}
+      return { status: "error", message: message, code: "OTP_EMAIL_SEND_FAILED", fallbackReason: fallbackReason || "EMAIL_SEND_FAILED" };
+    }
 
     return { status: "success", message: fallbackReason ? "OTP Telegram belum tersedia. OTP dikirim ke email Anda." : "OTP sudah dikirim ke email Anda.", channel: fallbackReason ? "email_fallback" : "email", fallbackReason: fallbackReason, cooldownSec: 60 };
   } catch (e) {
