@@ -94,9 +94,15 @@ function exportPdfDocument(dx, epid, token, recordKey) {
     // Some Apps Script runtimes reject HtmlOutput.getAs(PDF); convert rendered HTML blob instead.
     pdf = Utilities.newBlob(htmlOutput.getContent(), MimeType.HTML, "Dokumen_PE_" + epid + ".html").getAs(MimeType.PDF);
   }
-  const code = String(data["Nomor EPID"] || epid).replace(/[^A-Za-z0-9_-]+/g, "_");
+  const recordIdentity = String(
+    data["Nomor EPID"] || epid || data["ID Registrasi Kasus"] || recordKey || ""
+  ).trim();
+  const code = recordIdentity.replace(/[^A-Za-z0-9_-]+/g, "_");
   const name = "Dokumen_PE_" + code + ".pdf";
-  const propertyKey = "PE_PDF_DRIVE_" + dx + "_" + code;
+  // Cache must use physical record identity, not EPID. EPID can be empty or duplicated.
+  const cacheIdentity = String(recordKey || data["ID Registrasi Kasus"] || recordIdentity).trim();
+  const cacheCode = cacheIdentity.replace(/[^A-Za-z0-9_-]+/g, "_");
+  const propertyKey = "PE_PDF_DRIVE_V2_" + dx + "_" + cacheCode;
   const props = PropertiesService.getScriptProperties();
   const existingId = String(props.getProperty(propertyKey) || "").trim();
   if (existingId) {
