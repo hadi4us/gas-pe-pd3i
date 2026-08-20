@@ -1122,7 +1122,7 @@
       const year = Number(window.DEFAULT_DASHBOARD_YEAR || new Date().getFullYear());
       yearEl.innerHTML = '<option value="' + year + '">' + year + '</option>';
       weekEl.innerHTML = '<option value="ALL">Semua minggu</option>' + Array.from({length: 53}, function(_, i){ return '<option value="' + (i + 1) + '">ME ' + (i + 1) + '</option>'; }).join('');
-      weekEl.value = Number(window.DEFAULT_DASHBOARD_WEEK || 0) > 0 ? String(Number(window.DEFAULT_DASHBOARD_WEEK)) : 'ALL';
+      weekEl.value = String(window.__PD3I_ACTIVE_WORKSPACE || window.__PD3I_ACTIVE_SIDEBAR_WORKSPACE || '').trim() === 'weekly-report-detail' ? 'ALL' : (Number(window.DEFAULT_DASHBOARD_WEEK || 0) > 0 ? String(Number(window.DEFAULT_DASHBOARD_WEEK)) : 'ALL');
       yearEl.onchange = loadWeeklyReportDetail;
       weekEl.onchange = loadWeeklyReportDetail;
       ['weeklyDetailStatus','weeklyDetailDisease'].forEach(function(id){ var el = document.getElementById(id); if (el) el.onchange = applyWeeklyDetailFilter_; });
