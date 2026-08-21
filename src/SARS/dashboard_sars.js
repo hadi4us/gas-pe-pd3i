@@ -608,7 +608,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const role = (typeof _normalizePd3iRole_ === 'function') ? _normalizePd3iRole_(sess.user.role) : String(sess.user.role || '').toLowerCase();
   const scopeLevel = String(sess.user.scopeLevel || '').toLowerCase().replace(/[_\s]+/g, '-');
   const allowAll = role === 'admin' || role === 'super-admin' || role === 'superadmin' || scopeLevel === 'dinkes';
-  const unitKey = sarsDash_normKey_(sess.user.unitKerja || sess.user.namaFaskes || '');
+  const sessionScopeValues = [sess.user.unitKerja, sess.user.namaFaskes, sess.user.kodePuskesmas, sess.user.faskesKey, sess.user.faskesKeyPengampu].filter(Boolean).map(sarsDash_normKey_);
+  const unitKeys = {}; sessionScopeValues.forEach(function(v){ if (v) unitKeys[v] = true; });
+  const unitKey = sessionScopeValues[0] || '';
   const ss = sarsDash_open_();
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
@@ -654,9 +656,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const faskesKeyPengampu=field(row,['FaskesKeyPengampu','Faskes Key Pengampu','KodePengampu','Kode Pengampu']);
     const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);
     const belongs = allowAll
-      || sarsDash_normKey_(namaFaskes) === unitKey
-      || sarsDash_normKey_(unitSurveilans) === unitKey
-      || sarsDash_normKey_(pengampu) === unitKey
+      || !!unitKeys[sarsDash_normKey_(namaFaskes)]
+      || !!unitKeys[sarsDash_normKey_(unitSurveilans)]
+      || !!unitKeys[sarsDash_normKey_(pengampu)]
       || !!scopedNames[sarsDash_normKey_(namaFaskes)]
       || !!scopedNames[sarsDash_normKey_(unitSurveilans)]
       || !!scopedNames[sarsDash_normKey_(pengampu)]
