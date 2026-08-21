@@ -1,6 +1,24 @@
 const AUTH_CACHE = CacheService.getScriptCache();
 const SESSION_ABSOLUTE_TTL_SECONDS = 6 * 60 * 60;
 
+function _authSessionProps_() { return PropertiesService.getScriptProperties(); }
+function _storeAuthSessionToken_(token, payload, ttl) {
+  const key = 'TOKEN_' + String(token || '').trim();
+  if (key === 'TOKEN_') return;
+  const value = typeof payload === 'string' ? payload : JSON.stringify(payload || {});
+  _authSessionProps_().setProperty(key, value);
+}
+function _readAuthSessionToken_(token) {
+  const key = 'TOKEN_' + String(token || '').trim();
+  return AUTH_CACHE.get(key) || _authSessionProps_().getProperty(key);
+}
+function _removeAuthSessionToken_(token) {
+  const key = 'TOKEN_' + String(token || '').trim();
+  AUTH_CACHE.remove(key);
+  _authSessionProps_().deleteProperty(key);
+}
+
+
 /**
  * Session_Manager — mengelola TTL sesi per role.
  * Req 11.1, 11.2, 11.3, 11.4
@@ -142,7 +160,7 @@ function _getSessionFromToken_(token) {
   token = String(token || "").trim();
   if (!token) return { ok: false, message: "Token kosong." };
 
-  const raw = AUTH_CACHE.get("TOKEN_" + token);
+  const raw = _readAuthSessionToken_(token);
   if (!raw) return { ok: false, message: "Sesi habis. Silakan login ulang." };
 
   let obj = null;
@@ -161,7 +179,7 @@ function _getSessionFromToken_(token) {
   const issuedAt = Number(obj.issuedAt || obj.ts || 0);
   const absoluteExpiresAt = Number(obj.absoluteExpiresAt || (issuedAt ? issuedAt + (SESSION_ABSOLUTE_TTL_SECONDS * 1000) : nowTs + (Session_Manager.getTtlForRole(obj.user && obj.user.role) * 1000)));
   if (absoluteExpiresAt && nowTs >= absoluteExpiresAt) {
-    AUTH_CACHE.remove("TOKEN_" + token);
+    _removeAuthSessionToken_(token);
     return { ok: false, message: "Sesi habis. Silakan login ulang." };
   }
   // Req 11.3 & 11.4: gunakan TTL dari objek sesi; fallback ke getTtlForRole jika tidak ada

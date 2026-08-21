@@ -314,6 +314,7 @@ function verifyLoginOtp(email, otp) {
     const nowTs = Date.now();
     const absoluteExpiresAt = nowTs + (SESSION_ABSOLUTE_TTL_SECONDS * 1000);
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: user, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }), ttl);
+    _storeAuthSessionToken_(token, { user: user, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }, ttl);
     if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) Audit_Logger.logLogin(user);
     return { status: "success", token: token, user: user, ttlSec: ttl, issuedAt: nowTs, expiresAt: nowTs + (ttl * 1000) };
   } catch (e) {
@@ -417,6 +418,7 @@ function authLogin(username, pin) {
     const nowTs = Date.now();
     const absoluteExpiresAt = nowTs + (SESSION_ABSOLUTE_TTL_SECONDS * 1000);
     AUTH_CACHE.put("TOKEN_" + token, JSON.stringify({ user: found, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }), ttl);
+    _storeAuthSessionToken_(token, { user: found, ts: nowTs, issuedAt: nowTs, ttl: ttl, absoluteExpiresAt: absoluteExpiresAt }, ttl);
 
     if (typeof Audit_Logger !== "undefined" && Audit_Logger.logLogin) {
       Audit_Logger.logLogin(found);
@@ -433,7 +435,7 @@ function authCheck(token) {
     token = String(token || "").trim();
     if (!token) return { status: "error", message: "Token kosong." };
 
-    const raw = AUTH_CACHE.get("TOKEN_" + token);
+    const raw = AUTH_CACHE.get("TOKEN_" + token) || _readAuthSessionToken_(token);
     if (!raw) return { status: "error", message: "Sesi habis. Silakan login ulang." };
 
     let obj = null;
@@ -458,6 +460,7 @@ function authCheck(token) {
     const absoluteExpiresAt = Number(obj.absoluteExpiresAt || (issuedAt + (SESSION_ABSOLUTE_TTL_SECONDS * 1000)));
     if (nowTs >= absoluteExpiresAt) {
       AUTH_CACHE.remove("TOKEN_" + token);
+      _removeAuthSessionToken_(token);
       return { status: "error", message: "Sesi habis. Silakan login ulang." };
     }
     const configuredTtl = obj.ttl || Session_Manager.getTtlForRole(obj.user.role);
@@ -503,7 +506,7 @@ function authLogout(token) {
   try {
     token = String(token || "").trim();
     if (token) {
-      const raw = AUTH_CACHE.get("TOKEN_" + token);
+      const raw = AUTH_CACHE.get("TOKEN_" + token) || _readAuthSessionToken_(token);
       let user = null;
       if (raw) {
         try {
@@ -515,6 +518,7 @@ function authLogout(token) {
         Audit_Logger.logLogout(user);
       }
       AUTH_CACHE.remove("TOKEN_" + token);
+      _removeAuthSessionToken_(token);
     }
     return { status: "success" };
   } catch (e) {
