@@ -649,13 +649,19 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // differing from reporting epi-year (late entry, backfill, migration).
     if (!allWeeks && Number(me)!==w) return null;
     const namaFaskes=field(row,['Nama Fasyankes','NamaFasyankes','Nama Faskes']);
+    const unitSurveilans=field(row,['Unit Surveilans','UnitSurveilans']);
     const faskesKey=field(row,['FaskesKey','KodeFaskes','Kode Faskes']);
+    const faskesKeyPengampu=field(row,['FaskesKeyPengampu','Faskes Key Pengampu','KodePengampu','Kode Pengampu']);
     const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);
     const belongs = allowAll
       || sarsDash_normKey_(namaFaskes) === unitKey
+      || sarsDash_normKey_(unitSurveilans) === unitKey
       || sarsDash_normKey_(pengampu) === unitKey
       || !!scopedNames[sarsDash_normKey_(namaFaskes)]
-      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)];
+      || !!scopedNames[sarsDash_normKey_(unitSurveilans)]
+      || !!scopedNames[sarsDash_normKey_(pengampu)]
+      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)]
+      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKeyPengampu)];
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
     const status = /^(1|ya|yes|nihil)$/i.test(nihil) ? 'Nihil' : (namaKasus ? 'Ada kasus' : 'Tidak jelas');
