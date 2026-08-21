@@ -83,9 +83,10 @@ function _extractUserScopeInfoFromRow_(row, headers) {
     return -1;
   }
 
-  const ixUnit = idx(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+  const ixUnit = idx(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas", "Unit Surveilans"]);
   const ixFaskes = idx(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-  const ixKode = idx(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
+  const ixKode = idx(["KodeFaskes", "Kode Faskes", "Kode PKM", "FaskesKey", "Faskes Key"]);
+  const ixFaskesPengampu = idx(["FaskesKeyPengampu", "Faskes Key Pengampu", "KodePengampu", "Kode Pengampu"]);
   const ixScope = idx(["ScopeLevel", "Scope Level"]);
   const ixWa = idx(["No Whatsapp", "No WhatsApp", "Whatsapp", "WhatsApp", "NoWA", "No WA", "WA"]);
 
@@ -93,6 +94,8 @@ function _extractUserScopeInfoFromRow_(row, headers) {
     unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
     namaFaskes: ixFaskes !== -1 ? String(row[ixFaskes] || "").trim() : "",
     kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+    faskesKey: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+    faskesKeyPengampu: ixFaskesPengampu !== -1 ? String(row[ixFaskesPengampu] || "").trim() : "",
     scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim().toLowerCase() : "",
     noWhatsapp: ixWa !== -1 ? String(row[ixWa] || "").trim() : ""
   };

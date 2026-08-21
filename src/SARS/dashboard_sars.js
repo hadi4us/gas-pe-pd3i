@@ -626,6 +626,17 @@ function getWeeklySubmittedRows(year, minggu, token) {
     scopedNames[sarsDash_normKey_(f.nama)] = true;
     scopedKeys[sarsDash_normFaskesKey_(f.key)] = true;
   });
+  // REF_PENGAMPU is authoritative for facility-to-PKM scope. Master reader
+  // intentionally excludes PKM rows, so PKM users need this mapping directly.
+  if (!allowAll) {
+    const refPeng = sarsDash_readRefPengampu_(ss);
+    Object.keys(refPeng.byKey || {}).forEach(function(k) {
+      if (unitKeys[sarsDash_normKey_(refPeng.byKey[k])]) scopedKeys[sarsDash_normFaskesKey_(k)] = true;
+    });
+    Object.keys(refPeng.byName || {}).forEach(function(n) {
+      if (unitKeys[sarsDash_normKey_(refPeng.byName[n])]) scopedNames[sarsDash_normKey_(n)] = true;
+    });
+  }
   const dataSheet = sarsDash_dataSheet_(ss);
   const sh = ss.getSheetByName(dataSheet);
   if (!sh) throw new Error('Sheet SARS tidak ditemukan.');

@@ -15,25 +15,25 @@
     {
       "name": "authLogin",
       "file": "src/Auth/auth.js",
-      "line": 325,
+      "line": 328,
       "guard": "public-login"
     },
     {
       "name": "authCheck",
       "file": "src/Auth/auth.js",
-      "line": 433,
+      "line": 436,
       "guard": "token"
     },
     {
       "name": "authLogout",
       "file": "src/Auth/auth.js",
-      "line": 505,
+      "line": 508,
       "guard": "token"
     },
     {
       "name": "authChangePin",
       "file": "src/Auth/auth.js",
-      "line": 539,
+      "line": 542,
       "guard": "token"
     },
     {
