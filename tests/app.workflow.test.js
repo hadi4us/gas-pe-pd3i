@@ -317,7 +317,7 @@ test('Daftar Kasus search uses short client cache and refined loading skeleton',
   assert.match(appHtmlRaw, /let WORKSPACE_SEARCH_RESULT_CACHE = \{\}/);
   assert.match(appHtmlRaw, /function getWorkspaceSearchResultCache\(workspace, dx, filters\)/);
   assert.match(appHtmlRaw, /Date\.now\(\) - entry\.at\) > 20000/);
-  assert.match(appInitHtmlRaw, /const cachedSearchData = workspace === 'search' \? null : \(typeof getWorkspaceSearchResultCache === 'function'/);
+  assert.match(appInitHtmlRaw, /const cachedSearchData = typeof getWorkspaceSearchResultCache === 'function'/);
   assert.match(appInitHtmlRaw, /setWorkspaceSearchResultCache\(workspace, dx, filters, data\)/);
   assert.match(appInitHtmlRaw, /Memuat daftar kasus halaman/);
   assert.match(utilsHtml, /pd3i-skeleton-spinner/);
