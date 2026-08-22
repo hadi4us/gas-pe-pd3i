@@ -1,5 +1,5 @@
 /******************************************************
- * config.gs — Konfigurasi terpusat SARS-PD3I Depok (FINAL)
+ * config.gs — Konfigurasi terpusat SARS-PD3I Depok
  * Tujuan:
  * - Hindari duplikasi const (TZ, SHEET_MASTER, dll.)
  * - Semua file lain membaca dari SARS_CONFIG

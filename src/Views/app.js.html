@@ -1,6 +1,6 @@
 <script>
   // ============================================================
-  // APP.JS.HTML — FINAL STABLE
+  // APP.JS.HTML — runtime
   // ============================================================
 
   window.rsChoicesInstance = window.rsChoicesInstance || null;
@@ -3839,7 +3839,7 @@
         !link.hidden && !link.classList.contains('hidden') && link.getAttribute('aria-hidden') !== 'true';
       if (active) activeLink = link;
     });
-    // Defensive cleanup: duplicate legacy/markup handlers must never leave
+    // Defensive cleanup: stale handlers must never leave
     // more than one sidebar item highlighted.
     document.querySelectorAll('.pd3i-nav-link.is-active, .pd3i-nav-button.is-active').forEach(function(link) {
       if (link !== activeLink) {

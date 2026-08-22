@@ -1,5 +1,5 @@
 /************************************
- * epi_week.gs — Minggu Epidemiologi (MMWR) Depok (FINAL)
+ * epi_week.gs — Minggu Epidemiologi (MMWR) Depok
  * Standar:
  * - Minggu epidemiologi: Minggu–Sabtu (Start Sunday, End Saturday)
  * - MMWR Week #1 = minggu yang memuat 4 Januari (>= 4 hari di Januari)

@@ -1,5 +1,5 @@
 /******************************************************
- * dashboard_sars.gs — DATA API Dashboard SARS (FINAL)
+ * dashboard_sars.gs — DATA API Dashboard SARS
  * Kompatibel struktur spreadsheet terbaru:
  * - REF_FASKES: KodePuskesmas, NamaFaskes, Jenis, Pengampu, Email, StatusAktif, Alias, ...
  * - SARS  : Waktu Submit, Email Petugas, ME, ..., Jenis Fasyankes, Nama Fasyankes, ...,

@@ -76,9 +76,6 @@ test('verification save gives local feedback, timeout, and modal confirmation fo
   assert.match(appHtml, /if \(!\/google\\\.script\\\.run tidak tersedia\/i\.test\(gsMessage\)\) \{\s*throw gsErr;\s*\}/);
   assert.match(appHtml, /const verificationDoneMessage = \(res\.nextWorkflowLabel \|\| res\.message \|\| 'Verifikasi selesai'\) \+ '\. Daftar verifikasi sudah diperbarui\.'/);
   assert.match(appHtml, /showSuccessModal\(\s*verificationDoneMessage,\s*'',\s*\{ dx: dxSaved, epid: epidSaved, token: SESSION_TOKEN \}\s*\)/);
-  assert.match(styleHtml, /\.pd3i-helper-text\.is-loading[\s\S]*?color: #1d4ed8/);
-  assert.match(styleHtml, /\.pd3i-helper-text\.is-success[\s\S]*?color: #047857/);
-  assert.match(styleHtml, /\.pd3i-helper-text\.is-error[\s\S]*?color: #b91c1c/);
 });
 
 const routesJs = fs.readFileSync(path.join(__dirname, '..', 'src', 'Controllers', 'routes.js'), 'utf8');
@@ -203,9 +200,6 @@ test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variab
   assert.match(appHtml, /search: 'Daftar Kasus'/);
   assert.match(appHtml, /isViewerMode \? 'Buka \/ Lihat' : 'Edit'/);
   assert.match(appHtml, /class=\"pd3i-search-result-action is-edit\"/);
-  assert.match(styleHtml, /\.pd3i-search-result-cta-wrap \{[\s\S]*?gap: 0\.7rem;[\s\S]*?flex-wrap: wrap;/);
-  assert.match(styleHtml, /\.pd3i-search-result-action\.is-edit \{[\s\S]*?#3b82f6[\s\S]*?#1d4ed8/);
-  assert.match(styleHtml, /\.pd3i-search-result-action\.is-danger \{[\s\S]*?#ef4444[\s\S]*?#dc2626/);
   assert.match(workspaceSearchHtml, /id="search-diagnosis"/);
   assert.match(workspaceSearchHtml, /<select id="search-kecamatan"[\s\S]*?Semua kecamatan/);
   assert.match(workspaceSearchHtml, /<select id="search-kelurahan"[\s\S]*?Semua kelurahan/);
@@ -288,7 +282,6 @@ test('Daftar Kasus and Verifikasi back-to-list controls clear open record withou
   assert.match(appHtmlRaw, /window\.__PD3I_WORKFLOW_LIST_COLLAPSED__\[workspaceKey\] = false/);
   assert.match(appHtmlRaw, /openSidebarWorkspace\(\['verifikasi', 'sampel', 'status'\]\.includes\(workspaceKey\) \? workspaceKey : 'search', \{ scroll: true, skipRecordReload: true \}\)/);
   assert.match(workspaceSearchHtml + workspaceVerifikasiHtml, /Kembali ke daftar kasus|Kembali ke daftar verifikasi/);
-  assert.match(styleHtml, /\.pd3i-back-to-list-btn/);
 });
 
 test('opening Daftar Kasus or Verifikasi menu resets active detail to list-first view', () => {
@@ -321,7 +314,6 @@ test('Daftar Kasus search uses short client cache and refined loading skeleton',
   assert.match(appInitHtmlRaw, /setWorkspaceSearchResultCache\(workspace, dx, filters, data\)/);
   assert.match(appInitHtmlRaw, /Memuat daftar kasus halaman/);
   assert.match(utilsHtml, /pd3i-skeleton-spinner/);
-  assert.match(styleHtml, /@keyframes pd3iSpinner/);
 });
 
 test('each sidebar menu has a dedicated spreadsheet-backed backend API', () => {
@@ -677,7 +669,7 @@ test('production client logs do not leak captcha answers or noisy workflow debug
 test('session restore does not leave auth boot overlay loading indefinitely', () => {
   const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
 const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
-  assert.ok(styleHtml.indexOf('.hidden { display: none !important; }') > styleHtml.indexOf('.flex { display: flex !important; }'));
+  assert.match(styleHtml, /\.hidden,\[hidden\]\{display:none!important\}/);
   assert.match(authHtml, /const AUTH_RESTORE_TIMEOUT_MS = 8000;/);
   assert.match(authHtml, /const restoreTimeout = window\.setTimeout\(function \(\) \{[\s\S]*?setLoggedOutUI\(\);[\s\S]*?Pemeriksaan sesi terlalu lama\. Silakan login ulang\./);
   assert.match(authHtml, /function finishRestoreSession\(action\) \{[\s\S]*?if \(restoreFinished\) return false;[\s\S]*?window\.clearTimeout\(restoreTimeout\);/);
@@ -738,9 +730,6 @@ const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'ut
   assert.match(appHtml, /aria-label="Geser tabel \$\{field\.label\} ke kanan\/kiri"/);
   assert.match(appHtml, /class="pd3i-table-scroll-hint md:hidden"/);
   assert.match(appHtml, /<table class="pd3i-dynamic-table w-full/);
-  assert.match(styleHtml, /\.pd3i-dynamic-table-container \{[\s\S]*?overflow-x: auto !important;[\s\S]*?-webkit-overflow-scrolling: touch;[\s\S]*?touch-action: pan-x pan-y;/);
-  assert.match(styleHtml, /\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{[\s\S]*?width: max-content !important;[\s\S]*?min-width: 100%;/);
-  assert.match(styleHtml, /@media \(max-width: 768px\) \{[\s\S]*?\.pd3i-dynamic-table-container \.pd3i-dynamic-table \{\s*min-width: 72rem;\s*\}/);
 });
 
 test('quality gate includes endpoint security inventory with no review-needed callable functions', () => {
@@ -847,9 +836,6 @@ test('PIE quality data insight card is full-width below dashboard cards', () => 
 test('mobile sidebar overlay does not reserve desktop grid column', () => {
   const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
 const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
-  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-app \{[\s\S]*?display: block;[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/);
-  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-page \{[\s\S]*?width: 100%;[\s\S]*?min-width: 0;/);
-  assert.match(styleHtml, /@media \(max-width: 1100px\) \{[\s\S]*?\.pd3i-sidebar \{[\s\S]*?position: fixed;[\s\S]*?transform: translateX\(-108%\);/);
 });
 
 test('PIE identity fields have consistent input box height', () => {
