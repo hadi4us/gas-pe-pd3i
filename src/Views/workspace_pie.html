@@ -303,10 +303,10 @@
   #section-pie .pie-kpi-card span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--pd3i-muted);font-weight:700}
   #section-pie .pie-kpi-card b{display:block;font-size:clamp(1.45rem,4vw,2rem);line-height:1.1;color:var(--pd3i-text);margin:.25rem 0;overflow-wrap:anywhere;font-family:var(--font-data);font-variant-numeric:tabular-nums}
   #section-pie .pie-kpi-card small{color:var(--pd3i-muted);line-height:1.35}
-  #section-pie .pie-kpi-card.danger:before{background:#ef4444}.pie-kpi-card.danger b{color:#dc2626}
-  #section-pie .pie-kpi-card.warning:before{background:#f59e0b}.pie-kpi-card.warning b{color:#d97706}
-  #section-pie .pie-kpi-card.indigo:before{background:#6366f1}.pie-kpi-card.indigo b{color:#4f46e5}
-    #section-pie .pie-insight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-3);padding:0 var(--space-4) var(--space-4);background:var(--pd3i-surface)}
+  #section-pie .pie-kpi-card.danger:before{background:#ef4444}#section-pie .pie-kpi-card.danger b{color:#dc2626}
+  #section-pie .pie-kpi-card.warning:before{background:#f59e0b}#section-pie .pie-kpi-card.warning b{color:#d97706}
+  #section-pie .pie-kpi-card.indigo:before{background:#6366f1}#section-pie .pie-kpi-card.indigo b{color:#4f46e5}
+  #section-pie .pie-insight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-3);padding:0 var(--space-4) var(--space-4);background:var(--pd3i-surface)}
   #section-pie .pie-insight-card{border:1px solid var(--pd3i-border);border-radius:var(--radius-lg);padding:var(--space-4);background:linear-gradient(180deg,var(--pd3i-surface),var(--pd3i-surface-soft));min-width:0}
   #section-pie .pie-insight-card-full{grid-column:1 / -1}
   #section-pie .pie-quality-wide{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-2)}
@@ -315,7 +315,8 @@
   #section-pie .pie-insight-head span{font-weight:800;color:var(--pd3i-text)}.pie-insight-head small{color:var(--pd3i-muted);text-align:right}
   #section-pie .pie-chip-row .badge{border-radius:var(--radius-pill);padding:.45rem .65rem;margin:.15rem;background:#eef2ff!important;color:#3730a3!important;border-color:#c7d2fe!important}
   #section-pie .pie-screening-output-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-4);width:100%;min-width:0;margin-top:var(--space-4)}
-  #section-pie .pie-inner-card{width:calc(100% - (var(--space-4) * 2));max-width:calc(100% - (var(--space-4) * 2));margin-left:auto;margin-right:auto}
+  /* Nested cards must fill parent; inset spacing belongs to parent padding. */
+  #section-pie .pie-inner-card{min-width:0}
   #section-pie .pie-eval-card,#section-pie .pie-followup-card{min-width:0;overflow-wrap:anywhere}
   #section-pie .pie-followup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-2)}
   #section-pie .pie-identity-grid{align-items:stretch}
@@ -326,7 +327,7 @@
   #section-pie .pie-analytics-density .space-y-2>*+*{margin-top:var(--space-2)!important}
   #section-pie .pie-analytics-density [id$="-bars"]{min-width:0;overflow-wrap:anywhere}
   @media(max-width:900px){#section-pie .pie-command-priority,#section-pie .pie-command-review{grid-template-columns:1fr}}
-  @media(max-width:640px){#section-pie .pie-command-hero{padding:var(--space-4)}#section-pie .pie-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);padding:var(--space-3)}#section-pie .pie-kpi-card{padding:var(--space-3)}#section-pie .pie-kpi-card span{font-size:.66rem}#section-pie .pie-kpi-card small{font-size:.72rem}#section-pie .pie-insight-grid{grid-template-columns:1fr;gap:var(--space-2);padding:0 var(--space-3) var(--space-3)}#section-pie .pie-insight-card{padding:var(--space-3)}#section-pie .pie-insight-head{align-items:flex-start;flex-direction:column;gap:var(--space-1)}#section-pie .pie-insight-head small{text-align:left}}
+  @media(max-width:640px){#section-pie .pie-command-hero{padding:var(--space-4)}#section-pie .pie-command-actions,#section-pie .pie-command-actions .pd3i-btn{width:100%}#section-pie .pie-command-actions .pd3i-btn{flex:1 1 100%}#section-pie .pie-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);padding:var(--space-3)}#section-pie .pie-kpi-card{padding:var(--space-3)}#section-pie .pie-kpi-card span{font-size:.66rem}#section-pie .pie-kpi-card small{font-size:.72rem}#section-pie .pie-insight-grid{grid-template-columns:1fr;gap:var(--space-2);padding:0 var(--space-3) var(--space-3)}#section-pie .pie-insight-card{padding:var(--space-3)}#section-pie .pie-insight-head{align-items:flex-start;flex-direction:column;gap:var(--space-1)}#section-pie .pie-insight-head small{text-align:left}}
 </style>
 
 <script>
