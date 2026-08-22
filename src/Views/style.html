@@ -18598,3 +18598,156 @@ html, body, body.pd3i-body { background: var(--pd3i-shell-page) !important; }
   #section-overview #overview-work-summary { grid-template-columns: 1fr !important; }
   #section-overview .pd3i-overview-task-card { min-height: 150px !important; }
 }
+
+/* Daftar Kasus redesign: search-first registry with stronger scan hierarchy. */
+#section-search-shell.pd3i-search-card {
+  max-width: 1280px !important;
+  border: 0 !important;
+  border-radius: 22px !important;
+  background: #f1f6fb !important;
+  box-shadow: none !important;
+}
+#section-search-shell > .pd3i-page-header {
+  padding: 1.35rem 1.5rem !important;
+  margin: 0 0 1rem !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #102a43 0%, #164e63 60%, #0f766e 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 30px rgba(16, 42, 67, .2) !important;
+}
+#section-search-shell #workflow-search-title {
+  color: #fff !important;
+  font-size: clamp(1.35rem, 2vw, 1.8rem) !important;
+  letter-spacing: -.025em !important;
+}
+#section-search-shell .pd3i-search-toolbar {
+  padding: 1.25rem !important;
+  border: 1px solid #d7e4ef !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(30, 64, 175, .07) !important;
+}
+#section-search-shell .pd3i-search-toolbar-head {
+  margin-bottom: 1rem !important;
+  padding-bottom: .8rem !important;
+  border-bottom: 1px solid #e5edf5 !important;
+}
+#section-search-shell .pd3i-search-toolbar-title {
+  color: #102a43 !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+}
+#section-search-shell .pd3i-search-filter-grid {
+  gap: .8rem !important;
+}
+#section-search-shell .pd3i-search-filter-grid > div:first-child {
+  grid-column: span 2 !important;
+}
+#section-search-shell .pd3i-search-filter-grid input,
+#section-search-shell .pd3i-search-filter-grid select {
+  min-height: 46px !important;
+  border: 1px solid #cbd9e7 !important;
+  border-radius: 11px !important;
+  background: #fbfdff !important;
+}
+#section-search-shell .pd3i-search-filter-grid input:focus,
+#section-search-shell .pd3i-search-filter-grid select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .13) !important;
+}
+#section-search-shell .pd3i-search-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: .7rem !important;
+  margin-top: 1rem !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid #e5edf5 !important;
+}
+#section-search-shell #btn-search-epid {
+  min-height: 46px !important;
+  padding-inline: 1.25rem !important;
+  border-radius: 11px !important;
+  background: #2563eb !important;
+}
+#section-search-shell .pd3i-search-sort-select {
+  min-height: 46px !important;
+  margin-left: auto !important;
+  border-radius: 11px !important;
+}
+#section-search-shell .pd3i-search-results-panel {
+  margin-top: 1rem !important;
+  padding: 1rem !important;
+  border: 1px solid #d7e4ef !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(15, 35, 65, .07) !important;
+}
+#section-search-shell .pd3i-search-result-card {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  gap: 1rem !important;
+  align-items: center !important;
+  padding: 1rem !important;
+  margin-bottom: .7rem !important;
+  border: 1px solid #dbe7f3 !important;
+  border-left: 5px solid #64748b !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+#section-search-shell .pd3i-search-result-card:hover,
+#section-search-shell .pd3i-search-result-card:focus-within {
+  border-color: #93c5fd !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, .1) !important;
+  transform: translateY(-1px) !important;
+}
+#section-search-shell .pd3i-search-result-index {
+  width: 40px !important;
+  height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 12px !important;
+  background: #e8f0fb !important;
+  color: #1d4ed8 !important;
+  font-weight: 800 !important;
+}
+#section-search-shell .pd3i-search-result-title,
+#section-search-shell .pd3i-search-result-dx {
+  color: #102a43 !important;
+}
+#section-search-shell .pd3i-search-result-title { font-size: 1rem !important; font-weight: 800 !important; }
+#section-search-shell .pd3i-search-result-meta { color: #52667a !important; line-height: 1.5 !important; }
+#section-search-shell .pd3i-search-result-badge {
+  border-radius: 999px !important;
+  padding: .3rem .6rem !important;
+  font-weight: 700 !important;
+}
+#section-search-shell .pd3i-search-result-action {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+}
+#section-search-shell .pd3i-search-safety-brief {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: .75rem !important;
+  margin-top: 1rem !important;
+}
+#section-search-shell .pd3i-search-safety-brief > div {
+  padding: .85rem !important;
+  border: 1px solid #dbe7f3 !important;
+  border-radius: 13px !important;
+  background: #f8fbff !important;
+}
+#section-search-shell .pd3i-search-safety-brief strong { color: #0f766e !important; }
+#section-search-shell .pd3i-search-safety-brief span { color: #52667a !important; }
+@media (max-width: 760px) {
+  #section-search-shell > .pd3i-page-header { padding: 1rem !important; }
+  #section-search-shell .pd3i-search-toolbar { padding: .85rem !important; }
+  #section-search-shell .pd3i-search-filter-grid > div:first-child { grid-column: auto !important; }
+  #section-search-shell .pd3i-search-actions { flex-wrap: wrap !important; }
+  #section-search-shell .pd3i-search-sort-select { width: 100% !important; margin-left: 0 !important; }
+  #section-search-shell .pd3i-search-result-card { grid-template-columns: 40px minmax(0, 1fr) !important; }
+  #section-search-shell .pd3i-search-result-cta-wrap { grid-column: 1 / -1 !important; width: 100% !important; }
+  #section-search-shell .pd3i-search-result-action { width: 100% !important; justify-content: center !important; }
+  #section-search-shell .pd3i-search-safety-brief { grid-template-columns: 1fr !important; }
+}
