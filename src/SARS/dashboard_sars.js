@@ -301,8 +301,6 @@ function sarsDash_readRefPengampu_(ss) {
     const pengKey = idxPengKey >= 0 ? sarsDash_normFaskesKey_(row[idxPengKey]) : '';
     // pengampu_key is canonical even when display-name column is blank.
     if (pengKey) out.pengampuKeys[pengKey] = true;
-    if (!peng || peng === '-') return;
-    out.list.push(peng);
     const code = idxCode >= 0 ? sarsDash_normFaskesKey_(row[idxCode]) : '';
     // Some REF_PENGAMPU rows contain pengampu_key without faskes_key.
     // Keep key as canonical identity regardless of row shape.
@@ -313,6 +311,9 @@ function sarsDash_readRefPengampu_(ss) {
       if (!out.faskesKeysByPengampuKey[pengKey]) out.faskesKeysByPengampuKey[pengKey] = [];
       out.faskesKeysByPengampuKey[pengKey].push(code);
     }
+    // Mapping rows may intentionally omit display name; key mapping remains valid.
+    if (!peng || peng === '-') return;
+    out.list.push(peng);
     if (code && pengKey) out.pengampuKeysByKey[code] = pengKey;
     if (code && pengKey) out.pengampuKeyByFaskesKey[code] = pengKey;
     if (name) out.byName[name] = peng;
@@ -640,6 +641,16 @@ function getWeeklySubmittedRows(year, minggu, token) {
     pengampuKey = refPengampu.pengampuKeysByKey[unitKey];
   }
   const canonicalPengampuKey = pengampuKey || unitKey;
+  // Accept both REF_USER.pengampu_key and the puskesmas faskes_key as
+  // candidates. SARS.pengampu_key is the authoritative row scope.
+  const scopePengampuKeys = {};
+  [pengampuKey, canonicalPengampuKey, unitKey].forEach(function(key) {
+    key = sarsDash_normFaskesKey_(key);
+    if (key) scopePengampuKeys[key] = true;
+  });
+  if (unitKey && refPengampu.pengampuKeysByKey && refPengampu.pengampuKeysByKey[unitKey]) {
+    scopePengampuKeys[sarsDash_normFaskesKey_(refPengampu.pengampuKeysByKey[unitKey])] = true;
+  }
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
   // FaskesPengampu as code while session unitKerja stores puskesmas name.
@@ -709,7 +720,11 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // Petugas akun faskes pelapor must never inherit pengampu scope merely
     // because REF_USER also contains a resolvable pengampu_key. Only an
     // explicit puskesmas/pengampu scope may see assigned facilities.
-    const explicitPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
+    const accountIsCanonicalPengampu = !!pengampuKey && (
+      (!!unitKey && unitKey === pengampuKey) ||
+      !!(refPengampu.pengampuKeysByKey && refPengampu.pengampuKeysByKey[unitKey])
+    );
+    const explicitPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel) || accountIsCanonicalPengampu;
     const isReporterScope = !explicitPengampuScope && (
       /^(faskes-pelapor|faskes|petugas|unit-pelapor)$/.test(scopeLevel) ||
       /^(petugas|faskes|faskes-pelapor)$/.test(roleText)
@@ -717,7 +732,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const isPengampuScope = explicitPengampuScope;
     const rowFaskesKey = sarsDash_normFaskesKey_(faskesKey);
     const faskesMatch = !!unitKey && rowFaskesKey === unitKey;
-    const pengampuMatch = !!canonicalPengampuKey && rowPengampuKey === canonicalPengampuKey;
+    const pengampuMatch = !!rowPengampuKey && !!scopePengampuKeys[rowPengampuKey];
     // In current SARS data, pengampu_key is the pengampu facility's key,
     // while each submitted row keeps that key in faskes_key. Match the
     // session pengampu_key against row faskes_key explicitly.
