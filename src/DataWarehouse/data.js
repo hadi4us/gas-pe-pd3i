@@ -443,19 +443,19 @@ function getPengampuByWilayah_(kecamatan, kelurahan, kabKota) {
 
   const headers = data[0].map(h => String(h || "").trim());
   const rows = data.slice(1);
-  const idxKab = headers.indexOf("Kab/Kota");
-  const idxKecamatan = headers.indexOf("Kecamatan");
-  const idxKelurahan = headers.indexOf("Kelurahan");
-  const idxKodePuskesmas = headers.indexOf("KodeFaskes");
-  const idxNamaPuskesmas = headers.indexOf("NamaPuskesmas");
-  const idxPengampu = headers.indexOf("Pengampu");
-  const idxKapus = headers.indexOf("KepalaPuskesmas");
-  const idxEmailKapus = headers.indexOf("EmailKapus");
-  const idxPetugas = headers.indexOf("PetugasSurveilans");
-  const idxEmailPetugas = headers.indexOf("EmailPetugas");
-  const idxSpreadsheetId = headers.indexOf("SpreadsheetId") !== -1 ? headers.indexOf("SpreadsheetId") : headers.indexOf("SpreadsheetIdTujuan");
-  const idxSpreadsheetUrl = headers.indexOf("SpreadsheetUrl") !== -1 ? headers.indexOf("SpreadsheetUrl") : headers.indexOf("SpreadsheetUrlTujuan");
-  const idxTelegramChatId = headers.indexOf("TelegramChatId");
+  const idxKab = _headerIndexCI_(headers, ["Kab/Kota", "Kabupaten/Kota"]);
+  const idxKecamatan = _headerIndexCI_(headers, ["Kecamatan"]);
+  const idxKelurahan = _headerIndexCI_(headers, ["Kelurahan", "Kelurahan/Desa"]);
+  const idxKodePuskesmas = _headerIndexCI_(headers, ["KodeFaskes", "KodePuskesmas", "faskes_key", "KodeFaskes Pengampu"]);
+  const idxNamaPuskesmas = _headerIndexCI_(headers, ["NamaPuskesmas", "Nama Puskesmas", "Puskesmas Pengampu"]);
+  const idxPengampu = _headerIndexCI_(headers, ["Pengampu", "nama_pengampu"]);
+  const idxKapus = _headerIndexCI_(headers, ["KepalaPuskesmas", "Kepala Puskesmas"]);
+  const idxEmailKapus = _headerIndexCI_(headers, ["EmailKapus", "Email Kapus"]);
+  const idxPetugas = _headerIndexCI_(headers, ["PetugasSurveilans", "Petugas Surveilans"]);
+  const idxEmailPetugas = _headerIndexCI_(headers, ["EmailPetugas", "Email Petugas"]);
+  const idxSpreadsheetId = _headerIndexCI_(headers, ["SpreadsheetId", "SpreadsheetIdTujuan"]);
+  const idxSpreadsheetUrl = _headerIndexCI_(headers, ["SpreadsheetUrl", "SpreadsheetUrlTujuan"]);
+  const idxTelegramChatId = _headerIndexCI_(headers, ["TelegramChatId"]);
 
   const kecNorm = _normalizeWilayahKey_(kecamatan);
   const kelNorm = _normalizeWilayahKey_(kelurahan);

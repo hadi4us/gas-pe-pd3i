@@ -190,7 +190,7 @@ function _findUserByEmail_(email) {
 
   function headerIndex(names) {
     for (var i = 0; i < names.length; i++) {
-      const ix = headers.indexOf(names[i]);
+      const ix = _headerIndexCI_(headers, [names[i]]);
       if (ix !== -1) return ix;
     }
     return -1;
@@ -349,11 +349,11 @@ function authLogin(username, pin) {
     const headers = values[0].map(h => String(h || "").trim());
     const rows = values.slice(1);
 
-    const ixUser = headers.indexOf("Username");
-    const ixPin = headers.indexOf("PIN");
-    const ixNama = headers.indexOf("Nama");
-    const ixRole = headers.indexOf("Role");
-    const ixAktif = headers.indexOf("Aktif") !== -1 ? headers.indexOf("Aktif") : headers.indexOf("StatusAktif");
+    const ixUser = _headerIndexCI_(headers, ["Username", "username", "email"]);
+    const ixPin = _headerIndexCI_(headers, ["PIN", "Pin", "pin"]);
+    const ixNama = _headerIndexCI_(headers, ["Nama", "Nama Petugas", "nama_petugas"]);
+    const ixRole = _headerIndexCI_(headers, ["Role", "role"]);
+    const ixAktif = _headerIndexCI_(headers, ["Aktif", "StatusAktif", "status"]);
 
     if (ixUser === -1 || ixPin === -1) {
       return { status: "error", message: "Kolom Username/PIN untuk password belum ada di REF_USER." };
@@ -481,7 +481,7 @@ function _refreshAuthUserFromRefUser_(cachedUser) {
   const headers = values[0].map(function(h) { return String(h || "").trim(); });
   function ix(names) {
     const normalized = headers.map(function(h) { return h.toLowerCase(); });
-    for (var i = 0; i < names.length; i++) { var n = headers.indexOf(names[i]); if (n !== -1) return n; }
+    for (var i = 0; i < names.length; i++) { var n = _headerIndexCI_(headers, [names[i]]); if (n !== -1) return n; }
     for (var j = 0; j < names.length; j++) { var normalizedIx = normalized.indexOf(String(names[j] || "").trim().toLowerCase()); if (normalizedIx !== -1) return normalizedIx; }
     return -1;
   }
@@ -564,8 +564,8 @@ function authChangePin(token, oldPin, newPin) {
     }
 
     const headers = data[0].map(h => String(h || "").trim());
-    const ixUser = headers.indexOf("Username");
-    const ixPin = headers.indexOf("PIN");
+    const ixUser = _headerIndexCI_(headers, ["Username", "username", "email"]);
+    const ixPin = _headerIndexCI_(headers, ["PIN", "Pin", "pin"]);
 
     if (ixUser === -1 || ixPin === -1) {
       return { status: "error", message: "Kolom Username/PIN untuk password belum ada di REF_USER." };
@@ -604,7 +604,7 @@ function manageGetUsers(token) {
 
     function headerIndex(names) {
       for (var i = 0; i < names.length; i++) {
-        const ix = headers.indexOf(names[i]);
+        const ix = _headerIndexCI_(headers, [names[i]]);
         if (ix !== -1) return ix;
       }
       return -1;
@@ -672,7 +672,7 @@ function manageSaveUser(token, userPayload) {
 
     function headerIndex(names) {
       for (var i = 0; i < names.length; i++) {
-        const ix = headers.indexOf(names[i]);
+        const ix = _headerIndexCI_(headers, [names[i]]);
         if (ix !== -1) return ix;
       }
       return -1;
@@ -758,7 +758,7 @@ function manageDeleteUser(token, username) {
 
     const values = sh.getDataRange().getValues();
     const headers = values[0].map(function(h) { return String(h || "").trim(); });
-    const ixUser = headers.indexOf("Username");
+    const ixUser = _headerIndexCI_(headers, ["Username", "username", "email"]);
 
     if (ixUser === -1) {
       return { ok: false, error: "Kolom Username tidak ditemukan di REF_USER." };

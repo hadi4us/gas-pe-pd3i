@@ -173,9 +173,9 @@ function getAdminOperationalNotificationEmails_() {
     const values = sh.getDataRange().getValues();
     if (!values || values.length < 2) return [];
     const headers = values[0].map(function(h) { return String(h || '').trim(); });
-    const idxEmail = ['Email', 'Gmail', 'EmailPetugas'].map(function(h) { return headers.indexOf(h); }).filter(function(i) { return i !== -1; })[0];
-    const idxRole = headers.indexOf('Role');
-    const idxAktif = ['Aktif', 'StatusAktif'].map(function(h) { return headers.indexOf(h); }).filter(function(i) { return i !== -1; })[0];
+    const idxEmail = _headerIndexCI_(headers, ['Email', 'Gmail', 'EmailPetugas']);
+    const idxRole = _headerIndexCI_(headers, ['Role', 'role']);
+    const idxAktif = _headerIndexCI_(headers, ['Aktif', 'StatusAktif', 'status']);
     if (idxEmail === undefined || idxRole === -1) return [];
     const seen = {};
     return values.slice(1).map(function(row) {
@@ -504,11 +504,11 @@ function _handleTelegramUpdate_(update) {
     if (requestSheet) {
       const requestValues = requestSheet.getDataRange().getValues();
       const requestHeaders = requestValues[0].map(function(v) { return String(v || '').trim(); });
-      const requestIdIx = requestHeaders.indexOf('RequestId');
-      const requestEmailIx = requestHeaders.indexOf('Gmail');
-      const requestStatusIx = requestHeaders.indexOf('StatusPermohonan');
-      const requestChatIx = requestHeaders.indexOf('TelegramChatId');
-      const requestUserIx = requestHeaders.indexOf('TelegramUsername');
+      const requestIdIx = _headerIndexCI_(requestHeaders, ['RequestId']);
+      const requestEmailIx = _headerIndexCI_(requestHeaders, ['Gmail', 'Email']);
+      const requestStatusIx = _headerIndexCI_(requestHeaders, ['StatusPermohonan']);
+      const requestChatIx = _headerIndexCI_(requestHeaders, ['TelegramChatId']);
+      const requestUserIx = _headerIndexCI_(requestHeaders, ['TelegramUsername']);
       for (var q = 1; q < requestValues.length; q++) {
         if (requestEmailIx >= 0 && requestStatusIx >= 0 &&
             _normalizeGmail_(requestValues[q][requestEmailIx]) === requestEmail &&
@@ -529,7 +529,7 @@ function _handleTelegramUpdate_(update) {
   const sh = getSheetOrNull_('REF_USER');
   const values = sh.getDataRange().getValues();
   const headers = values[0].map(function(v) { return String(v || '').trim(); });
-  const ixEmail = headers.indexOf('Gmail') !== -1 ? headers.indexOf('Gmail') : headers.indexOf('Email');
+  const ixEmail = _headerIndexCI_(headers, ['Gmail', 'Email']);
   const ix = {}; headers.forEach(function(h, i) { ix[h] = i; });
   for (var r = 1; r < values.length; r++) {
     if (_normalizeGmail_(values[r][ixEmail]) !== email) continue;

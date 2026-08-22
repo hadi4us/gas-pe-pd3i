@@ -132,6 +132,17 @@ function getTrimmedHeaders_(sheet) {
   return sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => String(h || "").trim());
 }
 
+/** Header lookup shared by reference-sheet readers. Names compare trim/case-insensitive. */
+function _headerIndexCI_(headers, names) {
+  const normalized = (headers || []).map(function(h) { return String(h || '').trim().toLowerCase(); });
+  for (var i = 0; i < (names || []).length; i++) {
+    const wanted = String(names[i] || '').trim().toLowerCase();
+    const index = normalized.indexOf(wanted);
+    if (index !== -1) return index;
+  }
+  return -1;
+}
+
 function responseJSON(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))

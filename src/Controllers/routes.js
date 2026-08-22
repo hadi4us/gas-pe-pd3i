@@ -813,11 +813,11 @@ function getWorkflowFilterOptions(token) {
 
   if (data && data.length > 1) {
     const headers = data[0].map(function(h) { return String(h || '').trim(); });
-    const idxKecamatan = headers.indexOf('Kecamatan');
-    const idxKelurahan = headers.indexOf('Kelurahan');
-    const idxKodePuskesmas = headers.indexOf('KodeFaskes') !== -1 ? headers.indexOf('KodeFaskes') : headers.indexOf('KodeFaskes Pengampu');
-    const idxNamaPuskesmas = headers.indexOf('NamaPuskesmas') !== -1 ? headers.indexOf('NamaPuskesmas') : headers.indexOf('Puskesmas Pengampu');
-    const idxPengampu = headers.indexOf('Pengampu');
+    const idxKecamatan = _headerIndexCI_(headers, ['Kecamatan']);
+    const idxKelurahan = _headerIndexCI_(headers, ['Kelurahan']);
+    const idxKodePuskesmas = _headerIndexCI_(headers, ['KodeFaskes', 'KodeFaskes Pengampu', 'KodePuskesmas', 'faskes_key']);
+    const idxNamaPuskesmas = _headerIndexCI_(headers, ['NamaPuskesmas', 'Puskesmas Pengampu', 'Nama Puskesmas']);
+    const idxPengampu = _headerIndexCI_(headers, ['Pengampu', 'nama_pengampu']);
     const isRowInUserScope = function(row) {
       if (canSeeAllReferenceWilayah) return true;
       const rowKode = idxKodePuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxKodePuskesmas]) : '';
