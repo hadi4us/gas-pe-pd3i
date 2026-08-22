@@ -295,7 +295,7 @@ function sarsDash_readRefPengampu_(ss) {
   const idxName = sarsDash_refIndex_(headers, ['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'NamaPuskesmas', 'Nama Puskesmas']);
   const idxKec = sarsDash_refIndex_(headers, ['Kecamatan', 'Nama Kecamatan']);
   const idxKel = sarsDash_refIndex_(headers, ['Kelurahan', 'Nama Kelurahan']);
-  const out = { list: [], byKey: {}, byName: {}, byRegion: {}, faskesKeysByPengampuKey: {}, pengampuKeysByKey: {}, pengampuKeyByFaskesKey: {}, pengampuKeys: {} };
+  const out = { list: [], byKey: {}, byName: {}, byRegion: {}, faskesKeysByPengampuKey: {}, pengampuKeysByKey: {}, pengampuKeyByFaskesKey: {}, pengampuKeyByName: {}, pengampuKeys: {} };
   values.slice(1).forEach(row => {
     const peng = idxPeng >= 0 ? sarsDash_clean_(row[idxPeng]) : '';
     const pengKey = idxPengKey >= 0 ? sarsDash_normFaskesKey_(row[idxPengKey]) : '';
@@ -307,6 +307,7 @@ function sarsDash_readRefPengampu_(ss) {
     const name = idxName >= 0 ? sarsDash_normKey_(row[idxName]) : '';
     if (code) out.byKey[code] = peng;
     if (pengKey) out.byKey['__PENGAMPU__' + pengKey] = peng;
+    if (pengKey) out.pengampuKeyByName[sarsDash_normKey_(peng)] = pengKey;
     if (pengKey && code) {
       if (!out.faskesKeysByPengampuKey[pengKey]) out.faskesKeysByPengampuKey[pengKey] = [];
       out.faskesKeysByPengampuKey[pengKey].push(code);
@@ -639,6 +640,13 @@ function getWeeklySubmittedRows(year, minggu, token) {
   }
   if (!pengampuKey && unitKey && refPengampu.pengampuKeysByKey && refPengampu.pengampuKeysByKey[unitKey]) {
     pengampuKey = refPengampu.pengampuKeysByKey[unitKey];
+  }
+  if (!pengampuKey) {
+    const accountNames = [sess.user.unitKerja, sess.user.namaFaskes, sess.user.nama];
+    for (let i = 0; i < accountNames.length && !pengampuKey; i++) {
+      const key = refPengampu.pengampuKeyByName && refPengampu.pengampuKeyByName[sarsDash_normKey_(accountNames[i])];
+      if (key) pengampuKey = key;
+    }
   }
   const canonicalPengampuKey = pengampuKey || unitKey;
   // Accept both REF_USER.pengampu_key and the puskesmas faskes_key as
