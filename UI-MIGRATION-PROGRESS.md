@@ -24,6 +24,7 @@
 - Repository check attempted: `npm run test:node` currently fails on an existing workflow-search assertion (`normalized === 'search'` branch), unrelated to current UI changes; no Development deploy yet.
 - PIE regression assertion updated to match already-committed safe nested-card rule (`min-width:0`), but full suite remains blocked by the unrelated existing assertion.
 - PIE inline widths for template preview and case filters moved to scoped classes; mini-bar fixed heights moved to CSS, preserving dynamic width percentage.
+- SARS empty-state spacing and rows-per-page width moved to local classes; runtime display behavior preserved.
 - Run targeted/static checks and responsive smoke review before first Development deploy.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.

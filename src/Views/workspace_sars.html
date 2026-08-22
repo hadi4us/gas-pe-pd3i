@@ -1,5 +1,8 @@
 
-<style>/* SARS styles handled by SS PD3I design system in style.html */</style>
+<style>
+  .pd3i-sars-empty{display:none;margin-top:10px}
+  .pd3i-sars-rows-select{min-width:120px}
+/* SARS styles handled by SS PD3I design system in style.html */</style>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
 <section id="section-zero-reporting-form" class="pd3i-zero-reporting-section hidden mt-6" data-legacy-section-id="section-sars-form">
   <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="form">
@@ -894,7 +897,7 @@
         <div class="chartBox">
           <div class="chartTitle hidden" id="trendTitle" aria-hidden="true">Tren kelengkapan (ME 1–52/53) — sesuai filter</div>
           <div id="chartTrend" class="sars-chart sars-chart-trend"></div>
-          <div id="trendEmpty" class="empty" style="display:none; margin-top:10px;">Data tren belum tersedia.</div>
+          <div id="trendEmpty" class="empty pd3i-sars-empty">Data tren belum tersedia.</div>
         </div>
       </div>
     </div>
@@ -903,7 +906,7 @@
       <h2>Rekap Per Pengampu</h2>
       <div class="chartBox sars-chart-box-pengampu">
         <div id="chartPengampu" class="sars-chart sars-chart-pengampu"></div>
-        <div id="pengEmpty" class="empty" style="display:none; margin-top:10px;">Tidak ada data rekap per pengampu untuk filter ini.</div>
+        <div id="pengEmpty" class="empty pd3i-sars-empty">Tidak ada data rekap per pengampu untuk filter ini.</div>
       </div>
     </div>
 
@@ -917,7 +920,7 @@
       <!-- ✅ Table controls (rows per page + pagination) -->
       <div class="tableBar pd3i-filter-toolbar" data-component="FilterToolbar">
         <div class="left">
-          <select id="rowsPerPage" style="min-width:120px;" aria-label="Jumlah baris per halaman">
+          <select id="rowsPerPage" class="pd3i-sars-rows-select" aria-label="Jumlah baris per halaman">
             <option value="10">10 baris</option>
             <option value="15">15 baris</option>
             <option value="20">20 baris</option>
