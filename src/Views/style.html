@@ -18751,3 +18751,89 @@ html, body, body.pd3i-body { background: var(--pd3i-shell-page) !important; }
   #section-search-shell .pd3i-search-result-action { width: 100% !important; justify-content: center !important; }
   #section-search-shell .pd3i-search-safety-brief { grid-template-columns: 1fr !important; }
 }
+
+/* Input Kasus redesign: guided capture workspace. */
+#section-input-form-shell .pd3i-form-layout { max-width: 1180px !important; }
+#section-input-form-shell .pd3i-form-main { display: grid !important; gap: 1rem !important; }
+#section-input-form-shell .pd3i-form-card {
+  border: 1px solid #d7e4ef !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 22px rgba(15, 35, 65, .06) !important;
+  overflow: hidden !important;
+}
+#section-input-form-shell .pd3i-form-card > .pd3i-page-header {
+  padding: 1.1rem 1.25rem !important;
+  border-bottom: 1px solid #e5edf5 !important;
+  background: linear-gradient(90deg, #f8fbff, #fff) !important;
+}
+#section-input-form-shell .pd3i-form-card-highlight > .pd3i-page-header {
+  background: linear-gradient(135deg, #ecfeff, #eff6ff) !important;
+}
+#section-input-form-shell .pd3i-card-eyebrow {
+  color: #0f766e !important;
+  font-weight: 800 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+}
+#section-input-form-shell .pd3i-card-title { color: #102a43 !important; font-size: 1.2rem !important; }
+#section-input-form-shell .pd3i-field-grid {
+  padding: 1.2rem 1.25rem !important;
+  gap: 1rem !important;
+}
+#section-input-form-shell .pd3i-field-grid > div { min-width: 0 !important; }
+#section-input-form-shell .pd3i-field-grid label {
+  display: block !important;
+  margin-bottom: .4rem !important;
+  color: #334e68 !important;
+  font-weight: 700 !important;
+}
+#section-input-form-shell .pd3i-field-grid input,
+#section-input-form-shell .pd3i-field-grid select,
+#section-input-form-shell .pd3i-field-grid textarea {
+  min-height: 46px !important;
+  border: 1px solid #cbd9e7 !important;
+  border-radius: 10px !important;
+  background: #fbfdff !important;
+}
+#section-input-form-shell .pd3i-field-grid input:focus,
+#section-input-form-shell .pd3i-field-grid select:focus,
+#section-input-form-shell .pd3i-field-grid textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .13) !important;
+}
+#section-input-form-shell #action-panel-input {
+  max-width: 1180px !important;
+  position: sticky !important;
+  bottom: .75rem !important;
+  z-index: 5 !important;
+  margin-top: 1rem !important;
+  padding: 1rem 1.25rem !important;
+  border: 1px solid #b7cce0 !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 14px 30px rgba(15, 35, 65, .14) !important;
+  backdrop-filter: blur(12px) !important;
+}
+#section-input-form-shell #action-panel-input .pd3i-submit-stack {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: .75rem !important;
+}
+#section-input-form-shell #btn-submit-input {
+  min-height: 48px !important;
+  flex: 1 1 auto !important;
+  border-radius: 11px !important;
+  background: linear-gradient(135deg, #2563eb, #0f766e) !important;
+  font-weight: 800 !important;
+}
+#section-input-form-shell #btn-reset-input { min-height: 48px !important; border-radius: 11px !important; }
+#section-input-form-shell #workflow-submit-status-input { margin-top: .75rem !important; }
+@media (max-width: 640px) {
+  #section-input-form-shell .pd3i-form-card > .pd3i-page-header { padding-inline: .9rem !important; }
+  #section-input-form-shell .pd3i-field-grid { padding: .9rem !important; gap: .8rem !important; }
+  #section-input-form-shell #action-panel-input { bottom: 0 !important; margin-inline: -.25rem !important; border-radius: 14px 14px 0 0 !important; padding: .8rem !important; }
+  #section-input-form-shell #action-panel-input .pd3i-submit-stack { flex-direction: column !important; align-items: stretch !important; }
+  #section-input-form-shell #btn-submit-input, #section-input-form-shell #btn-reset-input { width: 100% !important; }
+}
