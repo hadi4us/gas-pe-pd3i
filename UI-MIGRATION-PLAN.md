@@ -25,13 +25,13 @@ Development: deploy only after batch gates pass
 - Existing untracked recovery directories must not be modified or deleted.
 
 ## Batch sequence
-### Batch 0 — control and compatibility layer
+### Batch 0 — control and compatibility layer — COMPLETE
 - Record baseline and freeze local CSS expansion.
 - Define canonical tokens and compatibility aliases only where needed.
 - Normalize Settings Rule ID inline width.
 - Gate: diff check, no behavior change.
 
-### Batch 1 — global primitives
+### Batch 1 — global primitives — IN PROGRESS
 - Canonical button geometry/states.
 - Canonical page header/action group.
 - Canonical card levels and shared form controls.

@@ -17875,6 +17875,54 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
 }
 
 /* Shared button contract */
+/* Canonical layout primitives. Legacy classes remain supported during migration. */
+.pd3i-page-header,
+.pd3i-card-header-row,
+.pd3i-dashboard-toolbar-head,
+.pd3i-search-toolbar-head,
+.pd3i-sars-filter-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.pd3i-page-header > :first-child,
+.pd3i-card-header-row > :first-child { min-width: 0; }
+.pd3i-page-actions,
+.pd3i-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.pd3i-card,
+.pd3i-shell-card,
+.pd3i-section-card,
+.pd3i-inset-card { min-width: 0; }
+.pd3i-section-card {
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-lg);
+  background: var(--pd3i-surface);
+  box-shadow: var(--pd3i-shadow-soft);
+}
+.pd3i-inset-card {
+  border: 1px solid var(--pd3i-border);
+  border-radius: var(--radius-md);
+  background: var(--pd3i-surface-soft);
+}
+@media (max-width: 640px) {
+  .pd3i-page-header,
+  .pd3i-card-header-row,
+  .pd3i-dashboard-toolbar-head,
+  .pd3i-search-toolbar-head,
+  .pd3i-sars-filter-head { flex-direction: column; align-items: stretch; }
+  .pd3i-page-actions,
+  .pd3i-card-actions { width: 100%; justify-content: stretch; }
+  .pd3i-page-actions > .pd3i-btn,
+  .pd3i-card-actions > .pd3i-btn { flex: 1 1 12rem; }
+}
 .pd3i-body :where(.pd3i-btn, .pd3i-action-btn, .pd3i-primary-button, .pd3i-ghost-button,
   .pd3i-admin-button, .pd3i-submit-button, .pd3i-cancel-button, .pd3i-wizard-button,
   .pd3i-queue-action-btn, .pd3i-search-page-btn, .pd3i-queue-page-btn, .pd3i-search-result-action,
