@@ -648,9 +648,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // Detail source filter is ME only. SARS rows may use submit date/year
     // differing from reporting epi-year (late entry, backfill, migration).
     if (!allWeeks && Number(me)!==w) return null;
-    const namaFaskes=field(row,['Nama Fasyankes','NamaFasyankes','Nama Faskes']);
-    const faskesKey=field(row,['FaskesKey','KodeFaskes','Kode Faskes']);
-    const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);
+    const namaFaskes=field(row,['nama_faskes','Nama Fasyankes','NamaFasyankes','Nama Faskes','NamaFaskes']);
+    const faskesKey=field(row,['faskes_key','FaskesKey','KodeFaskes','Kode Faskes']);
+    const pengampu=field(row,['nama_pengampu','FaskesPengampu','Faskes Pengampu','Pengampu']);
     const belongs = allowAll
       || sarsDash_normKey_(namaFaskes) === unitKey
       || sarsDash_normKey_(pengampu) === unitKey
@@ -661,7 +661,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const status = /^(1|ya|yes|nihil)$/i.test(nihil) ? 'Nihil' : (namaKasus ? 'Ada kasus' : 'Tidak jelas');
     const onTime=field(row,['OnTime','On Time']);
     const anomaly=[]; if (!isFinite(me)) anomaly.push('ME tidak valid'); if (!field(row,['Waktu Submit','WaktuSubmit','Timestamp'])) anomaly.push('Waktu kirim kosong'); if (!namaFaskes) anomaly.push('Fasyankes kosong'); if (status === 'Tidak jelas') anomaly.push('Status nihil/kasus tidak jelas');
-    return {waktuSubmit:field(row,['Waktu Submit','WaktuSubmit','Timestamp']),me:me,namaFasyankes:namaFaskes,jenisFasyankes:field(row,['Jenis Fasyankes','JenisFaskes']),namaPetugas:field(row,['Nama Petugas']),emailPetugas:field(row,['Email Petugas']),namaPenyakit:field(row,['Nama Penyakit']),nihil:nihil,status:status,namaKasus:namaKasus,tglLahir:field(row,['Tgl Lahir','Tanggal Lahir']),jenisKelamin:field(row,['Jenis Kelamin']),alamat:field(row,['Alamat & No Telp','Alamat']),tanggalMulai:field(row,['Tanggal Mulai']),gejala:field(row,['Gejala']),diagnosis:field(row,['Diagnosis Medis/Banding','Diagnosis']),statusImunisasi:field(row,['Status Imunisasi']),keadaan:field(row,['Keadaan (H/M)','Keadaan']),spesimen:field(row,['Spesimen / Penolong','Spesimen']),pengampu:pengampu,onTime:onTime,anomaly:anomaly};
+    return {waktuSubmit:field(row,['Waktu Submit','WaktuSubmit','Timestamp']),me:me,namaFasyankes:namaFaskes,jenisFasyankes:field(row,['Jenis Fasyankes','JenisFaskes']),namaPetugas:field(row,['nama_petugas','Nama Petugas']),emailPetugas:field(row,['Email Petugas']),namaPenyakit:field(row,['Nama Penyakit']),nihil:nihil,status:status,namaKasus:namaKasus,tglLahir:field(row,['Tgl Lahir','Tanggal Lahir']),jenisKelamin:field(row,['Jenis Kelamin']),alamat:field(row,['Alamat & No Telp','Alamat']),tanggalMulai:field(row,['Tanggal Mulai']),gejala:field(row,['Gejala']),diagnosis:field(row,['Diagnosis Medis/Banding','Diagnosis']),statusImunisasi:field(row,['Status Imunisasi']),keadaan:field(row,['Keadaan (H/M)','Keadaan']),spesimen:field(row,['Spesimen / Penolong','Spesimen']),pengampu:pengampu,onTime:onTime,anomaly:anomaly};
   }).filter(Boolean);
   return out;
 }
