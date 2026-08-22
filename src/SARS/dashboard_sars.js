@@ -653,6 +653,14 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const scopedNames = {};
   const scopedKeys = {};
   const scopedPengampuKeys = {};
+  const assignedReporterKeys = {};
+  // REF_PENGAMPU is authoritative for reporter-to-puskesmas assignment.
+  // Keep this mapping even when REF_FASKES omits/filters a row.
+  if (pengampuKey && refPengampu.faskesKeysByPengampuKey && refPengampu.faskesKeysByPengampuKey[pengampuKey]) {
+    refPengampu.faskesKeysByPengampuKey[pengampuKey].forEach(function(key) {
+      assignedReporterKeys[sarsDash_normFaskesKey_(key)] = true;
+    });
+  }
   (scopedMaster && scopedMaster.faskes || []).forEach(function(f) {
     scopedNames[sarsDash_normKey_(f.nama)] = true;
     scopedKeys[sarsDash_normFaskesKey_(f.key)] = true;
@@ -714,6 +722,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // while each submitted row keeps that key in faskes_key. Match the
     // session pengampu_key against row faskes_key explicitly.
     const pengampuFacilityMatch = !!pengampuKey && rowFaskesKey === pengampuKey;
+    const assignedReporterMatch = !!assignedReporterKeys[rowFaskesKey];
     // Pengampu flow: try own faskes_key first; when row is not own faskes,
     // use pengampu_key. This matches SARS data where reporter and pengampu
     // keys are stored independently.
@@ -722,7 +731,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const belongs = allowAll || (isReporterScope
       ? faskesMatch
       : isPengampuScope
-        ? (faskesMatch || pengampuFacilityMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
+        ? (faskesMatch || pengampuFacilityMatch || pengampuMatch || assignedReporterMatch || !!scopedKeys[rowFaskesKey])
         : faskesMatch);
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
