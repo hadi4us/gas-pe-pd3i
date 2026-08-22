@@ -290,18 +290,26 @@ function sarsDash_readRefPengampu_(ss) {
   if (!values || values.length < 2) return { list: [], byKey: {}, byName: {}, byRegion: {} };
   const headers = (values[0] || []).map(sarsDash_clean_);
   const idxPeng = sarsDash_refIndex_(headers, ['Pengampu', 'NamaPuskesmas', 'Nama Puskesmas', 'Puskesmas Pengampu', 'UPTD Pengampu', 'Nama UPTD']);
+  const idxPengKey = sarsDash_refIndex_(headers, ['pengampu_key', 'PengampuKey', 'Pengampu Key', 'Kode Pengampu', 'KodeFaskes Pengampu']);
   const idxCode = sarsDash_refIndex_(headers, ['faskes_key', 'FaskesKey', 'Faskes Key', 'KodeFaskes', 'Kode Faskes', 'Kode']);
   const idxName = sarsDash_refIndex_(headers, ['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'NamaPuskesmas', 'Nama Puskesmas']);
   const idxKec = sarsDash_refIndex_(headers, ['Kecamatan', 'Nama Kecamatan']);
   const idxKel = sarsDash_refIndex_(headers, ['Kelurahan', 'Nama Kelurahan']);
-  const out = { list: [], byKey: {}, byName: {}, byRegion: {} };
+  const out = { list: [], byKey: {}, byName: {}, byRegion: {}, faskesKeysByPengampuKey: {}, pengampuKeysByKey: {} };
   values.slice(1).forEach(row => {
     const peng = idxPeng >= 0 ? sarsDash_clean_(row[idxPeng]) : '';
     if (!peng || peng === '-') return;
     out.list.push(peng);
     const code = idxCode >= 0 ? sarsDash_normFaskesKey_(row[idxCode]) : '';
+    const pengKey = idxPengKey >= 0 ? sarsDash_normFaskesKey_(row[idxPengKey]) : '';
     const name = idxName >= 0 ? sarsDash_normKey_(row[idxName]) : '';
     if (code) out.byKey[code] = peng;
+    if (pengKey) out.byKey['__PENGAMPU__' + pengKey] = peng;
+    if (pengKey && code) {
+      if (!out.faskesKeysByPengampuKey[pengKey]) out.faskesKeysByPengampuKey[pengKey] = [];
+      out.faskesKeysByPengampuKey[pengKey].push(code);
+    }
+    if (code && pengKey) out.pengampuKeysByKey[code] = pengKey;
     if (name) out.byName[name] = peng;
     const kec = idxKec >= 0 ? sarsDash_normKey_(row[idxKec]) : '';
     const kel = idxKel >= 0 ? sarsDash_normKey_(row[idxKel]) : '';
@@ -612,8 +620,18 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const scopeLevel = String(sess.user.scopeLevel || '').toLowerCase().replace(/[_\s]+/g, '-');
   const allowAll = role === 'admin' || role === 'super-admin' || role === 'superadmin' || scopeLevel === 'dinkes';
   const unitKey = sarsDash_normFaskesKey_(sess.user.faskesKey || sess.user.faskes_key || sess.user.unitKey || '');
-  let pengampuKey = sarsDash_normFaskesKey_(sess.user.pengampuKey || sess.user.pengampu_key || '');
   const ss = sarsDash_open_();
+  let pengampuKey = sarsDash_normFaskesKey_(sess.user.pengampuKey || sess.user.pengampu_key || '');
+  // Canonical pengampu identity lives in REF_PENGAMPU, not REF_USER/REF_FASKES.
+  // When session carries only the puskesmas faskes_key, resolve matching
+  // REF_PENGAMPU.pengampu_key directly.
+  const refPengampu = sarsDash_readRefPengampu_(ss);
+  if (!pengampuKey && unitKey && refPengampu.faskesKeysByPengampuKey && refPengampu.faskesKeysByPengampuKey[unitKey]) {
+    pengampuKey = unitKey;
+  }
+  if (!pengampuKey && unitKey && refPengampu.pengampuKeysByKey && refPengampu.pengampuKeysByKey[unitKey]) {
+    pengampuKey = refPengampu.pengampuKeysByKey[unitKey];
+  }
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
   // FaskesPengampu as code while session unitKerja stores puskesmas name.
