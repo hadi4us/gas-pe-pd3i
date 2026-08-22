@@ -17829,7 +17829,15 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
 .weekly-detail-card .sars-table-wrap th { position:sticky; top:0; z-index:2; padding:1rem .85rem; background:#0f3d5e; color:#fff; font-size:.92rem; font-weight:800; letter-spacing:.02em; white-space:nowrap; border:1px solid #94a3b8; }
 .weekly-detail-card .sars-table-wrap td { padding:.9rem .85rem; min-height:3rem; border:1px solid #cbd5e1; color:#1e293b; vertical-align:top; line-height:1.45; }
 .weekly-detail-card .sars-table-wrap tbody tr:nth-child(even) td { background:#f8fafc; }
-.weekly-detail-card .sars-table-wrap tbody tr:hover td { background:#e0f2fe; }
+.weekly-detail-card .sars-table-wrap table,
+.weekly-detail-card .sars-table-wrap table thead,
+.weekly-detail-card .sars-table-wrap table tbody,
+.weekly-detail-card .sars-table-wrap table tr,
+.weekly-detail-card .sars-table-wrap table th,
+.weekly-detail-card .sars-table-wrap table td { border-style:solid !important; border-width:1px !important; border-color:#94a3b8 !important; }
+.weekly-detail-card .sars-table-wrap table { border-width:2px !important; border-collapse:collapse !important; }
+.weekly-detail-card .sars-table-wrap tbody tr:nth-child(even) td { background:#f1f5f9 !important; }
+.weekly-detail-card .sars-table-wrap tbody tr:hover td { background:#dbeafe !important; }
 .weekly-detail-pagination { display:flex; justify-content:center; align-items:center; gap:.9rem; margin:1rem 0 .25rem; color:#334155; font-weight:700; }
 .weekly-detail-pagination .pd3i-btn { min-width:110px; }
 @media (max-width:760px) {
