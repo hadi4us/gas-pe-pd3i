@@ -295,13 +295,17 @@ function sarsDash_readRefPengampu_(ss) {
   const idxName = sarsDash_refIndex_(headers, ['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'NamaPuskesmas', 'Nama Puskesmas']);
   const idxKec = sarsDash_refIndex_(headers, ['Kecamatan', 'Nama Kecamatan']);
   const idxKel = sarsDash_refIndex_(headers, ['Kelurahan', 'Nama Kelurahan']);
-  const out = { list: [], byKey: {}, byName: {}, byRegion: {}, faskesKeysByPengampuKey: {}, pengampuKeysByKey: {} };
+  const out = { list: [], byKey: {}, byName: {}, byRegion: {}, faskesKeysByPengampuKey: {}, pengampuKeysByKey: {}, pengampuKeyByFaskesKey: {}, pengampuKeys: {} };
   values.slice(1).forEach(row => {
     const peng = idxPeng >= 0 ? sarsDash_clean_(row[idxPeng]) : '';
+    const pengKey = idxPengKey >= 0 ? sarsDash_normFaskesKey_(row[idxPengKey]) : '';
+    // pengampu_key is canonical even when display-name column is blank.
+    if (pengKey) out.pengampuKeys[pengKey] = true;
     if (!peng || peng === '-') return;
     out.list.push(peng);
     const code = idxCode >= 0 ? sarsDash_normFaskesKey_(row[idxCode]) : '';
-    const pengKey = idxPengKey >= 0 ? sarsDash_normFaskesKey_(row[idxPengKey]) : '';
+    // Some REF_PENGAMPU rows contain pengampu_key without faskes_key.
+    // Keep key as canonical identity regardless of row shape.
     const name = idxName >= 0 ? sarsDash_normKey_(row[idxName]) : '';
     if (code) out.byKey[code] = peng;
     if (pengKey) out.byKey['__PENGAMPU__' + pengKey] = peng;
@@ -310,6 +314,7 @@ function sarsDash_readRefPengampu_(ss) {
       out.faskesKeysByPengampuKey[pengKey].push(code);
     }
     if (code && pengKey) out.pengampuKeysByKey[code] = pengKey;
+    if (code && pengKey) out.pengampuKeyByFaskesKey[code] = pengKey;
     if (name) out.byName[name] = peng;
     const kec = idxKec >= 0 ? sarsDash_normKey_(row[idxKec]) : '';
     const kel = idxKel >= 0 ? sarsDash_normKey_(row[idxKel]) : '';
@@ -336,6 +341,11 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
   const iJenis = sarsDash_pickIndex_(headers, ["Jenis", "Jenis Faskes", "JenisFaskes", "Jenis Fasyankes"]);
   const iPeng  = sarsDash_pickIndex_(headers, ["nama_pengampu", "Pengampu", "FaskesPengampu"]);
   const refPengampu = sarsDash_readRefPengampu_(ss);
+  // REF_PENGAMPU.pengampu_key is canonical. For puskesmas accounts,
+  // REF_USER.faskes_key may carry that same value; use it directly.
+  if (!pengampuKey && unitKey && refPengampu.pengampuKeys && refPengampu.pengampuKeys[unitKey]) {
+    pengampuKey = unitKey;
+  }
   const iEmail = sarsDash_pickIndex_(headers, ["Email", "Email PIC", "Email Faskes"]);
   const iAktif = sarsDash_pickIndex_(headers, ["StatusAktif", "Aktif", "Status"]);
   const iAlias = sarsDash_pickIndex_(headers, ["Alias", "NamaAlias", "AliasNama"]);
@@ -626,6 +636,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
   // When session carries only the puskesmas faskes_key, resolve matching
   // REF_PENGAMPU.pengampu_key directly.
   const refPengampu = sarsDash_readRefPengampu_(ss);
+  // REF_PENGAMPU is source of truth: account key identifies one pengampu,
+  // SARS row must match its pengampu_key directly.
+  const canonicalPengampuKey = pengampuKey || unitKey;
   if (!pengampuKey && unitKey && refPengampu.faskesKeysByPengampuKey && refPengampu.faskesKeysByPengampuKey[unitKey]) {
     pengampuKey = unitKey;
   }
@@ -693,7 +706,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const isPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
     const rowFaskesKey = sarsDash_normFaskesKey_(faskesKey);
     const faskesMatch = !!unitKey && rowFaskesKey === unitKey;
-    const pengampuMatch = !!pengampuKey && rowPengampuKey === pengampuKey;
+    const pengampuMatch = !!canonicalPengampuKey && rowPengampuKey === canonicalPengampuKey;
     // In current SARS data, pengampu_key is the pengampu facility's key,
     // while each submitted row keeps that key in faskes_key. Match the
     // session pengampu_key against row faskes_key explicitly.
