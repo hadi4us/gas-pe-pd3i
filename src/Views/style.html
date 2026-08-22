@@ -7006,6 +7006,17 @@ body.pd3i-body {
   gap: var(--space-4);
 }
 
+/* Shared SARS filter action group. Keep header actions aligned across
+   dashboard and weekly detail without component-specific overrides. */
+.pd3i-zero-reporting-host .sars-filter-actions,
+.pd3i-weekly-detail-card .sars-filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+
 .pd3i-zero-reporting-host .headerTop {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -7304,6 +7315,10 @@ body.pd3i-body {
   .pd3i-zero-reporting-host .headerTop,
   .pd3i-zero-reporting-host .topbar,
   .pd3i-zero-reporting-host .sars-filter-head { align-items: flex-start; flex-direction: column; display: flex; }
+  .pd3i-zero-reporting-host .sars-filter-actions,
+  .pd3i-weekly-detail-card .sars-filter-actions { width: 100%; justify-content: stretch; }
+  .pd3i-zero-reporting-host .sars-filter-actions .pd3i-btn,
+  .pd3i-weekly-detail-card .sars-filter-actions .pd3i-btn { flex: 1 1 10rem; }
   .pd3i-zero-reporting-host .pd3i-case-grid,
   .pd3i-zero-reporting-host .pd3i-zero-reporting-grid,
   .pd3i-zero-reporting-host .sars-filter-grid,
