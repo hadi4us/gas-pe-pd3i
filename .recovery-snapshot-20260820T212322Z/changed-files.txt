@@ -1,6 +1,0 @@
-docs/ENDPOINT_SECURITY_MATRIX.generated.json
-src/Auth/auth.js
-src/Controllers/print.js
-src/SARS/dashboard_sars.js
-src/SARS/submit_sars.js
-src/Views/workspace_sars.html

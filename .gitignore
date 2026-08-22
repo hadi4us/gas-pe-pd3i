@@ -10,3 +10,8 @@ node_modules/
 /log.txt
 /check-ss.js
 /import-data.py
+
+# Local recovery artifacts
+.backup-before-sars-fix-*/
+.backup-style-rewrite-*/
+.recovery-snapshot-*/
