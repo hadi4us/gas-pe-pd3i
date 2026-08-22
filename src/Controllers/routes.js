@@ -2331,6 +2331,16 @@ function _normalizeAccessScopeKey_(value) {
     .replace(/\s+/g, " ");
 }
 
+// Key fields are identifiers, not display labels. Remove separators and
+// invisible whitespace so values copied from Sheets cannot miss-match.
+function _normalizeAccessScopeId_(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u001F\u007F\u00A0\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
 function _getRecordDomisiliForAccess_(dx, data) {
   const direct = {
     kabKota: _normalizeAccessScopeKey_((data && (data["Kab/Kota Pasien"] || data["Kab/Kota"] || data["Kabupaten/Kota"])) || ""),
@@ -2393,7 +2403,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
   const userFaskesKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
-  let userPengampuKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
+  let userPengampuKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   // Older REF_USER rows store only PKM code/name. Resolve that identity to
   // canonical REF_PENGAMPU.pengampu_key before checking MR_Raw.
   if (!userPengampuKey && (userKodePuskesmas || userUnitKerja)) {
@@ -2407,10 +2417,10 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
         const ic = ix(['kodepuskesmas', 'kode puskesmas', 'kodefaskes', 'kodefaskes pengampu']);
         const iname = ix(['namapuskesmas', 'nama puskesmas', 'puskesmas', 'nama_pengampu', 'pengampu']);
         for (let r = 1; r < vals.length; r++) {
-          const code = ic === -1 ? '' : _normalizeAccessScopeKey_(vals[r][ic]);
+          const code = ic === -1 ? '' : _normalizeAccessScopeId_(vals[r][ic]);
           const name = iname === -1 ? '' : _normalizeAccessScopeKey_(vals[r][iname]);
           if ((userKodePuskesmas && code === userKodePuskesmas) || (userUnitKerja && name === userUnitKerja)) {
-            userPengampuKey = ik === -1 ? '' : _normalizeAccessScopeKey_(vals[r][ik]);
+            userPengampuKey = ik === -1 ? '' : _normalizeAccessScopeId_(vals[r][ik]);
             if (userPengampuKey) break;
           }
         }
@@ -2420,13 +2430,13 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if (!userKodePuskesmas && !userUnitKerja && !userFaskesKey && !userPengampuKey) return false;
 
   // Reporting facility scope is separate from supervising PKM scope.
-  const recordFaskesKey = _normalizeAccessScopeKey_((data && (data['faskes_key'] || data['FaskesKey'] || data['Faskes Pelapor'])) || '');
+  const recordFaskesKey = _normalizeAccessScopeId_((data && (data['faskes_key'] || data['FaskesKey'] || data['Faskes Pelapor'])) || '');
   if (userFaskesKey && recordFaskesKey && userFaskesKey === recordFaskesKey) return true;
 
   // Pengampu scope: canonical key in REF_PENGAMPU/REF_USER must match
   // report row pengampu_key. Do this before domisili fallback; old records
   // may have no complete patient residence fields.
-  const recordPengampuKey = _normalizeAccessScopeKey_((data && (data['pengampu_key'] || data['PengampuKey'] || data['KodeFaskes Pengampu'])) || '');
+  const recordPengampuKey = _normalizeAccessScopeId_((data && (data['pengampu_key'] || data['PengampuKey'] || data['KodeFaskes Pengampu'])) || '');
   if (userPengampuKey && recordPengampuKey && userPengampuKey === recordPengampuKey) return true;
 
   const recordKodePengampu = _normalizeAccessScopeKey_((data && data['KodeFaskes Pengampu']) || '');
