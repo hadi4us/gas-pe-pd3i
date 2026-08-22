@@ -341,11 +341,6 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
   const iJenis = sarsDash_pickIndex_(headers, ["Jenis", "Jenis Faskes", "JenisFaskes", "Jenis Fasyankes"]);
   const iPeng  = sarsDash_pickIndex_(headers, ["nama_pengampu", "Pengampu", "FaskesPengampu"]);
   const refPengampu = sarsDash_readRefPengampu_(ss);
-  // REF_PENGAMPU.pengampu_key is canonical. For puskesmas accounts,
-  // REF_USER.faskes_key may carry that same value; use it directly.
-  if (!pengampuKey && unitKey && refPengampu.pengampuKeys && refPengampu.pengampuKeys[unitKey]) {
-    pengampuKey = unitKey;
-  }
   const iEmail = sarsDash_pickIndex_(headers, ["Email", "Email PIC", "Email Faskes"]);
   const iAktif = sarsDash_pickIndex_(headers, ["StatusAktif", "Aktif", "Status"]);
   const iAlias = sarsDash_pickIndex_(headers, ["Alias", "NamaAlias", "AliasNama"]);
@@ -638,13 +633,13 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const refPengampu = sarsDash_readRefPengampu_(ss);
   // REF_PENGAMPU is source of truth: account key identifies one pengampu,
   // SARS row must match its pengampu_key directly.
-  const canonicalPengampuKey = pengampuKey || unitKey;
   if (!pengampuKey && unitKey && refPengampu.faskesKeysByPengampuKey && refPengampu.faskesKeysByPengampuKey[unitKey]) {
     pengampuKey = unitKey;
   }
   if (!pengampuKey && unitKey && refPengampu.pengampuKeysByKey && refPengampu.pengampuKeysByKey[unitKey]) {
     pengampuKey = refPengampu.pengampuKeysByKey[unitKey];
   }
+  const canonicalPengampuKey = pengampuKey || unitKey;
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
   // FaskesPengampu as code while session unitKerja stores puskesmas name.
