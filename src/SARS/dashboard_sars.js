@@ -662,12 +662,12 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const rowPengampuKey=sarsDash_normFaskesKey_(field(row,['pengampu_key','PengampuKey','FaskesPengampuKey']));
     // Scope is mutually exclusive. Faskes reporter sees own faskes only;
     // puskesmas/pengampu sees facilities assigned to its pengampu_key.
-    const isReporterScope = scopeLevel === 'faskes-pelapor' || scopeLevel === 'faskes' || scopeLevel === 'petugas';
-    const isPengampuScope = scopeLevel === 'puskesmas' || scopeLevel === 'pengampu';
+    const isReporterScope = /^(faskes-pelapor|faskes|petugas|unit-pelapor)$/.test(scopeLevel);
+    const isPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
     const belongs = allowAll || (isReporterScope
       ? (!!unitKey && sarsDash_normFaskesKey_(faskesKey) === unitKey)
       : isPengampuScope
-        ? (!!pengampuKey && rowPengampuKey === pengampuKey)
+        ? (!!pengampuKey && (rowPengampuKey === pengampuKey || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)]))
         : (!!unitKey && sarsDash_normFaskesKey_(faskesKey) === unitKey));
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
