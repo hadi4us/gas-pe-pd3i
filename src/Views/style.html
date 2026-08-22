@@ -4102,6 +4102,17 @@ body.pd3i-body {
   backdrop-filter: blur(4px);
   z-index: 70;
   cursor: pointer;
+  pointer-events: none;
+}
+
+/* Overlay never blocks desktop rail. Mobile drawer enables it explicitly. */
+@media (min-width: 1101px) {
+  .pd3i-sidebar-overlay,
+  .pd3i-sidebar-overlay.hidden {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  .pd3i-sidebar { z-index: 80; }
 }
 
 .pd3i-sidebar-overlay.hidden {
@@ -4303,6 +4314,7 @@ body.pd3i-body {
 
   body.pd3i-sidebar-open .pd3i-sidebar-overlay {
     display: block !important;
+    pointer-events: auto !important;
   }
 
   .pd3i-sidebar:focus {
