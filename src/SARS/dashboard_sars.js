@@ -356,6 +356,7 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
     if (jen === "PKM" || jen === "PUSKESMAS") continue;
     const pengMaster = iPeng >= 0 ? sarsDash_clean_(row[iPeng]) : '';
     const peng = pengMaster || refPengampu.byKey[key] || refPengampu.byName[sarsDash_normKey_(nama)] || "-";
+    const pengampuKey = sarsDash_normFaskesKey_(row[sarsDash_pickIndex_(headers, ['pengampu_key','PengampuKey'])]);
     const email   = (iEmail >= 0) ? sarsDash_clean_(row[iEmail]) : "";
     const alias   = (iAlias >= 0) ? sarsDash_clean_(row[iAlias]) : "";
 
@@ -374,7 +375,7 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
       if (!isOwnFaskes && !isPengampu) continue;
     }
 
-    faskes.push({ key, nama, jenis: jen, pengampu: peng, email });
+    faskes.push({ key, nama, jenis: jen, pengampu: peng, pengampuKey, email });
 
     if (peng && peng !== "-" && peng !== "(Tanpa pengampu)") pengSet[peng] = true;
 
@@ -608,7 +609,8 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const role = (typeof _normalizePd3iRole_ === 'function') ? _normalizePd3iRole_(sess.user.role) : String(sess.user.role || '').toLowerCase();
   const scopeLevel = String(sess.user.scopeLevel || '').toLowerCase().replace(/[_\s]+/g, '-');
   const allowAll = role === 'admin' || role === 'super-admin' || role === 'superadmin' || scopeLevel === 'dinkes';
-  const unitKey = sarsDash_normKey_(sess.user.unitKerja || sess.user.namaFaskes || '');
+  const unitKey = sarsDash_normFaskesKey_(sess.user.faskesKey || sess.user.faskes_key || sess.user.unitKey || '');
+  const pengampuKey = sarsDash_normFaskesKey_(sess.user.pengampuKey || sess.user.pengampu_key || '');
   const ss = sarsDash_open_();
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
@@ -616,13 +618,17 @@ function getWeeklySubmittedRows(year, minggu, token) {
   // Matching raw pengampu text alone drops those rows from puskesmas detail.
   const scopedMaster = allowAll ? null : sarsDash_readMaster_(ss, 'ALL', 'all', {
     allowAll: false,
-    unitKerja: String(sess.user.unitKerja || sess.user.namaFaskes || '')
+    unitKerja: String(sess.user.unitKerja || sess.user.namaFaskes || ''),
+    faskesKey: unitKey,
+    pengampuKey: pengampuKey
   });
   const scopedNames = {};
   const scopedKeys = {};
+  const scopedPengampuKeys = {};
   (scopedMaster && scopedMaster.faskes || []).forEach(function(f) {
     scopedNames[sarsDash_normKey_(f.nama)] = true;
     scopedKeys[sarsDash_normFaskesKey_(f.key)] = true;
+    if (f.pengampuKey) scopedPengampuKeys[sarsDash_normFaskesKey_(f.pengampuKey)] = true;
   });
   const dataSheet = sarsDash_dataSheet_(ss);
   const sh = ss.getSheetByName(dataSheet);
@@ -651,11 +657,13 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const namaFaskes=field(row,['nama_faskes','Nama Fasyankes','NamaFasyankes','Nama Faskes','NamaFaskes']);
     const faskesKey=field(row,['faskes_key','FaskesKey','KodeFaskes','Kode Faskes']);
     const pengampu=field(row,['nama_pengampu','FaskesPengampu','Faskes Pengampu','Pengampu']);
+    const rowPengampuKey=sarsDash_normFaskesKey_(field(row,['pengampu_key','PengampuKey','FaskesPengampuKey']));
     const belongs = allowAll
-      || sarsDash_normKey_(namaFaskes) === unitKey
-      || sarsDash_normKey_(pengampu) === unitKey
+      || (!!unitKey && sarsDash_normFaskesKey_(faskesKey) === unitKey)
+      || (!!pengampuKey && rowPengampuKey === pengampuKey)
       || !!scopedNames[sarsDash_normKey_(namaFaskes)]
-      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)];
+      || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)]
+      || !!scopedPengampuKeys[rowPengampuKey];
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
     const status = /^(1|ya|yes|nihil)$/i.test(nihil) ? 'Nihil' : (namaKasus ? 'Ada kasus' : 'Tidak jelas');
