@@ -19029,3 +19029,160 @@ html, body, body.pd3i-body { background: var(--pd3i-shell-page) !important; }
   #section-input-form-shell #action-panel-input { margin-inline: 0 !important; border-radius: 10px !important; }
   #section-input-form-shell #action-panel-input .pd3i-submit-stack { flex-direction: column !important; align-items: stretch !important; }
 }
+
+/* Cross-module convergence: same flat SIRFK language everywhere. */
+#section-dashboard,
+#section-pie,
+#section-guide,
+#section-settings,
+#section-sars-dashboard,
+#section-sars-form,
+#section-zero-reporting-dashboard,
+#section-zero-reporting-form,
+#section-weekly-report-detail,
+#section-sampel-form-shell,
+#section-status-form-shell,
+#section-verifikasi-form-shell {
+  color: var(--pd3i-flat-text) !important;
+}
+#section-dashboard .pd3i-dashboard-shell,
+#section-dashboard .pd3i-dashboard-panel,
+#section-dashboard .pd3i-dashboard-toolbar-panel,
+#section-dashboard .pd3i-dashboard-chart-panel,
+#section-dashboard .pd3i-dashboard-reference-cases-card,
+#section-dashboard .pd3i-dashboard-region-card,
+#section-dashboard .pd3i-dashboard-age-card,
+#section-dashboard .pd3i-dashboard-epi-age-card,
+#section-pie .pd3i-card,
+#section-pie .pie-inner-card,
+#section-pie .pie-command-overview,
+#section-pie .pie-command-review,
+#section-pie .pie-command-priority,
+#section-guide .pd3i-guide-page-intro,
+#section-guide .pd3i-guide-faq-panel,
+#section-settings .pd3i-card,
+#section-settings .pd3i-settings-surface,
+#section-sars-dashboard .pd3i-shell-card,
+#section-sars-form .pd3i-shell-card,
+#section-zero-reporting-dashboard .pd3i-shell-card,
+#section-zero-reporting-form .pd3i-shell-card,
+#section-weekly-report-detail .pd3i-shell-card,
+#section-sampel-form-shell .pd3i-form-card,
+#section-status-form-shell .pd3i-form-card,
+#section-verifikasi-form-shell .pd3i-form-card {
+  border: 1px solid var(--pd3i-flat-border) !important;
+  border-radius: 10px !important;
+  background: var(--pd3i-flat-surface) !important;
+  box-shadow: none !important;
+}
+#section-dashboard .pd3i-dashboard-header,
+#section-dashboard .pd3i-dashboard-toolbar-head,
+#section-guide .pd3i-page-header,
+#section-settings .pd3i-page-header,
+#section-pie .pd3i-page-header,
+#section-sars-dashboard .pd3i-page-header,
+#section-sars-form .pd3i-page-header,
+#section-sampel-form-shell .pd3i-page-header,
+#section-status-form-shell .pd3i-page-header,
+#section-verifikasi-form-shell .pd3i-page-header {
+  background: transparent !important;
+  color: var(--pd3i-flat-text) !important;
+  box-shadow: none !important;
+}
+#section-dashboard .pd3i-dashboard-toolbar-panel,
+#section-dashboard .pd3i-dashboard-filter,
+#section-dashboard .pd3i-dashboard-exportbar,
+#section-dashboard .pd3i-dashboard-command-filterbar,
+#section-sars-dashboard .pd3i-sars-filter-head,
+#section-zero-reporting-dashboard .pd3i-sars-filter-head {
+  border-color: var(--pd3i-flat-border) !important;
+  background: var(--pd3i-flat-surface) !important;
+  box-shadow: none !important;
+}
+#section-dashboard .pd3i-dashboard-metric-card,
+#section-dashboard .pd3i-dashboard-command-kpi,
+#section-dashboard .pd3i-dashboard-status-chip,
+#section-dashboard .pd3i-dashboard-region-item,
+#section-pie .pd3i-admin-ops-item,
+#section-settings .pd3i-admin-ops-item,
+#section-settings .pd3i-admin-guardrail-item,
+#section-guide .pd3i-guide-topic-chip {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+#section-dashboard .pd3i-dashboard-command-kpi::after,
+#section-dashboard .pd3i-dashboard-metric-card::before,
+#section-pie .pie-command-hero::before,
+#section-pie .pie-command-hero::after,
+#section-guide .pd3i-guide-hero::before {
+  display: none !important;
+}
+#section-pie .pie-command-hero,
+#section-guide .pd3i-guide-hero,
+#section-settings .pd3i-epi-hero {
+  border: 1px solid var(--pd3i-flat-border) !important;
+  border-radius: 10px !important;
+  background: var(--pd3i-flat-surface) !important;
+  color: var(--pd3i-flat-text) !important;
+  box-shadow: none !important;
+}
+#section-pie .pie-command-hero h1,
+#section-pie .pie-command-hero h2,
+#section-pie .pie-command-hero h3,
+#section-pie .pie-command-hero p,
+#section-pie .pie-command-hero span,
+#section-guide .pd3i-guide-hero h1,
+#section-guide .pd3i-guide-hero h2,
+#section-guide .pd3i-guide-hero p {
+  color: inherit !important;
+}
+#section-dashboard button,
+#section-pie button,
+#section-guide button,
+#section-settings button,
+#section-sars-dashboard button,
+#section-sars-form button,
+#section-zero-reporting-dashboard button,
+#section-zero-reporting-form button,
+#section-sampel-form-shell button,
+#section-status-form-shell button,
+#section-verifikasi-form-shell button {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+#section-dashboard input,
+#section-dashboard select,
+#section-dashboard textarea,
+#section-pie input,
+#section-pie select,
+#section-settings input,
+#section-settings select,
+#section-sars-dashboard input,
+#section-sars-dashboard select,
+#section-sars-form input,
+#section-sars-form select,
+#section-sars-form textarea,
+#section-zero-reporting-form input,
+#section-zero-reporting-form select,
+#section-zero-reporting-form textarea,
+#section-sampel-form-shell input,
+#section-sampel-form-shell select,
+#section-sampel-form-shell textarea,
+#section-status-form-shell input,
+#section-status-form-shell select,
+#section-status-form-shell textarea,
+#section-verifikasi-form-shell input,
+#section-verifikasi-form-shell select,
+#section-verifikasi-form-shell textarea {
+  border-radius: 8px !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+@media (max-width: 768px) {
+  #section-dashboard .pd3i-dashboard-toolbar,
+  #section-dashboard .pd3i-dashboard-command-kpis,
+  #section-dashboard .pd3i-dashboard-reference-body-grid,
+  #section-dashboard .pd3i-dashboard-region-two-column,
+  #section-pie .pie-command-actions,
+  #section-settings .pd3i-epi-controls { grid-template-columns: 1fr !important; flex-direction: column !important; align-items: stretch !important; }
+}
