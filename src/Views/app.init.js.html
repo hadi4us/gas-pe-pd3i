@@ -1068,6 +1068,9 @@
           .withSuccessHandler(function(data) {
             if (typeof setWorkspaceSearchResultCache === 'function') setWorkspaceSearchResultCache(workspace, dx, filters, data);
             _renderSearchResultsList(data, dx);
+            if (data && data.audit && Number(data.total || 0) === 0 && searchResultsBox) {
+              searchResultsBox.insertAdjacentHTML('beforeend', '<details class="pd3i-debug-details"><summary>Diagnostik pencarian</summary><pre>' + escapeHtml(JSON.stringify(data.audit, null, 2)) + '</pre></details>');
+            }
           })
           .withFailureHandler(function(err) {
             console.error("searchRecords failed:", err);

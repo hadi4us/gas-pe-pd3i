@@ -991,8 +991,13 @@ function searchRecords(dx, filters, token) {
   let page = Math.max(1, parseInt(filters.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 10));
   const results = [];
+  const audit = { dxSheets: [], rowsRead: 0, scopeAllowed: 0, deleted: 0, filterRejected: 0, userFaskesKey: '', userPengampuKey: '', userScopeLevel: '' };
+  audit.userFaskesKey = _normalizeAccessScopeId_((sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
+  audit.userPengampuKey = _normalizeAccessScopeId_((sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
+  audit.userScopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim();
 
   dxList.forEach(function(dxItem) {
+    audit.dxSheets.push(dxItem + '_Raw');
     var headers = [];
     var rows = [];
 
@@ -1009,14 +1014,16 @@ function searchRecords(dx, filters, token) {
     rows = values.slice(1);
 
     rows.forEach(function(row, rowIdx) {
+      audit.rowsRead++;
       const record = _buildSearchProjectionRecord_(headers, row);
       record.RAW_ROW_NUMBER = rowIdx + 2;
 
       if (!_canSessionReadRecordByScope_(sess, dxItem, record)) return;
+      audit.scopeAllowed++;
 
       const item = _mapSearchResultItem_(dxItem, record);
       item.canDelete = _canSessionDeleteCaseRecord_(sess, dxItem, record);
-      if (String(item.deletedAt || '').trim()) return;
+      if (String(item.deletedAt || '').trim()) { audit.deleted++; return; }
       if (diagnosisNeedle && diagnosisNeedle !== 'ALL' && String(item.dx || '').toUpperCase() !== diagnosisNeedle) return;
       // Search result must bind to exact physical row. ID/EPID can duplicate
       // or be stale in legacy data; value keys can open another case.
@@ -1059,13 +1066,15 @@ function searchRecords(dx, filters, token) {
   page = Math.min(page, totalPages);
   const start = (page - 1) * pageSize;
   const pagedResults = results.slice(start, start + pageSize);
-  return {
+  const response = {
     results: pagedResults,
     total: total,
     page: page,
     pageSize: pageSize,
     totalPages: totalPages
   };
+  if (!total) response.audit = audit;
+  return response;
 }
 
 function _searchRecordsDirectFromSheet_(dx, filters, token) {
