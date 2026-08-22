@@ -3997,7 +3997,7 @@
     if (sarsDashboardSection) sarsDashboardSection.classList.toggle('pd3i-weekly-report-detail-mode', weeklyDetailMode);
     document.body.classList.toggle('pd3i-weekly-report-detail-mode', weeklyDetailMode);
     // Prevent stale active classes from duplicate route handlers.
-    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace].is-active').forEach(function(link){ link.classList.remove('is-active'); link.removeAttribute('aria-current'); });
+    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace].is-active, .pd3i-nav-button[data-sidebar-workspace].is-active').forEach(function(link){ link.classList.remove('is-active'); link.removeAttribute('aria-current'); });
     updateSidebarActiveState(normalized);
     setWorkspaceSectionVisibility(pieSection, isPieWorkspace);
     setWorkspaceSectionVisibility(settingsSection, isSettingsWorkspace);
