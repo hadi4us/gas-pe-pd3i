@@ -2391,8 +2391,13 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
+  const userFaskesKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
   const userPengampuKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
-  if (!userKodePuskesmas && !userUnitKerja && !userPengampuKey) return false;
+  if (!userKodePuskesmas && !userUnitKerja && !userFaskesKey && !userPengampuKey) return false;
+
+  // Reporting facility scope is separate from supervising PKM scope.
+  const recordFaskesKey = _normalizeAccessScopeKey_((data && (data['faskes_key'] || data['FaskesKey'] || data['Faskes Pelapor'])) || '');
+  if (userFaskesKey && recordFaskesKey && userFaskesKey === recordFaskesKey) return true;
 
   // Pengampu scope: canonical key in REF_PENGAMPU/REF_USER must match
   // report row pengampu_key. Do this before domisili fallback; old records
