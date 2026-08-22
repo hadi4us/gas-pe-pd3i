@@ -2,6 +2,9 @@
 <style>
   .pd3i-sars-empty{display:none;margin-top:10px}
   .pd3i-sars-rows-select{min-width:120px}
+.weekly-detail-grid{border-collapse:collapse;border:2px solid #475569}
+.weekly-detail-grid th,.weekly-detail-grid td{border:1px solid #64748b}
+.pd3i-sars-empty-copy{padding:14px;color:#5f6368;font-style:italic}
 /* SARS styles handled by SS PD3I design system in style.html */</style>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
 <section id="section-zero-reporting-form" class="pd3i-zero-reporting-section hidden mt-6" data-legacy-section-id="section-sars-form">
@@ -1168,7 +1171,7 @@
       var downloadBtn = document.getElementById('btnDownloadWeeklyDetail'); if (downloadBtn) downloadBtn.disabled = !rows.length;
       if (!rows.length) { target.innerHTML = '<div class="note">Tidak ada laporan faskes pada ME terpilih.</div>'; document.getElementById('weeklyDetailPagination').innerHTML = ''; return; }
       var compact = [['waktuSubmit','Waktu Kirim'],['me','ME'],['namaFasyankes','Fasyankes'],['namaPenyakit','Penyakit'],['namaKasus','Nama Kasus'],['keadaan','Keadaan'],['diagnosis','Diagnosis'],['onTime','Tepat waktu']];
-      target.innerHTML = '<table class="weekly-detail-grid" style="border-collapse:collapse;border:2px solid #475569"><thead><tr><th style="border:1px solid #64748b">No</th>' + compact.map(function(c){ return '<th>' + esc(c[1]) + '</th>'; }).join('') + '</tr></thead><tbody>' + pageRows.map(function(row, i){ return '<tr><td>' + (pageStart + i + 1) + '</td>' + compact.map(function(c){ var v = row && row[c[0]] || ''; if (c[0] === 'onTime') v = /^(true|ya|yes|1)$/i.test(String(v)) ? 'Ya' : (/^(false|tidak|no|0)$/i.test(String(v)) ? 'Tidak' : v); return '<td style="border:1px solid #64748b">' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>'; var pg=document.getElementById('weeklyDetailPagination'); pg.innerHTML='<button type="button" class="pd3i-btn is-secondary" '+(window.__WEEKLY_DETAIL_PAGE<=1?'disabled':'')+' onclick="window.__WEEKLY_DETAIL_PAGE--;renderWeeklyDetailTable_(window.__WEEKLY_DETAIL_ROWS)">Sebelumnya</button><span>Halaman '+window.__WEEKLY_DETAIL_PAGE+' / '+totalPages+' • '+rows.length+' laporan</span><button type="button" class="pd3i-btn is-secondary" '+(window.__WEEKLY_DETAIL_PAGE>=totalPages?'disabled':'')+' onclick="window.__WEEKLY_DETAIL_PAGE++;renderWeeklyDetailTable_(window.__WEEKLY_DETAIL_ROWS)">Berikutnya</button>';
+      target.innerHTML = '<table class="weekly-detail-grid"><thead><tr><th>No</th>' + compact.map(function(c){ return '<th>' + esc(c[1]) + '</th>'; }).join('') + '</tr></thead><tbody>' + pageRows.map(function(row, i){ return '<tr><td>' + (pageStart + i + 1) + '</td>' + compact.map(function(c){ var v = row && row[c[0]] || ''; if (c[0] === 'onTime') v = /^(true|ya|yes|1)$/i.test(String(v)) ? 'Ya' : (/^(false|tidak|no|0)$/i.test(String(v)) ? 'Tidak' : v); return '<td>' + esc(v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table>'; var pg=document.getElementById('weeklyDetailPagination'); pg.innerHTML='<button type="button" class="pd3i-btn is-secondary" '+(window.__WEEKLY_DETAIL_PAGE<=1?'disabled':'')+' onclick="window.__WEEKLY_DETAIL_PAGE--;renderWeeklyDetailTable_(window.__WEEKLY_DETAIL_ROWS)">Sebelumnya</button><span>Halaman '+window.__WEEKLY_DETAIL_PAGE+' / '+totalPages+' • '+rows.length+' laporan</span><button type="button" class="pd3i-btn is-secondary" '+(window.__WEEKLY_DETAIL_PAGE>=totalPages?'disabled':'')+' onclick="window.__WEEKLY_DETAIL_PAGE++;renderWeeklyDetailTable_(window.__WEEKLY_DETAIL_ROWS)">Berikutnya</button>';
     }
 
     function applyWeeklyDetailFilter_(){ var all=window.__WEEKLY_DETAIL_ROWS_ALL||[]; var st=document.getElementById('weeklyDetailStatus')?.value||'ALL', dis=document.getElementById('weeklyDetailDisease')?.value||'ALL'; window.__WEEKLY_DETAIL_ROWS=all.filter(function(r){return (st==='ALL'||r.status===st)&&(dis==='ALL'||r.namaPenyakit===dis);}); renderWeeklyDetailTable_(window.__WEEKLY_DETAIL_ROWS); }
@@ -1307,7 +1310,7 @@
       const tableEl = document.getElementById('table');
       const selectedMe = Number(document.getElementById('weekSel')?.value || 0);
       const safe = rows.filter(function(r){ return !selectedMe || Number(r.me) === selectedMe; });
-      if (!safe.length) { tableEl.innerHTML = '<div style="padding:14px;color:#5f6368;font-style:italic;">Tidak ada laporan dikirim faskes pada filter ini.</div>'; return; }
+      if (!safe.length) { tableEl.innerHTML = '<div class="pd3i-sars-empty-copy">Tidak ada laporan dikirim faskes pada filter ini.</div>'; return; }
       const cols = [['waktuSubmit','Waktu Kirim'],['me','ME'],['namaFasyankes','Fasyankes'],['jenisFasyankes','Jenis'],['namaPetugas','Petugas'],['namaPenyakit','Nama Penyakit'],['nihil','Nihil'],['namaKasus','Nama Kasus'],['tglLahir','Tgl Lahir'],['jenisKelamin','JK'],['alamat','Alamat & No Telp'],['tanggalMulai','Tanggal Mulai'],['gejala','Gejala'],['diagnosis','Diagnosis'],['statusImunisasi','Status Imunisasi'],['keadaan','Keadaan'],['spesimen','Spesimen / Penolong']];
       let html = '<table><thead><tr><th>No</th>' + cols.map(function(c){ return '<th>'+esc(c[1])+'</th>'; }).join('') + '</tr></thead><tbody>';
       safe.forEach(function(r,i){ html += '<tr><td>'+(i+1)+'</td>'+cols.map(function(c){ return '<td>'+esc(r[c[0]] || '')+'</td>'; }).join('')+'</tr>'; });
@@ -1504,7 +1507,7 @@
     function renderTable(detail, denomWeeks){
       const tableEl = document.getElementById('table');
       if (!detail.length){
-        tableEl.innerHTML = (typeof window.renderPd3iUiState === 'function') ? window.renderPd3iUiState({ type: 'empty', title: 'Tidak ada data detail', message: 'Data akan muncul setelah laporan SARS tersedia untuk filter yang dipilih.' }) : `<div style="padding:14px;color:#5f6368;font-style:italic;">Tidak ada data detail.</div>`;
+        tableEl.innerHTML = (typeof window.renderPd3iUiState === 'function') ? window.renderPd3iUiState({ type: 'empty', title: 'Tidak ada data detail', message: 'Data akan muncul setelah laporan SARS tersedia untuk filter yang dipilih.' }) : `<div class="pd3i-sars-empty-copy">Tidak ada data detail.</div>`;
         pageState.totalRows = 0;
         pageState.totalPages = 1;
         pageState.page = 1;
