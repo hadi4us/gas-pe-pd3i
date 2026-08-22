@@ -31,11 +31,13 @@ Development: deploy only after batch gates pass
 - Normalize Settings Rule ID inline width.
 - Gate: diff check, no behavior change.
 
-### Batch 1 — global primitives — IN PROGRESS
+### Batch 1 — global primitives — COMPLETE (Development @81)
 - Canonical button geometry/states.
 - Canonical page header/action group.
 - Canonical card levels and shared form controls.
 - Do not remove legacy selectors yet.
+- Development deployment updated: `AKfycbyvwxhm2ycZ-1R45QeTKSM4l5JQ9OIX7MqN9uBusGKhUM8McveAM5ydHXc5WaACD6Od @81`.
+- Production deployment unchanged.
 
 ### Batch 2 — core workflow menus
 Order: Dashboard, Overview, Search, Input, Verification, Status, Sample.

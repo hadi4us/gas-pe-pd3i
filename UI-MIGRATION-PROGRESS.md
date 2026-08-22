@@ -34,5 +34,9 @@
 - Full Node regression suite passed: 271/271.
 - Full `npm test` passed: Node tests, hygiene, and endpoint security checks.
 - No UI-specific test failure remains.
+- Development deployment updated successfully: `AKfycbyvwxhm2ycZ-1R45QeTKSM4l5JQ9OIX7MqN9uBusGKhUM8McveAM5ydHXc5WaACD6Od @81`.
+- Deployment description: `UI migration batch 1 - shared government UI primitives`.
+- Development URL opened successfully; page title confirmed `SIMPEL Surveilans Kota Depok`.
+- Production deployment unchanged. User visual smoke test remains next acceptance gate.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
