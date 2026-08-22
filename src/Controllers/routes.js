@@ -658,7 +658,7 @@ function getFaskesFromSheet(token, forceReload) {
 
   var raw = null;
   try {
-    if (forceReload && typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.remove === 'function') Cache_Manager.remove('REF_FASKES');
+    if (forceReload && typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.invalidateSheetCache === 'function') Cache_Manager.invalidateSheetCache('REF_FASKES');
     if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.getSheetData === 'function') {
       raw = Cache_Manager.getSheetData('REF_FASKES');
     }
@@ -689,7 +689,7 @@ function getFaskesFromSheet(token, forceReload) {
   };
 
   const idxJenis = findIdx(['Jenis', 'JenisFaskes', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
-  const idxNama = findIdx(['NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
+  const idxNama = findIdx(['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
   const idxKey = findIdx(['faskes_key', 'FaskesKey', 'KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
   const idxAktif = findIdx(['StatusAktif', 'Status Aktif', 'Aktif', 'IsActive', 'Active', 'Status']);
 
