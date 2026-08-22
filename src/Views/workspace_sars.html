@@ -800,7 +800,7 @@
 
 <section id="section-weekly-report-detail" class="pd3i-zero-reporting-section hidden mt-6">
   <div class="pd3i-shell-card pd3i-weekly-detail-card">
-    <div class="sars-filter-head"><div><h2>Detail Laporan Mingguan</h2><p>Data laporan asli yang dikirim faskes.</p></div><div class="sars-filter-actions"><button type="button" class="pd3i-btn is-secondary sars-filter-load" onclick="loadWeeklyReportDetail()"><span>Muat Data</span></button><button type="button" id="btnDownloadWeeklyDetail" class="pd3i-btn is-primary" onclick="downloadWeeklyReportExcel_()" disabled>Unduh Excel</button></div></div>
+    <div class="pd3i-page-header sars-filter-head"><div><h2>Detail Laporan Mingguan</h2><p>Data laporan asli yang dikirim faskes.</p></div><div class="sars-filter-actions"><button type="button" class="pd3i-btn is-secondary sars-filter-load" onclick="loadWeeklyReportDetail()"><span>Muat Data</span></button><button type="button" id="btnDownloadWeeklyDetail" class="pd3i-btn is-primary" onclick="downloadWeeklyReportExcel_()" disabled>Unduh Excel</button></div></div>
     <div class="sars-filter-grid"><div class="fitem"><label for="weeklyDetailYear">Tahun</label><select id="weeklyDetailYear"></select></div><div class="fitem"><label for="weeklyDetailWeek">Minggu Epidemiologi (ME)</label><select id="weeklyDetailWeek"></select></div><div class="fitem"><label for="weeklyDetailStatus">Status laporan</label><select id="weeklyDetailStatus"><option value="ALL">Semua status</option><option value="Nihil">Nihil</option><option value="Ada kasus">Ada kasus</option><option value="Tidak jelas">Perlu klarifikasi</option></select></div><div class="fitem"><label for="weeklyDetailDisease">Penyakit</label><select id="weeklyDetailDisease"><option value="ALL">Semua penyakit</option></select></div></div>
     <div id="weeklyDetailSummary" class="weekly-detail-summary" aria-live="polite"></div><div id="weeklyDetailNote" class="note"></div><div id="weeklyDetailTable" class="sars-table-wrap"></div><div id="weeklyDetailPagination" class="weekly-detail-pagination" aria-label="Pagination detail laporan"></div>
   </div>
@@ -814,7 +814,7 @@
     <div id="err" class="error"></div>
 
     <div class="pd3i-shell-card sars-dashboard-filter">
-      <div class="sars-filter-head">
+      <div class="pd3i-page-header sars-filter-head">
         <div>
           <h2>Filter laporan</h2>
         </div>
