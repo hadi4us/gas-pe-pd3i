@@ -146,7 +146,7 @@ test('confirm dialog replaces browser confirm for destructive case delete', () =
 
 test('queue tables and SARING-PIE entity lists use reusable table/list hooks', () => {
   const pieHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_pie.html'), 'utf8');
-  assert.match(appJs, /pd3i-queue-table-wrap pd3i-data-table-wrap/);
+  assert.match(appJs, /pd3i-queue-table-wrap pd3i-component-table pd3i-data-table-wrap/);
   assert.match(appJs, /pd3i-queue-table pd3i-data-table/);
   ['pie-specimen-list', 'pie-lab-list', 'pie-cluster-list', 'pie-onehealth-list'].forEach((id) => {
     assert.match(pieHtml, new RegExp(`id="${id}"[^>]*pd3i-data-list[^>]*data-component="DataTable"[^>]*data-mobile-mode="card"`));

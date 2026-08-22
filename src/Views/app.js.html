@@ -5485,10 +5485,10 @@
     html += `<div class="pd3i-queue-toolbar-title">${escapeHtml(title)}</div>`;
     html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${visibleRows.length}</strong> dari <strong>${rows.length}</strong> entri</div>`;
     html += '</div>';
-    html += '<div class="pd3i-queue-table-wrap pd3i-data-table-wrap" data-component="DataTable" data-mobile-mode="scroll">';
-    html += '<table class="pd3i-queue-table pd3i-data-table">';
+    html += '<div class="pd3i-queue-table-wrap pd3i-component-table pd3i-data-table-wrap" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="scroll">';
+    html += '<table class="pd3i-queue-table pd3i-data-table" role="table">';
     html += '<thead><tr>';
-    html += '<th class="is-no">No.</th>';
+    html += '<th class="is-no">No.</th>';},{
     html += '<th>Nama kasus / ID / DX</th>';
     html += '<th>Nama faskes / Wilayah</th>';
     html += '<th>Status</th>';
@@ -5558,8 +5558,8 @@
     html += '<div class="pd3i-queue-toolbar-title">Kasus sudah diverifikasi admin</div>';
     html += `<div class="pd3i-queue-toolbar-meta">Menampilkan <strong>${rows.length}</strong> kasus terverifikasi</div>`;
     html += '</div>';
-    html += '<div class="pd3i-queue-table-wrap pd3i-data-table-wrap" data-component="DataTable" data-mobile-mode="scroll">';
-    html += '<table class="pd3i-queue-table pd3i-data-table">';
+    html += '<div class="pd3i-queue-table-wrap pd3i-component-table pd3i-data-table-wrap" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="scroll">';
+    html += '<table class="pd3i-queue-table pd3i-data-table" role="table">';
     html += '<thead><tr><th class="is-no">No.</th><th>Nama kasus</th><th>Wilayah / DX</th><th>Nomor EPID</th><th>Status</th><th class="is-action">Aksi</th></tr></thead><tbody>';
     rows.forEach(function(item, idx) {
       const recordKeyArg = JSON.stringify(String(item && (item.recordKey || item.recordId || item.epid) || ''));
