@@ -676,13 +676,17 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const rowFaskesKey = sarsDash_normFaskesKey_(faskesKey);
     const faskesMatch = !!unitKey && rowFaskesKey === unitKey;
     const pengampuMatch = !!pengampuKey && rowPengampuKey === pengampuKey;
+    // In current SARS data, pengampu_key is the pengampu facility's key,
+    // while each submitted row keeps that key in faskes_key. Match the
+    // session pengampu_key against row faskes_key explicitly.
+    const pengampuFacilityMatch = !!pengampuKey && rowFaskesKey === pengampuKey;
     // Pengampu flow: try own faskes_key first; when row is not own faskes,
     // use pengampu_key. This matches SARS data where reporter and pengampu
     // keys are stored independently.
     const belongs = allowAll || (isReporterScope
       ? faskesMatch
       : isPengampuScope
-        ? (faskesMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
+        ? (faskesMatch || pengampuFacilityMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
         : faskesMatch);
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
