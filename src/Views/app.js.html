@@ -403,9 +403,9 @@
       ? `data-parent="${htmlEscape(field.showIf.field)}" data-parent-vals='${htmlEscape(JSON.stringify(field.showIf.values))}' data-required="${field.required ? "true" : "false"}"`
       : "";
 
-    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
+    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card pd3i-component-field ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
     const fieldWrapperAttrs = `data-pd3i-field-wrapper="1" data-pd3i-field-id="${attrEscape(field.id)}"`;
-    const cls = `pd3i-generated-control border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
+    const cls = `pd3i-generated-control pd3i-shell-input border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
       field.readonly
         ? "bg-slate-100 cursor-not-allowed font-extrabold text-slate-600"
         : "bg-white focus:ring-blue-500 focus:border-blue-500"
@@ -566,7 +566,7 @@
 
     return `<div class="${wrapperClass}" ${fieldWrapperAttrs} ${showIfAttr}>
       ${dependentMeta}
-      <label for="${attrEscape(field.id)}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated">
+      <label for="${attrEscape(field.id)}" class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight pd3i-field-label-generated pd3i-field-label">
         ${htmlEscape(field.label)} ${(field.required && !isOptionalField) ? '<span class="text-red-500">*</span>' : ""}
       </label>
       ${inputHtml}
