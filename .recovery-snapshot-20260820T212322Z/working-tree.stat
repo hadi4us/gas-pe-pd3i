@@ -1,0 +1,7 @@
+ docs/ENDPOINT_SECURITY_MATRIX.generated.json | 32 ++++++------
+ src/Auth/auth.js                             | 76 +++++++++++++++++++++++++---
+ src/Controllers/print.js                     | 10 +++-
+ src/SARS/dashboard_sars.js                   |  6 ++-
+ src/SARS/submit_sars.js                      | 10 +++-
+ src/Views/workspace_sars.html                |  7 +--
+ 6 files changed, 110 insertions(+), 31 deletions(-)

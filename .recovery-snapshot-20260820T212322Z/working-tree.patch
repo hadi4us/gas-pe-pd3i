@@ -1,0 +1,337 @@
+diff --git a/docs/ENDPOINT_SECURITY_MATRIX.generated.json b/docs/ENDPOINT_SECURITY_MATRIX.generated.json
+index 8e9eae8..2854022 100644
+--- a/docs/ENDPOINT_SECURITY_MATRIX.generated.json
++++ b/docs/ENDPOINT_SECURITY_MATRIX.generated.json
+@@ -15,25 +15,25 @@
+     {
+       "name": "authLogin",
+       "file": "src/Auth/auth.js",
+-      "line": 260,
++      "line": 261,
+       "guard": "public-login"
+     },
+     {
+       "name": "authCheck",
+       "file": "src/Auth/auth.js",
+-      "line": 367,
++      "line": 368,
+       "guard": "token"
+     },
+     {
+       "name": "authLogout",
+       "file": "src/Auth/auth.js",
+-      "line": 438,
++      "line": 439,
+       "guard": "token"
+     },
+     {
+       "name": "authChangePin",
+       "file": "src/Auth/auth.js",
+-      "line": 471,
++      "line": 472,
+       "guard": "token"
+     },
+     {
+@@ -225,7 +225,7 @@
+     {
+       "name": "getPdfPrintUrl",
+       "file": "src/Controllers/print.js",
+-      "line": 136,
++      "line": 138,
+       "guard": "token-scope"
+     },
+     {
+@@ -237,7 +237,7 @@
+     {
+       "name": "handlePrintRequest_",
+       "file": "src/Controllers/print.js",
+-      "line": 155,
++      "line": 157,
+       "guard": "token-scope"
+     },
+     {
+@@ -369,7 +369,7 @@
+     {
+       "name": "pieEvaluateScreeningPayload",
+       "file": "src/PIE/service.js",
+-      "line": 703,
++      "line": 702,
+       "guard": "token"
+     },
+     {
+@@ -381,19 +381,19 @@
+     {
+       "name": "pieGetOperationalDashboard",
+       "file": "src/PIE/service.js",
+-      "line": 444,
++      "line": 443,
+       "guard": "token"
+     },
+     {
+       "name": "pieCompleteActionTask",
+       "file": "src/PIE/service.js",
+-      "line": 552,
++      "line": 551,
+       "guard": "token"
+     },
+     {
+       "name": "pieSetCaseClassification",
+       "file": "src/PIE/service.js",
+-      "line": 577,
++      "line": 576,
+       "guard": "token"
+     },
+     {
+@@ -471,37 +471,37 @@
+     {
+       "name": "pieAcknowledgeAlert",
+       "file": "src/PIE/service.js",
+-      "line": 592,
++      "line": 591,
+       "guard": "token"
+     },
+     {
+       "name": "pieResolveAlert",
+       "file": "src/PIE/service.js",
+-      "line": 602,
++      "line": 601,
+       "guard": "token"
+     },
+     {
+       "name": "pieGetNotificationConfigStatus",
+       "file": "src/PIE/service.js",
+-      "line": 694,
++      "line": 693,
+       "guard": "admin"
+     },
+     {
+       "name": "pieSetupTelegramConfig",
+       "file": "src/PIE/service.js",
+-      "line": 612,
++      "line": 611,
+       "guard": "admin"
+     },
+     {
+       "name": "pieSendTestNotification",
+       "file": "src/PIE/service.js",
+-      "line": 636,
++      "line": 635,
+       "guard": "admin"
+     },
+     {
+       "name": "pieGetPd3iNotificationConfigStatus",
+       "file": "src/PIE/service.js",
+-      "line": 645,
++      "line": 644,
+       "guard": "admin"
+     }
+   ],
+diff --git a/src/Auth/auth.js b/src/Auth/auth.js
+index 09899ec..4d84930 100644
+--- a/src/Auth/auth.js
++++ b/src/Auth/auth.js
+@@ -108,7 +108,12 @@ function _authOtpCooldownKey_(email) {
+ }
+ 
+ function _normalizeGmail_(email) {
+-  return String(email || "").trim().toLowerCase();
++  return String(email == null ? "" : email)
++    .replace(/[\u0000-\u001F\u007F\u00A0\u200B-\u200D\uFEFF]/g, "")
++    .trim()
++    .replace(/^mailto:/i, "")
++    .trim()
++    .toLowerCase();
+ }
+ 
+ function _hashOtpValue_(email, otp) {
+@@ -124,6 +129,54 @@ function _generateLoginOtp_() {
+   return String(Math.floor(100000 + Math.random() * 900000));
+ }
+ 
++/** Run once from Apps Script editor to authorize MailApp scope. */
++function authorizeMailScope() {
++  return { service: "Brevo", configured: !!PropertiesService.getScriptProperties().getProperty("BREVO_API_KEY") };
++}
++
++function testBrevoConnection() {
++  const props = PropertiesService.getScriptProperties();
++  const apiKey = String(props.getProperty("BREVO_API_KEY") || "").replace(/[\\r\\n\\t]/g, "").trim();
++  const senderEmail = String(props.getProperty("BREVO_SENDER_EMAIL") || "").replace(/[\\r\\n\\t]/g, "").trim();
++  if (!apiKey || !senderEmail) return { status: "error", configured: false, hasApiKey: !!apiKey, hasSenderEmail: !!senderEmail };
++  const response = UrlFetchApp.fetch("https://api.brevo.com/v3/account", {
++    method: "get",
++    headers: { "api-key": apiKey, "accept": "application/json" },
++    muteHttpExceptions: true
++  });
++  const code = response.getResponseCode();
++  let body = response.getContentText() || "";
++  try {
++    const obj = JSON.parse(body);
++    body = obj.message || obj.code || (obj.email ? "account_ok" : "response_received");
++  } catch (e) { body = body.slice(0, 200); }
++  return { status: code >= 200 && code < 300 ? "success" : "error", httpCode: code, configured: true, senderEmail: senderEmail, brevoMessage: body };
++}
++
++function _sendOtpViaBrevo_(to, otp) {
++  const props = PropertiesService.getScriptProperties();
++  const apiKey = String(props.getProperty("BREVO_API_KEY") || "").replace(/[\\r\\n\\t]/g, "").trim();
++  const senderEmail = String(props.getProperty("BREVO_SENDER_EMAIL") || "").replace(/[\\r\\n\\t]/g, "").trim();
++  const senderName = "SIMPEL Surveilans Dinkes Kota Depok";
++  if (!apiKey || !senderEmail) throw new Error("BREVO_API_KEY atau BREVO_SENDER_EMAIL belum diset di Script Properties.");
++  const response = UrlFetchApp.fetch("https://api.brevo.com/v3/smtp/email", {
++    method: "post",
++    contentType: "application/json",
++    headers: { "api-key": apiKey, "accept": "application/json" },
++    payload: JSON.stringify({
++      sender: { email: senderEmail, name: senderName },
++      to: [{ email: String(to).trim() }],
++      subject: "Kode OTP SIMPEL Surveilans",
++      textContent: "Kode OTP Anda adalah: " + otp + "\n\nKode berlaku selama 5 menit. Jangan bagikan kode ini."
++    }),
++    muteHttpExceptions: true
++  });
++  const status = response.getResponseCode();
++  const body = response.getContentText();
++  if (status < 200 || status >= 300) throw new Error("Brevo HTTP " + status + ": " + body.slice(0, 300));
++  return body;
++}
++
+ function _findUserByEmail_(email) {
+   email = _normalizeGmail_(email);
+   const sh = getSheetOrNull_("REF_USER");
+@@ -218,11 +271,22 @@ function requestLoginOtp(email) {
+       }
+     }
+ 
+-    MailApp.sendEmail({
+-      to: email,
+-      subject: "Kode OTP SS PD3I",
+-      body: "Kode OTP Anda adalah: " + otp + "\n\nKode berlaku selama 5 menit.\n\nAbaikan email ini jika Anda tidak meminta OTP."
+-    });
++    try {
++      _sendOtpViaBrevo_(email, otp);
++    } catch (mailErr) {
++      // Keep OTP value private; expose actionable service failure only.
++      let detail = String(mailErr && mailErr.message || mailErr || '').trim();
++      let message = "OTP email gagal dikirim. ";
++      if (/^Brevo HTTP\s+401\b/i.test(detail)) message += "API key Brevo tidak valid atau sudah dicabut.";
++      else if (/^Brevo HTTP\s+400\b/i.test(detail)) message += "Sender Brevo belum terverifikasi atau payload email tidak valid.";
++      else if (/^Brevo HTTP\s+403\b/i.test(detail)) message += "API key Brevo tidak punya izin SMTP.";
++      else if (/^Brevo HTTP\s+429\b/i.test(detail)) message += "Brevo sedang membatasi pengiriman. Coba lagi nanti.";
++      else if (/too many times|quota|limit/i.test(detail)) message += "Quota/rate limit layanan email tercapai.";
++      else if (/(invalid\s+(argument|email|recipient)|invalid.*(recipient|email address)|recipient.*invalid|bad.*email)/i.test(detail)) message += "Alamat email penerima ditolak layanan email.";
++      else message += "Layanan email menolak pengiriman. Cek detail Apps Script Executions.";
++      try { console.error("OTP email send failed:", { email: email, detail: detail, fallbackReason: fallbackReason }); } catch (logErr) {}
++      return { status: "error", message: message, code: "OTP_EMAIL_SEND_FAILED", fallbackReason: fallbackReason || "EMAIL_SEND_FAILED" };
++    }
+ 
+     return { status: "success", message: fallbackReason ? "OTP Telegram belum tersedia. OTP dikirim ke email Anda." : "OTP sudah dikirim ke email Anda.", channel: fallbackReason ? "email_fallback" : "email", fallbackReason: fallbackReason, cooldownSec: 60 };
+   } catch (e) {
+diff --git a/src/Controllers/print.js b/src/Controllers/print.js
+index bd47a1f..cc5dedc 100644
+--- a/src/Controllers/print.js
++++ b/src/Controllers/print.js
+@@ -94,9 +94,15 @@ function exportPdfDocument(dx, epid, token, recordKey) {
+     // Some Apps Script runtimes reject HtmlOutput.getAs(PDF); convert rendered HTML blob instead.
+     pdf = Utilities.newBlob(htmlOutput.getContent(), MimeType.HTML, "Dokumen_PE_" + epid + ".html").getAs(MimeType.PDF);
+   }
+-  const code = String(data["Nomor EPID"] || epid).replace(/[^A-Za-z0-9_-]+/g, "_");
++  const recordIdentity = String(
++    data["Nomor EPID"] || epid || data["ID Registrasi Kasus"] || recordKey || ""
++  ).trim();
++  const code = recordIdentity.replace(/[^A-Za-z0-9_-]+/g, "_");
+   const name = "Dokumen_PE_" + code + ".pdf";
+-  const propertyKey = "PE_PDF_DRIVE_" + dx + "_" + code;
++  // Cache must use physical record identity, not EPID. EPID can be empty or duplicated.
++  const cacheIdentity = String(recordKey || data["ID Registrasi Kasus"] || recordIdentity).trim();
++  const cacheCode = cacheIdentity.replace(/[^A-Za-z0-9_-]+/g, "_");
++  const propertyKey = "PE_PDF_DRIVE_V2_" + dx + "_" + cacheCode;
+   const props = PropertiesService.getScriptProperties();
+   const existingId = String(props.getProperty(propertyKey) || "").trim();
+   if (existingId) {
+diff --git a/src/SARS/dashboard_sars.js b/src/SARS/dashboard_sars.js
+index 1a9fc6f..67c5de3 100644
+--- a/src/SARS/dashboard_sars.js
++++ b/src/SARS/dashboard_sars.js
+@@ -636,7 +636,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
+   const iSubmit=ix(['Waktu Submit','WaktuSubmit','Timestamp','Waktu','Submit Time']);
+   const iME=ix(['ME','Minggu Epid','MingguEpid','Minggu Epidemiologi']);
+   if (iSubmit < 0 || iME < 0) throw new Error('Header Waktu Submit/ME tidak ditemukan.');
+-  const wMatch=String(minggu == null ? '' : minggu).match(/\d+/);
++  const weekValue = String(minggu == null ? '' : minggu).trim().toUpperCase();
++  const allWeeks = weekValue === 'ALL' || weekValue === 'SEMUA' || weekValue === '*';
++  const wMatch=weekValue.match(/\d+/);
+   const w=wMatch ? Number(wMatch[0]) : 1;
+   const field = function(row,names){ const i=ix(names); return i >= 0 ? sarsDash_clean_(row[i]) : ''; };
+   const out = values.slice(1).map(function(row){
+@@ -645,7 +647,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
+     const me = meMatch ? Number(meMatch[0]) : NaN;
+     // Detail source filter is ME only. SARS rows may use submit date/year
+     // differing from reporting epi-year (late entry, backfill, migration).
+-    if (Number(me)!==w) return null;
++    if (!allWeeks && Number(me)!==w) return null;
+     const namaFaskes=field(row,['Nama Fasyankes','NamaFasyankes','Nama Faskes']);
+     const faskesKey=field(row,['FaskesKey','KodeFaskes','Kode Faskes']);
+     const pengampu=field(row,['FaskesPengampu','Faskes Pengampu','Pengampu']);
+diff --git a/src/SARS/submit_sars.js b/src/SARS/submit_sars.js
+index 5fc85b8..10f2f1c 100644
+--- a/src/SARS/submit_sars.js
++++ b/src/SARS/submit_sars.js
+@@ -326,7 +326,9 @@ function _checkDuplicate_(sheet, hmap, me, faskesKey) {
+   if (lastRow < 2) return;
+ 
+   const colME = hmap["ME"];
+-  const colKey = hmap["KodeFaskes"];
++  const colKey = hmap["KodeFaskes"] !== undefined
++    ? hmap["KodeFaskes"]
++    : (hmap["FaskesKey"] !== undefined ? hmap["FaskesKey"] : hmap["Faskes Key"]);
+   if (colME === undefined || colKey === undefined) return;
+ 
+   const meVals  = sheet.getRange(2, colME + 1, lastRow - 1, 1).getValues();
+@@ -394,9 +396,13 @@ function submitSARS(formData) {
+     "Waktu Submit","Email Petugas","ME","Nama Petugas","No Whatsapp","Unit Surveilans",
+     "Jenis Fasyankes","Nama Fasyankes","Nama Penyakit","Nihil",
+     "Tgl Lahir","Spesimen / Penolong","Diagnosis Medis/Banding",
+-    "Deadline","OnTime","KodeFaskes"
++    "Deadline","OnTime"
+   ];
+   MUST.forEach(h => _sRequire_(h in hmap, `Header "${h}" tidak ditemukan di sheet ${shData.getName()}.`));
++  _sRequire_(
++    hmap["KodeFaskes"] !== undefined || hmap["FaskesKey"] !== undefined || hmap["Faskes Key"] !== undefined,
++    `Header "KodeFaskes" tidak ditemukan di sheet ${shData.getName()}. Gunakan "KodeFaskes" atau "FaskesKey".`
++  );
+   _sRequire_(hmap["KodeFaskes Pengampu"] !== undefined || hmap["FaskesPengampu"] !== undefined,
+     `Header "KodeFaskes Pengampu" tidak ditemukan di sheet ${shData.getName()}.`);
+ 
+diff --git a/src/Views/workspace_sars.html b/src/Views/workspace_sars.html
+index c621f95..fce1e80 100644
+--- a/src/Views/workspace_sars.html
++++ b/src/Views/workspace_sars.html
+@@ -1121,7 +1121,7 @@
+       if (!yearEl || !weekEl) return;
+       const year = Number(window.DEFAULT_DASHBOARD_YEAR || new Date().getFullYear());
+       yearEl.innerHTML = '<option value="' + year + '">' + year + '</option>';
+-      weekEl.innerHTML = Array.from({length: 52}, function(_, i){ return '<option value="' + (i + 1) + '">ME ' + (i + 1) + '</option>'; }).join('');
++      weekEl.innerHTML = '<option value="ALL">Semua minggu</option>' + Array.from({length: 53}, function(_, i){ return '<option value="' + (i + 1) + '">ME ' + (i + 1) + '</option>'; }).join('');
+       weekEl.value = String(Number(window.DEFAULT_DASHBOARD_WEEK || 1));
+       yearEl.onchange = loadWeeklyReportDetail;
+       weekEl.onchange = loadWeeklyReportDetail;
+@@ -1131,7 +1131,8 @@
+ 
+     function loadWeeklyReportDetail(){
+       const year = Number(document.getElementById('weeklyDetailYear')?.value || new Date().getFullYear());
+-      const week = Number(document.getElementById('weeklyDetailWeek')?.value || 1);
++      const weekValue = String(document.getElementById('weeklyDetailWeek')?.value || 1);
++      const week = weekValue === 'ALL' ? 'ALL' : Number(weekValue);
+       const note = document.getElementById('weeklyDetailNote');
+       window.__WEEKLY_DETAIL_ROWS = [];
+       var downloadBtn = document.getElementById('btnDownloadWeeklyDetail'); if (downloadBtn) downloadBtn.disabled = true;
+@@ -1153,7 +1154,7 @@
+       const target = document.getElementById('weeklyDetailTable');
+       if (!target) return;
+       const cols = [['waktuSubmit','Waktu Kirim'],['me','ME'],['namaFasyankes','Fasyankes'],['jenisFasyankes','Jenis'],['namaPetugas','Petugas'],['namaPenyakit','Penyakit'],['nihil','Nihil'],['namaKasus','Nama Kasus'],['tglLahir','Tgl Lahir'],['jenisKelamin','JK'],['alamat','Alamat'],['tanggalMulai','Mulai Sakit'],['gejala','Gejala'],['diagnosis','Diagnosis'],['statusImunisasi','Imunisasi'],['keadaan','Keadaan'],['spesimen','Spesimen']];
+-      var summary = document.getElementById('weeklyDetailSummary'); if (summary) { var nihil=rows.filter(function(r){return r.status==='Nihil';}).length, kasus=rows.filter(function(r){return r.status==='Ada kasus';}).length, faskes={}; rows.forEach(function(r){faskes[r.namaFasyankes||''] = 1;}); summary.innerHTML = '<strong>' + rows.length + '</strong> laporan <span>• ' + Object.keys(faskes).filter(Boolean).length + ' faskes</span><span>• ' + nihil + ' nihil</span><span>• ' + kasus + ' ada kasus</span><span>• ME ' + esc(document.getElementById('weeklyDetailWeek')?.value || '') + '</span>'; }
++      var summary = document.getElementById('weeklyDetailSummary'); if (summary) { var nihil=rows.filter(function(r){return r.status==='Nihil';}).length, kasus=rows.filter(function(r){return r.status==='Ada kasus';}).length, faskes={}; rows.forEach(function(r){faskes[r.namaFasyankes||''] = 1;}); summary.innerHTML = '<strong>' + rows.length + '</strong> laporan <span>• ' + Object.keys(faskes).filter(Boolean).length + ' faskes</span><span>• ' + nihil + ' nihil</span><span>• ' + kasus + ' ada kasus</span><span>• ' + (document.getElementById('weeklyDetailWeek')?.value === 'ALL' ? 'Semua ME' : 'ME ' + esc(document.getElementById('weeklyDetailWeek')?.value || '')) + '</span>'; }
+       var downloadBtn = document.getElementById('btnDownloadWeeklyDetail'); if (downloadBtn) downloadBtn.disabled = !rows.length;
+       if (!rows.length) { target.innerHTML = '<div class="note">Tidak ada laporan faskes pada ME terpilih.</div>'; return; }
+       var compact = [['waktuSubmit','Waktu Kirim'],['namaFasyankes','Fasyankes'],['status','Status'],['namaPenyakit','Penyakit'],['namaKasus','Nama Kasus'],['keadaan','Keadaan'],['diagnosis','Diagnosis'],['onTime','Tepat Waktu']];

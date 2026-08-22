@@ -1,0 +1,80 @@
+b586831 HEAD@{2026-08-13 05:28:05 +0800}: commit: fix: preserve MR fever and rash choices during edit hydration
+38d9d6e HEAD@{2026-08-10 16:25:53 +0800}: commit: docs: add facility socialization materials
+b25576b HEAD@{2026-08-10 16:25:50 +0800}: commit: fix: refine case forms and print pagination
+37f98f5 HEAD@{2026-08-10 16:25:37 +0800}: commit: feat: harden workflow routing and PDF export
+3975002 HEAD@{2026-08-10 16:25:20 +0800}: commit: feat: expand weekly SARS report detail scope
+cb99307 HEAD@{2026-08-06 12:09:37 +0800}: reset: moving to HEAD
+cb99307 HEAD@{2026-08-03 13:48:50 +0800}: reset: moving to HEAD
+cb99307 HEAD@{2026-07-30 09:55:06 +0800}: commit: fix: require input case fields
+7371109 HEAD@{2026-07-28 17:19:05 +0800}: commit: fix: map pertussis specimen dates to target fields
+b9d8ce7 HEAD@{2026-07-28 17:05:29 +0800}: commit: fix: sync PD3I datepicker values into form payload
+c82ca8e HEAD@{2026-07-28 16:48:27 +0800}: commit: test: restore approval form review markup coverage
+c3e358f HEAD@{2026-07-28 16:37:17 +0800}: commit: feat: add approval menu badge and notifications
+f2264e2 HEAD@{2026-07-28 16:34:06 +0800}: commit: harden post-verification approval backend
+ecf483a HEAD@{2026-07-28 16:16:05 +0800}: commit: test: align approval workflow regression coverage
+de728aa HEAD@{2026-07-28 15:41:23 +0800}: commit: fix: label verified case action as approval request
+ee54a87 HEAD@{2026-07-28 15:28:00 +0800}: commit: fix: route verified edit through approval request
+bb21e98 HEAD@{2026-07-28 15:09:57 +0800}: commit: fix: use shared draft reset on cancel edit
+1d6d620 HEAD@{2026-07-28 15:02:47 +0800}: commit: feat: add post-verification edit approval workflow
+d720a30 HEAD@{2026-07-28 14:18:28 +0800}: commit: fix: preserve raw row identity during case edits
+e553dad HEAD@{2026-07-28 14:04:05 +0800}: commit: refactor: use case list renderer for revision queue
+eb7b89d HEAD@{2026-07-28 13:45:29 +0800}: commit: fix: reset stale edit submit lock
+9e51e1a HEAD@{2026-07-28 13:41:29 +0800}: commit: fix: remove duplicate revision queue action label
+0c4ea40 HEAD@{2026-07-28 13:37:27 +0800}: commit: fix: remove duplicate edit label and submit handler
+9e48664 HEAD@{2026-07-28 12:53:17 +0800}: commit: fix: label rejected queue action as edit
+7572433 HEAD@{2026-07-28 12:49:16 +0800}: commit: fix: remove inactive dashboard open button
+cc433fd HEAD@{2026-07-28 12:41:40 +0800}: commit: fix: save rejected case edits directly
+24b5ed4 HEAD@{2026-07-28 12:35:01 +0800}: commit: refactor: remove edit case accessory artifacts
+e2c26c2 HEAD@{2026-07-28 12:25:01 +0800}: commit: fix: force hide stacked edit case panels
+514ba66 HEAD@{2026-07-28 12:20:03 +0800}: commit: fix: remove all accessory panels from edit case view
+e9d0010 HEAD@{2026-07-28 12:12:41 +0800}: commit: fix: hide workflow accessory cards in edit mode
+530e9c4 HEAD@{2026-07-28 11:48:38 +0800}: commit: fix: remove edit review card and route edit save
+5107b2b HEAD@{2026-07-28 11:42:19 +0800}: commit: fix: align zero reporting placeholder with reporting epi week
+90511c0 HEAD@{2026-07-28 11:29:13 +0800}: commit: fix: avoid captcha lookup warnings outside login view
+4104202 HEAD@{2026-07-28 11:25:25 +0800}: commit: fix: place epidemiology year navigation below selector
+94bbca4 HEAD@{2026-07-28 11:18:58 +0800}: commit: fix: polish epidemiology calendar navigation and layout
+5f3e9de HEAD@{2026-07-28 11:11:55 +0800}: commit: fix: isolate epidemiology calendar administration view
+5e1b3ef HEAD@{2026-07-28 11:04:00 +0800}: commit: feat: add epidemiology calendar administration menu
+cc18a14 HEAD@{2026-07-28 10:52:37 +0800}: commit: fix: skip review popup for verification save
+b836589 HEAD@{2026-07-28 10:41:45 +0800}: commit: fix: simplify case list menu
+4740c9a HEAD@{2026-07-28 10:38:02 +0800}: commit: fix: move submit review details into confirmation popup
+13abbda HEAD@{2026-07-28 10:21:37 +0800}: commit: fix: repair validation readiness syntax
+b98726d HEAD@{2026-07-28 10:17:06 +0800}: commit: fix: show actionable validation messages
+c82ecac HEAD@{2026-07-28 10:07:33 +0800}: commit: fix: restore native date fields matching immunization list
+6f8134d HEAD@{2026-07-28 10:03:54 +0800}: commit: fix: use shared date picker for immunization dates
+32920a8 HEAD@{2026-07-28 09:59:11 +0800}: commit: fix: validate active edit form readiness
+aeeba83 HEAD@{2026-07-28 09:52:28 +0800}: commit: fix: simplify edit case workspace
+9d5e24a HEAD@{2026-07-28 09:07:38 +0800}: commit: fix: complete notification array syntax
+6437996 HEAD@{2026-07-28 09:06:08 +0800}: commit: fix: syntax in production notification copy
+74e2f78 HEAD@{2026-07-28 09:05:13 +0800}: commit: feat: modernize and protect case notifications
+c4ade1b HEAD@{2026-07-28 08:30:41 +0800}: commit: fix: bind search rows and strengthen case registration ids
+e0b8c2b HEAD@{2026-07-28 08:11:49 +0800}: commit: fix: expose htmlEscape for dynamic form rows
+006d53e HEAD@{2026-07-28 05:43:01 +0800}: commit: perf: reduce dashboard date parsing and search projection work
+e54d695 HEAD@{2026-07-28 05:41:39 +0800}: checkout: moving from main to perf-isolated-2026-07-28
+e54d695 HEAD@{2026-07-28 05:40:53 +0800}: reset: moving to HEAD
+e54d695 HEAD@{2026-07-26 15:59:43 +0800}: commit: security: enforce admin guards on batch endpoints
+d31a8d0 HEAD@{2026-07-26 15:51:17 +0800}: commit: security: cap session refresh at absolute TTL
+a45ea63 HEAD@{2026-07-26 15:45:08 +0800}: commit: security: harden initial workflow payload
+5df3348 HEAD@{2026-07-26 15:37:29 +0800}: commit: security: escape generated PD3I HTML values
+c04331a HEAD@{2026-07-26 14:59:03 +0800}: commit: Standardize application buttons and workflow form layout
+c5b2f0a HEAD@{2026-07-26 11:20:40 +0800}: commit: style: tighten account request page width
+a10d382 HEAD@{2026-07-26 11:17:13 +0800}: commit: fix: remove stale account request button rules
+f016d1d HEAD@{2026-07-26 11:12:37 +0800}: commit: fix: equalize account request action buttons
+6cf57b9 HEAD@{2026-07-26 11:07:18 +0800}: commit: style: fill account request action row
+5a095f6 HEAD@{2026-07-26 11:00:08 +0800}: commit: style: scale account request form
+e629a97 HEAD@{2026-07-26 10:53:31 +0800}: commit: style: simplify account request form
+71b3456 HEAD@{2026-07-26 10:47:36 +0800}: commit: style: refine login identity and account request form
+b3d2aeb HEAD@{2026-07-26 10:41:18 +0800}: commit: refactor: consolidate login CTA styles
+b1ff009 HEAD@{2026-07-26 10:33:56 +0800}: commit: style: simplify login identity and CTA
+4de1f60 HEAD@{2026-07-26 10:28:12 +0800}: commit: fix: apply account request CTA palette in login template
+dcd997e HEAD@{2026-07-26 10:24:29 +0800}: commit: fix: remove nested style wrappers
+6d488a8 HEAD@{2026-07-26 10:17:50 +0800}: commit: style: align account request button palette
+ffc9b33 HEAD@{2026-07-26 10:12:30 +0800}: commit: style: standardize controls and scale login
+5d0548f HEAD@{2026-07-26 10:02:51 +0800}: commit: style: unify login and sidebar controls
+4b1b31c HEAD@{2026-07-26 09:08:58 +0800}: commit: fix: align dashboard trend KPI with epi weeks
+e51152b HEAD@{2026-07-26 09:05:20 +0800}: commit: feat: improve dashboard semantic KPI UX
+3489bdf HEAD@{2026-07-26 08:48:34 +0800}: commit: trim zero reporting compatibility script
+381d535 HEAD@{2026-07-26 08:42:40 +0800}: commit: simplify zero reporting load action
+7c7477c HEAD@{2026-07-26 08:38:18 +0800}: commit: remove obsolete zero reporting helper text
+e3ae5f9 HEAD@{2026-07-26 08:35:20 +0800}: commit: simplify zero reporting identity heading
+819913b HEAD@{2026-07-26 08:32:52 +0800}: commit: simplify zero reporting filter heading

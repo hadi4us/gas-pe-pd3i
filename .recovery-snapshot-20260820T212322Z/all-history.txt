@@ -1,0 +1,640 @@
+commit b586831f1f8c13981591e85fc482061c1e578ff9
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-13 05:28:05 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-13 05:28:05 +0800
+
+    fix: preserve MR fever and rash choices during edit hydration
+
+commit 38d9d6e278bd39cc899b4f3ba88b5387c3323b46
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-10 16:25:53 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-10 16:25:53 +0800
+
+    docs: add facility socialization materials
+
+commit b25576b8b35d64f4b5ec26e9bc797e3195e30a66
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-10 16:25:50 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-10 16:25:50 +0800
+
+    fix: refine case forms and print pagination
+
+commit 37f98f5d4a7864cc485423a9e83619f17471c10d
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-10 16:25:37 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-10 16:25:37 +0800
+
+    feat: harden workflow routing and PDF export
+
+commit 3975002a13069f2b5c91f032c6db408cba2d416e
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-10 16:25:20 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-10 16:25:20 +0800
+
+    feat: expand weekly SARS report detail scope
+
+commit 543ca01e86c7c1a0f37e43d9bad6937083e305e1
+Merge: cb99307 a6315e1 210662d
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-06 12:09:36 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-06 12:09:36 +0800
+
+    On perf-isolated-2026-07-28: temp isolate pdf sharing deploy
+
+commit a6315e1377953fa72cea8c6ada818a5dd05c9aab
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-06 12:09:36 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-06 12:09:36 +0800
+
+    index on perf-isolated-2026-07-28: cb99307 fix: require input case fields
+
+commit 210662d093f3aa75a56f55519a31227969314d84
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-08-06 12:09:36 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-08-06 12:09:36 +0800
+
+    untracked files on perf-isolated-2026-07-28: cb99307 fix: require input case fields
+
+commit cb99307777ad137cc14b2fb69b38d5d1cac562b4
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-30 09:55:06 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-30 09:55:06 +0800
+
+    fix: require input case fields
+
+commit 7371109fa1a88df4387d0fc81aca396bb4b113f1
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 17:19:05 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 17:19:05 +0800
+
+    fix: map pertussis specimen dates to target fields
+
+commit b9d8ce769ae763a192f8cece82d4b33598e9e7b4
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 17:05:29 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 17:05:29 +0800
+
+    fix: sync PD3I datepicker values into form payload
+
+commit c82ca8e957c8e147bf28a37697b8bf16bac8861b
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 16:48:27 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 16:48:27 +0800
+
+    test: restore approval form review markup coverage
+
+commit c3e358fe4567ebef60244685c377894a89e01408
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 16:37:17 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 16:37:17 +0800
+
+    feat: add approval menu badge and notifications
+
+commit f2264e21ff496293f122c36e672e622d9f67d831
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 16:34:06 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 16:34:06 +0800
+
+    harden post-verification approval backend
+
+commit ecf483a467301844bd96562ff9daeac649dfaa46
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 16:16:05 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 16:16:05 +0800
+
+    test: align approval workflow regression coverage
+
+commit de728aabb5d8f3c991e4406cd115d64969810179
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 15:41:23 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 15:41:23 +0800
+
+    fix: label verified case action as approval request
+
+commit ee54a87ad9afa4d0307347f28178e945aaae1983
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 15:28:00 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 15:28:00 +0800
+
+    fix: route verified edit through approval request
+
+commit bb21e9875de8b3d8d3f6614eb43803fd832381e4
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 15:09:57 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 15:09:57 +0800
+
+    fix: use shared draft reset on cancel edit
+
+commit 1d6d620ec9abd0b7e0a3b5d0e7c30a36922fc710
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 15:02:47 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 15:02:47 +0800
+
+    feat: add post-verification edit approval workflow
+
+commit d720a30ade95140f5a9934d3d52869c3d47b7a56
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 14:18:28 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 14:18:28 +0800
+
+    fix: preserve raw row identity during case edits
+
+commit e553dadcff36abd6dcd9d76131d2d587ac71bfb4
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 14:04:05 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 14:04:05 +0800
+
+    refactor: use case list renderer for revision queue
+
+commit eb7b89db9fb72da88ff013192f1c855d539a0a44
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 13:45:29 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 13:45:29 +0800
+
+    fix: reset stale edit submit lock
+
+commit 9e51e1ab1bd80e1912fba46702d58161fe001fd4
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 13:41:29 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 13:41:29 +0800
+
+    fix: remove duplicate revision queue action label
+
+commit 0c4ea40af7e01d77db5ef67bf8e328c9137318c8
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 13:37:27 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 13:37:27 +0800
+
+    fix: remove duplicate edit label and submit handler
+
+commit 9e4866425ff584c065aefc5245c13410ad98f280
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:53:17 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:53:17 +0800
+
+    fix: label rejected queue action as edit
+
+commit 75724333ffb7bf836d6d1debc3fc51e3be3cf2e9
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:49:16 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:49:16 +0800
+
+    fix: remove inactive dashboard open button
+
+commit cc433fdb122499036f7354ca85e58c034f848167
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:41:40 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:41:40 +0800
+
+    fix: save rejected case edits directly
+
+commit 24b5ed40b4d1a07b6273f8c13eaab44f200f437f
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:35:01 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:35:01 +0800
+
+    refactor: remove edit case accessory artifacts
+
+commit e2c26c2e6de9a02ef7c5795227cd083edf615265
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:25:01 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:25:01 +0800
+
+    fix: force hide stacked edit case panels
+
+commit 514ba666e2016d51455690849b97a88168e29f88
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:20:03 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:20:03 +0800
+
+    fix: remove all accessory panels from edit case view
+
+commit e9d00109720467423a22f101a36d6f8531938210
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 12:12:41 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 12:12:41 +0800
+
+    fix: hide workflow accessory cards in edit mode
+
+commit 530e9c4d2b4b3f2924b4f1662b2c5b92a39ed253
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:48:38 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:48:38 +0800
+
+    fix: remove edit review card and route edit save
+
+commit 5107b2b2d72f69e1b862485d239cfd4a3b89ed85
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:42:19 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:42:19 +0800
+
+    fix: align zero reporting placeholder with reporting epi week
+
+commit 90511c0947174860473fcbf504b8f7b7c20fe266
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:29:13 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:29:13 +0800
+
+    fix: avoid captcha lookup warnings outside login view
+
+commit 410420269b6162f4a008ba8960a3c58bbd191516
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:25:25 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:25:25 +0800
+
+    fix: place epidemiology year navigation below selector
+
+commit 94bbca4ca3145c588444a91cbabf4aac5ad2a036
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:18:58 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:18:58 +0800
+
+    fix: polish epidemiology calendar navigation and layout
+
+commit 5f3e9de624c747af08189cae58be4d8bc25fc1e3
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:11:55 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:11:55 +0800
+
+    fix: isolate epidemiology calendar administration view
+
+commit 5e1b3ef391bfe290891f64f33511f179a50fe370
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 11:04:00 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 11:04:00 +0800
+
+    feat: add epidemiology calendar administration menu
+
+commit cc18a1405ec490d73bc23ba8b63b4d3c25222068
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:52:37 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:52:37 +0800
+
+    fix: skip review popup for verification save
+
+commit b836589abb6ea2b3e99124f6a5440b6ed0154a0f
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:41:45 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:41:45 +0800
+
+    fix: simplify case list menu
+
+commit 4740c9af1c2409507db3b1b3e46121e746be1273
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:38:02 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:38:02 +0800
+
+    fix: move submit review details into confirmation popup
+
+commit 13abbda71dcc64f5e8ce63a1812e60aed1eba78b
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:21:37 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:21:37 +0800
+
+    fix: repair validation readiness syntax
+
+commit b98726da470dbae993747971ab513f49dd4c185b
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:17:06 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:17:06 +0800
+
+    fix: show actionable validation messages
+
+commit c82ecac06308d2cf4dfeb7ec94334ad323190b7a
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:07:33 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:07:33 +0800
+
+    fix: restore native date fields matching immunization list
+
+commit 6f8134da6d908f00a7926cb84e46ccd91efbe7c0
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 10:03:54 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 10:03:54 +0800
+
+    fix: use shared date picker for immunization dates
+
+commit 32920a895dd808c859e90ad33c01e2cd5275ef0a
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 09:59:11 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 09:59:11 +0800
+
+    fix: validate active edit form readiness
+
+commit aeeba838f84d2e7cccccaf0d095b959c17ac31c6
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 09:52:28 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 09:52:28 +0800
+
+    fix: simplify edit case workspace
+
+commit 9d5e24a45e5207b8e51e95d2e08d384c99a91129
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 09:07:38 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 09:07:38 +0800
+
+    fix: complete notification array syntax
+
+commit 6437996f3652d27913b66d89c4d5458c0a9c7021
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 09:06:08 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 09:06:08 +0800
+
+    fix: syntax in production notification copy
+
+commit 74e2f78a27e64dc995775b03487282e3c2dcc0f9
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 09:05:13 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 09:05:13 +0800
+
+    feat: modernize and protect case notifications
+
+commit c4ade1bda7f9f760b4c37845ba95a667f76fc4a0
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 08:30:41 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 08:30:41 +0800
+
+    fix: bind search rows and strengthen case registration ids
+
+commit e0b8c2b97568b99317c7990c45c8046e02621642
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 08:11:49 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 08:11:49 +0800
+
+    fix: expose htmlEscape for dynamic form rows
+
+commit 006d53e3b006f559e44cb9c4e94d35e06218ee67
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-28 05:43:01 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-28 05:43:01 +0800
+
+    perf: reduce dashboard date parsing and search projection work
+
+commit e54d69507fd9c97b10e718af9c89d1cf1c173f6f
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 15:59:43 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 15:59:43 +0800
+
+    security: enforce admin guards on batch endpoints
+
+commit d31a8d087a106128d0197f81e3bd5337b1f29c71
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 15:51:17 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 15:51:17 +0800
+
+    security: cap session refresh at absolute TTL
+
+commit a45ea63cdf75c01681daabaaa7a7c0a1c0b27596
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 15:45:08 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 15:45:08 +0800
+
+    security: harden initial workflow payload
+
+commit 5df3348be507f19e37787ef7280ae4442e20521a
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 15:37:29 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 15:37:29 +0800
+
+    security: escape generated PD3I HTML values
+
+commit c04331a089607c32e33efe967971a819b1bdd976
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 14:59:03 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 14:59:03 +0800
+
+    Standardize application buttons and workflow form layout
+
+commit c5b2f0abde0cd744e48a8fd7e8116a163802b87f
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 11:20:40 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 11:20:40 +0800
+
+    style: tighten account request page width
+
+commit a10d3825e31fb305b7853fc73c86486f7086b385
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 11:17:13 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 11:17:13 +0800
+
+    fix: remove stale account request button rules
+
+commit f016d1d8e5d455093e4bda3184789ab7f0261b86
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 11:12:37 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 11:12:37 +0800
+
+    fix: equalize account request action buttons
+
+commit 6cf57b91a94bab70b0459efa87225af99bebc871
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 11:07:18 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 11:07:18 +0800
+
+    style: fill account request action row
+
+commit 5a095f625efd067dadf0ec9adeb18de91ec2aae8
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 11:00:08 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 11:00:08 +0800
+
+    style: scale account request form
+
+commit e629a97d1e6ac4e2a91cb4c1ac8dea8071683467
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:53:31 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:53:31 +0800
+
+    style: simplify account request form
+
+commit 71b3456b685abb81f025a49896f36aab0484b0ab
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:47:36 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:47:36 +0800
+
+    style: refine login identity and account request form
+
+commit b3d2aebb34c48179a59269804eeffcee6d82aa40
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:41:18 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:41:18 +0800
+
+    refactor: consolidate login CTA styles
+
+commit b1ff009261fa0650a6e61022fe00aa943fb216df
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:33:56 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:33:56 +0800
+
+    style: simplify login identity and CTA
+
+commit 4de1f60d77e266772c5ffbb4f22d85094c655eb3
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:28:12 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:28:12 +0800
+
+    fix: apply account request CTA palette in login template
+
+commit dcd997e87318360b385f137dc47ca0d7a6bed8aa
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:24:29 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:24:29 +0800
+
+    fix: remove nested style wrappers
+
+commit 6d488a82b718192f017355dff26655403e8b192a
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:17:50 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:17:50 +0800
+
+    style: align account request button palette
+
+commit ffc9b333c6237d244b46f6c8014d9c5adfa8737b
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:12:30 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:12:30 +0800
+
+    style: standardize controls and scale login
+
+commit 5d0548ffa5971e86ad90b188b77391b3ea6ac25e
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 10:02:51 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 10:02:51 +0800
+
+    style: unify login and sidebar controls
+
+commit 4b1b31cd0c65b29699ed04ee3bd94faadb1b5a0d
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 09:08:58 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 09:08:58 +0800
+
+    fix: align dashboard trend KPI with epi weeks
+
+commit e51152b82ed7175be68586e47ab548798c46a19a
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 09:05:20 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 09:05:20 +0800
+
+    feat: improve dashboard semantic KPI UX
+
+commit 3489bdf9c931aee924b7d8177435c7f58e74f531
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:48:34 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:48:34 +0800
+
+    trim zero reporting compatibility script
+
+commit 381d53571e6a6b64a1eb22baca4bdaa2b6447ab0
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:42:40 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:42:40 +0800
+
+    simplify zero reporting load action
+
+commit 7c7477c80a7bd3be9bf87e0fcc0f8e7d3f55cabb
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:38:18 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:38:18 +0800
+
+    remove obsolete zero reporting helper text
+
+commit e3ae5f9a18df0a32e97a91063503deda2cfa9fb3
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:35:20 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:35:20 +0800
+
+    simplify zero reporting identity heading
+
+commit 819913b67167b8e24033fcb25ff4e198e4cf3da0
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:32:52 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:32:52 +0800
+
+    simplify zero reporting filter heading
+
+commit f75d7ad669b378556a899d9d89351a3da842c0c7
+Author:     Nurhadi <macbook@192.168.10.253>
+AuthorDate: 2026-07-26 08:30:16 +0800
+Commit:     Nurhadi <macbook@192.168.10.253>
+CommitDate: 2026-07-26 08:30:16 +0800
+
+    remove hidden zero reporting footer
