@@ -709,7 +709,9 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // Pengampu flow: try own faskes_key first; when row is not own faskes,
     // use pengampu_key. This matches SARS data where reporter and pengampu
     // keys are stored independently.
-    const belongs = allowAll || (isReporterScope
+    // Canonical pengampu match is authoritative. Do not depend on scope label
+    // spelling; REF_PENGAMPU.pengampu_key == SARS.pengampu_key grants rows.
+    const belongs = allowAll || pengampuMatch || (isReporterScope
       ? faskesMatch
       : isPengampuScope
         ? (faskesMatch || pengampuFacilityMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
