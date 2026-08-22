@@ -612,7 +612,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
   const scopeLevel = String(sess.user.scopeLevel || '').toLowerCase().replace(/[_\s]+/g, '-');
   const allowAll = role === 'admin' || role === 'super-admin' || role === 'superadmin' || scopeLevel === 'dinkes';
   const unitKey = sarsDash_normFaskesKey_(sess.user.faskesKey || sess.user.faskes_key || sess.user.unitKey || '');
-  const pengampuKey = sarsDash_normFaskesKey_(sess.user.pengampuKey || sess.user.pengampu_key || '');
+  let pengampuKey = sarsDash_normFaskesKey_(sess.user.pengampuKey || sess.user.pengampu_key || '');
   const ss = sarsDash_open_();
   const cfg = sarsDash_cfg_();
   // Build facility scope from REF_FASKES/REF_PENGAMPU. SARS rows may store
@@ -632,6 +632,15 @@ function getWeeklySubmittedRows(year, minggu, token) {
     scopedKeys[sarsDash_normFaskesKey_(f.key)] = true;
     if (f.pengampuKey) scopedPengampuKeys[sarsDash_normFaskesKey_(f.pengampuKey)] = true;
   });
+  // REF_USER often stores puskesmas identity in faskes_key and leaves
+  // pengampu_key blank. Resolve that identity through REF_FASKES mapping.
+  if (!pengampuKey && unitKey) {
+    (scopedMaster && scopedMaster.faskes || []).some(function(f) {
+      if (sarsDash_normFaskesKey_(f.key) !== unitKey) return false;
+      pengampuKey = sarsDash_normFaskesKey_(f.pengampuKey || '');
+      return !!pengampuKey;
+    });
+  }
   const dataSheet = sarsDash_dataSheet_(ss);
   const sh = ss.getSheetByName(dataSheet);
   if (!sh) throw new Error('Sheet SARS tidak ditemukan.');
