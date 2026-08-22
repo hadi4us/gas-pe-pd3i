@@ -1105,7 +1105,7 @@ test('PIE main boxes use shared inset inner-card spacing', () => {
   const pieHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_pie.html'), 'utf8');
   const innerCards = pieHtml.match(/pie-inner-card/g) || [];
   assert.ok(innerCards.length >= 6, 'SARING-PIE section/result/operations cards use shared inset spacing');
-  assert.match(pieHtml, /#section-pie \.pie-inner-card\{width:calc\(100% - \(var\(--space-4\) \* 2\)\);max-width:calc\(100% - \(var\(--space-4\) \* 2\)\);margin-left:auto;margin-right:auto\}/);
+  assert.match(pieHtml, /#section-pie \.pie-inner-card\{min-width:0\}/);
   assert.match(pieHtml, /@media \(max-width:640px\)\{#section-pie \.pie-inner-card\{width:100%;max-width:100%;margin-left:0;margin-right:0\}\}/);
 });
 

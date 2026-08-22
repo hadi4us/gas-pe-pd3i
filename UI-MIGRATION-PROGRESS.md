@@ -21,6 +21,8 @@
 - Run repository checks and inspect responsive selectors for migrated forms.
 - Complete safe SARS/PIE header migration.
 - Inspect remaining PIE nested cards and SARS local styles before deciding next card migration.
-- Run repository checks and responsive smoke review before first Development deploy.
+- Repository check attempted: `npm run test:node` currently fails on an existing workflow-search assertion (`normalized === 'search'` branch), unrelated to current UI changes; no Development deploy yet.
+- PIE regression assertion updated to match already-committed safe nested-card rule (`min-width:0`), but full suite remains blocked by the unrelated existing assertion.
+- Run targeted/static checks and responsive smoke review before first Development deploy.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
