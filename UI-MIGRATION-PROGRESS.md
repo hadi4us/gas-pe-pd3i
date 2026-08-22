@@ -28,5 +28,8 @@
 - SARS weekly-detail table borders and empty-state presentation moved from generated inline styles to CSS classes.
 - Remaining PIE `style="width:'+pct+'%"` is intentional dynamic data-bar width; fixed presentation dimensions already moved to CSS.
 - Run targeted/static checks and responsive smoke review before first Development deploy.
+- Hygiene check passed.
+- Endpoint security matrix check passed; generated line-number metadata refreshed after source edits.
+- Full Node regression suite remains blocked by pre-existing workflow-search assertion; no UI-specific failure isolated yet.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
