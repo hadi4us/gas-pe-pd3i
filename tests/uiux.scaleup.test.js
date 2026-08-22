@@ -216,7 +216,7 @@ test('Zero Reporting dashboard detail table uses reusable filter/table/mobile ho
   assert.match(sarsHtml, /class="tableBar pd3i-filter-toolbar" data-component="FilterToolbar"/);
   assert.match(sarsHtml, /id="table" data-component="DataTable" data-mobile-mode="scroll"/);
   assert.match(sarsHtml, /window\.renderPd3iUiState === 'function'[\s\S]*title: 'Tidak ada data detail'/);
-  assert.match(sarsHtml, /let html = `<table class="pd3i-data-table"><thead><tr>`/);
+  assert.match(sarsHtml, /let html = `<div class="pd3i-component-table pd3i-data-table-wrap"/);
   assert.match(sarsHtml, /<tr class="pd3i-mobile-list-card" data-row-action="sars-detail">/);
 });
 
@@ -1925,6 +1925,12 @@ test('Shared SIRFK component contract exists for tables, fields, and UI states',
   assert.match(styleHtml, /\.pd3i-component-field \{/);
   assert.match(appHtml, /data-component="DynamicFieldset"/);
   assert.match(appHtml, /data-table-model="sirfk"/);
+  const pieHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_pie.html'), 'utf8');
+  const sarsHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'workspace_sars.html'), 'utf8');
+  assert.match(pieHtml, /pd3i-component-table pd3i-data-table-wrap/);
+  assert.match(pieHtml, /data-table-model="sirfk"/);
+  assert.match(sarsHtml, /pd3i-component-table pd3i-data-table-wrap/);
+  assert.match(sarsHtml, /data-table-model="sirfk"/);
   assert.match(appHtml, /class="pd3i-dynamic-table[^\"]*pd3i-data-table/);
 });
 

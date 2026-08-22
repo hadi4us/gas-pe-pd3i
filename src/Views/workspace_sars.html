@@ -1540,7 +1540,7 @@
         { key:'mingguTepat', label:'Minggu Tepat Waktu' }
       ];
 
-      let html = `<table class="pd3i-data-table"><thead><tr>`;
+      let html = `<div class="pd3i-component-table pd3i-data-table-wrap" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="scroll"><table class="pd3i-data-table" role="table"><thead><tr>`;
       head.forEach(h => {
         const icon = (sortState.key === h.key) ? (sortState.dir === 'asc' ? '▲' : '▼') : '⇅';
         html += `<th data-key="${h.key}" onclick="onSort('${h.key}')">${esc(h.label)} <span class="sortIcon">${icon}</span></th>`;
@@ -1571,7 +1571,7 @@
         `;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div>`;
       tableEl.innerHTML = html;
     }
 
