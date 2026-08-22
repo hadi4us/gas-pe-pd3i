@@ -4130,7 +4130,9 @@
       applySidebarWorkspaceLayout(normalized);
       applySearchShellCopyForWorkspace(normalized);
       if (normalized === 'search') {
-        refreshWorkflowInbox();
+        // Do not load the full case list on workspace open. Search workspace
+        // waits for explicit "Terapkan filter" / Cari action.
+        clearWorkflowInboxUi();
       } else {
         clearWorkflowInboxUi();
       }
