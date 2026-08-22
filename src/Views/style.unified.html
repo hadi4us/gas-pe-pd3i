@@ -1,4 +1,14 @@
 /* Unified component layer — staged migration. Shared visual language for all workspaces. */
+/* Shell authority: loaded last, intentionally wins over legacy shell rules. */
+:root{--ui2-sidebar-width:224px;--ui2-page:#f4f7fb;--ui2-sidebar:#162536;--ui2-surface:#fff;--ui2-border:#d8e1e8;--ui2-text:#17212b}
+html,body,body.pd3i-body{background:var(--ui2-page)!important;color:var(--ui2-text)!important}
+#app.pd3i-app{grid-template-columns:var(--ui2-sidebar-width) minmax(0,1fr)!important;background:var(--ui2-page)!important}
+#pd3i-sidebar.pd3i-sidebar{width:var(--ui2-sidebar-width)!important;min-width:var(--ui2-sidebar-width)!important;max-width:var(--ui2-sidebar-width)!important;background:var(--ui2-sidebar)!important;border:0!important;box-shadow:none!important}
+#app.pd3i-app>.pd3i-page{grid-column:2!important;width:100%!important;max-width:none!important;margin:0!important}
+.pd3i-page>.pd3i-topbar{margin:18px 24px 16px!important;background:var(--ui2-surface)!important;border:1px solid var(--ui2-border)!important;box-shadow:0 3px 12px rgba(25,45,65,.08)!important}
+.pd3i-page>.pd3i-content{width:auto!important;max-width:none!important;margin:0!important;padding:0 24px 32px!important}
+@media(max-width:1100px){#app.pd3i-app{grid-template-columns:1fr!important}#pd3i-sidebar.pd3i-sidebar{width:min(88vw,340px)!important;min-width:0!important;max-width:340px!important}#app.pd3i-app>.pd3i-page{grid-column:1!important}}
+@media(max-width:700px){.pd3i-page>.pd3i-topbar{margin:10px 12px 12px!important}.pd3i-page>.pd3i-content{padding:0 12px 20px!important}}
 :root{--ui2-page:#f4f7fb;--ui2-surface:#fff;--ui2-surface-soft:#f8fafc;--ui2-border:#d8e1e8;--ui2-primary:#176b87;--ui2-text:#17212b;--ui2-muted:#64748b;--ui2-radius:12px;--ui2-shadow:0 3px 12px rgba(25,45,65,.08)}
 .pd3i-shell-card,.pd3i-search-card,.pd3i-search-toolbar,.pd3i-search-results-panel,.pd3i-dashboard-shell,.pd3i-dashboard-panel,.pd3i-form-card-section,.pd3i-settings-surface,.pd3i-zero-reporting-card,.pd3i-sars-section,.pd3i-pie-inner-card{background:var(--ui2-surface)!important;border-color:var(--ui2-border)!important;border-radius:var(--ui2-radius)!important;box-shadow:var(--ui2-shadow)!important}
 .pd3i-shell-input,.pd3i-shell-select,.pd3i-search-card input,.pd3i-search-card select,.pd3i-sars-section input,.pd3i-sars-section select,.pd3i-pie-inner-card input,.pd3i-pie-inner-card select{border-color:var(--ui2-border)!important;border-radius:8px!important;background:var(--ui2-surface)!important;color:var(--ui2-text)!important}
