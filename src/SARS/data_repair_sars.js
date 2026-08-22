@@ -14,9 +14,11 @@ function SARS_repair_OnTime_FromSubmitVsDeadline_FINAL() {
   const values = sh.getRange(1, 1, lastRow, lastCol).getValues();
   const headers = (values[0] || []).map(h => String(h || "").trim());
 
-  const iSubmit = headers.indexOf("Waktu Submit");
-  const iDeadline = headers.indexOf("Deadline");
-  const iOnTime = headers.indexOf("OnTime");
+  const norm = headers.map(h => String(h || '').trim().toLowerCase());
+  const ix = names => names.reduce((found, name) => found >= 0 ? found : norm.indexOf(String(name).trim().toLowerCase()), -1);
+  const iSubmit = ix(["Waktu Submit"]);
+  const iDeadline = ix(["Deadline"]);
+  const iOnTime = ix(["OnTime"]);
 
   if (iSubmit < 0) throw new Error('Header "Waktu Submit" tidak ditemukan.');
   if (iDeadline < 0) throw new Error('Header "Deadline" tidak ditemukan.');

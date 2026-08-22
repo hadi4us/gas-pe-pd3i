@@ -71,7 +71,7 @@ function _lookupSarsAppUser_(email) {
     const values = sh.getDataRange().getValues();
     if (values.length < 2) return null;
     const headers = values[0].map(function(h){ return String(h || '').trim().toLowerCase(); });
-    const ix = function(names) { for (let i = 0; i < names.length; i++) { const n = names[i].toLowerCase(); const j = headers.indexOf(n); if (j >= 0) return j; } return -1; };
+    const ix = function(names) { for (let i = 0; i < names.length; i++) { const n = String(names[i] || '').trim().toLowerCase(); const j = headers.indexOf(n); if (j >= 0) return j; } return -1; };
     const ie = ix(['email','gmail','emailpetugas']);
     const ik = ix(['kodefaskes','kode faskes','kode pkm']);
     if (ie < 0 || ik < 0) return null;

@@ -415,7 +415,7 @@ function sarsDash_buildYearIndex_(ss, targetEpiYear, nameToKey) {
   const iSubmit = sarsDash_pickIndex_(headers, ["Waktu Submit", "WaktuSubmit", "Timestamp", "Waktu", "Submit Time"]);
   const iME     = sarsDash_pickIndex_(headers, ["ME", "Minggu Epid", "MingguEpid", "Minggu Epidemiologi"]);
   const iNamaFx = sarsDash_pickIndex_(headers, ["Nama Fasyankes", "NamaFasyankes", "Nama Faskes", "NamaFaskes", "Asal Faskes", "AsalFaskes"]);
-  const iKey    = sarsDash_pickIndex_(headers, ["KodeFaskes", "Key"]);
+  const iKey    = sarsDash_pickIndex_(headers, ["faskes_key", "FaskesKey", "Faskes Key", "KodeFaskes", "Key"]);
   const iOnTime = sarsDash_pickIndex_(headers, ["OnTime", "Tepat Waktu", "Ketepatan"]);
 
   if (iSubmit < 0) throw new Error('SARS: header "Waktu Submit" tidak ditemukan.');

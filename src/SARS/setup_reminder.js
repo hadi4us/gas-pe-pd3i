@@ -338,8 +338,8 @@ function REMINDER_getRecipientsBelumLapor_(targetWeek, targetEpiYear) {
 
   const dh = (dataVals[0] || []).map(x => String(x || "").trim());
   const diWeek  = findHeader_(dh, ["ME","Minggu Epid","MingguEpid","EW"]);
-  const diKey   = findHeader_(dh, ["KodeFaskes","Key"]);
-  const diNama  = findHeader_(dh, ["Nama Fasyankes","NamaFasyankes","Asal Faskes","AsalFaskes","Nama Faskes","NamaFaskes"]);
+  const diKey   = findHeader_(dh, ["faskes_key","FaskesKey","Faskes Key","KodeFaskes","Key"]);
+  const diNama  = findHeader_(dh, ["nama_faskes","Nama Fasyankes","NamaFasyankes","Asal Faskes","AsalFaskes","Nama Faskes","NamaFaskes"]);
   const diWaktu = findHeader_(dh, ["Waktu Submit","WaktuSubmit","Timestamp"]);
 
   if (diWeek < 0) throw new Error('SARS: kolom "ME" tidak ditemukan.');

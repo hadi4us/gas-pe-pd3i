@@ -91,18 +91,23 @@ function _headerMap_(sheet) {
   const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(_sTrim_);
   const map = {};
   headers.forEach((h, i) => { if (h) map[h] = i; });
+  // SARS endpoint headers are schema-owned; resolve trim/case-insensitive.
+  headers.forEach((h, i) => { if (h) map[String(h).trim().toLowerCase()] = i; });
   return { headers, map };
 }
 
 /** set cell by header name */
 function _set_(row, hmap, header, value) {
-  const idx = hmap[header];
+  const idx = hmap[header] !== undefined ? hmap[header] : hmap[String(header || '').trim().toLowerCase()];
   if (idx === undefined) return;
   row[idx] = (value === undefined || value === null) ? "" : value;
 }
+function _hasHeader_(hmap, headers) {
+  return (headers || []).some(function(header) { return hmap[header] !== undefined || hmap[String(header || '').trim().toLowerCase()] !== undefined; });
+}
 function _setAny_(row, hmap, headers, value) {
   for (const header of headers) {
-    if (hmap[header] !== undefined) {
+    if (hmap[header] !== undefined || hmap[String(header || '').trim().toLowerCase()] !== undefined) {
       _set_(row, hmap, header, value);
       return header;
     }
@@ -393,17 +398,19 @@ function submitSARS(formData) {
 
   // pastikan header yang Anda kirim ada
   const MUST = [
-    "Waktu Submit","Email Petugas","ME","Nama Petugas","No Whatsapp","Unit Surveilans",
-    "Jenis Fasyankes","Nama Fasyankes","Nama Penyakit","Nihil",
+    "Waktu Submit","Email Petugas","ME","No Whatsapp","Unit Surveilans",
+    "Jenis Fasyankes","Nama Penyakit","Nihil",
     "Tgl Lahir","Spesimen / Penolong","Diagnosis Medis/Banding",
     "Deadline","OnTime"
   ];
-  MUST.forEach(h => _sRequire_(h in hmap, `Header "${h}" tidak ditemukan di sheet ${shData.getName()}.`));
+  MUST.forEach(h => _sRequire_(_hasHeader_(hmap, [h]), `Header "${h}" tidak ditemukan di sheet ${shData.getName()}.`));
+  _sRequire_(_hasHeader_(hmap, ["Nama Fasyankes", "nama_faskes"]), `Header nama fasyankes tidak ditemukan di sheet ${shData.getName()}.`);
+  _sRequire_(_hasHeader_(hmap, ["Nama Petugas", "nama_petugas"]), `Header nama petugas tidak ditemukan di sheet ${shData.getName()}.`);
   _sRequire_(
-    hmap["KodeFaskes"] !== undefined || hmap["FaskesKey"] !== undefined || hmap["Faskes Key"] !== undefined,
+    hmap["KodeFaskes"] !== undefined || hmap["FaskesKey"] !== undefined || hmap["Faskes Key"] !== undefined || hmap["faskes_key"] !== undefined,
     `Header "KodeFaskes" tidak ditemukan di sheet ${shData.getName()}. Gunakan "KodeFaskes" atau "FaskesKey".`
   );
-  _sRequire_(hmap["KodeFaskes Pengampu"] !== undefined || hmap["FaskesPengampu"] !== undefined,
+  _sRequire_(hmap["KodeFaskes Pengampu"] !== undefined || hmap["FaskesPengampu"] !== undefined || hmap["nama_pengampu"] !== undefined,
     `Header "KodeFaskes Pengampu" tidak ditemukan di sheet ${shData.getName()}.`);
 
   // master lookup
@@ -441,12 +448,12 @@ function submitSARS(formData) {
     _set_(row, hmap, "Waktu Submit", submittedAt);
     _set_(row, hmap, "Email Petugas", email);
     _set_(row, hmap, "ME", me);
-    _set_(row, hmap, "Nama Petugas", namaPetugas);
+    _setAny_(row, hmap, ["Nama Petugas", "nama_petugas"], namaPetugas);
     _set_(row, hmap, "No Whatsapp", noWA);
     _set_(row, hmap, "Unit Surveilans", unit);
 
     _set_(row, hmap, "Jenis Fasyankes", jenisFasyankes);
-    _set_(row, hmap, "Nama Fasyankes", namaFasyankes);
+    _setAny_(row, hmap, ["Nama Fasyankes", "nama_faskes"], namaFasyankes);
 
     // ===== penyakit =====
     _set_(row, hmap, "Nama Penyakit", penyakit);
@@ -472,8 +479,8 @@ function submitSARS(formData) {
     _set_(row, hmap, "OnTime", onTime ? "TRUE" : "FALSE");
 
     // ===== master derived =====
-    _setAny_(row, hmap, ["KodeFaskes Pengampu", "FaskesPengampu"], faskesPengampu);
-    _set_(row, hmap, "KodeFaskes", faskesKey);
+    _setAny_(row, hmap, ["KodeFaskes Pengampu", "FaskesPengampu", "nama_pengampu"], faskesPengampu);
+    _setAny_(row, hmap, ["KodeFaskes", "FaskesKey", "Faskes Key", "faskes_key"], faskesKey);
 
     rowsToAppend.push(row);
   });
