@@ -252,7 +252,7 @@
             <div class="p-3 pie-inner-card mb-3" data-component="PiePeTemplatePreview">
               <div class="flex justify-between gap-2 flex-wrap align-items-center mb-2">
                 <div><h4 class="font-semibold mb-0">Preview format Form PE</h4><p class="text-xs text-slate-500 mb-0">Lihat struktur field sebelum draft kasus dibuat.</p></div>
-                <select id="pie-pe-template-preview-select" class="pd3i-shell-select" style="max-width: 260px" aria-label="Pilih template preview Form PE"></select>
+                <select id="pie-pe-template-preview-select" class="pd3i-shell-select pd3i-pie-template-select" aria-label="Pilih template preview Form PE"></select>
               </div>
               <div id="pie-pe-template-preview" class="grid md:grid-cols-2 gap-2 text-sm" aria-live="polite"></div>
             </div>
@@ -263,7 +263,7 @@
       </div>
 
       <div id="pie-ops-panel-cases" class="mt-4 pie-inner-card is-compact pie-ops-panel hidden" role="tabpanel" aria-labelledby="pie-ops-tab-cases" data-pie-tab-section="operations" data-pie-panel="dinkes" data-pie-ops-panel="cases">
-        <div class="flex justify-between gap-2 flex-wrap items-end mb-2"><h3 class="font-semibold">Daftar kasus PIE terbaru</h3><div class="flex gap-2 flex-wrap"><input id="pie-filter-q" class="pd3i-shell-input" placeholder="Cari kasus/penyakit" style="max-width:180px"><select id="pie-filter-risk" class="pd3i-shell-select" style="max-width:120px"><option value="">Semua risiko</option><option>E0</option><option>E2</option><option>E3</option><option>EX</option></select><select id="pie-filter-class" class="pd3i-shell-select" style="max-width:160px"><option value="">Klasifikasi semua</option><option>UNDER_REVIEW</option><option>SUSPECT</option><option>PROBABLE</option><option>CONFIRMED</option><option>DISCARDED</option></select></div></div>
+        <div class="flex justify-between gap-2 flex-wrap items-end mb-2"><h3 class="font-semibold">Daftar kasus PIE terbaru</h3><div class="flex gap-2 flex-wrap"><input id="pie-filter-q" class="pd3i-shell-input pd3i-pie-case-query" placeholder="Cari kasus/penyakit"><select id="pie-filter-risk" class="pd3i-shell-select pd3i-pie-case-risk"><option value="">Semua risiko</option><option>E0</option><option>E2</option><option>E3</option><option>EX</option></select><select id="pie-filter-class" class="pd3i-shell-select pd3i-pie-case-class"><option value="">Klasifikasi semua</option><option>UNDER_REVIEW</option><option>SUSPECT</option><option>PROBABLE</option><option>CONFIRMED</option><option>DISCARDED</option></select></div></div>
         <div id="pie-case-list" class="overflow-auto text-sm pd3i-data-table-wrap" data-component="DataTable" data-mobile-mode="scroll"><div class="pd3i-skeleton" role="status" aria-live="polite" aria-label="Memuat data"><div class="pd3i-skeleton-row"><span></span><span></span><span></span></div><div class="pd3i-skeleton-row"><span></span><span></span><span></span></div></div></div>
         <div id="pie-case-timeline" class="mt-3 pie-inner-card is-compact bg-slate-50 text-sm hidden"></div>
       </div>
@@ -317,6 +317,12 @@
   #section-pie .pie-screening-output-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-4);width:100%;min-width:0;margin-top:var(--space-4)}
   /* Nested cards must fill parent; inset spacing belongs to parent padding. */
   #section-pie .pie-inner-card{min-width:0}
+  #section-pie .pd3i-pie-template-select{max-width:260px}
+  #section-pie .pd3i-pie-case-query{max-width:180px}
+  #section-pie .pd3i-pie-case-risk{max-width:120px}
+  #section-pie .pd3i-pie-case-class{max-width:160px}
+  #section-pie .pie-mini-bar-track{height:6px}
+  #section-pie .pie-mini-bar-fill{height:6px}
   #section-pie .pie-eval-card,#section-pie .pie-followup-card{min-width:0;overflow-wrap:anywhere}
   #section-pie .pie-followup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-2)}
   #section-pie .pie-identity-grid{align-items:stretch}
@@ -497,7 +503,7 @@ window.renderPieGuidedNextActions = function(d){
 };
 
 window.pieCountBy = function(rows, key){ const out={}; (rows||[]).forEach(function(r){ const k=String(r[key]||'-')||'-'; out[k]=(out[k]||0)+1; }); return out; };
-window.renderPieMiniBars = function(elId, counts){ const el=document.getElementById(elId); if(!el) return; const keys=Object.keys(counts||{}).sort(); const max=Math.max.apply(null, keys.map(function(k){return counts[k];}).concat([1])); el.innerHTML=keys.length?keys.map(function(k){ const pct=Math.max(8, Math.round((counts[k]/max)*100)); return '<div><div class="flex justify-between"><span>'+pieHtml(k)+'</span><b>'+pieHtml(counts[k])+'</b></div><div class="pie-mini-bar-track bg-slate-100" style="height:6px"><div class="pie-mini-bar-fill bg-blue-500" style="height:6px;width:'+pct+'%"></div></div></div>'; }).join(''):'-'; };
+window.renderPieMiniBars = function(elId, counts){ const el=document.getElementById(elId); if(!el) return; const keys=Object.keys(counts||{}).sort(); const max=Math.max.apply(null, keys.map(function(k){return counts[k];}).concat([1])); el.innerHTML=keys.length?keys.map(function(k){ const pct=Math.max(8, Math.round((counts[k]/max)*100)); return '<div><div class="flex justify-between"><span>'+pieHtml(k)+'</span><b>'+pieHtml(counts[k])+'</b></div><div class="pie-mini-bar-track bg-slate-100"><div class="pie-mini-bar-fill bg-blue-500" style="width:'+pct+'%"></div></div></div>'; }).join(''):'-'; };
 
 
 
