@@ -697,8 +697,16 @@ function getWeeklySubmittedRows(year, minggu, token) {
     const rowPengampuKey=sarsDash_normFaskesKey_(field(row,['pengampu_key','PengampuKey','FaskesPengampuKey']));
     // Scope is mutually exclusive. Faskes reporter sees own faskes only;
     // puskesmas/pengampu sees facilities assigned to its pengampu_key.
-    const isReporterScope = /^(faskes-pelapor|faskes|petugas|unit-pelapor)$/.test(scopeLevel);
-    const isPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
+    const roleText = String(sess.user.role || '').toLowerCase().replace(/[_\s]+/g, '-');
+    // Petugas akun faskes pelapor must never inherit pengampu scope merely
+    // because REF_USER also contains a resolvable pengampu_key. Only an
+    // explicit puskesmas/pengampu scope may see assigned facilities.
+    const explicitPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
+    const isReporterScope = !explicitPengampuScope && (
+      /^(faskes-pelapor|faskes|petugas|unit-pelapor)$/.test(scopeLevel) ||
+      /^(petugas|faskes|faskes-pelapor)$/.test(roleText)
+    );
+    const isPengampuScope = explicitPengampuScope;
     const rowFaskesKey = sarsDash_normFaskesKey_(faskesKey);
     const faskesMatch = !!unitKey && rowFaskesKey === unitKey;
     const pengampuMatch = !!canonicalPengampuKey && rowPengampuKey === canonicalPengampuKey;
@@ -711,7 +719,7 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // keys are stored independently.
     // Canonical pengampu match is authoritative. Do not depend on scope label
     // spelling; REF_PENGAMPU.pengampu_key == SARS.pengampu_key grants rows.
-    const belongs = allowAll || pengampuMatch || (isReporterScope
+    const belongs = allowAll || (isReporterScope
       ? faskesMatch
       : isPengampuScope
         ? (faskesMatch || pengampuFacilityMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
