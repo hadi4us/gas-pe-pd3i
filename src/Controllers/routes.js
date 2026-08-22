@@ -679,8 +679,9 @@ function getFaskesFromSheet(token) {
   const headers = raw[0].map(function(h) { return String(h || '').trim(); });
   const rows = raw.slice(1);
   const findIdx = function(candidates) {
+    const normalizedHeaders = headers.map(function(h) { return String(h || '').trim().toLowerCase(); });
     for (var i = 0; i < candidates.length; i++) {
-      var idx = headers.indexOf(candidates[i]);
+      var idx = normalizedHeaders.indexOf(String(candidates[i] || '').trim().toLowerCase());
       if (idx !== -1) return idx;
     }
     return -1;
