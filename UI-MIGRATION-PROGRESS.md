@@ -30,6 +30,9 @@
 - Run targeted/static checks and responsive smoke review before first Development deploy.
 - Hygiene check passed.
 - Endpoint security matrix check passed; generated line-number metadata refreshed after source edits.
-- Full Node regression suite remains blocked by pre-existing workflow-search assertion; no UI-specific failure isolated yet.
+- Workflow-search assertion corrected to current intended behavior: opening Search clears inbox and waits for explicit search.
+- Full Node regression suite passed: 271/271.
+- Full `npm test` passed: Node tests, hygiene, and endpoint security checks.
+- No UI-specific test failure remains.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
