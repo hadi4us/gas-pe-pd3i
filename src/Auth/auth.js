@@ -83,10 +83,10 @@ function _extractUserScopeInfoFromRow_(row, headers) {
     return -1;
   }
 
-  const ixUnit = idx(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-  const ixFaskes = idx(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-  const ixKode = idx(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
-  const ixScope = idx(["ScopeLevel", "Scope Level"]);
+  const ixUnit = idx(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+  const ixFaskes = idx(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+  const ixKode = idx(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+  const ixScope = idx(["scope_level", "ScopeLevel", "Scope Level"]);
   const ixWa = idx(["No Whatsapp", "No WhatsApp", "Whatsapp", "WhatsApp", "NoWA", "No WA", "WA"]);
 
   return {
@@ -198,11 +198,11 @@ function _findUserByEmail_(email) {
 
   function fieldIndex(names) { return headerIndex(names); }
 
-  const ixEmail = headerIndex(["Email", "Gmail", "EmailPetugas"]);
-  const ixUser = headerIndex(["Username"]);
-  const ixNama = headerIndex(["Nama", "Nama Petugas"]);
-  const ixRole = headerIndex(["Role"]);
-  const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+  const ixEmail = headerIndex(["email", "Email", "Gmail", "EmailPetugas"]);
+  const ixUser = headerIndex(["username", "Username", "email"]);
+  const ixNama = headerIndex(["nama_petugas", "Nama Petugas", "Nama"]);
+  const ixRole = headerIndex(["role", "Role"]);
+  const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
 
   if (ixEmail === -1) return { error: "Kolom Email/Gmail belum ada di REF_USER." };
 
@@ -608,15 +608,15 @@ function manageGetUsers(token) {
       return -1;
     }
 
-    const ixUser = headerIndex(["Username"]);
-    const ixGmail = headerIndex(["Gmail", "Email", "EmailPetugas"]);
-    const ixNama = headerIndex(["Nama", "Nama Petugas"]);
-    const ixRole = headerIndex(["Role"]);
-    const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-    const ixFaskes = headerIndex(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-    const ixKode = headerIndex(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
-    const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
-    const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+    const ixUser = headerIndex(["username", "Username", "email"]);
+    const ixGmail = headerIndex(["email", "Gmail", "Email", "EmailPetugas"]);
+    const ixNama = headerIndex(["nama_petugas", "Nama Petugas", "Nama"]);
+    const ixRole = headerIndex(["role", "Role"]);
+    const ixUnit = headerIndex(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+    const ixFaskes = headerIndex(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+    const ixKode = headerIndex(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+    const ixScope = headerIndex(["scope_level", "ScopeLevel", "Scope Level"]);
+    const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
     const ixLoginMethod = headerIndex(["LoginMethod", "Login Method"]);
     const ixOtpEnabled = headerIndex(["OtpEnabled", "Otp Enabled"]);
     const ixOtpTtl = headerIndex(["OtpTtlMinutes", "Otp Ttl Minutes", "OtpTtl"]);
@@ -676,15 +676,15 @@ function manageSaveUser(token, userPayload) {
       return -1;
     }
 
-    const ixUser = headerIndex(["Username"]);
-    const ixGmail = headerIndex(["Gmail", "Email", "EmailPetugas"]);
-    const ixNama = headerIndex(["Nama", "Nama Petugas"]);
-    const ixRole = headerIndex(["Role"]);
-    const ixUnit = headerIndex(["UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
-    const ixFaskes = headerIndex(["NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-    const ixKode = headerIndex(["KodeFaskes", "Kode Faskes", "Kode PKM"]);
-    const ixScope = headerIndex(["ScopeLevel", "Scope Level"]);
-    const ixAktif = headerIndex(["Aktif", "StatusAktif"]);
+    const ixUser = headerIndex(["username", "Username", "email"]);
+    const ixGmail = headerIndex(["email", "Gmail", "Email", "EmailPetugas"]);
+    const ixNama = headerIndex(["nama_petugas", "Nama Petugas", "Nama"]);
+    const ixRole = headerIndex(["role", "Role"]);
+    const ixUnit = headerIndex(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
+    const ixFaskes = headerIndex(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
+    const ixKode = headerIndex(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+    const ixScope = headerIndex(["scope_level", "ScopeLevel", "Scope Level"]);
+    const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
     const ixCatatan = headerIndex(["Catatan"]);
     const ixOtpChannel = headerIndex(["OtpChannel"]), ixOtpFallback = headerIndex(["OtpFallbackChannel"]), ixNotifChannel = headerIndex(["NotificationChannel"]);
 
