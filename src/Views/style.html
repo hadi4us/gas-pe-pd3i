@@ -1470,6 +1470,94 @@ body[data-active-workspace="sars-dashboard"] #section-zero-reporting-dashboard {
   .pd3i-skeleton-row span:nth-child(3) { width: 48%; }
 }
 
+/* UI/UX rollout slice: Beranda command center. Scoped overrides preserve legacy hooks. */
+#section-overview.pd3i-overview-grid {
+  gap: var(--space-4);
+  max-width: 1180px;
+}
+
+#section-overview .pd3i-overview-panel {
+  border-color: #d8e3ef;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+#section-overview .pd3i-overview-panel-kpi { order: 1; }
+#section-overview .pd3i-overview-panel-summary { order: 2; }
+#section-overview .pd3i-overview-panel-actions { order: 3; }
+
+#section-overview #overview-role-summary {
+  margin: 0;
+  padding: .7rem .85rem;
+  border-left: 3px solid var(--pd3i-primary);
+  background: #f8fbff;
+  border-radius: .5rem;
+}
+
+#section-overview #overview-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#section-overview .pd3i-overview-summary-card {
+  min-height: 6.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#section-overview #overview-situation-strip,
+#section-overview #overview-kpi-focus {
+  margin-top: .25rem;
+}
+
+#section-overview .pd3i-overview-task-card {
+  border-left-width: 4px;
+}
+
+#section-overview .pd3i-overview-task-card.is-active {
+  border-left-color: #d97706;
+  background: #fffaf0;
+}
+
+#section-overview .pd3i-overview-task-card.is-clear {
+  border-left-color: #16a34a;
+}
+
+#section-overview .pd3i-overview-task-action,
+#section-overview .pd3i-overview-action-btn {
+  min-height: 44px;
+}
+
+@media (min-width: 961px) {
+  #section-overview .pd3i-overview-panel-summary {
+    grid-column: 1 / -1;
+  }
+  #section-overview .pd3i-overview-panel-actions {
+    display: grid;
+    grid-template-columns: minmax(0, .32fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 960px) {
+  #section-overview #overview-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  #section-overview #overview-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem;
+  }
+  #section-overview .pd3i-overview-summary-card {
+    min-height: 5.5rem;
+    padding: .75rem;
+  }
+  #section-overview .pd3i-overview-summary-card .count {
+    font-size: 1.35rem;
+  }
+}
+
 .pd3i-ui-state {
   display: flex;
   align-items: flex-start;
