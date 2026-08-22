@@ -1914,6 +1914,20 @@ test('Hasil pemeriksaan submit area stays clean without next-action note', () =>
   assert.doesNotMatch(sampelHtml, /Langkah aman sebelum simpan/);
 });
 
+test('Shared SIRFK component contract exists for tables, fields, and UI states', () => {
+  const utilsHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'utils.js.html'), 'utf8');
+  const appHtml = fs.readFileSync(path.join(root, 'src', 'Views', 'app.js.html'), 'utf8');
+  assert.match(utilsHtml, /function renderPd3iTable\(options\)/);
+  assert.match(utilsHtml, /data-table-model="sirfk"/);
+  assert.match(utilsHtml, /function renderPd3iField\(options\)/);
+  assert.match(utilsHtml, /window\.renderPd3iTable = renderPd3iTable/);
+  assert.match(styleHtml, /\.pd3i-component-table \{/);
+  assert.match(styleHtml, /\.pd3i-component-field \{/);
+  assert.match(appHtml, /data-component="DynamicFieldset"/);
+  assert.match(appHtml, /data-table-model="sirfk"/);
+  assert.match(appHtml, /class="pd3i-dynamic-table[^\"]*pd3i-data-table/);
+});
+
 test('Dashboard statistik never leaves spinner stuck when server stalls', () => {
   const dashboardJs = fs.readFileSync(path.join(root, 'src', 'Views', 'app.dashboard.js.html'), 'utf8');
   assert.match(dashboardJs, /const timeoutId = setTimeout\(function\(\) \{/);

@@ -280,6 +280,50 @@
     window.pd3iPromptDialog = pd3iPromptDialog;
   }
 
+  // ------------------------------------------------------------
+  // SHARED UI COMPONENTS — SIRFK pattern adopted by all modules
+  // ------------------------------------------------------------
+  // One table contract: toolbar -> table -> empty/loading state -> pagination.
+  // Modules pass data model; renderer owns markup, escaping, and responsive behavior.
+  function renderPd3iTable(options) {
+    const cfg = options || {};
+    const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
+    const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
+    const key = cfg.key || 'id';
+    const empty = cfg.empty || 'Belum ada data.';
+    if (!rows.length) return renderPd3iUiState({ type: 'empty', title: cfg.emptyTitle || 'Belum ada data', message: empty });
+    const head = columns.map(function(col) {
+      return '<th scope="col" class="'+escapeHtml(col.className || '')+'">'+escapeHtml(col.label || '')+'</th>';
+    }).join('');
+    const body = rows.map(function(row, index) {
+      const rowKey = row && row[key] != null ? row[key] : index;
+      const cells = columns.map(function(col) {
+        let value = typeof col.value === 'function' ? col.value(row, index) : row && row[col.key];
+        if (value == null || value === '') value = '-';
+        const html = col.html === true ? String(value) : escapeHtml(value);
+        return '<td class="'+escapeHtml(col.className || '')+'">'+html+'</td>';
+      }).join('');
+      return '<tr data-row-key="'+escapeHtml(rowKey)+'">'+cells+'</tr>';
+    }).join('');
+    return '<div class="pd3i-component-table" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="scroll">'+
+      '<div class="pd3i-data-table-wrap"><table class="pd3i-data-table" role="table"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div></div>';
+  }
+
+  function renderPd3iField(options) {
+    const cfg = options || {};
+    const id = escapeHtml(cfg.id || '');
+    const label = escapeHtml(cfg.label || '');
+    const required = cfg.required ? ' <span class="pd3i-required" aria-hidden="true">*</span>' : '';
+    const type = escapeHtml(cfg.type || 'text');
+    const value = escapeHtml(cfg.value || '');
+    return '<div class="pd3i-component-field" data-component="Field"><label class="pd3i-field-label" for="'+id+'">'+label+required+'</label><input id="'+id+'" name="'+id+'" type="'+type+'" value="'+value+'" class="pd3i-shell-input"'+(cfg.required ? ' required' : '')+'></div>';
+  }
+
+  if (typeof window !== 'undefined') {
+    window.renderPd3iTable = renderPd3iTable;
+    window.renderPd3iField = renderPd3iField;
+  }
+
   function renderPd3iSkeleton(options) {
     const cfg = options || {};
     const rows = Math.max(1, Math.min(8, Number(cfg.rows || 3)));

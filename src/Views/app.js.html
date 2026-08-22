@@ -450,7 +450,7 @@
         `;
       }
 
-      return `<div class="${wrapperClass} pd3i-dynamic-card bg-white p-5 border border-slate-200 rounded-lg shadow-sm" ${fieldWrapperAttrs} ${showIfAttr}>
+      return `<div class="${wrapperClass} pd3i-dynamic-card pd3i-component-fieldset" data-component="DynamicFieldset" ${fieldWrapperAttrs} ${showIfAttr}>
         <div class="flex justify-between items-center mb-4 gap-3 flex-wrap">
           <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-wide">${htmlEscape(field.label)}</label>
           <button type="button" onclick="addDynamicRow('${attrEscape(field.id)}')"
@@ -458,9 +458,9 @@
             <i class="fas fa-plus mr-2"></i> Tambah
           </button>
         </div>
-        <div class="table-container pd3i-dynamic-table-container overflow-x-auto w-full border rounded-lg border-slate-200" role="region" aria-label="Geser tabel ${field.label} ke kanan/kiri">
+        <div class="table-container pd3i-dynamic-table-container overflow-x-auto w-full border rounded-lg border-slate-200 pd3i-data-table-wrap" data-component="DataTable" data-table-model="sirfk" role="region" aria-label="Geser tabel ${field.label} ke kanan/kiri">
           <div class="pd3i-table-scroll-hint md:hidden" aria-hidden="true"><i class="fas fa-arrows-left-right"></i> Geser tabel ke kanan/kiri</div>
-          <table class="pd3i-dynamic-table w-full text-sm text-left text-slate-500" data-dynamic-table="${attrEscape(field.id)}">
+          <table class="pd3i-dynamic-table w-full text-sm text-left text-slate-500 pd3i-data-table" data-dynamic-table="${attrEscape(field.id)}">
             <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b">
               <tr>
                 ${columns.map(c => `<th class="px-2 py-4 text-xs font-extrabold text-slate-600">${htmlEscape(c.name)}</th>`).join("")}
