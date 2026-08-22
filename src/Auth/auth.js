@@ -480,11 +480,13 @@ function _refreshAuthUserFromRefUser_(cachedUser) {
   if (!values || values.length < 2) return null;
   const headers = values[0].map(function(h) { return String(h || "").trim(); });
   function ix(names) {
+    const normalized = headers.map(function(h) { return h.toLowerCase(); });
     for (var i = 0; i < names.length; i++) { var n = headers.indexOf(names[i]); if (n !== -1) return n; }
+    for (var j = 0; j < names.length; j++) { var normalizedIx = normalized.indexOf(String(names[j] || "").trim().toLowerCase()); if (normalizedIx !== -1) return normalizedIx; }
     return -1;
   }
-  const ixUser = ix(["Username"]), ixEmail = ix(["Email", "Gmail", "EmailPetugas"]);
-  const ixNama = ix(["Nama", "Nama Petugas"]), ixRole = ix(["Role"]), ixAktif = ix(["Aktif", "StatusAktif"]);
+  const ixUser = ix(["username", "Username", "email"]), ixEmail = ix(["email", "Email", "Gmail", "EmailPetugas"]);
+  const ixNama = ix(["nama_petugas", "Nama", "Nama Petugas"]), ixRole = ix(["role", "Role"]), ixAktif = ix(["status", "Aktif", "StatusAktif"]);
   const wantedUser = String((cachedUser && cachedUser.username) || "").trim().toLowerCase();
   const wantedEmail = _normalizeGmail_(cachedUser && cachedUser.email);
   for (var r = 1; r < values.length; r++) {

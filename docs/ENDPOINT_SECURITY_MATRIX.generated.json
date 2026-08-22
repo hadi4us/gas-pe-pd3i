@@ -27,13 +27,13 @@
     {
       "name": "authLogout",
       "file": "src/Auth/auth.js",
-      "line": 502,
+      "line": 504,
       "guard": "token"
     },
     {
       "name": "authChangePin",
       "file": "src/Auth/auth.js",
-      "line": 535,
+      "line": 537,
       "guard": "token"
     },
     {
@@ -171,19 +171,19 @@
     {
       "name": "getWorkflowFilterOptions",
       "file": "src/Controllers/routes.js",
-      "line": 765,
+      "line": 767,
       "guard": "token-scope"
     },
     {
       "name": "searchRecords",
       "file": "src/Controllers/routes.js",
-      "line": 950,
+      "line": 952,
       "guard": "token-scope"
     },
     {
       "name": "resolveLatestSavedMeta",
       "file": "src/Controllers/routes.js",
-      "line": 1440,
+      "line": 1442,
       "guard": "token"
     },
     {
@@ -255,67 +255,67 @@
     {
       "name": "retryPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1494,
+      "line": 1496,
       "guard": "admin"
     },
     {
       "name": "retryTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1520,
+      "line": 1522,
       "guard": "admin"
     },
     {
       "name": "retryPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1548,
+      "line": 1550,
       "guard": "admin"
     },
     {
       "name": "retryRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1569,
+      "line": 1571,
       "guard": "admin"
     },
     {
       "name": "retryRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1596,
+      "line": 1598,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuSync",
       "file": "src/Controllers/routes.js",
-      "line": 1632,
+      "line": 1634,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedTelegramPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1645,
+      "line": 1647,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1658,
+      "line": 1660,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingWahaPd3iNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1663,
+      "line": 1665,
       "guard": "admin"
     },
     {
       "name": "retryAllPendingRevisionPengampuNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1668,
+      "line": 1670,
       "guard": "admin"
     },
     {
       "name": "retryAllFailedRevisionTelegramNotification",
       "file": "src/Controllers/routes.js",
-      "line": 1673,
+      "line": 1675,
       "guard": "admin"
     },
     {

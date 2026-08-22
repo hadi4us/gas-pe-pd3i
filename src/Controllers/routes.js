@@ -652,12 +652,13 @@ function fetchRefImunData(token) {
   return getRefImunisasi(token);
 }
 
-function getFaskesFromSheet(token) {
+function getFaskesFromSheet(token, forceReload) {
   const sess = _getSessionFromToken_(token);
   if (!sess.ok) throw new Error(sess.message || "Sesi tidak valid.");
 
   var raw = null;
   try {
+    if (forceReload && typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.remove === 'function') Cache_Manager.remove('REF_FASKES');
     if (typeof Cache_Manager !== 'undefined' && Cache_Manager && typeof Cache_Manager.getSheetData === 'function') {
       raw = Cache_Manager.getSheetData('REF_FASKES');
     }
@@ -689,7 +690,7 @@ function getFaskesFromSheet(token) {
 
   const idxJenis = findIdx(['Jenis', 'JenisFaskes', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
   const idxNama = findIdx(['NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
-  const idxKey = findIdx(['KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'KodeFaskes', 'Kode Fasyankes', 'ID']);
+  const idxKey = findIdx(['faskes_key', 'FaskesKey', 'KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
   const idxAktif = findIdx(['StatusAktif', 'Status Aktif', 'Aktif', 'IsActive', 'Active', 'Status']);
 
   return rows
