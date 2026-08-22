@@ -664,11 +664,17 @@ function getWeeklySubmittedRows(year, minggu, token) {
     // puskesmas/pengampu sees facilities assigned to its pengampu_key.
     const isReporterScope = /^(faskes-pelapor|faskes|petugas|unit-pelapor)$/.test(scopeLevel);
     const isPengampuScope = /(^|-)puskesmas(-|$)/.test(scopeLevel) || /(^|-)pengampu(-|$)/.test(scopeLevel);
+    const rowFaskesKey = sarsDash_normFaskesKey_(faskesKey);
+    const faskesMatch = !!unitKey && rowFaskesKey === unitKey;
+    const pengampuMatch = !!pengampuKey && rowPengampuKey === pengampuKey;
+    // Pengampu flow: try own faskes_key first; when row is not own faskes,
+    // use pengampu_key. This matches SARS data where reporter and pengampu
+    // keys are stored independently.
     const belongs = allowAll || (isReporterScope
-      ? (!!unitKey && sarsDash_normFaskesKey_(faskesKey) === unitKey)
+      ? faskesMatch
       : isPengampuScope
-        ? (!!pengampuKey && (rowPengampuKey === pengampuKey || !!scopedKeys[sarsDash_normFaskesKey_(faskesKey)]))
-        : (!!unitKey && sarsDash_normFaskesKey_(faskesKey) === unitKey));
+        ? (faskesMatch || pengampuMatch || !!scopedKeys[rowFaskesKey])
+        : faskesMatch);
     if (!belongs) return null;
     const nihil=field(row,['Nihil']); const namaKasus=field(row,['Nama Kasus']);
     const status = /^(1|ya|yes|nihil)$/i.test(nihil) ? 'Nihil' : (namaKasus ? 'Ada kasus' : 'Tidak jelas');
