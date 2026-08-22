@@ -9,6 +9,7 @@
 - Batch 1 started: existing final UI standardization layer audited as compatibility layer for legacy and canonical button systems.
 - Settings and Search migration started: Settings section surfaces now opt into `.pd3i-section-card`; Search page and filter headers opt into `.pd3i-page-header` while retaining legacy classes.
 - Dashboard and Overview headers now opt into `.pd3i-page-header` while retaining existing layout classes and handlers.
+- Form, Input, Verification, Status, and Sample section headers now opt into `.pd3i-page-header` while retaining existing form classes, compact modifiers, IDs, and handlers.
 - No business logic, IDs, handlers, access rules, or deployment targets changed.
 - Development/Production deployment not performed in this step.
 
@@ -16,6 +17,7 @@
 
 - Add canonical page action-group and card-level primitives without removing legacy selectors.
 - Complete Settings, Search, Dashboard, and Overview migration.
-- Inspect Form, Verification, Status, and Sample next before the first Development deploy.
+- Run repository checks and inspect responsive selectors for migrated forms.
+- Then continue SARS and PIE header/card migration before first Development deploy.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
