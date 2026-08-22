@@ -267,6 +267,47 @@
 }
 #settings-panel-config .flex,
 #settings-panel-users .flex { min-width: 0; }
+#section-settings .pd3i-settings-panel > .pd3i-settings-surface,
+#section-settings .pd3i-settings-panel > .pd3i-shell-card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--pd3i-shadow-soft);
+}
+#section-settings .pd3i-settings-panel h3 {
+  color: var(--pd3i-text);
+  letter-spacing: -.01em;
+}
+#section-settings .pd3i-settings-panel h4 {
+  color: var(--pd3i-text);
+}
+#section-settings .pd3i-settings-form-surface {
+  border-radius: var(--radius-lg);
+}
+#section-settings .account-approval-stats > div {
+  position: relative;
+  overflow: hidden;
+}
+#section-settings .account-approval-stats > div:first-child {
+  border-color: var(--color-warning-border);
+  background: var(--color-warning-bg);
+}
+#section-settings .account-approval-stats > div:first-child b { color: var(--color-warning); }
+#section-settings .account-approval-stats > div:nth-child(2) {
+  border-color: var(--color-success-border);
+  background: var(--color-success-bg);
+}
+#section-settings .account-approval-stats > div:nth-child(2) b { color: var(--color-success); }
+#section-settings .account-approval-stats > div:nth-child(3) {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+}
+#section-settings .account-approval-stats > div:nth-child(3) b { color: var(--color-danger); }
+#section-settings .account-approval-stats > div:nth-child(4) {
+  border-color: var(--pd3i-border);
+  background: var(--pd3i-surface-soft);
+}
+#section-settings .account-approval-table th { position: sticky; top: 0; z-index: 1; }
+#section-settings .pd3i-approval-table-wrap { border-radius: var(--radius-lg); }
+#section-settings .pd3i-settings-rule-id { flex: 1 1 220px; }
 #settings-panel-users > .user-management-panel { margin-bottom: 1rem; }
 #settings-panel-users .overflow-x-auto {
   display: block;
