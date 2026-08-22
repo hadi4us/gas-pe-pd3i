@@ -872,8 +872,8 @@ const SEARCH_PROJECTION_CANDIDATE_GROUPS_ = [
   ['Kelurahan', 'Kelurahan domisili', 'Kelurahan/Desa'],
   ['Status Pasien/Kasus', 'Keadaan saat ini'],
   ['Status Verifikasi EPID'],
-  ['KodeFaskes Pengampu'],
-  ['Puskesmas Pengampu'],
+  ['pengampu_key', 'PengampuKey', 'KodeFaskes Pengampu'],
+  ['Puskesmas Pengampu', 'nama_pengampu', 'Pengampu'],
   ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
   ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
   ['Deleted At'],
@@ -2391,7 +2391,14 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
-  if (!userKodePuskesmas && !userUnitKerja) return false;
+  const userPengampuKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
+  if (!userKodePuskesmas && !userUnitKerja && !userPengampuKey) return false;
+
+  // Pengampu scope: canonical key in REF_PENGAMPU/REF_USER must match
+  // report row pengampu_key. Do this before domisili fallback; old records
+  // may have no complete patient residence fields.
+  const recordPengampuKey = _normalizeAccessScopeKey_((data && (data['pengampu_key'] || data['PengampuKey'] || data['KodeFaskes Pengampu'])) || '');
+  if (userPengampuKey && recordPengampuKey && userPengampuKey === recordPengampuKey) return true;
 
   const recordKodePengampu = _normalizeAccessScopeKey_((data && data['KodeFaskes Pengampu']) || '');
   const recordPuskesmasPengampu = _normalizeAccessScopeKey_((data && data['Puskesmas Pengampu']) || '');
