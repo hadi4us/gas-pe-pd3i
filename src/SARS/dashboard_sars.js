@@ -290,8 +290,8 @@ function sarsDash_readRefPengampu_(ss) {
   if (!values || values.length < 2) return { list: [], byKey: {}, byName: {}, byRegion: {} };
   const headers = (values[0] || []).map(sarsDash_clean_);
   const idxPeng = sarsDash_refIndex_(headers, ['Pengampu', 'NamaPuskesmas', 'Nama Puskesmas', 'Puskesmas Pengampu', 'UPTD Pengampu', 'Nama UPTD']);
-  const idxCode = sarsDash_refIndex_(headers, ['KodeFaskes', 'Kode Faskes', 'Kode Faskes', 'Kode']);
-  const idxName = sarsDash_refIndex_(headers, ['NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'NamaPuskesmas', 'Nama Puskesmas']);
+  const idxCode = sarsDash_refIndex_(headers, ['faskes_key', 'FaskesKey', 'Faskes Key', 'KodeFaskes', 'Kode Faskes', 'Kode']);
+  const idxName = sarsDash_refIndex_(headers, ['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'NamaPuskesmas', 'Nama Puskesmas']);
   const idxKec = sarsDash_refIndex_(headers, ['Kecamatan', 'Nama Kecamatan']);
   const idxKel = sarsDash_refIndex_(headers, ['Kelurahan', 'Nama Kelurahan']);
   const out = { list: [], byKey: {}, byName: {}, byRegion: {} };
@@ -323,10 +323,10 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
 
   const headers = (values[0] || []).map(sarsDash_clean_);
 
-  const iKey   = sarsDash_pickIndex_(headers, ["KodeFaskes", "Kode Faskes", "Key"]);
-  const iNama  = sarsDash_pickIndex_(headers, ["NamaFaskes", "Nama Faskes", "NamaFasyankes", "Nama Fasyankes"]);
+  const iKey   = sarsDash_pickIndex_(headers, ["faskes_key", "FaskesKey", "Faskes Key", "KodeFaskes", "Kode Faskes", "Key"]);
+  const iNama  = sarsDash_pickIndex_(headers, ["nama_faskes", "NamaFaskes", "Nama Faskes", "NamaFasyankes", "Nama Fasyankes"]);
   const iJenis = sarsDash_pickIndex_(headers, ["Jenis", "Jenis Faskes", "JenisFaskes", "Jenis Fasyankes"]);
-  const iPeng  = sarsDash_pickIndex_(headers, ["Pengampu", "FaskesPengampu"]);
+  const iPeng  = sarsDash_pickIndex_(headers, ["nama_pengampu", "Pengampu", "FaskesPengampu"]);
   const refPengampu = sarsDash_readRefPengampu_(ss);
   const iEmail = sarsDash_pickIndex_(headers, ["Email", "Email PIC", "Email Faskes"]);
   const iAktif = sarsDash_pickIndex_(headers, ["StatusAktif", "Aktif", "Status"]);

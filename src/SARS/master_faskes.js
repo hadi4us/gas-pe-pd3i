@@ -162,12 +162,12 @@ function getMasterFaskesRaw_(includeInactive) {
   const header = values[0].map(h => String(h || "").trim());
 
   // fleksibel: terima beberapa kemungkinan nama header
-  const iNama = pickIndex_(header, ["Nama Faskes", "NamaFaskes", "Nama Fasyankes", "NamaFasyankes", "Nama"]);
-  const iJenis = pickIndex_(header, ["Jenis", "Jenis Faskes", "JenisFaskes", "Tipe", "Type"]);
-  const iPengampu = pickIndex_(header, ["Pengampu", "FaskesPengampu", "Puskesmas Pengampu", "UPTD Pengampu"]);
-  const iKey = pickIndex_(header, ["KodeFaskes", "FasyankesKey", "KodeFaskes", "Kode Faskes", "Key", "Kode", "Kode Faskes", "KodeFaskes"]);
-  const iStatus = pickIndex_(header, ["StatusAktif", "Status Aktif", "Aktif", "Status"]);
-  const iEmail = pickIndex_(header, ["Email", "Gmail", "EmailPetugas", "Email Petugas"]);
+  const iNama = pickIndex_(header, ["nama_faskes", "Nama Faskes", "NamaFaskes", "Nama Fasyankes", "NamaFasyankes", "Nama"]);
+  const iJenis = pickIndex_(header, ["jenis", "Jenis", "Jenis Faskes", "JenisFaskes", "Tipe", "Type"]);
+  const iPengampu = pickIndex_(header, ["nama_pengampu", "Pengampu", "FaskesPengampu", "Puskesmas Pengampu", "UPTD Pengampu"]);
+  const iKey = pickIndex_(header, ["faskes_key", "FaskesKey", "Faskes Key", "FasyankesKey", "Fasyankes Key", "KodeFaskes", "Kode Faskes", "Key", "Kode"]);
+  const iStatus = pickIndex_(header, ["status", "StatusAktif", "Status Aktif", "Aktif", "Status"]);
+  const iEmail = pickIndex_(header, ["email", "Email", "Gmail", "EmailPetugas", "Email Petugas"]);
 
   if (iNama < 0) throw new Error('REF_FASKES: kolom "NamaFaskes" tidak ditemukan.');
 
