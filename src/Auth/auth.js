@@ -76,8 +76,11 @@ function _verifyPinValue_(storedPin, suppliedPin) {
 
 function _extractUserScopeInfoFromRow_(row, headers) {
   function idx(names) {
+    const normalizedHeaders = headers.map(function(h) { return String(h || '').trim().toLowerCase(); });
     for (var i = 0; i < names.length; i++) {
       var found = headers.indexOf(names[i]);
+      if (found !== -1) return found;
+      found = normalizedHeaders.indexOf(String(names[i] || '').trim().toLowerCase());
       if (found !== -1) return found;
     }
     return -1;
@@ -93,6 +96,8 @@ function _extractUserScopeInfoFromRow_(row, headers) {
     unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
     namaFaskes: ixFaskes !== -1 ? String(row[ixFaskes] || "").trim() : "",
     kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+    faskesKey: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+    pengampuKey: (function(){ var ix = idx(["pengampu_key", "PengampuKey", "KodeFaskes Pengampu"]); return ix !== -1 ? String(row[ix] || "").trim() : ""; })(),
     scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim().toLowerCase() : "",
     noWhatsapp: ixWa !== -1 ? String(row[ixWa] || "").trim() : ""
   };
@@ -226,7 +231,10 @@ function _findUserByEmail_(email) {
       nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : username) || username || email,
       role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "",
       unitKerja: scopeInfo.unitKerja,
+      namaFaskes: scopeInfo.namaFaskes,
       kodePuskesmas: scopeInfo.kodePuskesmas,
+      faskesKey: scopeInfo.faskesKey,
+      pengampuKey: scopeInfo.pengampuKey,
       scopeLevel: scopeInfo.scopeLevel,
       noWhatsapp: scopeInfo.noWhatsapp,
       otpChannel: fieldIndex(['OtpChannel']) !== -1 ? String(row[fieldIndex(['OtpChannel'])] || '').trim().toLowerCase() : 'email',
@@ -388,7 +396,10 @@ function authLogin(username, pin) {
         nama: (ixNama !== -1 ? String(r[ixNama] || "").trim() : u) || u,
         role: ixRole !== -1 ? String(r[ixRole] || "").trim().toLowerCase() : "",
         unitKerja: scopeInfo.unitKerja,
+        namaFaskes: scopeInfo.namaFaskes,
         kodePuskesmas: scopeInfo.kodePuskesmas,
+        faskesKey: scopeInfo.faskesKey,
+        pengampuKey: scopeInfo.pengampuKey,
         scopeLevel: scopeInfo.scopeLevel
       };
       break;
@@ -496,7 +507,7 @@ function _refreshAuthUserFromRefUser_(cachedUser) {
     if (!((wantedEmail && rowEmail === wantedEmail) || (wantedUser && rowUser.toLowerCase() === wantedUser))) continue;
     if (ixAktif !== -1) { const aktif = String(row[ixAktif] || "").trim().toUpperCase(); if (aktif && !["YA", "AKTIF", "TRUE"].includes(aktif)) return null; }
     const scope = _extractUserScopeInfoFromRow_(row, headers);
-    return { username: rowUser || cachedUser.username, email: rowEmail || cachedUser.email || "", nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : rowUser) || rowUser, role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "", unitKerja: scope.unitKerja, namaFaskes: scope.namaFaskes, kodePuskesmas: scope.kodePuskesmas, scopeLevel: scope.scopeLevel, noWhatsapp: scope.noWhatsapp };
+    return { username: rowUser || cachedUser.username, email: rowEmail || cachedUser.email || "", nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : rowUser) || rowUser, role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "", unitKerja: scope.unitKerja, namaFaskes: scope.namaFaskes, kodePuskesmas: scope.kodePuskesmas, faskesKey: scope.faskesKey, pengampuKey: scope.pengampuKey, scopeLevel: scope.scopeLevel, noWhatsapp: scope.noWhatsapp };
   }
   return null;
 }

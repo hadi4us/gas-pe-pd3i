@@ -367,11 +367,13 @@ function sarsDash_readMaster_(ss, jenisFilter, pengFilter, accessScope) {
     // Scope wajib dipaksa server-side. Admin/super-admin sudah diberi allowAll.
     if (accessScope && !accessScope.allowAll) {
       const normUnit = sarsDash_normKey_(accessScope.unitKerja || '');
+      const normUnitKey = sarsDash_normFaskesKey_(accessScope.faskesKey || '');
+      const normPengampuKey = sarsDash_normFaskesKey_(accessScope.pengampuKey || '');
       const normName = sarsDash_normKey_(nama);
       const normKey = sarsDash_normFaskesKey_(key);
       const normPeng = sarsDash_normKey_(peng);
-      const isOwnFaskes = normUnit && (normUnit === normName || normUnit === normKey);
-      const isPengampu = normUnit && normUnit === normPeng;
+      const isOwnFaskes = normUnitKey ? normUnitKey === normKey : (normUnit && (normUnit === normName || normUnit === normKey));
+      const isPengampu = normPengampuKey ? normPengampuKey === sarsDash_normFaskesKey_(row[sarsDash_pickIndex_(headers, ['pengampu_key','PengampuKey'])]) : (normUnit && normUnit === normPeng);
       if (!isOwnFaskes && !isPengampu) continue;
     }
 
