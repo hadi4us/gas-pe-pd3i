@@ -2393,7 +2393,30 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
   const userFaskesKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
-  const userPengampuKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
+  let userPengampuKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
+  // Older REF_USER rows store only PKM code/name. Resolve that identity to
+  // canonical REF_PENGAMPU.pengampu_key before checking MR_Raw.
+  if (!userPengampuKey && (userKodePuskesmas || userUnitKerja)) {
+    try {
+      const ref = getSheetOrNull_('REF_PENGAMPU');
+      if (ref && ref.getLastRow() > 1) {
+        const vals = ref.getDataRange().getValues();
+        const hs = (vals[0] || []).map(function(h) { return String(h || '').trim().toLowerCase(); });
+        const ix = function(names) { for (let i = 0; i < names.length; i++) { const n = names[i].toLowerCase(); const j = hs.indexOf(n); if (j !== -1) return j; } return -1; };
+        const ik = ix(['pengampu_key', 'pengampu key']);
+        const ic = ix(['kodepuskesmas', 'kode puskesmas', 'kodefaskes', 'kodefaskes pengampu']);
+        const iname = ix(['namapuskesmas', 'nama puskesmas', 'puskesmas', 'nama_pengampu', 'pengampu']);
+        for (let r = 1; r < vals.length; r++) {
+          const code = ic === -1 ? '' : _normalizeAccessScopeKey_(vals[r][ic]);
+          const name = iname === -1 ? '' : _normalizeAccessScopeKey_(vals[r][iname]);
+          if ((userKodePuskesmas && code === userKodePuskesmas) || (userUnitKerja && name === userUnitKerja)) {
+            userPengampuKey = ik === -1 ? '' : _normalizeAccessScopeKey_(vals[r][ik]);
+            if (userPengampuKey) break;
+          }
+        }
+      }
+    } catch (e) {}
+  }
   if (!userKodePuskesmas && !userUnitKerja && !userFaskesKey && !userPengampuKey) return false;
 
   // Reporting facility scope is separate from supervising PKM scope.
