@@ -18307,3 +18307,61 @@ body.pd3i-embedded-sites .pd3i-overview-admin-strip {
   #section-zero-reporting-form input,#section-zero-reporting-form select,#section-zero-reporting-form textarea{max-width:100%;box-sizing:border-box}
   #section-zero-reporting-form .row,#section-zero-reporting-form [class*="col-"]{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;box-sizing:border-box!important}
 }
+
+/* Final shell authority: remove legacy cascade drift from sidebar/content proportions. */
+:root {
+  --sidebar-width: 224px;
+  --content-max-width: 1560px;
+  --pd3i-shell-page: #f8fafc;
+  --pd3i-shell-surface: #ffffff;
+  --pd3i-shell-border: #e2e8f0;
+  --pd3i-shell-sidebar: #0f172a;
+}
+html, body, body.pd3i-body { background: var(--pd3i-shell-page) !important; }
+.pd3i-app {
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) !important;
+  background: var(--pd3i-shell-page) !important;
+}
+.pd3i-sidebar {
+  width: auto !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  background: var(--pd3i-shell-sidebar) !important;
+  border-right: 1px solid #1e293b !important;
+  box-shadow: none !important;
+}
+.pd3i-content {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 1.5rem 2rem !important;
+}
+.pd3i-page {
+  width: min(100%, var(--content-max-width)) !important;
+  max-width: var(--content-max-width) !important;
+  margin: 0 auto !important;
+}
+.pd3i-topbar {
+  margin: 1rem 0 1.25rem !important;
+  background: var(--pd3i-shell-surface) !important;
+  border: 1px solid var(--pd3i-shell-border) !important;
+  box-shadow: 0 1px 3px rgba(15,23,42,.06) !important;
+}
+.pd3i-shell-card,
+.pd3i-search-card,
+.pd3i-search-toolbar,
+.pd3i-search-results-panel,
+.pd3i-dashboard-shell,
+.pd3i-form-card-section,
+.pd3i-settings-surface {
+  background: var(--pd3i-shell-surface) !important;
+  border-color: var(--pd3i-shell-border) !important;
+}
+@media (max-width: 1100px) {
+  .pd3i-app { grid-template-columns: 1fr !important; }
+  .pd3i-sidebar { width: min(88vw, 340px) !important; }
+}
+@media (max-width: 768px) {
+  .pd3i-content { padding: 0 .75rem 1rem !important; }
+}
