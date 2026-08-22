@@ -3821,7 +3821,7 @@
     let activeLink = null;
 
     // Sidebar active state has one owner. Clear stale markup/state before applying current route.
-    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
+    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace], .pd3i-nav-button[data-sidebar-workspace]').forEach(function(link) {
       link.classList.remove('is-active');
       link.removeAttribute('aria-current');
     });
@@ -3841,7 +3841,7 @@
     });
     // Defensive cleanup: duplicate legacy/markup handlers must never leave
     // more than one sidebar item highlighted.
-    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace].is-active').forEach(function(link) {
+    document.querySelectorAll('.pd3i-nav-link.is-active, .pd3i-nav-button.is-active').forEach(function(link) {
       if (link !== activeLink) {
         link.classList.remove('is-active');
         link.removeAttribute('aria-current');
