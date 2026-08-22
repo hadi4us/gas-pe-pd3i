@@ -877,6 +877,7 @@ const SEARCH_PROJECTION_CANDIDATE_GROUPS_ = [
   ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
   ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
   ['Deleted At'],
+  ['faskes_key', 'FaskesKey', 'KodeFaskes'],
   ['Diinput Oleh'],
   ['Input Awal Diisi Oleh'],
   ['Timestamp'],
