@@ -20,6 +20,7 @@
     const settingsTab = String(link.getAttribute('data-settings-tab') || '').trim();
     if (pieTab) window.__PIE_ACTIVE_TAB = pieTab;
     if (settingsTab) window.__SETTINGS_ACTIVE_TAB = settingsTab;
+    window.__ACTIVE_APPROVAL_MENU = String(link.getAttribute('data-approval-menu') || '').trim();
     openSidebarWorkspace(workspace, { autoLoad: workspace === 'dashboard', useRoute: true });
   }, true);
 
@@ -3844,11 +3845,14 @@
       group.classList.remove('is-expanded');
     });
 
-    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace]').forEach(function(link) {
+    document.querySelectorAll('.pd3i-nav-link[data-sidebar-workspace], .pd3i-nav-button[data-sidebar-workspace]').forEach(function(link) {
       const targetWorkspace = normalizeSidebarWorkspace(link.getAttribute('data-sidebar-workspace'));
       const linkPieTab = String(link.getAttribute('data-pie-tab') || '').toLowerCase();
       const linkSettingsTab = String(link.getAttribute('data-settings-tab') || '').toLowerCase();
+      const approvalMenu = String(link.getAttribute('data-approval-menu') || '').toLowerCase();
+      const approvalActive = String(window.__ACTIVE_APPROVAL_MENU || '').toLowerCase();
       const active = !activeLink && targetWorkspace === workspace &&
+        (!approvalMenu || approvalMenu === approvalActive) &&
         (workspace !== 'pie' || !linkPieTab || linkPieTab === pieTab) &&
         (workspace !== 'settings' || !linkSettingsTab || linkSettingsTab === settingsTab) &&
         !link.hidden && !link.classList.contains('hidden') && link.getAttribute('aria-hidden') !== 'true';

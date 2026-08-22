@@ -526,6 +526,7 @@
           const workspace = String(link.getAttribute('data-sidebar-workspace') || '').trim();
           const pieTab = String(link.getAttribute('data-pie-tab') || '').trim();
           const settingsTab = String(link.getAttribute('data-settings-tab') || '').trim();
+          window.__ACTIVE_APPROVAL_MENU = String(link.getAttribute('data-approval-menu') || '').trim();
           if (pieTab) { window.__PIE_ACTIVE_TAB = pieTab; if (typeof window.applyPieTab === 'function') window.applyPieTab(pieTab); }
           if (settingsTab) { window.__SETTINGS_ACTIVE_TAB = settingsTab; if (typeof window.applySettingsTab === 'function') window.applySettingsTab(settingsTab); }
           if (!workspace) return;
