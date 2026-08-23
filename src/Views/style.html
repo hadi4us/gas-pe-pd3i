@@ -164,9 +164,45 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-dashboard .pd3i-dashboard-content { display: grid; gap: 18px; }
 #section-dashboard .pd3i-dashboard-state { display: grid; place-items: center; min-height: 160px; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 16px; background: #f8fafc; color: #64748b; text-align: center; }
 #section-dashboard .pd3i-dashboard-state.is-error { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
-#section-dashboard .pd3i-dashboard-case-kpi-compact { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 16px; margin-bottom: 0 !important; }
-#section-dashboard .pd3i-dashboard-metric-card { min-width: 0; padding: 18px; border-top: 3px solid #3b82f6; background:linear-gradient(180deg,#fff 0%,#f8fafc 100%); border-radius:18px; }
-#section-dashboard .pd3i-dashboard-metric-card.is-compact { min-height: 136px; display: flex; flex-direction: column; justify-content: space-between; }
+#section-dashboard .pd3i-dashboard-case-kpi-compact { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 14px; margin-bottom: 0 !important; }
+#section-dashboard .pd3i-dashboard-metric-card { min-width: 0; padding: 16px; border-top: 3px solid #3b82f6; background:linear-gradient(180deg,#fff 0%,#f8fafc 100%); border-radius:18px; }
+#section-dashboard .pd3i-dashboard-metric-card.is-compact { min-height: 128px; display: flex; flex-direction: column; justify-content: space-between; }
+#section-dashboard .pd3i-dashboard-metric-card .flex { display: flex; }
+#section-dashboard .pd3i-dashboard-metric-card .justify-between { justify-content: space-between; }
+#section-dashboard .pd3i-dashboard-metric-card .items-start { align-items: flex-start; }
+#section-dashboard .pd3i-dashboard-metric-card .shrink-0 { flex-shrink: 0; }
+#section-dashboard .pd3i-dashboard-metric-card .text-xs { font-size: .75rem; line-height: 1rem; }
+#section-dashboard .pd3i-dashboard-metric-card .text-\[11px\] { font-size: 11px; line-height: 1.35; }
+#section-dashboard .pd3i-dashboard-metric-card .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+#section-dashboard .pd3i-dashboard-metric-card .font-semibold { font-weight: 600; }
+#section-dashboard .pd3i-dashboard-metric-card .font-black { font-weight: 900; }
+#section-dashboard .pd3i-dashboard-metric-card .uppercase { text-transform: uppercase; }
+#section-dashboard .pd3i-dashboard-metric-card .tracking-wider { letter-spacing: .05em; }
+#section-dashboard .pd3i-dashboard-metric-card .mb-1 { margin-bottom: .25rem; }
+#section-dashboard .pd3i-dashboard-metric-card .mt-2 { margin-top: .5rem; }
+#section-dashboard .pd3i-dashboard-metric-card .w-10 { width: 2.5rem; }
+#section-dashboard .pd3i-dashboard-metric-card .h-10 { height: 2.5rem; }
+#section-dashboard .pd3i-dashboard-metric-card .rounded-full { border-radius: 999px; }
+#section-dashboard .pd3i-dashboard-metric-card .items-center { align-items: center; }
+#section-dashboard .pd3i-dashboard-metric-card .justify-center { justify-content: center; }
+#section-dashboard .pd3i-dashboard-metric-card .text-base { font-size: 1rem; line-height: 1.5rem; }
+#section-dashboard .pd3i-dashboard-metric-card .text-slate-500 { color:#64748b; }
+#section-dashboard .pd3i-dashboard-metric-card .text-slate-400 { color:#94a3b8; }
+#section-dashboard .pd3i-dashboard-metric-card .text-blue-900 { color:#1e3a8a; }
+#section-dashboard .pd3i-dashboard-metric-card .text-blue-700 { color:#1d4ed8; }
+#section-dashboard .pd3i-dashboard-metric-card .text-sky-900 { color:#0c4a6e; }
+#section-dashboard .pd3i-dashboard-metric-card .text-sky-700 { color:#0369a1; }
+#section-dashboard .pd3i-dashboard-metric-card .text-amber-900 { color:#78350f; }
+#section-dashboard .pd3i-dashboard-metric-card .text-amber-700 { color:#b45309; }
+#section-dashboard .pd3i-dashboard-metric-card .text-emerald-900 { color:#064e3b; }
+#section-dashboard .pd3i-dashboard-metric-card .text-emerald-700 { color:#047857; }
+#section-dashboard .pd3i-dashboard-metric-card .text-rose-900 { color:#881337; }
+#section-dashboard .pd3i-dashboard-metric-card .text-rose-700 { color:#be123c; }
+#section-dashboard .pd3i-dashboard-metric-card .bg-blue-500\/10 { background:rgba(59,130,246,.1); }
+#section-dashboard .pd3i-dashboard-metric-card .bg-sky-500\/10 { background:rgba(14,165,233,.1); }
+#section-dashboard .pd3i-dashboard-metric-card .bg-amber-500\/10 { background:rgba(245,158,11,.1); }
+#section-dashboard .pd3i-dashboard-metric-card .bg-emerald-500\/10 { background:rgba(16,185,129,.1); }
+#section-dashboard .pd3i-dashboard-metric-card .bg-rose-500\/10 { background:rgba(244,63,94,.1); }
 #section-dashboard .pd3i-dashboard-metric-card.tone-sky { border-top-color: #0ea5e9; }
 #section-dashboard .pd3i-dashboard-metric-card.tone-amber { border-top-color: #f59e0b; }
 #section-dashboard .pd3i-dashboard-metric-card.tone-emerald { border-top-color: #10b981; }
@@ -257,7 +293,7 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 #section-dashboard .pd3i-dashboard-age-card .pd3i-dashboard-month-value { width: auto; white-space: nowrap; }
 #section-dashboard .pd3i-dashboard-epi-age-card .pd3i-dashboard-block-title { margin-bottom: 10px; }
 @media(max-width:1100px){
-  #section-dashboard .pd3i-dashboard-case-kpi-compact { grid-template-columns: repeat(3,minmax(180px,1fr)); }
+  #section-dashboard .pd3i-dashboard-case-kpi-compact { grid-template-columns: repeat(3,minmax(0,1fr)); }
 }
 @media(max-width:900px){
   #section-dashboard .pd3i-dashboard-shell { padding: 18px; }
@@ -272,6 +308,10 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
   #section-dashboard .pd3i-dashboard-region-card-head span { flex-basis: auto; }
 }
 @media(max-width:560px){
+  .pd3i-topbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;overflow:visible}
+  .pd3i-topbar-actions{width:100%;justify-content:end;overflow:hidden}
+  .pd3i-user-badge{max-width:calc(100vw - 94px)}
+  .pd3i-admin-button span{display:none}
   #section-dashboard .pd3i-dashboard-shell { padding: 14px; }
   #section-dashboard .pd3i-dashboard-header { display: grid; gap: 12px; }
   #section-dashboard .pd3i-dashboard-header .pd3i-ghost-button { width: 100%; justify-content: center; }
