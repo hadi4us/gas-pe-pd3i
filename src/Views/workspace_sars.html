@@ -7,7 +7,7 @@
 .pd3i-sars-empty-copy{padding:14px;color:#5f6368;font-style:italic}
 /* SARS styles handled by SS PD3I design system in style.html */</style>
 <script src="https://www.gstatic.com/charts/loader.js"></script>
-<section id="section-zero-reporting-form" class="pd3i-zero-reporting-section hidden mt-6">
+<section id="section-zero-reporting-form" class="pd3i-workspace-section pd3i-zero-reporting-section hidden mt-6" data-workspace="zero-reporting">
   <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="form">
     <div class="pd3i-zero-reporting-host pd3i-zero-reporting-form-host">
 
@@ -804,7 +804,7 @@
   </div>
 </section>
 
-<section id="section-weekly-report-detail" class="pd3i-zero-reporting-section hidden mt-6">
+<section id="section-weekly-report-detail" class="pd3i-workspace-section pd3i-zero-reporting-section hidden mt-6" data-workspace="weekly-report-detail">
   <div class="pd3i-shell-card pd3i-weekly-detail-card">
     <div class="pd3i-page-header sars-filter-head"><div><h2>Detail Laporan Mingguan</h2><p>Data laporan asli yang dikirim faskes.</p></div><div class="sars-filter-actions"><button type="button" class="pd3i-btn is-secondary sars-filter-load" onclick="loadWeeklyReportDetail()"><span>Muat Data</span></button><button type="button" id="btnDownloadWeeklyDetail" class="pd3i-btn is-primary" onclick="downloadWeeklyReportExcel_()" disabled>Unduh Excel</button></div></div>
     <div class="sars-filter-grid"><div class="fitem"><label for="weeklyDetailYear">Tahun</label><select id="weeklyDetailYear"></select></div><div class="fitem"><label for="weeklyDetailWeek">Minggu Epidemiologi (ME)</label><select id="weeklyDetailWeek"></select></div><div class="fitem"><label for="weeklyDetailStatus">Status laporan</label><select id="weeklyDetailStatus"><option value="ALL">Semua status</option><option value="Nihil">Nihil</option><option value="Ada kasus">Ada kasus</option><option value="Tidak jelas">Perlu klarifikasi</option></select></div><div class="fitem"><label for="weeklyDetailDisease">Penyakit</label><select id="weeklyDetailDisease"><option value="ALL">Semua penyakit</option></select></div></div>
@@ -812,7 +812,7 @@
   </div>
 </section>
 
-<section id="section-zero-reporting-dashboard" class="pd3i-zero-reporting-section hidden mt-6">
+<section id="section-zero-reporting-dashboard" class="pd3i-workspace-section pd3i-zero-reporting-section hidden mt-6" data-workspace="zero-reporting-dashboard">
   <div class="pd3i-shell-card pd3i-zero-reporting-card pd3i-zero-reporting-native" data-zero-reporting-native="dashboard">
     <div class="pd3i-zero-reporting-host pd3i-zero-reporting-dashboard-host" aria-label="Status dashboard Zero Reporting">
 

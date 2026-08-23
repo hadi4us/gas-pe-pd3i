@@ -124,3 +124,26 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
   #section-dashboard .pd3i-dashboard-load { width: 100%; }
 }
 .pd3i-form-card-section[hidden],.pd3i-form-card-section.hidden{display:none!important}.pd3i-form-card-section:has(.pd3i-field-grid:empty){display:none}
+
+/* Shared application visual baseline: match login card language across every menu. */
+.pd3i-page{background:linear-gradient(135deg,#f6fbff 0%,#f8fafc 58%,#eef6ff 100%)}
+.pd3i-topbar{background:rgba(255,255,255,.94);border-bottom-color:#e2e8f0;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.pd3i-card,.pd3i-shell-card,.pd3i-dashboard-panel,.pd3i-form-card{border:1px solid rgba(226,232,240,.9);border-radius:24px;box-shadow:0 24px 70px rgba(15,23,42,.10)}
+.pd3i-form-card-section,.pd3i-overview-panel,.pd3i-search-card,.pd3i-zero-reporting-card{border-radius:24px}
+.pd3i-nav-link,.pd3i-nav-button{border-radius:10px}
+.pd3i-nav-link.is-active,.pd3i-nav-button.is-active{background:linear-gradient(135deg,#eff6ff,#eef2ff);border-color:#dbeafe;box-shadow:inset -3px 0 #2563eb,0 8px 18px rgba(37,99,235,.10)}
+input,select,textarea{border-radius:10px;background:#f8fafc;border-color:#cbd5e1}
+input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.pd3i-btn,.pd3i-action-btn,.pd3i-primary-button,.pd3i-submit-button,.pd3i-search-result-action,.pd3i-state-action{border-radius:10px;box-shadow:0 8px 18px rgba(37,99,235,.16)}
+.pd3i-btn.is-secondary,.pd3i-action-btn.is-secondary,.pd3i-ghost-button,.pd3i-cancel-button{border-radius:10px;box-shadow:none}
+@media(max-width:560px){.pd3i-card,.pd3i-shell-card,.pd3i-dashboard-panel,.pd3i-form-card,.pd3i-form-card-section,.pd3i-overview-panel,.pd3i-search-card,.pd3i-zero-reporting-card{border-radius:18px}}
+/* Shared component pass: normalize page-specific panels to login baseline. */
+.pd3i-section-card,.pd3i-settings-panel,.pd3i-queue-card,.pd3i-workflow-queue-summary-card,.pd3i-dashboard-metric-card,.pd3i-dashboard-region-card,.pd3i-overview-summary-card,.pd3i-overview-task-card,.pd3i-overview-focus-card,.pd3i-guide-card,.pie-inner-card,.pie-insight-card,.pie-kpi-card,.pie-ops-panel,.disease-section{border:1px solid rgba(226,232,240,.9);border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,.06);background:#fff}
+.pd3i-card-header-row,.pd3i-dashboard-region-card-head{border-color:#eef2f7}
+.pd3i-data-table-wrap,.pd3i-queue-table-wrap,.pd3i-search-results-panel{border:1px solid #e2e8f0;border-radius:14px;overflow:auto;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+.pd3i-data-table th,.pd3i-component-table th,.pd3i-queue-table th{background:#f8fafc;color:#475569;border-bottom-color:#e2e8f0}
+.pd3i-data-table td,.pd3i-component-table td,.pd3i-queue-table td{border-bottom-color:#eef2f7}
+.pd3i-badge-soft,.badge{border-radius:999px}
+.pd3i-toast-stack .pd3i-toast,.pd3i-alert,.pd3i-inline-alert{border-radius:12px;box-shadow:0 12px 28px rgba(15,23,42,.12)}
+.pd3i-success-modal,.pd3i-modal,.modal-content{border-radius:20px;box-shadow:0 24px 70px rgba(15,23,42,.22)}
+@media(max-width:560px){.pd3i-section-card,.pd3i-settings-panel,.pd3i-queue-card,.pd3i-workflow-queue-summary-card,.pd3i-dashboard-metric-card,.pd3i-dashboard-region-card,.pd3i-overview-summary-card,.pd3i-overview-task-card,.pd3i-overview-focus-card,.pd3i-guide-card,.pie-inner-card,.pie-insight-card,.pie-kpi-card,.pie-ops-panel,.disease-section{border-radius:14px}}
