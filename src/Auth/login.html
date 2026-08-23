@@ -3,7 +3,7 @@
     <!-- Top accent bar -->
     <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-sky-500 to-orange-500"></div>
     <div class="pd3i-login-mark mx-auto mb-3 mt-2">
-      <i class="fas fa-shield-halved"></i>
+      <i class="fas fa-shield-halved" aria-hidden="true"></i>
     </div>
     <div class="pd3i-login-title pd3i-login-title-small">Memeriksa sesi akses…</div>
     <div class="pd3i-login-subtitle">Menyiapkan autentikasi aplikasi.</div>
@@ -12,15 +12,15 @@
 
 <div id="account-request-modal" class="account-request-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="account-request-title">
   <div class="account-request-shell mx-auto mt-4 mb-8 relative overflow-hidden">
-    <button id="btn-close-account-request" type="button" class="account-request-close" aria-label="Tutup permohonan akun"><i class="fas fa-xmark"></i></button>
+    <button id="btn-close-account-request" type="button" class="account-request-close" aria-label="Tutup permohonan akun"><i class="fas fa-xmark" aria-hidden="true"></i></button>
     <div class="account-request-grid">
       <aside class="account-request-guide">
-        <div class="account-request-brand"><span class="account-request-brand-mark"><i class="fas fa-shield-halved"></i></span><span>SIMPEL<br><small>Surveilans Kota Depok</small></span></div>
+        <div class="account-request-brand"><span class="account-request-brand-mark"><i class="fas fa-shield-halved" aria-hidden="true"></i></span><span>SIMPEL<br><small>Surveilans Kota Depok</small></span></div>
         <div class="pd3i-login-kicker">Akses baru</div>
         <h2 id="account-request-title">Permohonan akun pengguna</h2>
         <p class="account-request-lead">Ajukan akses untuk membantu pelaporan dan pemantauan surveilans.</p>
         <div class="account-request-submit-help" aria-label="Langkah permohonan akun">
-          <b><i class="fas fa-list-check"></i> Langkah permohonan</b>
+          <b><i class="fas fa-list-check" aria-hidden="true"></i> Langkah permohonan</b>
           <ol>
             <li>Lengkapi nama, email, dan nomor WhatsApp.</li>
             <li>Pilih faskes dari daftar master.</li>
@@ -38,14 +38,14 @@
           <li><b>Pilih unit kerja</b><span>Data wilayah dan pengampu dikonfirmasi dari master PD3I.</span></li>
           <li><b>Verifikasi administrator</b><span>Akun aktif setelah permohonan disetujui.</span></li>
         </ol>
-        <div class="account-request-note"><i class="fas fa-lock"></i><span>Data digunakan untuk verifikasi akses internal.</span></div>
+        <div class="account-request-note"><i class="fas fa-lock" aria-hidden="true"></i><span>Data digunakan untuk verifikasi akses internal.</span></div>
       </aside>
       <section class="account-request-form-panel">
         <div class="account-request-panel-head"><div><h3>Data pemohon</h3><p>Permohonan diverifikasi administrator sebelum akses aktif.</p></div><span class="account-request-required">* wajib</span></div>
         <div class="account-request-form-summary" aria-label="Konteks permohonan akun">
-          <span><i class="fas fa-envelope"></i> Email aktif</span>
-          <span><i class="fas fa-hospital"></i> Unit/faskes resmi</span>
-          <span><i class="fas fa-user-shield"></i> Role ditetapkan admin</span>
+          <span><i class="fas fa-envelope" aria-hidden="true"></i> Email aktif</span>
+          <span><i class="fas fa-hospital" aria-hidden="true"></i> Unit/faskes resmi</span>
+          <span><i class="fas fa-user-shield" aria-hidden="true"></i> Role ditetapkan admin</span>
         </div>
         <div id="account-request-alert" class="hidden pd3i-login-alert"></div>
         <form id="account-request-form" class="pd3i-login-form" novalidate>
@@ -56,10 +56,10 @@
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-faskes">Nama faskes <em>*</em></label><input id="account-request-faskes" class="pd3i-login-input" list="account-request-faskes-options" required autocomplete="off" placeholder="Ketik nama faskes, alias, kecamatan, atau kelurahan"><datalist id="account-request-faskes-options"></datalist><input id="account-request-faskes-key" type="hidden"><small class="text-xs text-slate-500">Pilih faskes master yang paling sesuai. Data yang kurang lengkap dapat dikoreksi di bawah.</small></div>
           <div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-address">Alamat lengkap faskes</label><textarea id="account-request-address" class="pd3i-login-input" maxlength="500" rows="3" placeholder="Tuliskan alamat lengkap faskes"></textarea></div>
           <div class="account-request-two-col"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-kecamatan">KECAMATAN</label><select id="account-request-kecamatan" class="pd3i-login-input"><option value="">PILIH KECAMATAN</option><option value="BEJI">BEJI</option><option value="BOJONGSARI">BOJONGSARI</option><option value="CILODONG">CILODONG</option><option value="CIMANGGIS">CIMANGGIS</option><option value="CINERE">CINERE</option><option value="CIPAYUNG">CIPAYUNG</option><option value="LIMO">LIMO</option><option value="PANCORAN MAS">PANCORAN MAS</option><option value="SAWANGAN">SAWANGAN</option><option value="SUKMAJAYA">SUKMAJAYA</option><option value="TAPOS">TAPOS</option></select></div><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-kelurahan">KELURAHAN</label><select id="account-request-kelurahan" class="pd3i-login-input"><option value="">PILIH KELURAHAN</option></select></div></div>
-          <div id="account-request-pengampu-notice" class="account-request-routing-notice"><i class="fas fa-route"></i><span id="account-request-pengampu-message">Puskesmas pengampu akan ditentukan dari wilayah.</span></div>
+          <div id="account-request-pengampu-notice" class="account-request-routing-notice"><i class="fas fa-route" aria-hidden="true"></i><span id="account-request-pengampu-message">Puskesmas pengampu akan ditentukan dari wilayah.</span></div>
           <input id="account-request-pengampu" type="hidden"><div class="pd3i-login-field"><label class="pd3i-login-label" for="account-request-correction-note">Catatan data faskes <span class="font-normal text-slate-400">(opsional)</span></label><textarea id="account-request-correction-note" class="pd3i-login-input" maxlength="500" rows="2" placeholder="Tambahkan informasi bila ada data faskes yang perlu diperiksa"></textarea></div>
-          <div class="account-request-admin-info"><i class="fas fa-circle-info"></i><span><b>Info akses</b><br>Role dan tingkat akses ditetapkan administrator sesuai kebutuhan tugas.</span></div>
-          <div class="account-request-telegram-info"><b><i class="fab fa-telegram"></i> Verifikasi Telegram</b><span>Setelah kirim permohonan, buat link Telegram lalu tekan <b>Start</b> pada Akun Telegram Survim Dinkes Kota Depok untuk pairing OTP.</span></div>
+          <div class="account-request-admin-info"><i class="fas fa-circle-info" aria-hidden="true"></i><span><b>Info akses</b><br>Role dan tingkat akses ditetapkan administrator sesuai kebutuhan tugas.</span></div>
+          <div class="account-request-telegram-info"><b><i class="fab fa-telegram" aria-hidden="true"></i> Verifikasi Telegram</b><span>Setelah kirim permohonan, buat link Telegram lalu tekan <b>Start</b> pada Akun Telegram Survim Dinkes Kota Depok untuk pairing OTP.</span></div>
           <label class="account-request-consent"><input id="account-request-consent" type="checkbox" required><span>Saya menyatakan data benar dan menyetujui penggunaannya untuk verifikasi akun. <em>*</em></span></label>
           <div class="account-request-actions"><button id="btn-clear-account-request" type="button" class="account-request-clear">Bersihkan</button><button id="btn-submit-account-request" type="submit" class="pd3i-login-submit"><span>Kirim permohonan</span></button></div>
           <div id="account-request-telegram" class="hidden mt-3 text-sm text-slate-600"></div>
@@ -75,7 +75,7 @@
     <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-sky-500 to-orange-500"></div>
     <div class="pd3i-login-hero mt-2">
       <div class="pd3i-login-mark">
-        <i class="fas fa-shield-virus"></i>
+        <i class="fas fa-shield-virus" aria-hidden="true"></i>
       </div>
       <div>
         <h1 class="pd3i-login-title">SIMPEL Surveilans Kota Depok</h1>
@@ -90,7 +90,7 @@
       <div class="pd3i-login-field">
         <label class="pd3i-login-label">Email</label>
         <div class="pd3i-login-input-wrap">
-          <i class="fas fa-envelope"></i>
+          <i class="fas fa-envelope" aria-hidden="true"></i>
           <input id="login-email" type="email" autocomplete="email" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true" data-bwignore="true"
             class="pd3i-login-input"
             placeholder="Masukkan email Anda" />
@@ -104,7 +104,7 @@
       </button>
 
         <button id="btn-account-request" type="button" class="pd3i-login-account-request">
-          <i class="fas fa-user-plus"></i> Permohonan akun baru
+          <i class="fas fa-user-plus" aria-hidden="true"></i> Permohonan akun baru
         </button>
       </div>
 
@@ -112,7 +112,7 @@
         <div class="pd3i-login-field">
           <label class="pd3i-login-label">OTP</label>
           <div class="pd3i-login-input-wrap">
-            <i class="fas fa-key"></i>
+            <i class="fas fa-key" aria-hidden="true"></i>
             <input id="login-otp" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
               class="pd3i-login-input"
               placeholder="Masukkan OTP" />
@@ -120,20 +120,20 @@
         </div>
 
         <button id="btn-login" type="submit" class="pd3i-login-submit">
-          <span>Masuk</span> <i class="fas fa-arrow-right"></i>
+          <span>Masuk</span> <i class="fas fa-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
 
       <div class="pd3i-login-footer pd3i-login-footer-compact">
         <span>Dinas Kesehatan Kota Depok</span>
-        <small><i class="fas fa-lock"></i> Akses resmi berbasis peran. Data medis rahasia.</small>
+        <small><i class="fas fa-lock" aria-hidden="true"></i> Akses resmi berbasis peran. Data medis rahasia.</small>
       </div>
     </form>
 
     <div class="pd3i-login-trust-panel hidden" aria-hidden="true">
-      <span><i class="fas fa-lock"></i> Akses resmi</span>
-      <span><i class="fas fa-user-shield"></i> Sesi berbasis peran</span>
-      <span><i class="fas fa-notes-medical"></i> Data medis rahasia</span>
+      <span><i class="fas fa-lock" aria-hidden="true"></i> Akses resmi</span>
+      <span><i class="fas fa-user-shield" aria-hidden="true"></i> Sesi berbasis peran</span>
+      <span><i class="fas fa-notes-medical" aria-hidden="true"></i> Data medis rahasia</span>
     </div>
 
     <div class="mt-6 border-t border-slate-100 pt-4 text-left">
