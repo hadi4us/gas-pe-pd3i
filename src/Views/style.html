@@ -90,7 +90,17 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card.is-warning{color:#d97706;border-top-color:#f59e0b}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card.is-info{color:#2563eb;border-top-color:#3b82f6}
 #section-overview #overview-situation-strip{margin-top:18px;padding-top:18px;border-top:1px solid #e2e8f0}
+#section-overview .pd3i-overview-situation-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
 #section-overview .pd3i-overview-situation-item{min-width:0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
+#section-overview .pd3i-overview-focus-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);align-items:stretch}
+#section-overview .pd3i-overview-focus-card{min-width:0;padding:18px;border-radius:16px;display:flex;flex-direction:column;justify-content:flex-start}
+#section-overview .pd3i-overview-focus-title{margin-top:5px;color:#0f172a;font-size:.98rem;font-weight:800}
+#section-overview .pd3i-overview-dx-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0 12px}
+#section-overview .pd3i-overview-dx-pill{min-width:0;padding:10px 8px;border:1px solid #dbeafe;border-radius:12px;background:#f8fbff;text-align:center}
+#section-overview .pd3i-overview-dx-pill .label{display:block;color:#2563eb;font-size:.72rem;font-weight:800;letter-spacing:.05em}
+#section-overview .pd3i-overview-dx-pill .value{display:block;margin-top:4px;color:#0f172a;font-size:1.15rem;line-height:1;font-weight:800}
+#section-overview .pd3i-overview-focus-copy{margin-top:4px;color:#64748b;font-size:.84rem;line-height:1.5}
+#section-overview .pd3i-overview-focus-copy strong{color:#334155}
 #section-overview .pd3i-overview-situation-item strong{display:block;margin-top:4px;font-size:1.35rem;line-height:1.1;color:#0f172a}
 #section-overview .pd3i-overview-situation-item small{display:block;margin-top:5px;color:#64748b;line-height:1.35}
 #section-overview .pd3i-overview-situation-label{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b}
@@ -100,7 +110,9 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-overview .pd3i-overview-action-btn:hover{border-color:#93c5fd;background:#f8fbff;transform:translateY(-1px)}
 #section-overview .pd3i-overview-action-copy{color:#64748b;line-height:1.4}
 #section-overview .pd3i-overview-action-icon{color:#2563eb;background:#eff6ff;border-radius:10px}
-@media(max-width:800px){#section-overview{grid-template-columns:1fr;gap:14px}#section-overview .pd3i-overview-panel{padding:18px}}
+@media(max-width:900px){#section-overview .pd3i-overview-focus-grid{grid-template-columns:1fr}}
+@media(max-width:800px){#section-overview{grid-template-columns:1fr;gap:14px}#section-overview .pd3i-overview-panel{padding:18px}#section-overview .pd3i-overview-situation-strip{grid-template-columns:1fr}}
+@media(max-width:560px){#section-overview .pd3i-overview-dx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:560px){#section-overview .pd3i-overview-panel{padding:16px}#section-overview .pd3i-card-header-row{margin-bottom:14px}#section-overview .pd3i-overview-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#section-overview .pd3i-overview-summary-grid>*{padding:12px;border-radius:12px}#section-overview .pd3i-overview-action-btn{min-height:52px!important}}
 /* Form and Zero Reporting polish: preserve IDs, hooks, and workflow behavior. */
 .pd3i-form-main{display:grid;gap:18px}.pd3i-form-card-section{padding:22px}.pd3i-form-card-section .pd3i-card-header-row{padding-bottom:14px;border-bottom:1px solid #eef2f7;margin-bottom:18px}.pd3i-form-card-highlight{border-color:#bfdbfe;background:linear-gradient(135deg,#fff 0%,#f8fbff 100%)}.pd3i-field-grid{row-gap:16px}.pd3i-action-panel-card{margin-top:18px;padding:20px;position:sticky;bottom:12px;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(10px)}
