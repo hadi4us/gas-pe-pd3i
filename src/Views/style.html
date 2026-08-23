@@ -197,3 +197,25 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 .pd3i-toast-stack .pd3i-toast,.pd3i-alert,.pd3i-inline-alert{border-radius:12px;box-shadow:0 12px 28px rgba(15,23,42,.12)}
 .pd3i-success-modal,.pd3i-modal,.modal-content{border-radius:20px;box-shadow:0 24px 70px rgba(15,23,42,.22)}
 @media(max-width:560px){.pd3i-section-card,.pd3i-settings-panel,.pd3i-queue-card,.pd3i-workflow-queue-summary-card,.pd3i-dashboard-metric-card,.pd3i-dashboard-region-card,.pd3i-overview-summary-card,.pd3i-overview-task-card,.pd3i-overview-focus-card,.pd3i-guide-card,.pie-inner-card,.pie-insight-card,.pie-kpi-card,.pie-ops-panel,.disease-section{border-radius:14px}}
+
+/* Dashboard mobile containment: allow chart/table internals to scroll without widening the app shell. */
+#section-dashboard,
+#section-dashboard .pd3i-dashboard-shell,
+#section-dashboard .pd3i-dashboard-content,
+#section-dashboard .pd3i-dashboard-panel,
+#section-dashboard .pd3i-dashboard-reference-cases-card,
+#section-dashboard .pd3i-dashboard-region-card,
+#section-dashboard .pd3i-dashboard-age-analysis,
+#section-dashboard .pd3i-dashboard-epi-age-analysis { min-width: 0; }
+@media(max-width:560px){
+  #section-dashboard .pd3i-dashboard-shell,
+  #section-dashboard .pd3i-dashboard-toolbar-panel,
+  #section-dashboard .pd3i-dashboard-panel,
+  #section-dashboard .pd3i-dashboard-reference-cases-card,
+  #section-dashboard .pd3i-dashboard-metric-card,
+  #section-dashboard .pd3i-dashboard-region-card { padding-left: 14px; padding-right: 14px; }
+  #section-dashboard .pd3i-dashboard-header,
+  #section-dashboard .pd3i-dashboard-toolbar-head,
+  #section-dashboard .pd3i-dashboard-block-title,
+  #section-dashboard .pd3i-dashboard-region-card-head { min-width: 0; }
+}
