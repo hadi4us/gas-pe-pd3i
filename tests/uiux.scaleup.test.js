@@ -30,3 +30,11 @@ test('new UI baseline has no presentation reset-era markers', () => {
   assert.doesNotMatch(styleHtml, /phase [0-9]+|CANONICAL|Bootstrap|Tailwind|Tabler|legacy|obsolete|hotfix/i);
   assert.doesNotMatch(indexHtml, /data-legacy-section-id|reference-skin/);
 });
+
+
+test('topbar shows deploy version from rendered template value', () => {
+  assert.match(indexHtml, /data-app-version="<\?= appVersion \|\| 'v120' \?>"/);
+  assert.match(indexHtml, /class="pd3i-app-version pd3i-topbar-version"[^>]*>Versi <\?= appVersion \|\| 'v120' \?>/);
+  assert.match(styleHtml, /\.pd3i-topbar-version\{/);
+  assert.match(styleHtml, /@media\(max-width:560px\)[\s\S]*\.pd3i-topbar-version\{[^}]*max-width:88px/);
+});
