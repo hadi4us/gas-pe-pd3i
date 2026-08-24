@@ -5022,7 +5022,7 @@
       { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil Lab', copy: 'Isi hasil pemeriksaan.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
       { workspace: 'status', icon: 'fa-list-check', title: 'Update Status', copy: 'Perbarui klasifikasi akhir.', show: caps.viewStages.indexOf('section-status') !== -1 },
       { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard PD3I', copy: 'Lihat situasi epidemiologi.', show: caps.canView }
-    ].filter(function(item) { return item.show && allowedWorkspaces.has(item.workspace); });
+    ].filter(function(item) { return item.show && allowedWorkspaces.has(item.workspace); }).slice(0, 5);
 
     quickWrap.innerHTML = quickActions.map(function(item) {
       return `<button type="button" class="pd3i-overview-action-btn" data-overview-workspace="${escapeHtml(item.workspace)}">

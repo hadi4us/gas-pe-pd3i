@@ -249,7 +249,7 @@ test('sidebar hides admin-only dashboard and verification menus for petugas/pusk
   assert.match(appHtml, /isAdminUiRole\(role\)[\s\S]*?allowed\.add\('dashboard'\)/);
   assert.match(appHtml, /isAdminUiRole\(role\)[\s\S]*?allowed\.add\('verifikasi'\)/);
   assert.match(appHtml, /if \(caps\.writeStages\.indexOf\('section-sampel'\) !== -1\) allowed\.add\('sampel'\)/);
-  assert.match(appHtml, /quickActions[\s\S]*?allowedWorkspaces\.has\(item\.workspace\)/);
+  assert.match(appHtml, /quickActions[\s\S]*?allowedWorkspaces\.has\(item\.workspace\)[\s\S]*?\.slice\(0, 5\)/);
   assert.match(appHtml, /document\.querySelectorAll\('\.pd3i-nav-link\[data-sidebar-workspace\]'\)[\s\S]*?getAllowedSidebarWorkspacesForUser\(SESSION_USER\)[\s\S]*?link\.classList\.toggle\('hidden', !allowedWorkspaces\.has\(workspace\)\)/);
   assert.match(appHtml, /if \(SESSION_USER && !canAccessSidebarWorkspace\(normalized, SESSION_USER\)\)[\s\S]*?openSidebarWorkspace\('overview'/);
   assert.match(appDashboardHtml, /if \(typeof canAccessSidebarWorkspace === 'function' && !canAccessSidebarWorkspace\('dashboard', SESSION_USER\)\)/);
