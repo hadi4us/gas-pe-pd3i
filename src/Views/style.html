@@ -78,13 +78,14 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 @media(max-width:800px){.pd3i-overview-grid{grid-template-columns:1fr}.pd3i-overview-panel-kpi{grid-column:auto}.pd3i-search-safety-brief{grid-template-columns:1fr}.pd3i-search-sort-select{margin-left:0;max-width:none}}
 /* Overview alignment pass: one shared card language, tighter hierarchy, no workflow changes. */
 #section-overview{grid-template-columns:minmax(0,1.45fr) minmax(300px,.85fr);gap:20px}
+#section-overview .pd3i-overview-panel-summary{grid-column:1/-1}
 #section-overview .pd3i-overview-panel{padding:24px;background:#fff}
 #section-overview .pd3i-overview-panel-kpi{background:linear-gradient(135deg,#fff 0%,#f8fbff 100%)}
 #section-overview .pd3i-overview-panel-actions,#section-overview .pd3i-overview-panel-summary{min-height:0}
 #section-overview .pd3i-card-header-row{min-height:42px;margin-bottom:18px}
 #section-overview .pd3i-overview-summary-grid{gap:14px}
 #section-overview .pd3i-overview-summary-grid>*{min-width:0;padding:16px;border-radius:14px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
-#section-overview #overview-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+#section-overview #overview-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card{position:relative;min-height:112px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;border-top-width:3px}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card::after{content:'';position:absolute;right:-22px;bottom:-30px;width:86px;height:86px;border-radius:50%;background:currentColor;opacity:.06}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card .pd3i-mini-stat-label{max-width:85%;font-size:.72rem;line-height:1.35;letter-spacing:.04em;text-transform:uppercase;color:#64748b}
@@ -96,7 +97,7 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-overview #overview-situation-strip{margin-top:18px;padding-top:18px;border-top:1px solid #e2e8f0}
 #section-overview .pd3i-overview-situation-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
 #section-overview .pd3i-overview-situation-item{min-width:0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
-#section-overview .pd3i-overview-focus-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);align-items:stretch}
+#section-overview .pd3i-overview-focus-grid{display:grid;grid-template-columns:1fr;align-items:stretch}
 #section-overview .pd3i-overview-focus-card{min-width:0;padding:18px;border-radius:16px;display:flex;flex-direction:column;justify-content:flex-start}
 #section-overview .pd3i-overview-focus-title{margin-top:5px;color:#0f172a;font-size:.98rem;font-weight:800}
 #section-overview .pd3i-overview-dx-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:14px 0 12px}
@@ -108,16 +109,30 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-overview .pd3i-overview-situation-item strong{display:block;margin-top:4px;font-size:1.35rem;line-height:1.1;color:#0f172a}
 #section-overview .pd3i-overview-situation-item small{display:block;margin-top:5px;color:#64748b;line-height:1.35}
 #section-overview .pd3i-overview-situation-label{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#64748b}
+@media(max-width:1100px){#section-overview #overview-work-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){#section-overview #overview-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
 #section-overview .pd3i-overview-situation-strip,#section-overview .pd3i-overview-focus-grid{gap:14px}
-#section-overview .pd3i-overview-action-btn{min-height:56px!important;padding:13px 14px!important;border:1px solid #e2e8f0;background:#fff;box-shadow:none;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+#section-overview .pd3i-overview-action-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px!important;padding:12px 14px!important;border:1px solid #e2e8f0;background:#fff;box-shadow:none;transition:border-color .16s ease,background .16s ease,transform .16s ease}
 #section-overview .pd3i-overview-action-btn:hover{border-color:#93c5fd;background:#f8fbff;transform:translateY(-1px)}
 #section-overview .pd3i-overview-action-copy{color:#64748b;line-height:1.4}
-#section-overview .pd3i-overview-action-icon{color:#2563eb;background:#eff6ff;border-radius:10px}
+#section-overview .pd3i-overview-action-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;color:#2563eb;background:#eff6ff;border-radius:10px}
+#section-overview #overview-work-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+#section-overview .pd3i-overview-task-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;border-left:4px solid #94a3b8;background:#fff}
+#section-overview .pd3i-overview-task-card.is-active{border-left-color:#f59e0b;background:#fffbeb}
+#section-overview .pd3i-overview-task-card.is-clear{border-left-color:#10b981;background:#f0fdf4}
+#section-overview .pd3i-overview-task-count{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:#fff;border:1px solid #e2e8f0}
+#section-overview .pd3i-overview-task-card .count{color:#0f172a;font-size:1.65rem;line-height:1;font-weight:850;letter-spacing:-.04em}
+#section-overview .pd3i-overview-task-main{min-width:0}
+#section-overview .pd3i-overview-task-copy{margin-top:6px;color:#334155;font-size:.86rem;line-height:1.35}
+#section-overview .pd3i-overview-task-next{margin-top:6px;color:#64748b;font-size:.76rem;line-height:1.35}
+#section-overview .pd3i-overview-task-side{grid-column:1/-1;display:flex;justify-content:flex-end}
+#section-overview .pd3i-overview-task-action{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 13px;border:1px solid #2563eb;border-radius:10px;background:#2563eb;color:#fff;font-size:.82rem;font-weight:800;white-space:normal;text-align:center}
+#section-overview .pd3i-overview-task-action:hover{background:#1d4ed8;border-color:#1d4ed8}
+#section-overview .pd3i-overview-dashboard-link{width:max-content;margin-top:10px}
 @media(max-width:900px){#section-overview .pd3i-overview-focus-grid{grid-template-columns:1fr}}
 @media(max-width:800px){#section-overview{grid-template-columns:1fr;gap:14px}#section-overview .pd3i-overview-panel{padding:18px}#section-overview .pd3i-overview-situation-strip{grid-template-columns:1fr}}
 @media(max-width:560px){#section-overview .pd3i-overview-dx-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:560px){#section-overview .pd3i-overview-panel{padding:16px}#section-overview .pd3i-card-header-row{margin-bottom:14px}#section-overview .pd3i-overview-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#section-overview .pd3i-overview-summary-grid>*{padding:12px;border-radius:12px}#section-overview .pd3i-overview-action-btn{min-height:52px!important}}
+@media(max-width:560px){#section-overview .pd3i-overview-panel{padding:16px}#section-overview .pd3i-card-header-row{margin-bottom:14px}#section-overview .pd3i-overview-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#section-overview #overview-work-summary{grid-template-columns:1fr}#section-overview .pd3i-overview-summary-grid>*{padding:12px;border-radius:12px}#section-overview .pd3i-overview-action-btn{min-height:52px!important}#section-overview #overview-kpi-grid .pd3i-overview-summary-card{min-height:92px}#section-overview .pd3i-overview-task-side{justify-content:stretch}#section-overview .pd3i-overview-task-action{width:100%}}
 /* Form and Zero Reporting polish: preserve IDs, hooks, and workflow behavior. */
 .pd3i-form-main{display:grid;gap:18px}.pd3i-form-card-section{padding:22px}.pd3i-form-card-section .pd3i-card-header-row{padding-bottom:14px;border-bottom:1px solid #eef2f7;margin-bottom:18px}.pd3i-form-card-highlight{border-color:#bfdbfe;background:linear-gradient(135deg,#fff 0%,#f8fbff 100%)}.pd3i-field-grid{row-gap:16px}.pd3i-action-panel-card{margin-top:18px;padding:20px;position:sticky;bottom:12px;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(10px)}
 .pd3i-zero-reporting-card{padding:22px}.pd3i-zero-reporting-section,.pd3i-zero-reporting-card,.pd3i-zero-reporting-form-host,.pd3i-zero-reporting-form,.pd3i-zero-reporting-grid,.disease-section,.pd3i-zero-reporting-case-row,.pd3i-case-grid{min-width:0;max-width:100%}.pd3i-zero-reporting-form-host{max-width:1180px;margin:0 auto}.pd3i-zero-reporting-section-title{font-size:1.1rem;font-weight:800;color:#0f172a;margin:18px 0 14px}.pd3i-zero-reporting-week-notice{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:13px 15px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1e3a8a}.pd3i-zero-reporting-week-notice a{margin-left:auto;font-weight:700;color:#1d4ed8}.pd3i-zero-reporting-grid{gap:14px}.disease-section{margin-top:20px;padding:16px;border:1px solid #e2e8f0;border-radius:14px;background:#fff}.pd3i-zero-reporting-disease-header{padding:10px 12px;border-left:4px solid #2563eb;border-radius:6px;background:#f8fafc;color:#1e293b;font-size:.88rem;font-weight:800}.pd3i-zero-reporting-case-row{position:relative;margin-top:12px;padding:16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc}.pd3i-zero-reporting-case-row .pd3i-case-grid>*{min-width:0}.pd3i-zero-reporting-case-row input,.pd3i-zero-reporting-case-row select,.pd3i-zero-reporting-case-row textarea{min-width:0}.nihil-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0}.pd3i-zero-reporting-remove-btn{position:absolute;right:12px;top:12px;min-height:32px;padding:6px 10px;font-size:.78rem}.pd3i-zero-reporting-btn-add{min-height:36px;padding:7px 11px;font-size:.82rem}

@@ -5017,15 +5017,11 @@
     const caps = getRoleCapabilities(SESSION_USER);
     const allowedWorkspaces = getAllowedSidebarWorkspacesForUser(SESSION_USER);
     const quickActions = [
-      { workspace: 'input', icon: 'fa-plus-circle', title: 'Input kasus baru', copy: 'Mulai entri formulir PE baru berdasarkan diagnosis.', show: caps.canWrite },
-      { workspace: 'search', icon: 'fa-list-ul', title: 'Daftar Kasus', copy: 'Temukan data yang sudah ada untuk diedit, ditinjau, atau dihapus sesuai kewenangan.', show: caps.canView },
-
-      { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Tinjau data yang sudah ada untuk validasi admin.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
-      { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil pemeriksaan', copy: 'Lanjutkan data yang sudah ada saat hasil pemeriksaan tersedia.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
-      { workspace: 'status', icon: 'fa-list-check', title: 'Pembaruan status', copy: 'Perbarui status pasien / kasus dari data yang sudah ada.', show: caps.viewStages.indexOf('section-status') !== -1 },
-      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard statistik', copy: 'Pantau ringkasan dan analitik kasus PD3I.', show: caps.canView },
-      { workspace: 'settings', icon: 'fa-gear', title: 'Pengaturan', copy: 'Kelola konfigurasi PD3I/SARING-PIE sesuai role.', show: isSuperAdminUiRole(SESSION_USER && SESSION_USER.role) },
-      { workspace: 'guide', icon: 'fa-book-open', title: 'Panduan aplikasi', copy: 'Baca petunjuk penggunaan detail per menu dan per peran.', show: caps.canView }
+      { workspace: 'input', icon: 'fa-plus-circle', title: 'Input Kasus', copy: 'Entri PE baru.', show: caps.canWrite },
+      { workspace: 'verifikasi', icon: 'fa-id-card-clip', title: 'Verifikasi EPID', copy: 'Tinjau data pending.', show: caps.viewStages.indexOf('section-verifikasi') !== -1 },
+      { workspace: 'sampel', icon: 'fa-vials', title: 'Hasil Lab', copy: 'Isi hasil pemeriksaan.', show: caps.viewStages.indexOf('section-sampel') !== -1 },
+      { workspace: 'status', icon: 'fa-list-check', title: 'Update Status', copy: 'Perbarui klasifikasi akhir.', show: caps.viewStages.indexOf('section-status') !== -1 },
+      { workspace: 'dashboard', icon: 'fa-chart-column', title: 'Dashboard PD3I', copy: 'Lihat situasi epidemiologi.', show: caps.canView }
     ].filter(function(item) { return item.show && allowedWorkspaces.has(item.workspace); });
 
     quickWrap.innerHTML = quickActions.map(function(item) {
@@ -5109,27 +5105,29 @@
           const queueFocusCount = isAdminUiRole(SESSION_USER && SESSION_USER.role) ? pending : revisi;
 
           kpiWrap.innerHTML = [
-            `<div class="pd3i-overview-summary-card is-neutral"><div class="pd3i-mini-stat-label">Total kasus dalam cakupan</div><span class="count">${totalRecords}</span></div>`,
-            `<div class="pd3i-overview-summary-card is-success"><div class="pd3i-mini-stat-label">Kasus terverifikasi</div><span class="count">${verified}</span></div>`,
+            `<div class="pd3i-overview-summary-card ${actionable > 0 ? 'is-warning' : 'is-success'}"><div class="pd3i-mini-stat-label">Perlu dikerjakan</div><span class="count">${actionable}</span></div>`,
             `<div class="pd3i-overview-summary-card ${queueFocusCount > 0 ? 'is-warning' : 'is-neutral'}"><div class="pd3i-mini-stat-label">${escapeHtml(queueFocusLabel)}</div><span class="count">${queueFocusCount}</span></div>`,
             `<div class="pd3i-overview-summary-card ${sample > 0 ? 'is-info' : 'is-neutral'}"><div class="pd3i-mini-stat-label">Menunggu hasil lab</div><span class="count">${sample}</span></div>`,
-            ``
+            `<div class="pd3i-overview-summary-card is-success"><div class="pd3i-mini-stat-label">Terverifikasi</div><span class="count">${verified}</span></div>`
           ].join('');
 
           if (situationWrap) {
             const workflowLoad = pending + revisi + sample + status;
             const verificationRate = totalRecords > 0 ? Math.round((verified / totalRecords) * 100) : 0;
             situationWrap.innerHTML = [
-              `<div class="pd3i-overview-situation-item is-neutral"><span class="pd3i-overview-situation-label">Cakupan data</span><strong>${totalRecords}</strong><small>Total kasus dalam cakupan</small></div>`,
-              `<div class="pd3i-overview-situation-item ${workflowLoad > 0 ? 'is-warning' : 'is-neutral'}"><span class="pd3i-overview-situation-label">Beban kerja</span><strong>${workflowLoad}</strong><small>Verifikasi, revisi, lab, status</small></div>`,
-              `<div class="pd3i-overview-situation-item ${verificationRate >= 80 ? 'is-success' : (totalRecords > 0 ? 'is-info' : 'is-neutral')}"><span class="pd3i-overview-situation-label">Kelengkapan verifikasi</span><strong>${verificationRate}%</strong><small>${verified} kasus terverifikasi</small></div>`
+              `<div class="pd3i-overview-situation-item ${workflowLoad > 0 ? 'is-warning' : 'is-success'}"><span class="pd3i-overview-situation-label">Beban kerja</span><strong>${workflowLoad}</strong><small>Verifikasi, revisi, lab, status</small></div>`,
+              `<div class="pd3i-overview-situation-item ${verificationRate >= 80 ? 'is-success' : (totalRecords > 0 ? 'is-info' : 'is-neutral')}"><span class="pd3i-overview-situation-label">Progres verifikasi</span><strong>${verificationRate}%</strong><small>${verified}/${totalRecords} kasus</small></div>`
             ].join('');
           }
 
           focusWrap.innerHTML = [
-            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Diagnosis dalam scope</div><div class="pd3i-overview-focus-title">Nilai masing-masing diagnosis</div><div class="pd3i-overview-dx-grid">${['MR','DIF','PERT','TN','AFP'].map(function(dxKey) { return `<div class="pd3i-overview-dx-pill"><span class="label">${dxKey}</span><span class="value">${Number(dxBreakdown[dxKey] || 0)}</span></div>`; }).join('')}</div><div class="pd3i-overview-focus-copy">Total kasus dalam cakupan saat ini: <strong>${totalRecords}</strong>. Ringkasan dominan: ${primaryFocus}</div></div>`,
-            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Fokus tindak lanjut</div><div class="pd3i-overview-focus-title">Antrian kerja aktif</div><div class="pd3i-overview-focus-copy">Saat ini ada <strong>${actionable}</strong> item kerja aktif yang perlu ditindaklanjuti di workspace operasional.</div></div>`
+            `<div class="pd3i-overview-focus-card"><div class="pd3i-card-eyebrow">Snapshot diagnosis</div><div class="pd3i-overview-focus-title">MR, DIF, PERT, TN, AFP</div><div class="pd3i-overview-dx-grid">${['MR','DIF','PERT','TN','AFP'].map(function(dxKey) { return `<div class="pd3i-overview-dx-pill"><span class="label">${dxKey}</span><span class="value">${Number(dxBreakdown[dxKey] || 0)}</span></div>`; }).join('')}</div><div class="pd3i-overview-focus-copy">Dominan: ${primaryFocus}</div><button type="button" class="pd3i-overview-task-action pd3i-overview-dashboard-link" data-overview-focus-dashboard="1">Buka Dashboard PD3I</button></div>`
           ].join('');
+          focusWrap.querySelectorAll('[data-overview-focus-dashboard]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              openSidebarWorkspace('dashboard', { autoLoad: true, useRoute: true });
+            });
+          });
 
           const taskCards = [
             { workspace: 'verifikasi', label: 'Pending verifikasi', count: pending, copy: 'Kasus masuk yang perlu keputusan EPID/admin.', next: 'Langkah aman: buka verifikasi, cek kelengkapan, lalu putuskan EPID.', action: 'Buka verifikasi' },
@@ -5146,13 +5144,13 @@
             const count = Number(card.count || 0);
             const stateClass = count > 0 ? 'is-active' : 'is-clear';
             return `<div class="pd3i-overview-task-card ${stateClass}" data-overview-task="${escapeHtml(card.workspace)}">
+              <div class="pd3i-overview-task-count"><span class="count">${count}</span></div>
               <div class="pd3i-overview-task-main">
                 <div class="pd3i-mini-stat-label">${escapeHtml(card.label)}</div>
                 <div class="pd3i-overview-task-copy">${escapeHtml(card.copy)}</div>
                 <div class="pd3i-overview-task-next">${escapeHtml(card.next)}</div>
               </div>
               <div class="pd3i-overview-task-side">
-                <span class="count">${count}</span>
                 <button type="button" class="pd3i-overview-task-action" data-overview-task-workspace="${escapeHtml(card.workspace)}">${escapeHtml(card.action)}</button>
               </div>
             </div>`;
