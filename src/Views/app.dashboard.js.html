@@ -181,9 +181,13 @@
         map.fitBounds(bounds, { padding: [24, 24] });
       }
     }
-    setTimeout(function() {
-      try { map.invalidateSize(); } catch (e) {}
-    }, 0);
+    const refreshMapSize = function(delay) {
+      setTimeout(function() {
+        try { map.invalidateSize(); } catch (e) {}
+      }, delay);
+    };
+    refreshMapSize(0);
+    refreshMapSize(180);
   }
 
 
