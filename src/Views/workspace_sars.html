@@ -729,13 +729,27 @@
         }
       });
 
+      const sessionRole = String(sessionUser.role || sessionUser.roleNormalized || '').toLowerCase().replace(/[_\s]+/g, '-');
+      const isAdminReporter = sessionRole === 'admin' || sessionRole === 'super-admin' || sessionRole === 'superadmin';
+
       google.script.run
         .withSuccessHandler(res => {
           if (!res || res.status !== 'success') {
-            SARS_FASKES_READY = false;
             const rawMsg = (res && res.message) ? res.message : 'Akun faskes tidak ditemukan.';
+            if (isAdminReporter) {
+              SARS_FASKES_READY = true;
+              jenisEl().value = 'lain';
+              asalFaskesEl().value = String(sessionUser.unitKerja || sessionUser.unit || 'DINAS KESEHATAN');
+              const submitBtn = document.getElementById('submitBtn');
+              if (submitBtn) submitBtn.disabled = false;
+              if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
+              if (loginBoxName) loginBoxName.textContent = `${asalFaskesEl().value || 'DINAS KESEHATAN'} (ADMIN)`;
+              helpEl().textContent = 'Akun admin: identitas laporan memakai unit kerja login.';
+              return;
+            }
+            SARS_FASKES_READY = false;
             if (loginBoxName) loginBoxName.textContent = '';
-            helpEl().textContent = '';
+            helpEl().textContent = rawMsg;
             if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) submitBtn.disabled = true;
@@ -758,10 +772,21 @@
         })
         .withFailureHandler(err => {
           console.error(err);
+          if (isAdminReporter) {
+            SARS_FASKES_READY = true;
+            jenisEl().value = 'lain';
+            asalFaskesEl().value = String(sessionUser.unitKerja || sessionUser.unit || 'DINAS KESEHATAN');
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.disabled = false;
+            if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
+            if (loginBoxName) loginBoxName.textContent = `${asalFaskesEl().value || 'DINAS KESEHATAN'} (ADMIN)`;
+            helpEl().textContent = 'Akun admin: identitas laporan memakai unit kerja login.';
+            return;
+          }
           SARS_FASKES_READY = false;
           const msg = 'Gagal memuat akun faskes.';
           if (loginBoxName) loginBoxName.textContent = '';
-          helpEl().textContent = '';
+          helpEl().textContent = msg;
           if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
           const submitBtn = document.getElementById('submitBtn');
           if (submitBtn) submitBtn.disabled = true;

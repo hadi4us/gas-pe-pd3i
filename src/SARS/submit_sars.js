@@ -369,14 +369,27 @@ function submitSARS(formData) {
   const unit          = _sTrim_(session.user.unitKerja || session.user.unit || formData.unitPelapor);
   const jenisFasyankes= _sTrim_(formData.jenisFaskes);
   const clientFacility = _sTrim_(formData.asalFaskes);
-  const sessionFacility = (typeof getSarsFacilityForActiveUser === 'function')
+  const role = (typeof _normalizePd3iRole_ === 'function')
+    ? _normalizePd3iRole_(session.user.role)
+    : String(session.user.role || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+  const sessionFacilityRaw = (typeof getSarsFacilityForActiveUser === 'function')
     ? getSarsFacilityForActiveUser(email)
     : { status: 'error', message: 'Resolver fasilitas SARS tidak tersedia.' };
+  const isAdminReporter = role === 'admin' || role === 'super-admin' || role === 'superadmin';
+  const sessionFacility = ((!sessionFacilityRaw || sessionFacilityRaw.status !== 'success') && isAdminReporter) ? {
+      status: 'success',
+      nama: unit || 'DINAS KESEHATAN',
+      jenis: 'LAIN',
+      pengampu: 'DINAS KESEHATAN',
+      key: _normKey_(unit || 'DINKES') || 'DINKES',
+      statusAktif: 'AKTIF',
+      adminFallback: true
+    } : sessionFacilityRaw;
   _sRequire_(sessionFacility && sessionFacility.status === 'success', sessionFacility.message || 'Akun/fasilitas tidak terdaftar di REF_FASKES.');
   const namaFasyankes = _sTrim_(sessionFacility.nama);
   const sessionKey = _normKey_(sessionFacility.key);
   const sessionCode = _normKey_(session.user.kodePuskesmas || session.user.kodeFaskes || '');
-  _sRequire_(sessionKey && (!sessionCode || sessionKey === sessionCode), 'Mapping fasilitas akun tidak konsisten.');
+  _sRequire_(sessionKey && (!sessionCode || sessionKey === sessionCode || isAdminReporter), 'Mapping fasilitas akun tidak konsisten.');
   if (clientFacility && _normKey_(clientFacility) !== sessionKey && _normKey_(clientFacility) !== _normKey_(namaFasyankes)) {
     throw new Error('Fasilitas laporan tidak sesuai dengan akun login.');
   }
@@ -417,7 +430,10 @@ function submitSARS(formData) {
   const masterIndex = _buildMasterIndex_();
   const sessionEmail = (() => { try { return Session.getActiveUser().getEmail() || email; } catch (e) { return email; } })();
   const accountLookup = _lookupFaskesByEmail_(masterIndex, sessionEmail);
-  const lk = accountLookup || _lookupFaskes_(masterIndex, namaFasyankes);
+  let lk = accountLookup || _lookupFaskes_(masterIndex, namaFasyankes);
+  if (sessionFacility.adminFallback && !lk.found) {
+    lk = { found: true, faskesKey: sessionKey || 'DINKES', pengampu: 'DINAS KESEHATAN' };
+  }
 
   // faskesKey harus ada minimal turunan
   const faskesKey = _sTrim_(lk.faskesKey);
