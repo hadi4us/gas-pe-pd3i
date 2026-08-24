@@ -14,7 +14,7 @@
     <?!= include('style'); ?>
   </style>
 </head>
-<body class="pd3i-body" data-app-version="v120" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
+<body class="pd3i-body" data-app-version="<?= appVersion || 'v120' ?>" data-initial-view="<?= initialView || 'app' ?>" data-initial-workspace="<?= initialWorkspace || 'overview' ?>" data-embed-mode="<?= embedMode || '' ?>" data-app-url="<?= appUrl || '' ?>" data-dashboard-url="<?= dashboardUrl || '' ?>">
   <script>
     (function(){
       var framed = false;
@@ -40,7 +40,7 @@
           </div>
           <div>
             <div class="pd3i-brand-title">SIMPEL Surveilans</div>
-            <div class="pd3i-brand-subtitle">Kota Depok · v120</div>
+            <div class="pd3i-brand-subtitle">Kota Depok · <?= appVersion || 'v120' ?></div>
           </div>
         </div>
         <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
@@ -189,7 +189,7 @@
         </div>
 
         <div class="pd3i-topbar-actions">
-          <div class="pd3i-app-version" title="Versi aplikasi untuk trace update">Versi v120</div>
+          <div class="pd3i-app-version" title="Versi aplikasi untuk trace update">Versi <?= appVersion || 'v120' ?></div>
           <div id="user-badge" class="hidden pd3i-user-badge">
             <i class="fas fa-user"></i><span id="user-badge-text">-</span>
           </div>

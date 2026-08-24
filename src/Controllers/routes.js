@@ -33,6 +33,7 @@ function doGet(e) {
   template.embedMode = embedMode === "sites" ? "sites" : "";
   template.appUrl = serviceUrl || "";
   template.dashboardUrl = serviceUrl ? (serviceUrl + "?view=dashboard") : "";
+  template.appVersion = getAppVersion_();
   template.SPREADSHEET_ID = (typeof getSarsSpreadsheetId === "function") ? getSarsSpreadsheetId() : "";
   template.APP_URL = serviceUrl || "";
   template.email = safeActiveUserEmail_();
@@ -79,6 +80,10 @@ function renderSarsDashboard_(e) {
   try { template.SARS_CONFIG = (typeof getSarsConfig === "function") ? getSarsConfig() : {}; } catch (err) { template.SARS_CONFIG = {}; }
   const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
   return finalizeHtmlOutput_(template.evaluate(), "Dashboard SARS PD3I – Depok", embedMode);
+}
+
+function getAppVersion_() {
+  return "v121";
 }
 
 function finalizeHtmlOutput_(output, title, embedMode) {
