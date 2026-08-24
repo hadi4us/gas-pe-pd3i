@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SIMPEL Surveilans Kota Depok - Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan</title>
+  <title>SIMPEL Surveilans Kota Depok - Sistem Informasi Monitoring, Penyelidikan Epidemiologi & Pelaporan</title>
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
@@ -40,12 +40,22 @@
           </div>
           <div>
             <div class="pd3i-brand-title">SIMPEL Surveilans</div>
-            <div class="pd3i-brand-subtitle">Kota Depok · v120</div>
+            <div class="pd3i-brand-subtitle">Kota Depok</div>
           </div>
         </div>
         <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
           <i class="fas fa-xmark"></i>
         </button>
+      </div>
+      <div class="pd3i-sidebar-account" aria-label="Profil pengguna aktif">
+        <div id="user-badge" class="hidden pd3i-user-badge">
+          <i class="fas fa-user"></i><span id="user-badge-text">-</span>
+        </div>
+        <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
+          <button id="btn-logout" type="button" class="pd3i-admin-button is-danger" title="Keluar dari sesi aktif">
+            <i class="fas fa-right-from-bracket"></i> <span id="btn-admin-menu-label">Keluar</span>
+          </button>
+        </div>
       </div>
       <div class="pd3i-sidebar-section">
         <nav class="pd3i-sidebar-nav" aria-label="Navigasi utama">
@@ -184,21 +194,10 @@
             </nav>
             <div id="pd3i-page-eyebrow" class="pd3i-page-eyebrow">FORM PENYELIDIKAN EPIDEMIOLOGI</div>
             <h1 id="pd3i-page-title" class="pd3i-page-title">SIMPEL Surveilans</h1>
-            <p id="pd3i-page-subtitle" class="pd3i-page-subtitle">Sistem Informasi Monitoring & Penyelidikan Epidemiologi Lanjutan.</p>
+            <p id="pd3i-page-subtitle" class="pd3i-page-subtitle">Sistem Informasi Monitoring, Penyelidikan Epidemiologi & Pelaporan.</p>
           </div>
         </div>
 
-        <div class="pd3i-topbar-actions">
-          <div class="pd3i-app-version" title="Versi aplikasi untuk trace update">Versi v120</div>
-          <div id="user-badge" class="hidden pd3i-user-badge">
-            <i class="fas fa-user"></i><span id="user-badge-text">-</span>
-          </div>
-          <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
-            <button id="btn-logout" type="button" class="pd3i-admin-button is-danger" title="Keluar dari sesi aktif">
-              <i class="fas fa-right-from-bracket"></i> <span id="btn-admin-menu-label">Keluar</span>
-            </button>
-          </div>
-        </div>
       </header>
 
       <main class="pd3i-content">
