@@ -313,6 +313,18 @@ function _getPengampuByWilayahCachedForDashboard_(kecamatan, kelurahan, kabKota)
   return value;
 }
 
+function _dashboardScopeCacheIdentity_(sess) {
+  const user = (sess && sess.user) || {};
+  return [
+    String(user.role || '').trim().toLowerCase().replace(/[_\s]+/g, '-'),
+    _normalizeWilayahKey_(user.unitKerja || ''),
+    _normalizeWilayahKey_(user.kodePuskesmas || ''),
+    String(user.scopeLevel || '').trim().toLowerCase().replace(/[_\s]+/g, '-'),
+    _normalizeWilayahKey_(user.kecamatan || ''),
+    _normalizeWilayahKey_(user.kabKota || '')
+  ].join(':');
+}
+
 function _isDashboardScopeMatch_(sess, role, userUnit, userKode, rawPuskesmasPengampu, rawKodePuskesmas, kabKota, kecamatan, kelurahan) {
   if ((role === 'admin' || role === 'super-admin' || role === 'superadmin')) return true;
 
@@ -947,11 +959,7 @@ function getDashboardStats(dx, tahun, token) {
     var dashboardStatsCacheKey = '';
     try {
       dashboardStatsCache = CacheService.getScriptCache();
-      const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
-      const unit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
-      const kode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
-      const scope = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
-      dashboardStatsCacheKey = ['dashboard-stats-v3', dx, filterTahun ? tahunNum : 'ALL', role, unit, kode, scope].join(':');
+      dashboardStatsCacheKey = ['dashboard-stats-v4', dx, filterTahun ? tahunNum : 'ALL', _dashboardScopeCacheIdentity_(sess)].join(':');
       const cachedStatsRaw = dashboardStatsCache.get(dashboardStatsCacheKey);
       if (cachedStatsRaw) return JSON.parse(cachedStatsRaw);
     } catch (cacheReadErr) {
@@ -1433,6 +1441,7 @@ function getDashboardDrilldown(dx, tahun, drilldown, token) {
     const rows = sheetData.rows;
     const idxMap = {
       idxTglPelacakan: headers.indexOf('Tanggal Pelacakan'),
+      idxKabKota: _findFirstHeaderIndex_(headers, ['Kab/Kota Pasien', 'Kab/Kota', 'Kabupaten/Kota']),
       idxKecamatan: headers.indexOf('Kecamatan'),
       idxKelurahan: headers.indexOf('Kelurahan'),
       idxRW: headers.indexOf('RW'),
@@ -1447,9 +1456,14 @@ function getDashboardDrilldown(dx, tahun, drilldown, token) {
       idxVerifikasi: headers.indexOf('Status Verifikasi EPID'),
       idxStatusKasus: headers.indexOf('Status Pasien/Kasus'),
       idxTimestamp: headers.indexOf('Timestamp'),
-      idxUpdated: headers.indexOf('Updated At')
+      idxUpdated: headers.indexOf('Updated At'),
+      idxPuskesmasPengampu: headers.indexOf('Puskesmas Pengampu'),
+      idxKodePuskesmasPengampu: headers.indexOf('KodeFaskes Pengampu')
     };
 
+    const role = String((sess.user && sess.user.role) || '').trim().toLowerCase().replace(/[_\s]+/g, '-');
+    const userUnit = _normalizeWilayahKey_((sess.user && sess.user.unitKerja) || '');
+    const userKode = _normalizeWilayahKey_((sess.user && sess.user.kodePuskesmas) || '');
     const matches = [];
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
@@ -1461,6 +1475,10 @@ function getDashboardDrilldown(dx, tahun, drilldown, token) {
       }
       var record = _buildDashboardRecordSummary_(row, idxMap);
       if (!record.recordKey) continue;
+      var kabKota = idxMap.idxKabKota !== -1 ? String(row[idxMap.idxKabKota] || '').trim() : '';
+      var puskesmasPengampu = idxMap.idxPuskesmasPengampu !== -1 ? String(row[idxMap.idxPuskesmasPengampu] || '').trim() : '';
+      var kodePuskesmasPengampu = idxMap.idxKodePuskesmasPengampu !== -1 ? String(row[idxMap.idxKodePuskesmasPengampu] || '').trim() : '';
+      if (!_isDashboardScopeMatch_(sess, role, userUnit, userKode, puskesmasPengampu, kodePuskesmasPengampu, kabKota, record.kecamatan, record.kelurahan)) continue;
       if (_matchesDashboardDrilldown_(record, type, key)) {
         matches.push(record);
       }

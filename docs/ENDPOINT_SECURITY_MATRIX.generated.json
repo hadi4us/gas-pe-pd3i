@@ -195,31 +195,31 @@
     {
       "name": "getWorkflowInbox",
       "file": "src/Controllers/dashboard.js",
-      "line": 719,
+      "line": 731,
       "guard": "token"
     },
     {
       "name": "getOverviewSummary",
       "file": "src/Controllers/dashboard.js",
-      "line": 789,
+      "line": 801,
       "guard": "token"
     },
     {
       "name": "getDashboardStats",
       "file": "src/Controllers/dashboard.js",
-      "line": 930,
+      "line": 942,
       "guard": "token"
     },
     {
       "name": "getDashboardDrilldown",
       "file": "src/Controllers/dashboard.js",
-      "line": 1406,
+      "line": 1414,
       "guard": "token"
     },
     {
       "name": "exportToCsv",
       "file": "src/Controllers/dashboard.js",
-      "line": 1505,
+      "line": 1523,
       "guard": "token"
     },
     {
