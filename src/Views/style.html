@@ -319,8 +319,8 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 }
 @media(max-width:560px){
   #section-dashboard .pd3i-dashboard-shell { padding: 14px; }
-  #section-dashboard .pd3i-dashboard-header { display: grid; gap: 12px; }
-  #section-dashboard .pd3i-dashboard-header .pd3i-ghost-button { width: 100%; justify-content: center; }
+  #section-dashboard .pd3i-dashboard-header { display: grid; gap: 12px; width: 100%; }
+  #section-dashboard .pd3i-dashboard-header .pd3i-ghost-button { width: calc(100% - 12px); max-width: 100%; justify-content: center; justify-self: start; }
   #section-dashboard .pd3i-dashboard-toolbar-panel,
   #section-dashboard .pd3i-dashboard-panel,
   #section-dashboard .pd3i-dashboard-reference-cases-card,
