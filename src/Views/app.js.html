@@ -8,14 +8,15 @@
   window.__PD3I_WORKFLOW_LIST_COLLAPSED__ = window.__PD3I_WORKFLOW_LIST_COLLAPSED__ || {};
   const SEARCH_RESULTS_PAGE_SIZE = 10;
 
-  // Sidebar navigation must stay functional even if optional workspace initialization fails.
+  // Sidebar navigation must stay functional even if optional workspace initialization fails
+  // or later DOM refreshes leave a nav item without its direct init handler.
   document.addEventListener('click', function(evt) {
-    if (window.__PD3I_INIT_NAV_BOUND) return;
     const link = evt.target && evt.target.closest && evt.target.closest('[data-sidebar-workspace]');
     if (!link || link.hidden || link.classList.contains('hidden')) return;
     const workspace = String(link.getAttribute('data-sidebar-workspace') || '').trim();
     if (!workspace || typeof openSidebarWorkspace !== 'function') return;
     evt.preventDefault();
+    evt.stopImmediatePropagation();
     const pieTab = String(link.getAttribute('data-pie-tab') || '').trim();
     const settingsTab = String(link.getAttribute('data-settings-tab') || '').trim();
     if (pieTab) window.__PIE_ACTIVE_TAB = pieTab;
