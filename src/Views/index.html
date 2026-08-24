@@ -40,12 +40,22 @@
           </div>
           <div>
             <div class="pd3i-brand-title">SIMPEL Surveilans</div>
-            <div class="pd3i-brand-subtitle">Kota Depok · v120</div>
+            <div class="pd3i-brand-subtitle">Kota Depok</div>
           </div>
         </div>
         <button id="btn-sidebar-close" type="button" class="pd3i-sidebar-close" aria-label="Tutup navigasi">
           <i class="fas fa-xmark"></i>
         </button>
+      </div>
+      <div class="pd3i-sidebar-account" aria-label="Profil pengguna aktif">
+        <div id="user-badge" class="hidden pd3i-user-badge">
+          <i class="fas fa-user"></i><span id="user-badge-text">-</span>
+        </div>
+        <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
+          <button id="btn-logout" type="button" class="pd3i-admin-button is-danger" title="Keluar dari sesi aktif">
+            <i class="fas fa-right-from-bracket"></i> <span id="btn-admin-menu-label">Keluar</span>
+          </button>
+        </div>
       </div>
       <div class="pd3i-sidebar-section">
         <nav class="pd3i-sidebar-nav" aria-label="Navigasi utama">
@@ -167,7 +177,6 @@
         <div class="pd3i-note-copy">
           Tampilan dibuat ringkas, operasional, dan nyaman digunakan untuk kegiatan surveilans harian.
         </div>
-        <div class="pd3i-app-version" title="Versi aplikasi untuk trace update">Versi v120</div>
       </div>
     </aside>
 
@@ -189,16 +198,6 @@
           </div>
         </div>
 
-        <div class="pd3i-topbar-actions">
-          <div id="user-badge" class="hidden pd3i-user-badge">
-            <i class="fas fa-user"></i><span id="user-badge-text">-</span>
-          </div>
-          <div id="admin-menu-wrap" class="relative hidden pd3i-topbar-admin-wrap">
-            <button id="btn-logout" type="button" class="pd3i-admin-button is-danger" title="Keluar dari sesi aktif">
-              <i class="fas fa-right-from-bracket"></i> <span id="btn-admin-menu-label">Keluar</span>
-            </button>
-          </div>
-        </div>
       </header>
 
       <main class="pd3i-content">
