@@ -2540,13 +2540,11 @@ function _getInitialReportStageOnlyFields_() {
 }
 
 function _getExistingRecordForPayload_(dx, data, token) {
-  try {
-    var key = String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'])) || '').trim();
-    if (!key) return null;
-    return getRecordByKey(dx, key, token) || null;
-  } catch (e) {
-    return null;
-  }
+  var key = String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'])) || '').trim();
+  if (!key) return null;
+  var record = getRecordByKey(dx, key, token);
+  if (!record) throw new Error('Data kasus tidak ditemukan. Muat ulang dari daftar kasus sebelum menyimpan edit.');
+  return record;
 }
 
 function _buildEditDiffSummary_(existing, data, allowMap) {

@@ -411,10 +411,10 @@
     const htmlEscape = window.htmlEscape;
     const attrEscape = htmlEscape;
     if (field.type === "header") {
-      return `<div class="col-span-1 md:col-span-2 lg:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
+      return `<div class="col-span-1 md:col-span-2 xl:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
     }
 
-    const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 lg:col-span-3" : "";
+    const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 xl:col-span-3" : "";
     const showIfAttr = field.showIf
       ? `data-parent="${htmlEscape(field.showIf.field)}" data-parent-vals='${htmlEscape(JSON.stringify(field.showIf.values))}' data-required="${field.required ? "true" : "false"}"`
       : "";
@@ -432,7 +432,7 @@
     const isOptionalExaminationDate = String(field.type || '').toLowerCase() === 'date'
       && /(pemeriksaan|sampel|spesimen)/i.test(fieldSemanticText);
     const isOptionalField = String(field.id || '') === 'Tanggal meninggal AFP' || isOptionalExaminationDate;
-    const requiredAttr = (field.required && !field.showIf && !isOptionalField) ? "required" : "";
+    const requiredAttr = (field.required && !field.showIf && !isOptionalField) ? "required aria-required=\"true\"" : "";
 
     if (field.type === "dynamic_table") {
       let tableDef = field;
@@ -550,7 +550,7 @@
         </div>
       </div>`;
     } else if (field.type === "textarea") {
-      inputHtml = `<textarea id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls} min-h-[110px]" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
+      inputHtml = `<textarea id="${attrEscape(field.id)}" name="${attrEscape(neutralName)}" class="${cls} min-h-[110px]" rows="${Number(field.rows) || 3}" ${requiredAttr} ${field.readonly ? "readonly" : ""} ${browserHintAttrs}></textarea>`;
     } else {
       const patternAttr = field.pattern ? `pattern="${field.pattern}"` : "";
       let maxAttr = field.max ? `max="${field.max}"` : "";
@@ -612,7 +612,7 @@
   }
 
   function renderSectionTitle(title) {
-    return `<div class="col-span-1 md:col-span-2 lg:col-span-3 pd3i-section-banner"><div class="pd3i-section-banner-eyebrow">Sub-section diagnosis</div><div class="pd3i-section-banner-title">${title}</div></div>`;
+    return `<div class="col-span-1 md:col-span-2 xl:col-span-3 pd3i-section-banner"><div class="pd3i-section-banner-eyebrow">Sub-section diagnosis</div><div class="pd3i-section-banner-title">${title}</div></div>`;
   }
 
   // ============================================================
