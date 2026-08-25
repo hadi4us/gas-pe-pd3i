@@ -400,6 +400,13 @@ test('Daftar Kasus direct search can show pending records created by the logged-
   assert.doesNotMatch(routesJs, /if \(_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
+
+
+test('Daftar Kasus renderer ignores non-object result rows and keeps fallback error UI local', () => {
+  assert.match(appInitHtmlRaw, /const rawResults = Array\.isArray\(data\) \? data : \(data && Array\.isArray\(data\.results\) \? data\.results : \[\]\);/);
+  assert.match(appInitHtmlRaw, /const results = rawResults\.filter\(function\(item\) \{ return item && typeof item === 'object'; \}\);/);
+  assert.match(appInitHtmlRaw, /typeof renderPd3iUiState === 'function'[\s\S]*List kasus gagal dirender/);
+});
 test('Daftar Kasus search is paginated at 10 records per page with next and previous controls', () => {
   assert.match(routesJs, /const pageSize = Math\.min\(100, Math\.max\(1, parseInt\(filters\.pageSize, 10\) \|\| 10\)\);/);
   assert.match(appHtml, /const SEARCH_RESULTS_PAGE_SIZE = 10;/);

@@ -1151,8 +1151,9 @@
         const box = document.getElementById("search-results");
         if (!box) return;
 
-        const results = Array.isArray(data) ? data : (data && data.results ? data.results : []);
-        const total = Array.isArray(data) ? data.length : (data && data.total != null ? Number(data.total) : results.length);
+        const rawResults = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+        const results = rawResults.filter(function(item) { return item && typeof item === 'object'; });
+        const total = Array.isArray(data) ? results.length : (data && data.total != null ? Number(data.total) : results.length);
         const page = Math.max(1, Array.isArray(data) ? 1 : (parseInt(data && data.page, 10) || 1));
         const pageSize = Math.max(1, Array.isArray(data) ? (results.length || SEARCH_RESULTS_PAGE_SIZE) : (parseInt(data && data.pageSize, 10) || SEARCH_RESULTS_PAGE_SIZE));
         const totalPages = Math.max(1, Array.isArray(data) ? 1 : (parseInt(data && data.totalPages, 10) || Math.ceil(total / pageSize) || 1));
@@ -1319,7 +1320,9 @@
           });
         } catch (err) {
           console.error("_renderSearchResultsList failed:", err);
-          box.innerHTML = renderPd3iUiState({ type: 'error', title: 'List kasus gagal dirender', message: 'Silakan refresh halaman, lalu coba lagi.' });
+          box.innerHTML = (typeof renderPd3iUiState === 'function')
+            ? renderPd3iUiState({ type: 'error', title: 'List kasus gagal dirender', message: 'Silakan refresh halaman, lalu coba lagi.' })
+            : '<div class="pd3i-dashboard-state is-error">List kasus gagal dirender. Silakan refresh halaman, lalu coba lagi.</div>';
         }
       }
 
