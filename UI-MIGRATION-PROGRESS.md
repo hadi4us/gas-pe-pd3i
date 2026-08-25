@@ -59,3 +59,19 @@
 - No obvious app-owned horizontal overflow in supplied desktop captures; vertical scroll expected for long dashboard.
 - Not fully validated from supplied captures: explicit Back to Workspace click behavior, mobile/tablet breakpoints 900/768/390/360, non-destructive filter interaction.
 - Dashboard state: `POST_DEPLOY_HYBRID_QA=PARTIAL_PASS_WITH_HUMAN_RUNTIME_EVIDENCE`; Main Post-Deploy Review pending remaining breakpoint/action evidence before ACCEPTED.
+## 2026-08-25 — Development @177
+
+- Removed Dashboard `Kembali ke beranda` button per MasBro instruction.
+- Removed unused `btn-dashboard-back-to-workspace` click binding.
+- Included existing approved local SARS workspace changes in same Development deploy per option 1.
+- Checks passed before release: `git diff --check`, `npm test` (102/102), hygiene, endpoint security.
+- Commit: `a89d86b88de9 fix(ui): remove dashboard back button`.
+- Development deployment updated in place: `AKfycbyvwxhm2ycZ-1R45QeTKSM4l5JQ9OIX7MqN9uBusGKhUM8McveAM5ydHXc5WaACD6Od @177`.
+- Production unchanged.
+## 2026-08-25 — Dashboard @177 human QA result
+
+- Human noVNC screenshots received after Development @177.
+- Confirmed removed Dashboard `Kembali ke beranda` button is no longer visible.
+- Runtime visual QA finds dashboard styling regression: KPI cards render as collapsed/plain rows, icon controls show as broken/native glyph positions, top-region drilldown items render as native button boxes, age distribution rows lose intended card/bar styling, and epidemiology chart renders as heavy black filled area.
+- Functional data load appears OK, but visual system is not acceptable for Dashboard page acceptance.
+- Main Post-Deploy Review: `REWORK_REQUIRED`; not blocked by tooling.
