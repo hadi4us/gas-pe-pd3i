@@ -1226,14 +1226,7 @@
               <span class="pd3i-search-summary-pill">${safeEscape(workflowActionLabel)}</span>
             </div>
           </div>`;
-          html += `<div class="pd3i-search-results-wrap pd3i-data-list" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="card">
-            <div class="pd3i-search-table-head" role="row">
-              <span role="columnheader">Kasus</span>
-              <span role="columnheader">Wilayah / lahir</span>
-              <span role="columnheader">Status</span>
-              <span role="columnheader">Sampel</span>
-              <span role="columnheader" class="pd3i-search-actions-head">Aksi</span>
-            </div>`;
+          html += `<div class="pd3i-search-results-wrap pd3i-data-list" data-component="DataList" data-mobile-mode="card">`;
 
           results.forEach(function(item, index) {
             const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ""));
@@ -1307,11 +1300,11 @@
           if (totalPages > 1) {
             html += `<div class="pd3i-search-pagination" role="navigation" aria-label="Navigasi halaman Daftar Kasus">
               <button type="button" class="pd3i-search-page-btn" data-search-page-target="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-left"></i> Sebelumnya
+                <i class="fas fa-chevron-left" aria-hidden="true"></i> Sebelumnya
               </button>
               <span class="pd3i-search-page-indicator">Halaman ${page} dari ${totalPages}</span>
               <button type="button" class="pd3i-search-page-btn" data-search-page-target="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>
-                Berikutnya <i class="fas fa-chevron-right"></i>
+                Berikutnya <i class="fas fa-chevron-right" aria-hidden="true"></i>
               </button>
             </div>`;
           }

@@ -16,7 +16,7 @@
                   <h4 class="pd3i-search-toolbar-title">Filter kasus</h4>
                 </div>
               </div>
-              <div class="pd3i-search-filter-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div class="pd3i-search-filter-grid">
                 <div id="search-filter-epid-wrap">
                   <input type="text" id="search-epid" class="pd3i-shell-input" aria-label="Cari EPID, ID registrasi, nama pasien, alamat, kelurahan, atau orang tua" placeholder="Ketik EPID / ID registrasi / nama pasien / alamat / kelurahan / orang tua" autocomplete="off" enterkeyhint="search">
                 </div>
@@ -57,10 +57,10 @@
               </div>
               <div class="pd3i-search-actions">
                 <button type="button" id="btn-search-epid" class="pd3i-primary-button pd3i-inline-button">
-                  <i class="fas fa-filter"></i> Terapkan Filter
+                  <i class="fas fa-filter" aria-hidden="true"></i> Terapkan Filter
                 </button>
                 <button type="button" id="btn-search-reset" class="pd3i-ghost-button pd3i-inline-button hidden">
-                  <i class="fas fa-filter-circle-xmark"></i> Reset Filter
+                  <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i> Reset Filter
                 </button>
                 <select id="search-sort" class="pd3i-shell-input pd3i-shell-select compact pd3i-search-sort-select" aria-label="Urutkan Daftar Kasus">
                   <option value="updated_desc">Urutkan: Terbaru dulu</option>
