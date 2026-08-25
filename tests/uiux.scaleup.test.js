@@ -26,6 +26,12 @@ test('new UI baseline keeps runtime state and action hooks', () => {
   assert.match(appJs, /updateSidebarActiveState\(/);
 });
 
+test('search results collapse table grid before mobile card viewport', () => {
+  assert.match(styleHtml, /\.pd3i-search-table-head,\.pd3i-search-result-card\{[^}]*grid-template-columns:minmax\(210px,1\.35fr\)[^}]*minmax\(168px,\.8fr\)[^}]*min-width:0/);
+  assert.match(styleHtml, /@media\(max-width:800px\)\{[^}]*\.pd3i-search-results-head,\.pd3i-search-result-card\{grid-template-columns:1fr;display:grid/);
+  assert.match(styleHtml, /@media\(max-width:800px\)\{[^\n]*\.pd3i-search-table-head\{display:none\}/);
+});
+
 test('new UI baseline has no presentation reset-era markers', () => {
   assert.doesNotMatch(styleHtml, /phase [0-9]+|CANONICAL|Bootstrap|Tailwind|Tabler|legacy|obsolete|hotfix/i);
   assert.doesNotMatch(indexHtml, /data-legacy-section-id|reference-skin/);
