@@ -17,9 +17,7 @@
   <div id="sars-inline-banner" data-zero-reporting-id="zero-reporting-inline-banner" class="hidden" role="status" aria-live="polite"></div>
 
       <div id="pd3i-zero-reporting-week-notice" class="pd3i-zero-reporting-week-notice" role="status" aria-live="polite">
-        <strong>Minggu laporan aktif</strong>
-        <span id="pd3i-zero-reporting-week-notice-text">Memuat minggu epidemiologi yang harus dilaporkan...</span>
-        <a href="#section-settings" data-sidebar-workspace="settings" data-settings-tab="epid-calendar">Buka kalender epidemiologi</a>
+        <strong id="pd3i-zero-reporting-week-notice-text">Memuat minggu epidemiologi...</strong>
       </div>
 
       <form id="sarsForm" class="pd3i-form-section pd3i-zero-reporting-form" data-component="ZeroReportingForm">
@@ -32,7 +30,6 @@
           <div>
             <label for="mingguEpid" class="pd3i-zero-reporting-required">Minggu epidemiologis</label>
             <input type="number" id="mingguEpid" min="1" max="53" value="" required placeholder="Minggu epidemiologi berjalan -1">
-            <div class="pd3i-zero-reporting-help-text hidden" id="mingguEpidHelp" aria-hidden="true">Periode: memuat periode epidemiologi...</div>
           </div>
 
           <div>
@@ -663,17 +660,15 @@
       const year = Number(data.year || fallback.year) || fallback.year;
       const range = String(data.rangeLabel || data.label || `Tahun ${year}, ME ${week}`);
       const input = document.getElementById('mingguEpid');
-      const help = document.getElementById('mingguEpidHelp');
       if (input) {
         input.placeholder = `ME ${week} · ${year}`;
         input.setAttribute('aria-label', `Minggu epidemiologi pelaporan: ME ${week} tahun ${year}`);
         if (!input.value) input.value = String(week);
       }
-      if (help) help.textContent = `Periode: ${range}`;
       const notice = document.getElementById('pd3i-reporting-week-notice-text');
       if (notice) notice.textContent = `Yang harus dilaporkan: ME ${week} tahun ${year} (${range}).`;
       const formNotice = document.getElementById('pd3i-zero-reporting-week-notice-text');
-      if (formNotice) formNotice.textContent = `Yang harus dilaporkan: ME ${week} tahun ${year} (${range}).`;
+      if (formNotice) formNotice.textContent = `ME ${week} tahun ${year}`;
     }
 
     function initSarsEpiInfo_() {

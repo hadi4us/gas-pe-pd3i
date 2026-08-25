@@ -40,3 +40,22 @@
 - Production deployment unchanged. User visual smoke test remains next acceptance gate.
 - Run visual/responsive smoke checks before each Development deployment.
 - Keep `.clasp.json` restored to repository default outside deployment operation.
+## 2026-08-25 — Browser tooling reconciliation and hybrid QA mode
+
+- Browser shared human/tool session recovery stopped by Main Review.
+- Root cause confirmed: Gateway managed browser runs on host, while noVNC/Xvfb live inside sandbox-browser container; host Gateway cannot access sandbox X display.
+- Option 1 sandbox attach route closed: `SUPPORTED_SANDBOX_ATTACH_ROUTE=NO`; no raw CDP follow-up.
+- Rollback state healthy: Gateway active, managed `openclaw` remains headless, no config JSON mutation, no source/dev/prod mutation.
+- Program tooling mode updated: `PROGRAM_TOOLING_MODE=HYBRID_HUMAN_ASSISTED_QA`; `PROGRAM_BLOCKED=NO`; `APPLICATION_PROGRAM_BLOCKED=NO`.
+- Evidence model: source evidence from `ui-dev`; runtime visual evidence from human-controlled noVNC screenshots; runtime interaction evidence from non-destructive human-assisted checks; DOM evidence marked `AVAILABLE` or `NOT_AVAILABLE_TARGET_LIMITATION`.
+- Dashboard `DASH-001` remains fixed on current DEV; do not reimplement. Next: pending hybrid post-deploy validation and Main Post-Deploy Review.
+- Edit reopened after Dashboard: `PAGE=edit`, `PAGE_STATE=DEEP_AUDIT_PENDING`, `EDIT-001=AUDIT_INPUT_NOT_PROVEN`; no speculative fix.
+- Search/UI-009 remains frozen. Production unchanged.
+## 2026-08-25 — Dashboard @176 hybrid QA evidence
+
+- Human noVNC screenshots received for Dashboard PD3I current DEV @176.
+- Runtime visual evidence shows authenticated dashboard loaded after transient session-check screen.
+- Evidence observed: sidebar/topbar visible, Dashboard PD3I active, filters render, MR 2026 data cards render, weekly epidemiology chart renders, regional top lists render, choropleth/hotspot map renders, age/epidemiology distribution panels render, export action visible.
+- No obvious app-owned horizontal overflow in supplied desktop captures; vertical scroll expected for long dashboard.
+- Not fully validated from supplied captures: explicit Back to Workspace click behavior, mobile/tablet breakpoints 900/768/390/360, non-destructive filter interaction.
+- Dashboard state: `POST_DEPLOY_HYBRID_QA=PARTIAL_PASS_WITH_HUMAN_RUNTIME_EVIDENCE`; Main Post-Deploy Review pending remaining breakpoint/action evidence before ACCEPTED.

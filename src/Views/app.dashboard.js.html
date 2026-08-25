@@ -463,20 +463,6 @@
       tahunEl.addEventListener("change", loadDashboard);
     }
 
-    const btnBack = document.getElementById("btn-dashboard-back-to-workspace");
-    if (btnBack && !btnBack.dataset.bound) {
-      btnBack.dataset.bound = "1";
-      btnBack.addEventListener("click", function () {
-        if (typeof openSidebarWorkspace === 'function') {
-          openSidebarWorkspace('overview', { scroll: true, useRoute: true });
-          return;
-        }
-        const target = document.getElementById('section-overview');
-        if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState('overview');
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-
     const btnDashboard = document.getElementById("btn-dashboard");
     if (btnDashboard && !btnDashboard.dataset.bound) {
       btnDashboard.dataset.bound = "1";
