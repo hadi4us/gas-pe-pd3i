@@ -1226,7 +1226,14 @@
               <span class="pd3i-search-summary-pill">${safeEscape(workflowActionLabel)}</span>
             </div>
           </div>`;
-          html += `<div class="pd3i-search-results-wrap pd3i-data-list" data-component="DataTable" data-mobile-mode="card">`;
+          html += `<div class="pd3i-search-results-wrap pd3i-data-list" data-component="DataTable" data-table-model="sirfk" data-mobile-mode="card">
+            <div class="pd3i-search-table-head" role="row">
+              <span role="columnheader">Kasus</span>
+              <span role="columnheader">Wilayah / lahir</span>
+              <span role="columnheader">Status</span>
+              <span role="columnheader">Sampel</span>
+              <span role="columnheader" class="pd3i-search-actions-head">Aksi</span>
+            </div>`;
 
           results.forEach(function(item, index) {
             const recordKeyArg = JSON.stringify(String(item.recordKey || item.recordId || item.epid || ""));
@@ -1260,42 +1267,38 @@
             const statusKasusTone = getStatusTone(statusKasus);
             const statusVerifikasiTone = getStatusTone(statusVerifikasi);
             const sampelTone = getStatusTone(sampelState);
-            html += `<div class="pd3i-search-result-card pd3i-mobile-list-card" data-row-action="open-case">
-              <div class="pd3i-search-result-leading">
+            html += `<div class="pd3i-search-result-card pd3i-mobile-list-card" role="row" data-row-action="open-case">
+              <div class="pd3i-search-result-case" role="cell">
                 <span class="pd3i-search-result-index">${startNumber + index}</span>
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="pd3i-search-result-title-row">
-                  <div>
-                    <div class="pd3i-search-result-name">${safeEscape(item.nama || "-")}</div>
-                    <div class="pd3i-search-result-idline">${safeEscape(item.epid || item.recordId || "-")}</div>
-                  </div>
-                  <span class="pd3i-search-result-dx">${safeEscape(resolvedDx || '-')}</span>
-                </div>
-                <div class="pd3i-search-result-meta">
-                  <span class="pd3i-search-result-badge"><i class="fas fa-cake-candles"></i> ${safeEscape(normalizeListDate(item.tanggalLahir))}</span>
-                  <span class="pd3i-search-result-badge"><i class="fas fa-location-dot"></i> ${safeEscape([item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || "-")}</span>
-                  ${item.orangTua ? `<span class="pd3i-search-result-badge"><i class="fas fa-user-group"></i> ${safeEscape(item.orangTua)}</span>` : ''}
-                </div>
-                <div class="pd3i-search-result-meta pd3i-search-result-meta-secondary">
-                  <span class="pd3i-search-result-badge is-status ${safeEscape(statusKasusTone)}"><i class="fas fa-list-check"></i> ${safeEscape(statusKasus)}</span>
-                  <span class="pd3i-search-result-badge is-verify ${safeEscape(statusVerifikasiTone)}"><i class="fas fa-id-card-clip"></i> ${safeEscape(statusVerifikasi)}</span>
-                  <span class="pd3i-search-result-badge is-sample ${safeEscape(sampelTone)}"><i class="fas fa-vials"></i> ${safeEscape(sampelState)}</span>
-                </div>
-                <div class="pd3i-search-result-copy mt-2">
-                  ${item.alamat ? safeEscape(item.alamat) : "Alamat belum tersedia"}
+                <div class="min-w-0">
+                  <div class="pd3i-search-result-name">${safeEscape(item.nama || "-")}</div>
+                  <div class="pd3i-search-result-idline">${safeEscape(item.epid || item.recordId || "-")} · ${safeEscape(resolvedDx || '-')}</div>
+                  ${item.orangTua ? `<div class="pd3i-search-result-subline">Ortu/Wali: ${safeEscape(item.orangTua)}</div>` : ''}
                 </div>
               </div>
-              <div class="pd3i-search-result-cta-wrap">
-                <div class="pd3i-search-result-action-label">Tindak lanjut</div>
+              <div class="pd3i-search-result-location" role="cell">
+                <span class="pd3i-mobile-cell-label">Wilayah / lahir</span>
+                <strong>${safeEscape([item.kecamatan, item.kelurahan].filter(Boolean).join(' / ') || "-")}</strong>
+                <span>${safeEscape(normalizeListDate(item.tanggalLahir))}</span>
+                <small>${item.alamat ? safeEscape(item.alamat) : "Alamat belum tersedia"}</small>
+              </div>
+              <div class="pd3i-search-result-status" role="cell">
+                <span class="pd3i-mobile-cell-label">Status</span>
+                <span class="pd3i-search-result-badge is-status ${safeEscape(statusKasusTone)}">${safeEscape(statusKasus)}</span>
+                <span class="pd3i-search-result-badge is-verify ${safeEscape(statusVerifikasiTone)}">${safeEscape(statusVerifikasi)}</span>
+              </div>
+              <div class="pd3i-search-result-sample" role="cell">
+                <span class="pd3i-mobile-cell-label">Sampel</span>
+                <span class="pd3i-search-result-badge is-sample ${safeEscape(sampelTone)}">${safeEscape(sampelState)}</span>
+              </div>
+              <div class="pd3i-search-result-cta-wrap" role="cell">
+                <div class="pd3i-search-result-action-label">Aksi</div>
                 <!-- Legacy regression anchor: class="pd3i-search-result-action is-edit"; pd3i-search-result-action is-edit pd3i-action-btn is-secondary; isViewerMode ? 'Buka / Lihat' : 'Edit' -->
-                <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(caseActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true })'>
-                  <i class="fas ${isViewerMode ? 'fa-eye' : 'fa-arrow-up-right-from-square'}"></i> ${safeEscape(caseActionLabel)}
-                </button>
+                <button type="button" class="pd3i-search-result-action is-edit pd3i-action-btn is-primary" aria-label="${safeEscape(caseActionLabel)} untuk ${safeEscape(item.nama || item.epid || item.recordId || 'kasus ini')}" onclick='window._loadRecordFromSearch_ && window._loadRecordFromSearch_(${recordKeyArg}, ${dxArg}, { triggerButton: this, workspace: &quot;edit&quot;, workflowIntent: &quot;section-pelapor&quot;, skipWorkflowInboxRefresh: true })'>${safeEscape(caseActionLabel)}</button>
                 ${printUrl
-                  ? `<button type="button" class="pd3i-search-result-action pd3i-action-btn is-secondary" onclick='downloadPePdf_(${dxArg}, ${JSON.stringify(String(item.epid || ''))}, this, ${JSON.stringify(printRecordKey)})'><i class="fas fa-file-arrow-down"></i> Download Dokumen PE</button>`
-                  : `<span class="pd3i-search-result-action pd3i-action-btn is-secondary is-disabled" aria-disabled="true" title="Dokumen PE belum tersedia"><i class="fas fa-file-circle-xmark"></i> Dokumen PE belum tersedia <small>(Nomor EPID belum tersedia)</small></span>`}
-                ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger pd3i-action-btn" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'><i class="fas fa-trash-can"></i> Hapus</button>` : ''}
+                  ? `<button type="button" class="pd3i-search-result-action pd3i-action-btn is-secondary" onclick='downloadPePdf_(${dxArg}, ${JSON.stringify(String(item.epid || ''))}, this, ${JSON.stringify(printRecordKey)})'>Download PE</button>`
+                  : `<span class="pd3i-search-result-action pd3i-action-btn is-secondary is-disabled" aria-disabled="true" title="Dokumen PE belum tersedia">PE belum tersedia <small>(Nomor EPID belum tersedia)</small></span>`}
+                ${canDeleteRecord ? `<button type="button" class="pd3i-search-result-action is-danger pd3i-action-btn" title="Hapus data kasus ini" onclick='deleteCaseRecordFromList(${recordKeyArg}, ${dxArg}, this)'>Hapus</button>` : ''}
               </div>
             </div>`;
           });
