@@ -29,7 +29,10 @@ test('new UI baseline keeps runtime state and action hooks', () => {
 
 test('search UI keeps native responsive grid and list-card results', () => {
   assert.match(styleHtml, /#section-search-shell \.pd3i-search-filter-grid\{[^}]*display:grid[^}]*grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,220px\),1fr\)\)/);
-  assert.match(styleHtml, /\.pd3i-search-result-card\{[^}]*grid-template-columns:minmax\(210px,1\.15fr\)[^}]*minmax\(190px,\.85fr\)[^}]*min-width:0/);
+  assert.match(styleHtml, /\.pd3i-search-result-card\{[^}]*grid-template-columns:minmax\(210px,1\.15fr\)[^}]*minmax\(190px,\.85fr\)[^}]*min-width:0[^}]*padding:14px 16px/);
+  assert.match(styleHtml, /\.pd3i-search-result-main\{display:grid;gap:4px;min-width:0\}/);
+  assert.match(styleHtml, /@media\(max-width:900px\)\{[^}]*\.pd3i-search-result-card\{grid-template-columns:minmax\(0,1\.1fr\) minmax\(0,\.9fr\)[^}]*padding:16px/);
+  assert.match(styleHtml, /@media\(max-width:900px\)[\s\S]*\.pd3i-search-result-location,\.pd3i-search-result-status,\.pd3i-search-result-sample\{padding-top:8px;border-top:1px solid #f1f5f9\}/);
   assert.match(styleHtml, /@media\(max-width:800px\)\{[^}]*#section-search-shell \.pd3i-search-filter-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(styleHtml, /@media\(max-width:560px\)\{[^\n]*#section-search-shell \.pd3i-search-filter-grid\{grid-template-columns:minmax\(0,1fr\)/);
   assert.doesNotMatch(searchInitJs, /data-component="DataTable" data-table-model="sirfk"/);
@@ -46,6 +49,7 @@ test('new UI baseline has no presentation reset-era markers', () => {
 test('search touched decorative icons are hidden from accessibility tree', () => {
   assert.match(read('src/Views/workspace_search.html'), /<i class="fas fa-filter" aria-hidden="true"><\/i> Terapkan Filter/);
   assert.match(read('src/Views/workspace_search.html'), /<i class="fas fa-filter-circle-xmark" aria-hidden="true"><\/i> Reset Filter/);
+  assert.match(styleHtml, /#section-search-shell #btn-search-reset\{min-height:40px;padding:9px 13px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#334155;box-shadow:none\}/);
   assert.match(appJs, /<i class="fas fa-chevron-left" aria-hidden="true"><\/i> Sebelumnya/);
   assert.match(appJs, /Berikutnya <i class="fas fa-chevron-right" aria-hidden="true"><\/i>/);
 });

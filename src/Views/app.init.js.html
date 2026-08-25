@@ -1264,7 +1264,7 @@
             html += `<div class="pd3i-search-result-card pd3i-mobile-list-card" role="row" data-row-action="open-case">
               <div class="pd3i-search-result-case" role="cell">
                 <span class="pd3i-search-result-index">${startNumber + index}</span>
-                <div class="min-w-0">
+                <div class="pd3i-search-result-main">
                   <div class="pd3i-search-result-name">${safeEscape(item.nama || "-")}</div>
                   <div class="pd3i-search-result-idline">${safeEscape(item.epid || item.recordId || "-")} · ${safeEscape(resolvedDx || '-')}</div>
                   ${item.orangTua ? `<div class="pd3i-search-result-subline">Ortu/Wali: ${safeEscape(item.orangTua)}</div>` : ''}
