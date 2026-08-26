@@ -19,17 +19,25 @@
           </div>
         </div>
         <div class="pd3i-dashboard-toolbar">
-          <select id="dashboard-dx" class="pd3i-shell-select pd3i-dashboard-filter">
-            <option value="MR">Campak/Rubella (MR)</option>
-            <option value="DIF">Difteri (DIF)</option>
-            <option value="PERT">Pertusis (PERT)</option>
-            <option value="TN">Tetanus Neonatorum (TN)</option>
-            <option value="AFP">AFP</option>
-          </select>
-          <select id="dashboard-tahun" class="pd3i-shell-select pd3i-dashboard-filter pd3i-dashboard-filter-year"></select>
-          <button type="button" id="btn-load-dashboard" class="pd3i-primary-button pd3i-dashboard-load">
-            <i class="fas fa-sync mr-1"></i> Muat data
-          </button>
+          <div class="pd3i-dashboard-field">
+            <label for="dashboard-dx" class="pd3i-dashboard-field-label">Diagnosis</label>
+            <select id="dashboard-dx" class="pd3i-shell-select pd3i-dashboard-filter">
+              <option value="MR">Campak/Rubella (MR)</option>
+              <option value="DIF">Difteri (DIF)</option>
+              <option value="PERT">Pertusis (PERT)</option>
+              <option value="TN">Tetanus Neonatorum (TN)</option>
+              <option value="AFP">AFP</option>
+            </select>
+          </div>
+          <div class="pd3i-dashboard-field pd3i-dashboard-field-year">
+            <label for="dashboard-tahun" class="pd3i-dashboard-field-label">Tahun</label>
+            <select id="dashboard-tahun" class="pd3i-shell-select pd3i-dashboard-filter pd3i-dashboard-filter-year"></select>
+          </div>
+          <div class="pd3i-dashboard-action-field">
+            <button type="button" id="btn-load-dashboard" class="pd3i-primary-button pd3i-dashboard-load">
+              <i class="fas fa-sync mr-1"></i> Muat data
+            </button>
+          </div>
         </div>
       </div>
 

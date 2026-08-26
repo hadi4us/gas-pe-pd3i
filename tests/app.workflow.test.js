@@ -657,6 +657,43 @@ test('Beranda summary scans all rows instead of stopping after first valid recor
   assert.doesNotMatch(dashboardJs, /if \(summaryOnly\) \{[\s\S]*?return;[\s\S]*?\}\n\n      const item = \{/);
 });
 
+test('dashboard visual contract keeps scoped recovery selectors and toolbar wrappers', () => {
+  const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
+  const dashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_dashboard.html'), 'utf8');
+  const scopedSelectors = [
+    '#section-dashboard .pd3i-dashboard-toolbar',
+    '#section-dashboard .pd3i-dashboard-field',
+    '#section-dashboard .pd3i-dashboard-field-year',
+    '#section-dashboard .pd3i-dashboard-action-field',
+    '#section-dashboard .pd3i-dashboard-field-label',
+    '#section-dashboard .pd3i-dashboard-case-kpi-compact',
+    '#section-dashboard .pd3i-dashboard-metric-card',
+    '#section-dashboard .pd3i-dashboard-metric-card.tone-sky',
+    '#section-dashboard .pd3i-dashboard-metric-card.tone-amber',
+    '#section-dashboard .pd3i-dashboard-metric-card.tone-emerald',
+    '#section-dashboard .pd3i-dashboard-metric-card.tone-rose',
+    '#section-dashboard .pd3i-dashboard-region-item',
+    '#section-dashboard .pd3i-dashboard-drilldown-item',
+    '#section-dashboard #chart-tren-bulanan',
+    '#section-dashboard #chart-tren-bulanan > .pd3i-epi-curve-fallback',
+    '#section-dashboard #chart-tren-bulanan .pd3i-epi-curve-svg',
+    '#section-dashboard .pd3i-dashboard-age-card',
+    '#section-dashboard .pd3i-dashboard-age-card .pd3i-dashboard-month-row',
+    '#section-dashboard .w-full',
+    '#section-dashboard .h-80'
+  ];
+  for (const selector of scopedSelectors) assert.ok(styleHtml.includes(selector), selector);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-case-kpi-compact \{[^}]*grid-template-columns: repeat\(auto-fit,minmax\(160px,1fr\)\)/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-metric-card \{[^}]*border-top: 3px solid #3b82f6/);
+  assert.match(styleHtml, /#section-dashboard #chart-tren-bulanan \{[^}]*min-height: 320px/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-drilldown-item \{[^}]*grid-template-columns: minmax\(0,1fr\) auto/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-age-card \.pd3i-dashboard-month-row \{[^}]*grid-template-columns:minmax\(96px,150px\) minmax\(80px,1fr\) minmax\(72px,auto\)/);
+  assert.match(dashboardHtml, /<div class="pd3i-dashboard-field">[\s\S]*?<label for="dashboard-dx" class="pd3i-dashboard-field-label">Diagnosis<\/label>[\s\S]*?<select id="dashboard-dx"/);
+  assert.match(dashboardHtml, /<div class="pd3i-dashboard-field pd3i-dashboard-field-year">[\s\S]*?<label for="dashboard-tahun" class="pd3i-dashboard-field-label">Tahun<\/label>[\s\S]*?<select id="dashboard-tahun"/);
+  assert.match(dashboardHtml, /<div class="pd3i-dashboard-action-field">[\s\S]*?<button type="button" id="btn-load-dashboard"/);
+  assert.doesNotMatch(dashboardHtml, /btn-dashboard-back-to-workspace/);
+});
+
 test('production client logs do not leak captcha answers or noisy workflow debug data', () => {
   const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
   assert.doesNotMatch(utilsHtml, /console\.log\(["'](?:Login|PIN) captcha:/);
