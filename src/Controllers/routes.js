@@ -442,7 +442,38 @@ function getVerificationRecord(dx, recordKey, token) {
   return getRecordByKey(dx, recordKey, token);
 }
 
+function _validateVerificationDecisionPayload_(token, payload) {
+  payload = payload || {};
+  const dx = String(payload.dx || '').trim().toUpperCase();
+  const recordId = String(payload['ID Registrasi Kasus'] || '').trim();
+  if (!dx || !recordId) throw new Error('Identitas kasus wajib diisi sebelum verifikasi.');
+  const existing = getRecordByKey(dx, recordId, token);
+  if (!existing) throw new Error('Data kasus tidak ditemukan. Muat ulang dari daftar verifikasi sebelum menyimpan.');
+
+  const incomingEpid = String(payload['Nomor EPID'] || '').trim();
+  if (incomingEpid) {
+    const epidRecord = getRecordByKey(dx, incomingEpid, token);
+    const epidRecordId = String((epidRecord && epidRecord['ID Registrasi Kasus']) || '').trim();
+    if (epidRecordId && epidRecordId !== recordId) {
+      throw new Error('Nomor EPID sudah dipakai record lain. Muat ulang rekomendasi EPID sebelum menyimpan verifikasi.');
+    }
+  }
+
+  const status = _normalizeVerificationStatus_(payload['Status Verifikasi EPID']);
+  if (status !== 'TERVERIFIKASI' && status !== 'PERLU REVISI' && status !== 'DITOLAK') {
+    throw new Error('Status Verifikasi EPID wajib Terverifikasi, Perlu Revisi, atau Ditolak.');
+  }
+  if (status === 'TERVERIFIKASI') {
+    ['Tanggal Verifikasi EPID', 'Petugas Verifikator', 'Nomor EPID'].forEach(function(field) {
+      if (!String(payload[field] || '').trim()) throw new Error(field + ' wajib diisi saat kasus Terverifikasi.');
+    });
+  } else if (!String(payload['Catatan Verifikasi EPID'] || '').trim()) {
+    throw new Error('Catatan Verifikasi EPID wajib diisi saat kasus Perlu Revisi atau Ditolak.');
+  }
+}
+
 function saveVerificationDecision(token, payload) {
+  _validateVerificationDecisionPayload_(token, payload);
   return _saveDedicatedWorkflowPayload_(token, payload, 'section-verifikasi');
 }
 

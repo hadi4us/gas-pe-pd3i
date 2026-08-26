@@ -113,6 +113,20 @@ test('dynamic table serialization sanitizes nested string cells before JSON stor
   assert.match(dataJs, /val = sanitizeStructuredValueForSheet_\(val, h\);[\s\S]*?val = JSON\.stringify\(val\);/);
 });
 
+
+test('verification decision backend validates record identity, EPID collision, and final status requirements', () => {
+  assert.match(routesJs, /function _validateVerificationDecisionPayload_\(token, payload\)/);
+  assert.match(routesJs, /const recordId = String\(payload\['ID Registrasi Kasus'\] \|\| ''\)\.trim\(\)/);
+  assert.match(routesJs, /const existing = getRecordByKey\(dx, recordId, token\)/);
+  assert.match(routesJs, /if \(!existing\) throw new Error\('Data kasus tidak ditemukan/);
+  assert.match(routesJs, /const epidRecord = getRecordByKey\(dx, incomingEpid, token\)/);
+  assert.match(routesJs, /epidRecordId && epidRecordId !== recordId/);
+  assert.match(routesJs, /Status Verifikasi EPID wajib Terverifikasi, Perlu Revisi, atau Ditolak/);
+  assert.match(routesJs, /\['Tanggal Verifikasi EPID', 'Petugas Verifikator', 'Nomor EPID'\]\.forEach/);
+  assert.match(routesJs, /Catatan Verifikasi EPID'\] \|\| ''\)\.trim\(\)\) \{\s*throw new Error\('Catatan Verifikasi EPID wajib diisi/);
+  assert.match(routesJs, /function saveVerificationDecision\(token, payload\) \{\s*_validateVerificationDecisionPayload_\(token, payload\)/);
+});
+
 test('workflow stage saves follow queue-first blueprint and only offer PDF after EPID verification', () => {
   assert.match(routesJs, /notifyWaha: true/);
   assert.match(routesJs, /const shouldNotifyWaha = policy\.notifyWaha && !\(isSameFingerprint && prevWahaStatus === "SENT"\)/);
@@ -1114,6 +1128,14 @@ test('input submit uses one click path only', () => {
   assert.match(inputFormHtml, /id="btn-submit-input"[^>]*onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK/);
   assert.doesNotMatch(appInitHtmlRaw, /btnSubmitInput\.addEventListener\('click'/);
   assert.match(appInitHtmlRaw, /btn-submit-input uses inline workflow handler; do not bind second click handler/);
+});
+
+test('sampel and status submit use one click path only', () => {
+  assert.match(workspaceSampelHtml, /id="btn-submit-sampel"[^>]*onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_status_form.html'), 'utf8'), /id="btn-submit-status"[^>]*onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.match(appInitHtmlRaw, /Workflow submit buttons use inline __PD3I_SUBMIT_WORKFLOW_CLICK only/);
+  assert.doesNotMatch(appInitHtmlRaw, /btnSubmitSampel\.addEventListener\('click'/);
+  assert.doesNotMatch(appInitHtmlRaw, /btnSubmitStatus\.addEventListener\('click'/);
 });
 
 test('required long-select proxy keeps canonical select as value source', () => {

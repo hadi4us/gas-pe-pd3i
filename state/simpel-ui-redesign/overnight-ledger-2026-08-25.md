@@ -231,3 +231,48 @@ AUTO_DEV_DEPLOY=PAUSED_WORKTREE_RECONCILIATION
 DEV_DEPLOY=PAUSED
 PROD_MUTATION=NO
 REASON=audit worktree/integration source before any further Dev deploy or rollback
+
+## Page: verifikasi — 2026-08-26 12:59 UTC cron progress
+MAIN_AUDIT_REVIEW=APPROVED_WITH_SCOPE
+APPROVED_FINDINGS=
+- VERIF-BE-001 P0 EPID collision can update wrong row. Scope: validate by ID Registrasi Kasus first, reject incoming Nomor EPID owned by different record before save.
+- VERIF-BE-002 P1 backend verification business rules missing. Scope: require valid Status Verifikasi EPID; require Tanggal Verifikasi EPID, Petugas Verifikator, Nomor EPID when Terverifikasi; require Catatan Verifikasi EPID when Perlu Revisi/Ditolak.
+- VERIF-BE-003 P1 queue/read admin-only contract already enforced for write; read contract needs source review before mutation.
+DEFERRED_FINDINGS=
+- VERIF-001..005 UI source findings remain pending specialist implementation/review.
+- VERIF-BE-004 role aliases deferred pending role matrix decision.
+SOURCE_FIX=PARTIAL_BACKEND_GUARD_LOCAL_ONLY
+TESTS=npm test PASS 107/107
+GITHUB_PUSH=NO
+DEV_DEPLOY=NO
+PROD_MUTATION=NO
+NEXT_ACTION=add focused regression for verification guard, finish verifikasi candidate review, then only dev deploy after full gates pass.
+
+## Page: verifikasi — 2026-08-26 13:59 UTC cron progress
+MAIN_CANDIDATE_REVIEW=IN_PROGRESS
+SOURCE_FIX=PARTIAL_BACKEND_GUARD_PLUS_REGRESSION_LOCAL_ONLY
+APPROVED_IMPLEMENTED=VERIF-BE-001,VERIF-BE-002
+PENDING_REVIEW=VERIF-BE-003 read contract, VERIF-001..005 UI source findings
+TESTS=npm test PASS 108/108; git diff --check PASS
+TEST_WEAKENING=NO
+EXISTING_TEST_REMOVAL=NO
+SECURITY_TESTS_PRESERVED=YES
+GITHUB_PUSH=NO
+DEV_DEPLOY=NO
+PROD_MUTATION=NO
+NEXT_ACTION=finish verifikasi source review/candidate review; deploy Dev only after all quality gates pass.
+
+## Page: sampel/status — 2026-08-26 15:03 UTC cron progress
+SOURCE_FIRST_AUDIT=LOCAL_SOURCE_REVIEW
+MAIN_CANDIDATE_REVIEW=IN_PROGRESS
+FINDING_IMPLEMENTED=
+- SAMPLESTATUS-001 P1 sampel/status submit buttons had inline __PD3I_SUBMIT_WORKFLOW_CLICK plus explicit addEventListener submit bindings, unlike input/verifikasi single-path pattern. Scope: remove duplicate listeners; keep inline handler only; add regression.
+- SAMPLESTATUS-002 P2 sampel/status inline feedback targets missing. Scope: add workflow-submit-status-sampel/status live regions and route getWorkflowSubmitStatusElement.
+TESTS=npm test PASS 109/109; git diff --check PASS
+TEST_WEAKENING=NO
+EXISTING_TEST_REMOVAL=NO
+SECURITY_TESTS_PRESERVED=YES
+GITHUB_PUSH=NO
+DEV_DEPLOY=NO
+PROD_MUTATION=NO
+NEXT_ACTION=finish sampel/status source review, decide if backend validators needed, then candidate review before any dev deploy.

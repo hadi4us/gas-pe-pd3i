@@ -1769,6 +1769,8 @@
         const submitMode = normalizeSidebarWorkspace(mode || 'search');
         if (submitMode === 'input') return document.getElementById('workflow-submit-status-input');
         if (submitMode === 'verifikasi') return document.getElementById('workflow-submit-status-verifikasi');
+        if (submitMode === 'sampel') return document.getElementById('workflow-submit-status-sampel');
+        if (submitMode === 'status') return document.getElementById('workflow-submit-status-status');
         return null;
       }
 
@@ -2536,18 +2538,8 @@
       // btn-submit-input uses inline workflow handler; do not bind second click handler.
       // Verifikasi button already uses inline handler in workspace_verifikasi_form.html.
       // Avoid duplicate listeners that race and leave button looking unresponsive.
-      if (btnSubmitSampel && !btnSubmitSampel.dataset.boundSubmit) {
-        btnSubmitSampel.dataset.boundSubmit = '1';
-        btnSubmitSampel.addEventListener('click', function() {
-          safeHandleMainFormSubmit('sampel');
-        });
-      }
-      if (btnSubmitStatus && !btnSubmitStatus.dataset.boundSubmit) {
-        btnSubmitStatus.dataset.boundSubmit = '1';
-        btnSubmitStatus.addEventListener('click', function() {
-          safeHandleMainFormSubmit('status');
-        });
-      }
+      // Workflow submit buttons use inline __PD3I_SUBMIT_WORKFLOW_CLICK only.
+      // Do not bind second listeners; double submit races leave stale loading/error state.
     }
 
     if (document.readyState === "loading") {
