@@ -102,3 +102,16 @@ FINDINGS=
 - INPUT-BE-004 P2 input GET shell has no server auth gate; save auth exists. Scope: verify boot overlay/logged-out controls; backend change only if policy requires server render gate.
 REQUIRED_SECURITY_CHECKS=viewer_denied,missing_expired_token_session_error,forged_epid_admin_fields_stripped,pending_status_blank_epid,input_audit_fields,notification_failure_non_blocking
 NEXT_ACTION=wait_ui_source_audit_then_MAIN_AUDIT_REVIEW
+
+## Deployment automation policy — 2026-08-26 08:29 WIB / 2026-08-26 00:29 UTC
+AUTO_GITHUB_PUSH=YES
+AUTO_DEV_DEPLOY=YES
+AUTO_PROD_DEPLOY=NO
+PROD_ALLOWED=NO
+PROD_MUTATION=NO
+DEV_APPROVAL_REQUIRED=NO_AFTER_GATES_PASS
+PROD_APPROVAL_REQUIRED=YES_EXPLICIT
+DEV_GATE_SEQUENCE=MAIN_CANDIDATE_REVIEW=APPROVED -> integration current release HEAD -> FULL_TESTS=PASS -> TEST_WEAKENING=NO -> SECURITY_TESTS_PRESERVED=YES -> push GitHub -> update existing DEV deployment -> DEV_RELEASE_PARITY=PASS -> next page/runtime QA
+DEV_GATE_FAILURE_ACTION=NO_DEPLOY_RETURN_TO_SPECIALIST_REWORK
+INPUT_CURRENT_STAGE=MAIN_AUDIT_REVIEW_PENDING
+INPUT_NEXT_ACTION=main review ui-dev source audit + backend-dev contract audit; freeze implementation scope
