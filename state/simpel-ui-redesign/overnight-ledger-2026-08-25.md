@@ -77,3 +77,17 @@ CURRENT_PAGE=input
 INPUT_WORKFLOW=ui-dev source audit -> backend-dev contract audit -> MAIN_AUDIT_REVIEW -> freeze findings -> implementation -> MAIN_CANDIDATE_REVIEW -> tests
 DEV_WORKFLOW_ALLOWED=YES_AFTER_MAIN_REVIEW_AND_FULL_TESTS_PASS
 PROD_MUTATION=NO
+
+## Page: input — UI_SOURCE_AUDIT
+TIME_LOCAL_WIB=2026-08-26 07:20
+TIME_UTC=2026-08-26 00:20
+SOURCE_AUDIT=SOURCE_READY_PENDING_RUNTIME_QA
+UI_DEV_REVIEW=COMPLETE
+FINDINGS=
+- INPUT-001 P1 required long selects hidden behind visible proxy input; evidence src/Views/app.js.html long select enhancer. Scope: preserve native required behavior or mirror required/invalid/focus to proxy.
+- INPUT-002 P2 wizard nav generated/listened then hidden. Scope: remove dead wizard nav/listeners if all-blocks-visible final.
+- INPUT-003 P2 input shell is div with form-only attrs. Scope: convert to form or remove misleading attrs.
+- INPUT-004 P2 duplicate visibility control paths. Scope: make applySidebarWorkspaceLayout single owner; syncDiagnosisSelectorUi copy-only.
+DEFERRED_RUNTIME_QA=input page browser acceptance, diagnosis selector flow, long select keyboard/a11y, mobile sticky action panel.
+NEXT_ACTION=wait backend contract audit then MAIN_AUDIT_REVIEW
+PROD_MUTATION=NO
