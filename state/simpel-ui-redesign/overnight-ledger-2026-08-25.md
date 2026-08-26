@@ -115,3 +115,20 @@ DEV_GATE_SEQUENCE=MAIN_CANDIDATE_REVIEW=APPROVED -> integration current release 
 DEV_GATE_FAILURE_ACTION=NO_DEPLOY_RETURN_TO_SPECIALIST_REWORK
 INPUT_CURRENT_STAGE=MAIN_AUDIT_REVIEW_PENDING
 INPUT_NEXT_ACTION=main review ui-dev source audit + backend-dev contract audit; freeze implementation scope
+
+## Page: input — MAIN_AUDIT_REVIEW
+MAIN_REVIEW=APPROVED_WITH_SCOPE
+APPROVED_FINDINGS=
+- INPUT-001 P1 required long selects hidden behind proxy. Scope: for required selects, keep required semantics visible/focusable or mirror required/invalid/focus to proxy without changing choices data.
+- INPUT-BE-001 P1 createInitialCase can update existing record when payload carries existing identifiers. Scope: reject record identifiers on createInitialCase; keep saveInitialReportEdit as edit path.
+- INPUT-BE-002 P1 duplicate input submit triggers. Scope: keep one submit path; add regression if possible.
+- INPUT-BE-003 P2 dx backend allowlist missing. Scope: allow only MR/DIF/PERT/TN/AFP before save.
+DEFERRED_FINDINGS=
+- INPUT-002 wizard nav dead code: cleanup later, non-blocking.
+- INPUT-003 div form attrs: cleanup later, non-blocking.
+- INPUT-004 duplicate visibility owners: defer unless source fix touches same area.
+- INPUT-BE-004 GET shell auth gate: save auth is hard gate; runtime boot overlay check required, no server render change now.
+IMPLEMENTATION_SCOPE_FROZEN=YES
+MAIN_CANDIDATE_REVIEW=PENDING
+PROD_MUTATION=NO
+NEXT_ACTION=implement approved input findings, run full tests, then auto push/dev deploy if gates pass
