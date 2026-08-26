@@ -225,3 +225,9 @@ FINDINGS=
 MAIN_REVIEW=PENDING
 BLOCKER=VERIF-BE-001_P0_until_main_review_and_fix
 PROD_MUTATION=NO
+
+## Deployment pause — 2026-08-26 08:57 WIB / 2026-08-26 00:57 UTC
+AUTO_DEV_DEPLOY=PAUSED_WORKTREE_RECONCILIATION
+DEV_DEPLOY=PAUSED
+PROD_MUTATION=NO
+REASON=audit worktree/integration source before any further Dev deploy or rollback
