@@ -2533,13 +2533,7 @@
         return false;
       };
 
-      // btn-submit uses inline workflow handler; do not bind second click handler.
-      if (btnSubmitInput && !btnSubmitInput.dataset.boundSubmit) {
-        btnSubmitInput.dataset.boundSubmit = '1';
-        btnSubmitInput.addEventListener('click', function() {
-          safeHandleMainFormSubmit('input');
-        });
-      }
+      // btn-submit-input uses inline workflow handler; do not bind second click handler.
       // Verifikasi button already uses inline handler in workspace_verifikasi_form.html.
       // Avoid duplicate listeners that race and leave button looking unresponsive.
       if (btnSubmitSampel && !btnSubmitSampel.dataset.boundSubmit) {

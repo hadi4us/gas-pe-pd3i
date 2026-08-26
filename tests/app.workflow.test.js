@@ -1065,3 +1065,22 @@ test('MR rejects duplicate campak case when NIK and fever onset date match', () 
   assert.match(dataJs, /if \(dx === "MR" && rowIndex === -1\) \{\s*_assertNoDuplicateMrNikDemam_\(sheet, headers, data, recordId, epidValue\);\s*\}/);
   assert.match(dataJs, /Input ditolak: kasus campak dengan NIK dan tanggal mulai demam yang sama sudah ada\. Kasus dianggap duplikat\./);
 });
+
+
+test('input create path is create-only and diagnosis allowlisted', () => {
+  assert.match(routesJs, /function createInitialCase\(token, payload\) \{[\s\S]*?\['ID Registrasi Kasus', 'RAW_ROW_NUMBER', 'Nomor EPID', 'recordKey', 'recordId'\]\.forEach[\s\S]*?Input awal harus membuat kasus baru/);
+  assert.match(routesJs, /if \(\["MR", "DIF", "PERT", "TN", "AFP"\]\.indexOf\(dx\) === -1\) \{\s*return \{ status: "error", message: "dx tidak valid\." \};\s*\}/);
+});
+
+test('input submit uses one click path only', () => {
+  const inputFormHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_input_form.html'), 'utf8');
+  assert.match(inputFormHtml, /id="btn-submit-input"[^>]*onclick="return window.__PD3I_SUBMIT_WORKFLOW_CLICK/);
+  assert.doesNotMatch(appInitHtmlRaw, /btnSubmitInput\.addEventListener\('click'/);
+  assert.match(appInitHtmlRaw, /btn-submit-input uses inline workflow handler; do not bind second click handler/);
+});
+
+test('required long-select proxy keeps required and invalid state visible', () => {
+  assert.match(appHtmlRaw, /if \(select\.required\) \{\s*input\.required = true;\s*input\.setAttribute\('aria-required', 'true'\);\s*\}/);
+  assert.match(appHtmlRaw, /if \(select\.required && !select\.value\) input\.setCustomValidity\('Pilih opsi dari daftar\.'\);/);
+  assert.match(appHtmlRaw, /if \(select\.required\) input\.setCustomValidity\('Pilih opsi dari daftar\.'\);/);
+});

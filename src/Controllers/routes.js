@@ -230,6 +230,10 @@ function _saveDedicatedWorkflowPayload_(token, payload, workflowStage, extra) {
 }
 
 function createInitialCase(token, payload) {
+  payload = Object.assign({}, payload || {});
+  ['ID Registrasi Kasus', 'RAW_ROW_NUMBER', 'Nomor EPID', 'recordKey', 'recordId'].forEach(function(field) {
+    if (String(payload[field] || '').trim()) throw new Error('Input awal harus membuat kasus baru. Gunakan Edit Inputan untuk memperbarui data.');
+  });
   return _saveDedicatedWorkflowPayload_(token, payload, 'section-pelapor', { 'Status Verifikasi EPID': String((payload && payload['Status Verifikasi EPID']) || '').trim() || 'Pending' });
 }
 
@@ -3110,6 +3114,9 @@ function saveFormPayload_(data) {
   const dx = String(data.dx || "").trim().toUpperCase();
   if (!dx) {
     return { status: "error", message: "dx wajib diisi." };
+  }
+  if (["MR", "DIF", "PERT", "TN", "AFP"].indexOf(dx) === -1) {
+    return { status: "error", message: "dx tidak valid." };
   }
 
   data = _sanitizeInitialReportEditPayload_(dx, data, sess);

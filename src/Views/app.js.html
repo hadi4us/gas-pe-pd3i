@@ -4428,6 +4428,10 @@
       input.setAttribute('aria-label', 'Saring pilihan ' + String(select.id || 'dropdown'));
       input.setAttribute('autocomplete', 'off');
       input.setAttribute('list', datalistId);
+      if (select.required) {
+        input.required = true;
+        input.setAttribute('aria-required', 'true');
+      }
 
       // Hide the original select (use important to override CSS display: block !important)
       select.style.setProperty('display', 'none', 'important');
@@ -4453,8 +4457,10 @@
         const selectedOpt = select.options[select.selectedIndex];
         if (selectedOpt && selectedOpt.value) {
           input.value = selectedOpt.textContent.trim();
+          input.setCustomValidity('');
         } else {
           input.value = '';
+          if (select.required) input.setCustomValidity('Pilih opsi dari daftar.');
         }
       }
       syncInputFromSelect();
@@ -4471,15 +4477,19 @@
         }
         if (foundOpt) {
           select.value = foundOpt.value;
+          input.setCustomValidity('');
         } else {
           select.value = '';
+          if (select.required && val) input.setCustomValidity('Pilih opsi dari daftar.');
         }
+        if (select.required && !select.value) input.setCustomValidity('Pilih opsi dari daftar.');
         select.dispatchEvent(new Event('change', { bubbles: true }));
       });
 
       input.addEventListener('input', function() {
         if (!input.value.trim()) {
           select.value = '';
+          if (select.required) input.setCustomValidity('Pilih opsi dari daftar.');
           select.dispatchEvent(new Event('change', { bubbles: true }));
         }
       });
