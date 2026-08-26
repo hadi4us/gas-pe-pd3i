@@ -1079,8 +1079,14 @@ test('input submit uses one click path only', () => {
   assert.match(appInitHtmlRaw, /btn-submit-input uses inline workflow handler; do not bind second click handler/);
 });
 
-test('required long-select proxy keeps required and invalid state visible', () => {
-  assert.match(appHtmlRaw, /if \(select\.required\) \{\s*input\.required = true;\s*input\.setAttribute\('aria-required', 'true'\);\s*\}/);
-  assert.match(appHtmlRaw, /if \(select\.required && !select\.value\) input\.setCustomValidity\('Pilih opsi dari daftar\.'\);/);
-  assert.match(appHtmlRaw, /if \(select\.required\) input\.setCustomValidity\('Pilih opsi dari daftar\.'\);/);
+test('required long-select proxy keeps canonical select as value source', () => {
+  assert.match(appHtmlRaw, /function syncRequiredProxyValidity\(\) \{[\s\S]*?input\.setAttribute\('aria-invalid', select\.value \? 'false' : 'true'\);[\s\S]*?input\.setCustomValidity\(select\.value \? '' : 'Pilih opsi dari daftar\.'\);/);
+  assert.match(appHtmlRaw, /const exactOpt = Array\.from\(select\.options\)\.find[\s\S]*?select\.value = exactOpt \? exactOpt\.value : '';/);
+  assert.match(appHtmlRaw, /select\.dispatchEvent\(new Event\('change', \{ bubbles: true \}\)\);/);
+});
+
+test('input shell does not keep inert form-only attributes on div', () => {
+  const inputFormHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_input_form.html'), 'utf8');
+  assert.match(inputFormHtml, /<div id="dynamic-form-input" class="hidden" data-form-type="input">/);
+  assert.doesNotMatch(inputFormHtml, /id="dynamic-form-input"[^>]*(autocomplete|novalidate)/);
 });

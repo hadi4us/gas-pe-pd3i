@@ -4462,6 +4462,7 @@
           input.value = '';
           if (select.required) input.setCustomValidity('Pilih opsi dari daftar.');
         }
+        syncRequiredProxyValidity();
       }
       syncInputFromSelect();
 
@@ -4482,16 +4483,24 @@
           select.value = '';
           if (select.required && val) input.setCustomValidity('Pilih opsi dari daftar.');
         }
-        if (select.required && !select.value) input.setCustomValidity('Pilih opsi dari daftar.');
+        syncRequiredProxyValidity();
         select.dispatchEvent(new Event('change', { bubbles: true }));
       });
 
+      function syncRequiredProxyValidity() {
+        if (!select.required) return;
+        input.setAttribute('aria-invalid', select.value ? 'false' : 'true');
+        input.setCustomValidity(select.value ? '' : 'Pilih opsi dari daftar.');
+      }
+
       input.addEventListener('input', function() {
-        if (!input.value.trim()) {
-          select.value = '';
-          if (select.required) input.setCustomValidity('Pilih opsi dari daftar.');
-          select.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        const val = input.value.trim();
+        const exactOpt = Array.from(select.options).find(function(opt) {
+          return opt.textContent.trim() === val || opt.textContent.trim().toLowerCase() === val.toLowerCase();
+        });
+        select.value = exactOpt ? exactOpt.value : '';
+        syncRequiredProxyValidity();
+        select.dispatchEvent(new Event('change', { bubbles: true }));
       });
 
       const observer = new MutationObserver(function() {
