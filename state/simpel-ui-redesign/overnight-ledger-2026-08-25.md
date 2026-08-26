@@ -190,3 +190,38 @@ PAGE_STATE=SOURCE_READY_PENDING_RUNTIME_QA
 PROD_ALLOWED=NO
 PROD_MUTATION=NO
 NEXT_ACTION=commit refined input scope, push, update existing DEV deployment, continue verifikasi main review
+
+## Page: input — DEV_RELEASE_REFINED
+GITHUB_PUSH=YES
+DEV_DEPLOY=YES
+DEV_VERSION=181
+DEV_DEPLOYMENT_ID=AKfycbyvwxhm2ycZ-1R45QeTKSM4l5JQ9OIX7MqN9uBusGKhUM8McveAM5ydHXc5WaACD6Od
+DEV_RELEASE_PARITY=PASS
+DEV_SMOKE=HTTP_200_TITLE_ONLY_NOT_VISUAL_QA
+PAGE_STATE=SOURCE_READY_PENDING_RUNTIME_QA
+PROD_ALLOWED=NO
+PROD_MUTATION=NO
+NEXT_ACTION=verifikasi MAIN_AUDIT_REVIEW from UI+backend audits; P0 backend findings block verifikasi source-ready until fixed
+
+## Page: verifikasi — UI_SOURCE_AUDIT
+SOURCE_AUDIT=SOURCE_READY_PENDING_RUNTIME_QA
+UI_DEV_REVIEW=COMPLETE
+FINDINGS=
+- VERIF-001 P1 review-only lock hides editable verification technical fields too early; scope: visible read-only summary/preview current status + recommended EPID near action box.
+- VERIF-002 P1 timestamp clock writes Tanggal Verifikasi EPID before final decision; scope: set/freeze only at Terverifikasi/Perlu Revisi submit path.
+- VERIF-003 P2 helper canAccessDeferredWorkflowStages acts like access gate but checks navigation state; scope: rename or add capability guard where used.
+- VERIF-004 P2 verification action buttons can force disabled back enabled; scope: remove forced enable or gate by role/stage capability.
+- VERIF-005 P2 tests reference old path split; scope: update tests to correct file source.
+DEFERRED_RUNTIME_QA=role matrix clicks, generated action fields, showIf EPID, confirm dialog focus/mobile, timestamp final value, queue workspace preservation
+PROD_MUTATION=NO
+
+## Page: verifikasi — BACKEND_CONTRACT_AUDIT
+BACKEND_CONTRACT_AUDIT=FAIL
+FINDINGS=
+- VERIF-BE-001 P0 EPID collision can update wrong row; scope: target by record ID first and reject EPID owned by different record.
+- VERIF-BE-002 P1 verification business rules enforced only frontend; scope: server validator for non-Pending, required date/verifier/EPID/note.
+- VERIF-BE-003 P1 verification queue/read not admin-only; scope: decide contract; likely admin-only per UI copy.
+- VERIF-BE-004 P2 verifier role aliases cannot verify; scope: clarify role matrix, no automatic grant tonight.
+MAIN_REVIEW=PENDING
+BLOCKER=VERIF-BE-001_P0_until_main_review_and_fix
+PROD_MUTATION=NO
