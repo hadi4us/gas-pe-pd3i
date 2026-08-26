@@ -1149,3 +1149,19 @@ test('input shell does not keep inert form-only attributes on div', () => {
   assert.match(inputFormHtml, /<div id="dynamic-form-input" class="hidden" data-form-type="input">/);
   assert.doesNotMatch(inputFormHtml, /id="dynamic-form-input"[^>]*(autocomplete|novalidate)/);
 });
+
+
+test('deployment automation only targets canonical dev deployment from release worktree', () => {
+  const deployScript = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'deploy-dev-canonical.js'), 'utf8');
+  const rootClasp = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '.clasp.json'), 'utf8'));
+  const nestedClasp = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', '.clasp.json'), 'utf8'));
+  assert.equal(rootClasp.scriptId, '1_EmuiShiCbQcaRmCxZcPySs5uIEzux-U9EQ2q9qEzUtac0SsTHBnbfol');
+  assert.equal(nestedClasp.scriptId, '1_EmuiShiCbQcaRmCxZcPySs5uIEzux-U9EQ2q9qEzUtac0SsTHBnbfol');
+  assert.match(deployScript, /DEPLOY_NESTED_CLASP_POINTS_TO_PRODUCTION/);
+  assert.match(deployScript, /AKfycbyvwxhm2ycZ-1R45QeTKSM4l5JQ9OIX7MqN9uBusGKhUM8McveAM5ydHXc5WaACD6Od/);
+  assert.match(deployScript, /DEPLOY_WORKTREE_NOT_CANONICAL/);
+  assert.match(deployScript, /DEPLOY_BRANCH_UNEXPECTED/);
+  assert.match(deployScript, /DEV_CANONICAL_DEPLOYMENT_IS_HEAD/);
+  assert.match(deployScript, /timeoutMs = Number\(process\.env\.PD3I_CLASP_TIMEOUT_MS \|\| 120000\)/);
+  assert.equal(deployScript.includes("scriptId: '1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu'"), false);
+});
