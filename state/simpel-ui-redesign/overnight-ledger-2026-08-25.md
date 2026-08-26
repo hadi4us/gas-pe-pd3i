@@ -91,3 +91,14 @@ FINDINGS=
 DEFERRED_RUNTIME_QA=input page browser acceptance, diagnosis selector flow, long select keyboard/a11y, mobile sticky action panel.
 NEXT_ACTION=wait backend contract audit then MAIN_AUDIT_REVIEW
 PROD_MUTATION=NO
+
+## Page: input — BACKEND_CONTRACT_AUDIT
+BACKEND_CONTRACT_AUDIT=PASS_WITH_FINDINGS
+PROD_MUTATION=NO
+FINDINGS=
+- INPUT-BE-001 P1 createInitialCase can update existing record if payload carries existing ID/RAW_ROW_NUMBER/Nomor EPID. Scope: make createInitialCase create-only; keep saveInitialReportEdit as edit path.
+- INPUT-BE-002 P1 duplicate input submit triggers: inline onclick plus app.init listener. Scope: keep one trigger only; add duplicate-submit regression.
+- INPUT-BE-003 P2 dx accepts arbitrary string until sheet lookup. Scope: backend allowlist MR/DIF/PERT/TN/AFP before save.
+- INPUT-BE-004 P2 input GET shell has no server auth gate; save auth exists. Scope: verify boot overlay/logged-out controls; backend change only if policy requires server render gate.
+REQUIRED_SECURITY_CHECKS=viewer_denied,missing_expired_token_session_error,forged_epid_admin_fields_stripped,pending_status_blank_epid,input_audit_fields,notification_failure_non_blocking
+NEXT_ACTION=wait_ui_source_audit_then_MAIN_AUDIT_REVIEW
