@@ -543,10 +543,8 @@ function _normalizeFaskesJenis_(value) {
 
 function _resolveFaskesJenis_(jenisValue, namaValue) {
   var normalizedJenis = _normalizeFaskesJenis_(jenisValue);
-  var normalizedNama = _normalizeFaskesJenis_(namaValue);
-  var known = ['PUSKESMAS', 'RUMAH SAKIT', 'KLINIK', 'TPMB', 'TPMD', 'PRAKTIK MANDIRI', 'LABORATORIUM', 'MASYARAKAT', 'LAINNYA'];
-  if (normalizedNama && known.indexOf(normalizedNama) !== -1 && known.indexOf(normalizedJenis) === -1) return normalizedNama;
-  return normalizedJenis || normalizedNama;
+  if (normalizedJenis) return normalizedJenis;
+  return _normalizeFaskesJenis_(namaValue);
 }
 
 function getRecordByKey(dx, recordKey, token) {

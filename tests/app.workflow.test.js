@@ -238,7 +238,6 @@ test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variab
   assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
   assert.match(routesJs, /userUnitKerja && rowNama && userUnitKerja === rowNama/);
   assert.match(routesJs, /replace\(\/\\b\(PKM\|PUSKESMAS\)\\b\/g, ''\)/);
-  assert.match(routesJs, /normalizedNama && known\.indexOf\(normalizedNama\) !== -1 && known\.indexOf\(normalizedJenis\) === -1/);
   assert.match(routesJs, /userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias/);
   assert.match(routesJs, /kelurahanByKecamatan/);
   assert.match(routesJs, /const kecamatanNeedle = String\(filters\.kecamatan \|\| ''\)/);
