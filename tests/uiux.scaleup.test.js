@@ -30,3 +30,14 @@ test('new UI baseline has no presentation reset-era markers', () => {
   assert.doesNotMatch(styleHtml, /phase [0-9]+|CANONICAL|Bootstrap|Tailwind|Tabler|legacy|obsolete|hotfix/i);
   assert.doesNotMatch(indexHtml, /data-legacy-section-id|reference-skin/);
 });
+
+
+test('remaining workflow pages keep polished card density and zero reporting grid', () => {
+  assert.match(styleHtml, /\.pd3i-field-grid\{gap:16px 20px\}/);
+  assert.match(styleHtml, /\.pd3i-submit-button\{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:10px;font-weight:800;line-height:1\.2\}/);
+  assert.match(styleHtml, /\.pd3i-zero-reporting-form label\{display:block;margin-bottom:6px;color:#334155;font-size:\.78rem;font-weight:800\}/);
+  assert.match(styleHtml, /\.pd3i-zero-reporting-grid,\.pd3i-case-grid\{display:grid;grid-template-columns:repeat\(6,minmax\(0,1fr\)\);gap:14px\}/);
+  assert.match(styleHtml, /\.pd3i-zero-reporting-grid>div\{grid-column:span 2\}/);
+  assert.match(styleHtml, /\.pd3i-case-span-3\{grid-column:span 3\}/);
+  assert.match(styleHtml, /@media\(max-width:800px\)[\s\S]*\.pd3i-zero-reporting-grid,\.pd3i-case-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+});

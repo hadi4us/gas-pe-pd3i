@@ -66,8 +66,12 @@ test('successful workflow save resets submit button before success modal or queu
   assert.match(appHtml, /if \(res && res\.status === "success"\) \{[\s\S]*?clearFormDraft\(\);[\s\S]*?resetSubmitButtonByMode\(submitMode\);[\s\S]*?showSuccessModal\(/);
 });
 
-test('verification save gives local feedback, timeout, and modal confirmation for every outcome', () => {
+test('workflow saves give local feedback, timeout, and modal confirmation for every outcome', () => {
   assert.match(workspaceVerifikasiHtml, /id="workflow-submit-status-verifikasi"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(workspaceSampelHtml, /id="workflow-submit-status-sampel"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_status_form.html'), 'utf8'), /id="workflow-submit-status-status"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(appHtml, /if \(submitMode === 'sampel'\) return document\.getElementById\('workflow-submit-status-sampel'\)/);
+  assert.match(appHtml, /if \(submitMode === 'status'\) return document\.getElementById\('workflow-submit-status-status'\)/);
   assert.match(appHtml, /const WORKFLOW_SAVE_TIMEOUT_MS = 45000/);
   assert.match(appHtml, /function withWorkflowSaveTimeout\(promise, label\)/);
   assert.match(appHtml, /setWorkflowSubmitFeedback\(submitMode, 'Menyimpan verifikasi ke server\.\.\.', null\)/);
