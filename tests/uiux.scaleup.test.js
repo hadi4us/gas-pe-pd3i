@@ -41,3 +41,12 @@ test('remaining workflow pages keep polished card density and zero reporting gri
   assert.match(styleHtml, /\.pd3i-case-span-3\{grid-column:span 3\}/);
   assert.match(styleHtml, /@media\(max-width:800px\)[\s\S]*\.pd3i-zero-reporting-grid,\.pd3i-case-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
+
+
+test('dashboard keeps Beranda-aligned dense card system and mobile containment', () => {
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-shell\{display:grid;gap:18px;padding:24px\}/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-case-kpi-compact\{grid-template-columns:repeat\(auto-fit,minmax\(150px,1fr\)\);gap:12px\}/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-metric-card::after\{content:'';position:absolute;right:-22px;bottom:-30px;width:86px;height:86px;border-radius:50%;background:currentColor;opacity:\.06\}/);
+  assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-region-main strong\{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical\}/);
+  assert.match(styleHtml, /@media\(max-width:560px\)[\s\S]*#section-dashboard \.pd3i-dashboard-case-kpi-compact\{grid-template-columns:1fr\}/);
+});
