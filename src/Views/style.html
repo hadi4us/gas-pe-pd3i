@@ -205,6 +205,14 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 }
 .pd3i-form-card-section[hidden],.pd3i-form-card-section.hidden{display:none!important}.pd3i-form-card-section:has(.pd3i-field-grid:empty){display:none}
 
+/* Shared spacing contract: prevent cards/frames from visually touching across pages. */
+.pd3i-workspace-section{gap:24px}
+.pd3i-workspace-section:not(.hidden)+.pd3i-workspace-section:not(.hidden),.pd3i-shell-card+.pd3i-shell-card,.pd3i-card+.pd3i-card,.pd3i-form-card-section+.pd3i-form-card-section{margin-top:24px}
+.pd3i-overview-grid,#section-overview,.pd3i-form-main,#section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{gap:24px}
+.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:18px}
+.pd3i-overview-panel,.pd3i-search-card,.pd3i-form-card,.pd3i-form-card-section,.pd3i-zero-reporting-card,.pd3i-dashboard-panel,.pd3i-dashboard-metric-card,.pd3i-dashboard-region-card,.pd3i-section-card,.pd3i-settings-panel,.pd3i-queue-card,.pie-inner-card,.pie-insight-card,.pie-kpi-card,.pie-ops-panel{margin-bottom:0}
+@media(max-width:700px){.pd3i-workspace-section,.pd3i-overview-grid,#section-overview,.pd3i-form-main,#section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{gap:18px}.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:14px}.pd3i-workspace-section:not(.hidden)+.pd3i-workspace-section:not(.hidden),.pd3i-shell-card+.pd3i-shell-card,.pd3i-card+.pd3i-card,.pd3i-form-card-section+.pd3i-form-card-section{margin-top:18px}}
+
 /* Shared application visual baseline: match login card language across every menu. */
 .pd3i-page{background:linear-gradient(135deg,#f6fbff 0%,#f8fafc 58%,#eef6ff 100%)}
 .pd3i-topbar{background:rgba(255,255,255,.94);border-bottom-color:#e2e8f0;box-shadow:0 8px 24px rgba(15,23,42,.06)}
