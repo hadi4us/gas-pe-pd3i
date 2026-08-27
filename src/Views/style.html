@@ -90,9 +90,10 @@ input,select,textarea{width:100%;min-height:40px;padding:9px 11px;border:1px sol
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card.is-success{color:#059669;border-top-color:#10b981}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card.is-warning{color:#d97706;border-top-color:#f59e0b}
 #section-overview #overview-kpi-grid .pd3i-overview-summary-card.is-info{color:#2563eb;border-top-color:#3b82f6}
-#section-overview #overview-situation-strip{margin-top:18px;padding-top:18px;border-top:1px solid #e2e8f0}
+#section-overview #overview-situation-strip{margin-top:16px;padding-top:0;border-top:0}
 #section-overview .pd3i-overview-situation-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
 #section-overview .pd3i-overview-situation-item{min-width:0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
+#section-overview #overview-kpi-focus{margin-top:16px!important}
 #section-overview .pd3i-overview-focus-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);align-items:stretch}
 #section-overview .pd3i-overview-focus-card{min-width:0;padding:18px;border-radius:16px;display:flex;flex-direction:column;justify-content:flex-start}
 #section-overview .pd3i-overview-focus-title{margin-top:5px;color:#0f172a;font-size:.98rem;font-weight:800}
@@ -279,7 +280,7 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 @media(max-width:900px){#section-dashboard .pd3i-dashboard-case-kpi-compact{grid-template-columns:repeat(2,minmax(0,1fr))}#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column{grid-template-columns:1fr}}
 @media(max-width:560px){#section-dashboard .pd3i-dashboard-case-kpi-compact{grid-template-columns:1fr;gap:10px}#section-dashboard .pd3i-dashboard-metric-card,#section-dashboard .pd3i-dashboard-region-card,#section-dashboard .pd3i-dashboard-chart-panel,#section-dashboard .pd3i-dashboard-age-card,#section-dashboard .pd3i-dashboard-epi-age-card{padding:12px}#section-dashboard .pd3i-dashboard-month-row{grid-template-columns:1fr;gap:6px}#section-dashboard .pd3i-dashboard-month-value{text-align:left}}
 /* Final spacing pass: last wins over page-local density rules. */
-#section-overview,.pd3i-overview-grid{row-gap:34px;column-gap:24px}
+#section-overview,.pd3i-overview-grid{row-gap:24px;column-gap:24px}
 #section-overview .pd3i-overview-panel,.pd3i-form-card-section,.pd3i-shell-card,.pd3i-dashboard-panel,.pd3i-zero-reporting-card,.pd3i-section-card{scroll-margin-top:24px}
 #section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-form-main,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{row-gap:28px;column-gap:24px}
 #section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:20px}
