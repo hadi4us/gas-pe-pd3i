@@ -64,6 +64,7 @@ test('boot session spinner is centered near top of viewport', () => {
 test('shared spacing contract keeps cards and frames separated across pages', () => {
   assert.match(styleHtml, /\/\* Shared spacing contract: prevent cards\/frames from visually touching across pages\. \*\//);
   assert.match(styleHtml, /\.pd3i-workspace-section\{gap:4px\}/);
+  assert.match(styleHtml, /\.pd3i-workspace-section\.mt-6\{margin-top:4px!important\}/);
   assert.match(styleHtml, /\.pd3i-shell-card\+\.pd3i-shell-card,\.pd3i-card\+\.pd3i-card,\.pd3i-form-card-section\+\.pd3i-form-card-section\{margin-top:4px\}/);
   assert.match(styleHtml, /#section-dashboard \.pd3i-dashboard-case-kpi-compact,#section-dashboard \.pd3i-dashboard-region-two-column,#section-dashboard \.pd3i-dashboard-age-two-column[\s\S]*\{gap:18px\}/);
   assert.match(styleHtml, /@media\(max-width:700px\)[\s\S]*\.pd3i-workspace-section[\s\S]*row-gap:4px/);
