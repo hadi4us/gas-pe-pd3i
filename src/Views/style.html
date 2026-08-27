@@ -297,3 +297,16 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 #section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-form-main,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{row-gap:8px;column-gap:24px}
 #section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:20px}
 @media(max-width:700px){#section-overview,.pd3i-overview-grid,#section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-form-main,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{row-gap:8px;column-gap:18px}#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:16px}}
+
+/* Dashboard breathing-room pass: keep filter, insight, KPI, and chart as distinct blocks. */
+#section-dashboard .pd3i-dashboard-shell{gap:18px!important}
+#section-dashboard .pd3i-dashboard-toolbar-panel{padding:14px 16px!important;margin:0 0 4px!important}
+#section-dashboard .pd3i-dashboard-content{display:grid!important;gap:24px!important}
+#section-dashboard .pd3i-dashboard-content[data-loaded="1"]{gap:24px!important}
+#section-dashboard .pd3i-dashboard-insight-strip{gap:14px!important;margin:2px 0 0!important}
+#section-dashboard .pd3i-dashboard-case-kpi-compact{gap:18px!important;margin:0!important}
+#section-dashboard .pd3i-dashboard-panel,#section-dashboard .pd3i-dashboard-chart-panel{margin-top:0!important;padding:18px!important}
+#section-dashboard .pd3i-dashboard-insight-strip+.pd3i-dashboard-case-kpi-compact{margin-top:0!important}
+#section-dashboard .pd3i-dashboard-case-kpi-compact+.pd3i-dashboard-panel{margin-top:2px!important}
+#section-dashboard .pd3i-dashboard-reference-cases-card,#section-dashboard .pd3i-dashboard-region-card,#section-dashboard .pd3i-dashboard-age-card,#section-dashboard .pd3i-dashboard-epi-age-card{padding:18px!important}
+@media(max-width:700px){#section-dashboard .pd3i-dashboard-shell{gap:16px!important;padding:16px!important}#section-dashboard .pd3i-dashboard-content,#section-dashboard .pd3i-dashboard-content[data-loaded="1"]{gap:18px!important}#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-insight-strip{gap:14px!important}#section-dashboard .pd3i-dashboard-panel,#section-dashboard .pd3i-dashboard-chart-panel,#section-dashboard .pd3i-dashboard-reference-cases-card,#section-dashboard .pd3i-dashboard-region-card,#section-dashboard .pd3i-dashboard-age-card,#section-dashboard .pd3i-dashboard-epi-age-card{padding:14px!important}}
