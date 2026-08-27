@@ -626,8 +626,26 @@
     const topRw = ((stats.wilayahSummary && stats.wilayahSummary.topRw) || []).filter(isDepokDashboardArea).slice(0, 10);
     const topRtRw = ((stats.wilayahSummary && stats.wilayahSummary.topRtRw) || []).filter(isDepokDashboardArea).slice(0, 10);
     const wilayahPrioritasCount = topKecamatan.length + topKelurahan.length + topRw.length + topRtRw.length;
+    const insightItems = [
+      { label: 'Kecepatan PE', value: sameDayRate, note: epi.medianReportToTrackingDays != null ? `Median ${epi.medianReportToTrackingDays} hari` : 'Belum ada median' },
+      { label: 'Keputusan kasus', value: decisionRate, note: `${decisionCount} keputusan dari ${totalCases} kasus` },
+      { label: 'Tindak lanjut', value: followUpCount, note: pendingPeninjauanCount ? `${pendingPeninjauanCount} perlu verifikasi` : 'Tidak ada antrian verifikasi' },
+      { label: 'Wilayah prioritas', value: wilayahPrioritasCount, note: 'Kecamatan/kelurahan/RW/RT teratas' }
+    ];
 
     let html = '';
+
+    html += `
+      <div class="pd3i-dashboard-insight-strip" aria-label="Ringkasan insight dashboard">
+        ${insightItems.map(function(item) {
+          return `<div class="pd3i-dashboard-insight-item">
+            <span>${escapeHtml(item.label)}</span>
+            <strong>${escapeHtml(item.value)}</strong>
+            <small>${escapeHtml(item.note)}</small>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
 
     // ROW 1: KPI CARDS (ringkasan kasus tetap di Dashboard PD3I; KPI operasional/antrian tetap di Beranda)
     // Label lama "Analisis kasus" dihapus dari UI sesuai feedback pengguna.
