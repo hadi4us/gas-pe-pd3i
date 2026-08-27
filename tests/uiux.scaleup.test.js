@@ -55,5 +55,7 @@ test('dashboard keeps Beranda-aligned dense card system and mobile containment',
 test('boot session spinner is centered near top of viewport', () => {
   assert.match(styleHtml, /#auth-boot-overlay\{position:fixed!important;inset:0!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;width:100vw!important;min-height:100dvh!important;padding:2rem 1rem 1rem!important\}/);
   assert.match(styleHtml, /#auth-boot-overlay\.hidden\{display:none!important\}/);
-  assert.match(styleHtml, /#auth-boot-overlay \.pd3i-login-card\{margin:0 auto!important;padding:1\.8rem 2rem\}/);
+  assert.match(styleHtml, /#auth-boot-overlay \.pd3i-login-card\{margin:0 auto!important;padding:1\.8rem 2rem;text-align:center\}/);
+  assert.match(styleHtml, /#auth-boot-overlay \.pd3i-login-mark\{margin:\.5rem auto \.75rem\}/);
+  assert.match(styleHtml, /#auth-boot-overlay \.pd3i-login-title,#auth-boot-overlay \.pd3i-login-subtitle\{text-align:center\}/);
 });
