@@ -848,6 +848,8 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(workspaceSars, /class="sars-faskes-picker"/);
   assert.match(workspaceSars, /getMasterFaskesForClient/);
   assert.match(styleHtml, /sars-faskes-picker/);
+  assert.match(styleHtml, /pd3i-zero-reporting-submit-help\{margin:10px 0 16px/);
+  assert.match(styleHtml, /#section-zero-reporting-form #submitBtn\{margin-top:10px/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
   assert.match(submitSars, /new Date\(tglMulai\) >= new Date\(tglLahir\)/);
 });
