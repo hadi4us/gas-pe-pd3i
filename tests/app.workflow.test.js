@@ -840,6 +840,7 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(workspaceSars, /rows\.classList\.add\('hidden'\)/);
   assert.match(workspaceSars, /rows\.classList\.remove\('hidden'\)/);
   assert.match(workspaceSars, /id = 'sars-confirm-dialog'/);
+  assert.doesNotMatch(workspaceSars, /pd3iConfirmDialog/);
   assert.doesNotMatch(workspaceSars, /window\.confirm/);
   assert.match(styleHtml, /sars-confirm-backdrop/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);

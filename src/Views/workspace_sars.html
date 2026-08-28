@@ -235,7 +235,6 @@
     };
 
     async function confirmSarsAction(options){
-      if (typeof window.pd3iConfirmDialog === 'function') return window.pd3iConfirmDialog(options || {});
       const cfg = options || {};
       return new Promise(resolve => {
         const existing = document.getElementById('sars-confirm-dialog');
