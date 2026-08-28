@@ -780,7 +780,7 @@
     html += `
       <div class="pd3i-dashboard-age-two-column mb-6" aria-label="Distribusi usia dan kelompok umur epidemiologis">
         <div class="pd3i-dashboard-block pd3i-dashboard-age-analysis">
-          <div class="pd3i-dashboard-block-title">Analisis Distribusi Kasus Berdasarkan Usia</div>
+          <div class="pd3i-dashboard-block-title pd3i-dashboard-title-accent">Analisis Distribusi Kasus Berdasarkan Usia</div>
           <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table pd3i-dashboard-age-card space-y-3">
             <div class="pd3i-helper-text text-slate-500">Interval analisis surveilans: &lt;1, 1–4, 5–9, 10–14, 15–19, 20–44, 45–59, dan ≥60 tahun. Distribusi Kelompok Umur Epidemiologis umum tetap dipertahaman terpisah.</div>
     `;
@@ -815,16 +815,22 @@
     html += `
         <div class="pd3i-dashboard-block pd3i-dashboard-epi-age-analysis">
           <div class="pd3i-dashboard-panel pd3i-dashboard-panel-table pd3i-dashboard-epi-age-card">
-            <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>
+            <div class="pd3i-dashboard-age-head">
+              <div>
+                <div class="pd3i-dashboard-age-kicker">Stratifikasi epidemiologis</div>
+                <div class="pd3i-dashboard-block-title is-sub">Distribusi Kelompok Umur Epidemiologis</div>
+              </div>
+              <span>${umurKeys.length} kelompok</span>
+            </div>
     `;
     if (!umurKeys.length) {
       html += `<div class="pd3i-empty-keadaan text-slate-400">Belum ada data kelompok umur epidemiologis.</div>`;
     } else {
       umurKeys.forEach(function(k) {
         html += `
-          <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-b-0 gap-3">
-            <span class="text-sm font-semibold text-slate-700">${escapeHtml(k)}</span>
-            <span class="text-base font-black text-emerald-700">${perUmur[k]}</span>
+          <div class="pd3i-dashboard-epi-age-row">
+            <span>${escapeHtml(k)}</span>
+            <strong>${perUmur[k]}</strong>
           </div>
         `;
       });

@@ -322,3 +322,17 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 #section-dashboard .pd3i-dashboard-panel h3,#section-dashboard .pd3i-dashboard-region-card-head h3{font-size:1rem!important;font-weight:950!important;letter-spacing:-.025em!important;color:#0f172a!important}
 #section-dashboard .pd3i-dashboard-region-card-head span{font-size:.68rem!important;font-weight:850!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:#64748b!important}
 #section-dashboard .pd3i-dashboard-region-main strong{font-weight:850!important;letter-spacing:-.015em!important}
+
+/* Dashboard age analysis design pass: make lower analytics read as designed cards, not plain text. */
+#section-dashboard .pd3i-dashboard-block-title{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:#0f172a;font-size:1rem;font-weight:950;letter-spacing:-.03em;line-height:1.15}
+#section-dashboard .pd3i-dashboard-title-accent::before,#section-dashboard .pd3i-dashboard-block-title.is-sub::before{content:'';width:4px;height:18px;border-radius:999px;background:linear-gradient(180deg,#2563eb,#06b6d4);box-shadow:0 6px 16px rgba(37,99,235,.22);flex:0 0 auto}
+#section-dashboard .pd3i-dashboard-age-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #e2e8f0}
+#section-dashboard .pd3i-dashboard-age-head .pd3i-dashboard-block-title{margin:3px 0 0}
+#section-dashboard .pd3i-dashboard-age-head>span{display:inline-flex;align-items:center;min-height:24px;padding:4px 9px;border:1px solid #bbf7d0;border-radius:999px;background:#ecfdf5;color:#047857;font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+#section-dashboard .pd3i-dashboard-age-kicker{color:#2563eb;font-size:.65rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+#section-dashboard .pd3i-dashboard-epi-age-card{background:linear-gradient(135deg,#ffffff 0%,#f8fffb 55%,#eff6ff 100%);border-color:#dbeafe!important}
+#section-dashboard .pd3i-dashboard-epi-age-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-top:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:14px;background:rgba(255,255,255,.86);box-shadow:0 6px 18px rgba(15,23,42,.04)}
+#section-dashboard .pd3i-dashboard-epi-age-row:first-of-type{margin-top:0}
+#section-dashboard .pd3i-dashboard-epi-age-row span{min-width:0;color:#334155;font-size:.88rem;font-weight:850;letter-spacing:-.015em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#section-dashboard .pd3i-dashboard-epi-age-row strong{min-width:36px;padding:4px 8px;border-radius:999px;background:#dcfce7;color:#047857;text-align:center;font-size:.95rem;font-weight:950;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+#section-dashboard .pd3i-dashboard-age-card .pd3i-helper-text{margin-bottom:8px;padding:10px 12px;border:1px solid #dbeafe;border-radius:14px;background:#eff6ff;color:#1e3a8a!important;font-size:.82rem!important;font-weight:650;line-height:1.42}
