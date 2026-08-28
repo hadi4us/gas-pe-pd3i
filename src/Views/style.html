@@ -395,3 +395,12 @@ button:disabled,.pd3i-btn:disabled,.pd3i-action-btn:disabled,.pd3i-primary-butto
 #section-input-form-shell .pd3i-diagnosis-section .pd3i-dynamic-table-container{max-width:100%;overflow-x:auto;border-radius:14px;background:#fff}
 #section-input-form-shell .pd3i-diagnosis-section .pd3i-dynamic-table{min-width:860px}
 @media(max-width:760px){#section-input-form-shell .pd3i-diagnosis-section{padding:14px}#section-input-form-shell .pd3i-diagnosis-section-grid{grid-template-columns:1fr!important}#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-button-row{grid-template-columns:1fr 1fr}#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-btn:last-child{grid-column:1/-1}}
+
+/* Input Kasus choice controls: clear question/answer boundary and selected state. */
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-component-field{padding:12px;border:1px solid #e2e8f0;border-radius:16px;background:#f8fafc}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-component-field>label{display:block;margin:0 0 10px;padding:0 0 8px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:.82rem;font-weight:900;line-height:1.32}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-group{padding:6px;border:1px solid #dbeafe;border-radius:14px;background:#fff}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-btn{appearance:none;border:1px solid #cbd5e1;background:linear-gradient(180deg,#fff,#f8fafc);color:#334155;box-shadow:none;font-weight:850;cursor:pointer}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-btn:hover{border-color:#93c5fd;background:#eff6ff;color:#1d4ed8}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-btn.is-active,#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-btn[aria-pressed="true"]{border-color:#2563eb;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.18)}
+#section-input-form-shell .pd3i-diagnosis-section .pd3i-choice-group.is-invalid{border-color:#fca5a5;background:#fff7f7}

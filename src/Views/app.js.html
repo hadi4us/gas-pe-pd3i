@@ -5321,6 +5321,8 @@
     root.querySelectorAll('input[name], select[name], textarea[name]').forEach(function(el) {
       const fieldKey = _getSemanticFieldKey_(el);
       if (!fieldKey) return;
+      const wrapper = el.closest && el.closest('.field-wrapper');
+      if (wrapper && wrapper.classList.contains('hidden')) return;
       if (el.multiple || (el.dataset && el.dataset.multiSelect === '1')) {
         payload[fieldKey] = Array.from(el.selectedOptions || [])
           .map(function(opt) { return String(opt.value || '').trim(); })
@@ -5333,6 +5335,8 @@
     // Choice button is source of truth. Hidden input can be overwritten by
     // browser autofill/hydration timing; never let stale hidden value win.
     root.querySelectorAll('.pd3i-choice-btn[data-field-id][aria-pressed="true"]').forEach(function(btn) {
+      const wrapper = btn.closest && btn.closest('.field-wrapper');
+      if (wrapper && wrapper.classList.contains('hidden')) return;
       const fieldKey = String(btn.getAttribute('data-field-id') || '').trim();
       const choiceValue = String(btn.getAttribute('data-choice-value') || '').trim();
       if (fieldKey && choiceValue) payload[fieldKey] = choiceValue;
