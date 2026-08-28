@@ -780,6 +780,8 @@ test('user management exposes password storage status without PIN values', () =>
   assert.match(settingsHtml, /function renderPasswordStorageBadge\(status\)/);
   assert.match(settingsHtml, /renderPasswordStorageBadge\(u\.passwordStorage\)/);
   assert.match(settingsHtml, /PLAINTEXT/);
+  assert.match(settingsHtml, /id="user-password-storage-summary"/);
+  assert.match(settingsHtml, /function renderPasswordStorageSummary\(\)/);
 });
 
 test('session refresh keeps absolute six-hour expiry', () => {

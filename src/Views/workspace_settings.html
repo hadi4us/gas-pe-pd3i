@@ -233,6 +233,7 @@
           </div>
         </div>
         <!-- Pagination Controls -->
+        <div id="user-password-storage-summary" class="text-xs mb-2 text-slate-600" role="status" aria-live="polite"></div>
         <div class="flex justify-between items-center mt-3 text-xs">
           <div class="text-slate-500 font-medium" id="user-pagination-info">Menampilkan 0 dari 0 pengguna</div>
           <div class="flex gap-2">
@@ -499,6 +500,20 @@ window.initSettingsWorkspace = function(){
   let currentPage = 1;
   const itemsPerPage = 10;
 
+  function renderPasswordStorageSummary() {
+    const out = document.getElementById('user-password-storage-summary');
+    if (!out) return;
+    const counts = allUsers.reduce(function(acc, user) {
+      const key = String(user.passwordStorage || 'missing').toLowerCase();
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    const plaintext = counts.plaintext || 0;
+    out.innerHTML = plaintext
+      ? '<span class="text-red-600 font-bold">' + plaintext + ' user masih PLAINTEXT</span><span class="ml-2 text-slate-500">Minta user ubah password agar tersimpan SHA256.</span>'
+      : '<span class="text-green-600 font-bold">Tidak ada PIN plaintext terdeteksi di daftar ini.</span>';
+  }
+
   const renderUserPage = function() {
     const tableBody = document.getElementById('user-table-body');
     if (!tableBody) return;
@@ -506,6 +521,7 @@ window.initSettingsWorkspace = function(){
     if (allUsers.length === 0) {
       tableBody.innerHTML = '<tr><td colspan="15" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
       document.getElementById('user-pagination-info').textContent = 'Menampilkan 0 dari 0 pengguna';
+      renderPasswordStorageSummary();
       document.getElementById('btn-user-prev').disabled = true;
       document.getElementById('btn-user-next').disabled = true;
       return;
@@ -566,6 +582,7 @@ window.initSettingsWorkspace = function(){
     tableBody.innerHTML = html;
     
     document.getElementById('user-pagination-info').textContent = 'Menampilkan ' + (startIndex + 1) + '-' + endIndex + ' dari ' + allUsers.length + ' pengguna';
+    renderPasswordStorageSummary();
     document.getElementById('btn-user-prev').disabled = (currentPage === 1);
     document.getElementById('btn-user-next').disabled = (endIndex >= allUsers.length);
   };
