@@ -247,7 +247,7 @@
           <h3 id="sars-confirm-title">${escapeHtml(cfg.title || 'Konfirmasi')}</h3>
           <p>${escapeHtml(cfg.message || 'Lanjutkan?')}</p>
           <div class="sars-confirm-actions">
-            <button type="button" class="pd3i-btn is-secondary" data-sars-confirm="cancel">${escapeHtml(cfg.cancelLabel || 'Batal')}</button>
+            ${cfg.cancelLabel === false ? '' : `<button type="button" class="pd3i-btn is-secondary" data-sars-confirm="cancel">${escapeHtml(cfg.cancelLabel || 'Batal')}</button>`}
             <button type="button" class="pd3i-btn ${cfg.variant === 'danger' ? 'is-danger' : 'is-primary'}" data-sars-confirm="ok">${escapeHtml(cfg.confirmLabel || 'Lanjutkan')}</button>
           </div>
         </div>`;
@@ -602,14 +602,18 @@
       });
 
       if (validationErrors.length > 0) {
-        showSarsBanner('Periksa kembali isian kasus berikut: ' + validationErrors.join(' '), { type: 'error' });
+        const message = 'Periksa kembali isian kasus berikut: ' + validationErrors.join(' ');
+        await confirmSarsAction({ title: 'Validasi belum lengkap', message, confirmLabel: 'Perbaiki isian', cancelLabel: false, variant: 'danger' });
+        showSarsBanner(message, { type: 'error' });
         IS_SUBMITTING = false;
         setSubmittingState(false);
         return;
       }
 
       if (formData.cases.length === 0) {
-        showSarsBanner('Minimal 1 kasus atau centang NIHIL per penyakit.', { type: 'error' });
+        const message = 'Minimal 1 kasus atau centang NIHIL per penyakit.';
+        await confirmSarsAction({ title: 'Validasi belum lengkap', message, confirmLabel: 'Perbaiki isian', cancelLabel: false, variant: 'danger' });
+        showSarsBanner(message, { type: 'error' });
         IS_SUBMITTING = false;
         setSubmittingState(false);
         return;
