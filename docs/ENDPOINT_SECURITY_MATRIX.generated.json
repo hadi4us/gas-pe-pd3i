@@ -33,7 +33,7 @@
     {
       "name": "authChangePin",
       "file": "src/Auth/auth.js",
-      "line": 548,
+      "line": 554,
       "guard": "token"
     },
     {

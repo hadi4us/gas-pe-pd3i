@@ -770,6 +770,13 @@ test('OTP login does not stay stuck on mobile when google.script.run stalls', ()
   assert.match(routesJs, /if \(action === "verifyLoginOtp"\) \{\s*return responseJSON\(verifyLoginOtp\(data\.email, data\.otp\)\);\s*\}/);
 });
 
+test('user management exposes password storage status without PIN values', () => {
+  assert.match(authJs, /function _getPinStorageStatus_\(storedPin\)/);
+  assert.match(authJs, /return \/\^sha256:\/i\.test\(storedPin\) \? "sha256" : "plaintext"/);
+  assert.match(authJs, /passwordStorage: ixPin !== -1 \? _getPinStorageStatus_\(row\[ixPin\]\) : "missing"/);
+  assert.doesNotMatch(authJs, /passwordStorage:[\s\S]{0,80}String\(row\[ixPin\]/);
+});
+
 test('session refresh keeps absolute six-hour expiry', () => {
   assert.match(coreUtils, /const SESSION_ABSOLUTE_TTL_SECONDS = 6 \* 60 \* 60/);
   assert.match(authJs, /absoluteExpiresAt: absoluteExpiresAt/);

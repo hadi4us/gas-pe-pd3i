@@ -535,6 +535,12 @@ function authLogout(token) {
   }
 }
 
+function _getPinStorageStatus_(storedPin) {
+  storedPin = String(storedPin || "").trim();
+  if (!storedPin) return "empty";
+  return /^sha256:/i.test(storedPin) ? "sha256" : "plaintext";
+}
+
 function _hashPinForStorage_(pin) {
   pin = String(pin || "").trim();
   const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, pin, Utilities.Charset.UTF_8);
@@ -630,6 +636,7 @@ function manageGetUsers(token) {
     const ixKode = headerIndex(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
     const ixScope = headerIndex(["scope_level", "ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
+    const ixPin = headerIndex(["PIN", "Pin", "pin"]);
     const ixLoginMethod = headerIndex(["LoginMethod", "Login Method"]);
     const ixOtpEnabled = headerIndex(["OtpEnabled", "Otp Enabled"]);
     const ixOtpTtl = headerIndex(["OtpTtlMinutes", "Otp Ttl Minutes", "OtpTtl"]);
@@ -659,7 +666,8 @@ function manageGetUsers(token) {
         otpTtlMinutes: ixOtpTtl !== -1 ? Number(row[ixOtpTtl] || 5) : 5,
         otpCooldownSeconds: ixOtpCooldown !== -1 ? Number(row[ixOtpCooldown] || 60) : 60,
         lastLoginAt: ixLastLogin !== -1 ? String(row[ixLastLogin] || "").trim() : "",
-        catatan: ixCatatan !== -1 ? String(row[ixCatatan] || "").trim() : ""
+        catatan: ixCatatan !== -1 ? String(row[ixCatatan] || "").trim() : "",
+        passwordStorage: ixPin !== -1 ? _getPinStorageStatus_(row[ixPin]) : "missing"
         ,otpChannel: ixOtpChannel !== -1 ? String(row[ixOtpChannel] || "email").trim().toLowerCase() : "email"
         ,otpFallbackChannel: ixOtpFallback !== -1 ? String(row[ixOtpFallback] || "none").trim().toLowerCase() : "none"
         ,notificationChannel: ixNotifChannel !== -1 ? String(row[ixNotifChannel] || "none").trim().toLowerCase() : "none"
