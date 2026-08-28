@@ -1,12 +1,14 @@
         <section id="section-input-launcher" class="pd3i-workspace-section pd3i-shell-card hidden mt-6" data-workspace="input-launcher">
           <div id="diagnosis-selector-card" class="pd3i-input-launcher-card">
-            <div class="pd3i-card-header-row">
+            <div class="pd3i-card-header-row pd3i-input-launcher-head">
               <div>
                 <div class="pd3i-card-eyebrow">Entri kasus baru</div>
                 <h3 class="pd3i-card-title">Pilih diagnosis / jenis penyakit</h3>
+                <p class="pd3i-helper-text">Mulai laporan awal dari satu diagnosis. Form berikutnya otomatis menyesuaikan pilihan.</p>
               </div>
               <span id="diagnosis-selector-badge" class="pd3i-badge-soft">Mandatory</span>
             </div>
+            <div class="pd3i-input-selector-row">
             <label for="form-selector" class="pd3i-field-label">Diagnosis aktif</label>
             <select id="form-selector" class="pd3i-shell-select">
               <option value="">-- Pilih --</option>
@@ -16,6 +18,7 @@
               <option value="TN">Tetanus Neonatorum (TN)</option>
               <option value="AFP">Lumpuh Layuh Akut (AFP)</option>
             </select>
+            </div>
             <div id="diagnosis-selector-helper" class="pd3i-helper-text">Pemilihan diagnosis hanya diperlukan untuk mulai entri kasus baru dan memuat blok formulir spesifik yang sesuai.</div>
             <div class="pd3i-launcher-flow-strip">
               <div class="pd3i-launcher-flow-item"><span>1</span><div><strong>Pilih diagnosis</strong><small>Tentukan jenis kasus yang akan diinput</small></div></div>
