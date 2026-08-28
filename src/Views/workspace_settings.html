@@ -216,6 +216,7 @@
                 <th class="p-2 border-b">Scope</th>
                 <th class="p-2 border-b">Status</th>
                 <th class="p-2 border-b">Method</th>
+                <th class="p-2 border-b">PIN</th>
                 <th class="p-2 border-b">OTP</th>
                 <th class="p-2 border-b">TTL/Cooldown</th>
                 <th class="p-2 border-b">Last Login</th>
@@ -225,7 +226,7 @@
             </thead>
             <tbody id="user-table-body">
               <tr>
-                <td colspan="14" class="p-3 text-center text-slate-400">Sedang memuat data pengguna...</td>
+                <td colspan="15" class="p-3 text-center text-slate-400">Sedang memuat data pengguna...</td>
               </tr>
             </tbody>
           </table>
@@ -485,6 +486,14 @@ window.initSettingsWorkspace = function(){
   document.getElementById('btn-pie-test-kb-rule')?.addEventListener('click', function(){ const payload={ disease_code:document.getElementById('pie-kb-disease')?.value||'', minimum_epi_risk:document.getElementById('pie-kb-risk')?.value||'E2', required_facts:document.getElementById('pie-kb-facts')?.value||'', optional_facts:'', exclusion_facts:'', recommended_actions:document.getElementById('pie-kb-actions')?.value||'START_PE_INVESTIGATION', explanation_template:document.getElementById('pie-kb-explain')?.value||'', facts:document.getElementById('pie-kb-test-facts')?.value||'' }; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieTestKbRule(getSessionToken(), payload); });
   document.getElementById('btn-pie-approve-kb-rule')?.addEventListener('click', function(){ const id=document.getElementById('pie-kb-approve-id')?.value||''; google.script.run.withSuccessHandler(window.showSettingsResult).withFailureHandler(fail).pieApproveKbRule(getSessionToken(), id, 'Approved from Settings workspace'); });
 
+  function renderPasswordStorageBadge(status) {
+    const value = String(status || 'missing').toLowerCase();
+    if (value === 'sha256') return '<span class="text-green-600 font-bold">SHA256</span>';
+    if (value === 'plaintext') return '<span class="text-red-600 font-bold">PLAINTEXT</span>';
+    if (value === 'empty') return '<span class="text-amber-600 font-bold">KOSONG</span>';
+    return '<span class="text-slate-400">MISSING</span>';
+  }
+
   // User Management functions
   let allUsers = [];
   let currentPage = 1;
@@ -495,7 +504,7 @@ window.initSettingsWorkspace = function(){
     if (!tableBody) return;
     
     if (allUsers.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="15" class="p-3 text-center text-slate-400">Belum ada user terdaftar.</td></tr>';
       document.getElementById('user-pagination-info').textContent = 'Menampilkan 0 dari 0 pengguna';
       document.getElementById('btn-user-prev').disabled = true;
       document.getElementById('btn-user-next').disabled = true;
@@ -536,6 +545,7 @@ window.initSettingsWorkspace = function(){
             : '<span class="text-red-500 font-bold">NONAKTIF</span>') +
         '</td>' +
         '<td class="p-2 border-b">' + String(u.loginMethod || 'OTP_GMAIL') + '</td>' +
+        '<td class="p-2 border-b">' + renderPasswordStorageBadge(u.passwordStorage) + '</td>' +
         '<td class="p-2 border-b">' +
           (String(u.otpEnabled || '').toUpperCase() === 'YA' 
             ? '<span class="text-blue-600 font-bold">YA</span>' 
@@ -563,17 +573,17 @@ window.initSettingsWorkspace = function(){
   const loadUserList = function() {
     const tableBody = document.getElementById('user-table-body');
     if (!tableBody) return;
-    tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-slate-400" role="status" aria-live="polite"><span>'+renderPd3iSpinner('Memuat data pengguna...')+'</span></td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="15" class="p-3 text-center text-slate-400" role="status" aria-live="polite"><span>'+renderPd3iSpinner('Memuat data pengguna...')+'</span></td></tr>';
     google.script.run.withSuccessHandler(function(res) {
       if (!res.ok) {
-        tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="15" class="p-3 text-center text-red-500 font-semibold">' + (res.error || 'Gagal memuat user') + '</td></tr>';
         return;
       }
       allUsers = res.users || [];
       currentPage = 1;
       renderUserPage();
     }).withFailureHandler(function(e) {
-      tableBody.innerHTML = '<tr><td colspan="14" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="15" class="p-3 text-center text-red-500 font-semibold">Error: ' + String((e&&e.message)||e) + '</td></tr>';
     }).manageGetUsers(getSessionToken());
   };
 

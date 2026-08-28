@@ -14,6 +14,7 @@ const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'in
 const workspaceSampelHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_sampel_form.html'), 'utf8');
 const workspaceVerifikasiHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_verifikasi_form.html'), 'utf8');
 const workspaceSearchHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_search.html'), 'utf8');
+const settingsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_settings.html'), 'utf8');
 const styleHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'style.html'), 'utf8');
 const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'utils.js.html'), 'utf8');
 const configMr = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'config_MR.html'), 'utf8');
@@ -775,6 +776,10 @@ test('user management exposes password storage status without PIN values', () =>
   assert.match(authJs, /return \/\^sha256:\/i\.test\(storedPin\) \? "sha256" : "plaintext"/);
   assert.match(authJs, /passwordStorage: ixPin !== -1 \? _getPinStorageStatus_\(row\[ixPin\]\) : "missing"/);
   assert.doesNotMatch(authJs, /passwordStorage:[\s\S]{0,80}String\(row\[ixPin\]/);
+  assert.match(settingsHtml, /<th class="p-2 border-b">PIN<\/th>/);
+  assert.match(settingsHtml, /function renderPasswordStorageBadge\(status\)/);
+  assert.match(settingsHtml, /renderPasswordStorageBadge\(u\.passwordStorage\)/);
+  assert.match(settingsHtml, /PLAINTEXT/);
 });
 
 test('session refresh keeps absolute six-hour expiry', () => {
