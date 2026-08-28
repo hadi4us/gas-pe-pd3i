@@ -80,6 +80,8 @@
     const type = String((field && field.type) || '').trim().toLowerCase();
     if (!id) return '';
     if (field && field.fullWidth) return 'pd3i-field-span-full';
+    if (type === 'dynamic_table' || type === 'geo_button') return 'pd3i-field-span-full';
+    if (type === 'choice_buttons') return 'pd3i-field-span-choice';
     if (type === 'textarea' || /alamat|catatan|gejala lain|komplikasi|riwayat|lokasi perjalanan|nama sekolah|tempat bekerja|nama rumah sakit|nama unit pelapor/.test(id)) return 'pd3i-field-span-full';
     if (type === 'date' || type === 'time' || type === 'number' || /tanggal|tgl|umur|usia|rt$|rw$|berat|tinggi|dosis|jumlah|latitude|longitude|wa|whatsapp|telepon|telp|kontak/.test(id)) return 'pd3i-field-span-short';
     if (/provinsi|kab\/kota|kecamatan|kelurahan|email|nik|sumber laporan|jenis|status|jk|kelas/.test(id)) return 'pd3i-field-span-medium';
@@ -422,7 +424,7 @@
     const htmlEscape = window.htmlEscape;
     const attrEscape = htmlEscape;
     if (field.type === "header") {
-      return `<div class="col-span-1 md:col-span-2 xl:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
+      return `<div class="pd3i-field-span-full pd3i-diagnosis-subsection-title col-span-1 md:col-span-2 xl:col-span-3 mt-8 mb-2 border-b-2 border-slate-200 pb-2 text-lg font-extrabold text-slate-800 uppercase tracking-tight">${htmlEscape(field.label)}</div>`;
     }
 
     const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 xl:col-span-3" : "";
