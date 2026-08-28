@@ -75,6 +75,17 @@
     return String((el.dataset && el.dataset.fieldId) || el.id || el.name || "").trim();
   }
 
+  function getPd3iFieldWidthClass_(field) {
+    const id = String((field && (field.id || field.label)) || '').trim().toLowerCase();
+    const type = String((field && field.type) || '').trim().toLowerCase();
+    if (!id) return '';
+    if (field && field.fullWidth) return 'pd3i-field-span-full';
+    if (type === 'textarea' || /alamat|catatan|gejala lain|komplikasi|riwayat|lokasi perjalanan|nama sekolah|tempat bekerja|nama rumah sakit|nama unit pelapor/.test(id)) return 'pd3i-field-span-full';
+    if (type === 'date' || type === 'time' || type === 'number' || /tanggal|tgl|umur|usia|rt$|rw$|berat|tinggi|dosis|jumlah|latitude|longitude|wa|whatsapp|telepon|telp|kontak/.test(id)) return 'pd3i-field-span-short';
+    if (/provinsi|kab\/kota|kecamatan|kelurahan|email|nik|sumber laporan|jenis|status|jk|kelas/.test(id)) return 'pd3i-field-span-medium';
+    return 'pd3i-field-span-medium';
+  }
+
   const ADDRESS_LIKE_FIELD_IDS = new Set([
     'Alamat', 'RT', 'RW', 'Provinsi Pasien', 'Kab/Kota Pasien', 'Kecamatan', 'Kelurahan',
     'Nama sekolah/tempat bekerja', 'Nama unit pelapor', 'Nama Rumah Sakit',
@@ -415,11 +426,12 @@
     }
 
     const widthClass = field.fullWidth ? "col-span-1 md:col-span-2 xl:col-span-3" : "";
+    const fieldWidthClass = getPd3iFieldWidthClass_(field);
     const showIfAttr = field.showIf
       ? `data-parent="${htmlEscape(field.showIf.field)}" data-parent-vals='${htmlEscape(JSON.stringify(field.showIf.values))}' data-required="${field.required ? "true" : "false"}"`
       : "";
 
-    const wrapperClass = `${widthClass} field-wrapper pd3i-field-card pd3i-component-field ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
+    const wrapperClass = `${widthClass} ${fieldWidthClass} field-wrapper pd3i-field-card pd3i-component-field ${field.fullWidth ? "pd3i-field-card-full" : ""} ${field.showIf ? "pd3i-field-card-dependent hidden" : ""}`;
     const fieldWrapperAttrs = `data-pd3i-field-wrapper="1" data-pd3i-field-id="${attrEscape(field.id)}"`;
     const cls = `pd3i-generated-control pd3i-shell-input border border-slate-300 text-sm rounded-lg block w-full p-2.5 shadow-sm ${
       field.readonly
