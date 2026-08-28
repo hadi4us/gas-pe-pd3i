@@ -10,18 +10,14 @@ function doGet(e) {
     return handlePdfExportRequest_(e);
   }
 
-  if (page === "sars" || page === "sars-form" || page === "zero-reporting" || page === "zero-reporting-form") {
-    return renderSarsForm_(e);
-  }
-  if (page === "sars-dashboard" || page === "zero-reporting-dashboard") {
-    return renderSarsDashboard_(e);
-  }
-
   const allowedWorkspaces = ["overview", "search", "input", "verifikasi", "sampel", "status", "zero-reporting-form", "zero-reporting-dashboard", "weekly-report-detail", "sars-form", "sars-dashboard", "guide", "pie", "settings"];
   const view = String((e && e.parameter && e.parameter.view) || "").trim().toLowerCase() === "dashboard"
     ? "dashboard"
     : "app";
-  const requestedWorkspace = String((e && e.parameter && e.parameter.workspace) || "").trim().toLowerCase();
+  const pageWorkspace = page === "sars" || page === "sars-form" || page === "zero-reporting" || page === "zero-reporting-form"
+    ? "zero-reporting-form"
+    : (page === "sars-dashboard" || page === "zero-reporting-dashboard" ? "zero-reporting-dashboard" : "");
+  const requestedWorkspace = pageWorkspace || String((e && e.parameter && e.parameter.workspace) || "").trim().toLowerCase();
   const initialWorkspace = view === "dashboard"
     ? "dashboard"
     : (allowedWorkspaces.indexOf(requestedWorkspace) !== -1 ? requestedWorkspace : "overview");
@@ -47,38 +43,6 @@ function doGet(e) {
   try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
 
   return finalizeHtmlOutput_(template.evaluate(), view === "dashboard" ? "Dashboard Statistik SIMPEL Surveilans Kota Depok" : "SIMPEL Surveilans Kota Depok", embedMode);
-}
-
-function renderSarsForm_(e) {
-  const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
-  const template = createTemplateFromFile_("SARS/index");
-  template.SPREADSHEET_ID = getSarsSpreadsheetId();
-  template.APP_URL = serviceUrl || getSarsAppUrl();
-  template.TZ = getSarsTimezone();
-  template.email = safeActiveUserEmail_();
-  template.defaultWA = "";
-  template.defaultFacilityType = "klinik";
-  template.defaultFacilityName = "";
-  template.epidInfo = getReportingEpidSafe_();
-  try { if (typeof getDefaultWA === "function") template.defaultWA = getDefaultWA() || ""; } catch (err) {}
-  try { if (typeof getDefaultFacilityType === "function") template.defaultFacilityType = getDefaultFacilityType() || "klinik"; } catch (err2) {}
-  try { if (typeof getDefaultFacilityName === "function") template.defaultFacilityName = getDefaultFacilityName() || ""; } catch (err3) {}
-  const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
-  return finalizeHtmlOutput_(template.evaluate(), "Form SARS PD3I – Depok", embedMode);
-}
-
-function renderSarsDashboard_(e) {
-  const serviceUrl = String(ScriptApp.getService().getUrl() || "").trim();
-  const template = createTemplateFromFile_("SARS/index_dashboard");
-  const rep = getReportingEpidSafe_();
-  template.SPREADSHEET_ID = getSarsSpreadsheetId();
-  template.APP_URL = serviceUrl || getSarsAppUrl();
-  template.TZ = getSarsTimezone();
-  template.DEFAULT_DASHBOARD_YEAR = Number(rep.year) || Number(new Date().getFullYear());
-  template.DEFAULT_DASHBOARD_WEEK = Number(rep.week) || 1;
-  try { template.SARS_CONFIG = (typeof getSarsConfig === "function") ? getSarsConfig() : {}; } catch (err) { template.SARS_CONFIG = {}; }
-  const embedMode = String((e && e.parameter && e.parameter.embed) || "").trim().toLowerCase();
-  return finalizeHtmlOutput_(template.evaluate(), "Dashboard SARS PD3I – Depok", embedMode);
 }
 
 function finalizeHtmlOutput_(output, title, embedMode) {

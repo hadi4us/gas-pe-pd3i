@@ -37,3 +37,8 @@ src/**/*.test.js
 src/**/*.node.test.js
 **/*.test.js
 **/*.node.test.js
+
+# Legacy standalone SARS shells are no longer entry points.
+# Routes now render the unified Views/index.html shell with zero-reporting workspaces.
+src/SARS/index.html
+src/SARS/index_dashboard.html
