@@ -63,8 +63,9 @@
           <div class="pd3i-zero-reporting-help-text" id="asalFaskesHelp"></div>
         </div>
 
-        <div class="sars-hidden-faskes-fields" aria-hidden="true">
-          <select id="jenisFaskes" tabindex="-1" aria-label="Jenis faskes pelapor">
+        <div class="sars-faskes-picker">
+          <label for="jenisFaskes">Jenis fasilitas kesehatan</label>
+          <select id="jenisFaskes" aria-label="Jenis faskes pelapor">
             <option value="">Pilih jenis fasilitas kesehatan</option>
             <option value="rs">Rumah Sakit (RS)</option>
             <option value="klinik">Klinik</option>
@@ -72,7 +73,8 @@
             <option value="pmb">PMB (Praktik Mandiri Bidan)</option>
             <option value="lain">Lainnya</option>
           </select>
-          <input type="text" id="asalFaskes" tabindex="-1">
+          <label for="asalFaskes">Nama faskes</label>
+          <input type="text" id="asalFaskes" placeholder="Ketik minimal 3 huruf nama faskes">
           <div id="acPopup" class="ac-popup" role="listbox" aria-label="Saran fasilitas"></div>
         </div>
 
@@ -749,10 +751,27 @@
     }
 
     function applyFallbackFaskesFromSession_(sessionUser) {
-      // Do not invent a facility identity. Server lookup must succeed first.
       jenisEl().value = '';
       asalFaskesEl().value = '';
       CURRENT_LIST = [];
+    }
+
+    function loadSarsMasterFaskes_(defaultJenis){
+      try {
+        google.script.run
+          .withSuccessHandler(data => {
+            MASTER_RS = Array.isArray(data && data.rs) ? data.rs : [];
+            MASTER_KLINIK = Array.isArray(data && data.klinik) ? data.klinik : [];
+            MASTER_TPMD = Array.isArray(data && data.tpmd) ? data.tpmd : [];
+            MASTER_PMB = Array.isArray(data && data.pmb) ? data.pmb : [];
+            MASTER_LAIN = Array.isArray(data && data.lain) ? data.lain : [];
+            ALL_FASKES = Array.isArray(data && data.all) ? data.all : [...new Set([].concat(MASTER_RS, MASTER_KLINIK, MASTER_TPMD, MASTER_PMB, MASTER_LAIN))];
+            if (defaultJenis && !jenisEl().value) jenisEl().value = defaultJenis;
+            setCurrentListByJenis((jenisEl().value || defaultJenis || 'lain').toLowerCase().trim());
+          })
+          .withFailureHandler(() => { helpEl().textContent = 'Master faskes gagal dimuat. Nama faskes tetap bisa diisi manual.'; })
+          .getMasterFaskesForClient();
+      } catch (e) {}
     }
 
     function initSarsNativeForm() {
@@ -785,6 +804,7 @@
       document.getElementById('unitPelapor').value = String(sessionUser.unitKerja || sessionUser.unit || sessionUser.scopeName || '');
       initSarsEpiInfo_();
       applyFallbackFaskesFromSession_(sessionUser);
+      loadSarsMasterFaskes_('lain');
 
       ["afp","mr","dif","tn","pert"].forEach(key => {
         const firstRow = document.querySelector(`#rows-${key} .pd3i-zero-reporting-case-row`);
@@ -804,6 +824,7 @@
             if (isAdminReporter) {
               setSarsFaskesReadyState_(true, 'Faskes login siap. Laporan bisa dikirim.', false);
               jenisEl().value = 'lain';
+              setCurrentListByJenis('lain');
               asalFaskesEl().value = String(sessionUser.unitKerja || sessionUser.unit || 'DINAS KESEHATAN');
               if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
               if (loginBoxName) loginBoxName.textContent = `${asalFaskesEl().value || 'DINAS KESEHATAN'} (ADMIN)`;

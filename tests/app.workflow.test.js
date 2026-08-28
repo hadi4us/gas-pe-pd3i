@@ -845,6 +845,9 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(workspaceSars, /title: 'Validasi belum lengkap'/);
   assert.match(workspaceSars, /cancelLabel: false/);
   assert.match(styleHtml, /sars-confirm-backdrop/);
+  assert.match(workspaceSars, /class="sars-faskes-picker"/);
+  assert.match(workspaceSars, /getMasterFaskesForClient/);
+  assert.match(styleHtml, /sars-faskes-picker/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
   assert.match(submitSars, /new Date\(tglMulai\) >= new Date\(tglLahir\)/);
 });
