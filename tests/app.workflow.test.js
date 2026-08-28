@@ -831,8 +831,11 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(workspaceSars, /if \(!res \|\| res\.ok !== true\) \{[\s\S]*?Laporan gagal disimpan/);
   assert.match(workspaceSars, /querySelector\(`#rows-\$\{key\} \.pd3i-zero-reporting-case-row`\)/);
   assert.match(workspaceSars, /firstRow\.querySelector\("\.pd3i-zero-reporting-remove-btn"\)/);
-  assert.match(workspaceSars, /class="nihil-row pd3i-sars-decision-row"[\s\S]*?\[✓\] Tidak ada kasus minggu ini[\s\S]*?\[\+\] Ada kasus, isi detail[\s\S]*?<div id="rows-afp"/);
-  assert.match(workspaceSars, /class="nihil-row pd3i-sars-decision-row"[\s\S]*?\[✓\] Tidak ada kasus minggu ini[\s\S]*?\[\+\] Ada kasus, isi detail[\s\S]*?<div id="rows-mr"/);
+  assert.match(workspaceSars, /class="nihil-row pd3i-sars-decision-row"[\s\S]*?\[✓\] Tidak ada kasus minggu ini[\s\S]*?\[\+\] Ada kasus, isi detail[\s\S]*?<div id="rows-afp" class="hidden"/);
+  assert.match(workspaceSars, /class="nihil-row pd3i-sars-decision-row"[\s\S]*?\[✓\] Tidak ada kasus minggu ini[\s\S]*?\[\+\] Ada kasus, isi detail[\s\S]*?<div id="rows-mr" class="hidden"/);
+  assert.match(workspaceSars, /container\.classList\.contains\('hidden'\)[\s\S]*?container\.classList\.remove\('hidden'\)/);
+  assert.match(workspaceSars, /Pilih \[✓\] Tidak ada kasus minggu ini atau \[\+\] Ada kasus, isi detail/);
+  assert.match(workspaceSars, /Detail kasus masih kosong/);
   assert.match(workspaceSars, /rows\.classList\.add\('hidden'\)/);
   assert.match(workspaceSars, /rows\.classList\.remove\('hidden'\)/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
