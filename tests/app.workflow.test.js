@@ -836,6 +836,7 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(workspaceSars, /container\.classList\.contains\('hidden'\)[\s\S]*?container\.classList\.remove\('hidden'\)/);
   assert.match(workspaceSars, /Pilih \[✓\] Tidak ada kasus minggu ini atau \[\+\] Ada kasus, isi detail/);
   assert.match(workspaceSars, /Detail kasus masih kosong/);
+  assert.match(styleHtml, /pd3i-sars-decision-card input\[type="checkbox"\][^{]*\{[^}]*width:18px!important[^}]*height:18px!important/);
   assert.match(workspaceSars, /rows\.classList\.add\('hidden'\)/);
   assert.match(workspaceSars, /rows\.classList\.remove\('hidden'\)/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
