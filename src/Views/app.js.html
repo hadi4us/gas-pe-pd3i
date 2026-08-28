@@ -4363,6 +4363,30 @@
     return nav;
   }
 
+  function updateInputCompletionCounters() {
+    const form = document.getElementById('dynamic-form-input');
+    if (!form) return;
+    PD3I_INPUT_WIZARD_BLOCKS.forEach(function(item) {
+      const card = form.querySelector(item.selector);
+      if (!card) return;
+      const summary = countRequiredCompletionForRoot(card);
+      let badge = card.querySelector('.pd3i-input-section-completion');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'pd3i-input-section-completion';
+        badge.setAttribute('role', 'status');
+        badge.setAttribute('aria-live', 'polite');
+        const title = card.querySelector('.pd3i-card-header-row, h3, h2') || card.firstElementChild;
+        if (title && title.parentNode) title.parentNode.insertBefore(badge, title.nextSibling);
+        else card.insertBefore(badge, card.firstChild);
+      }
+      const missing = Math.max(0, summary.total - summary.filled);
+      badge.classList.toggle('is-complete', summary.total > 0 && missing === 0);
+      badge.classList.toggle('is-missing', missing > 0);
+      badge.textContent = summary.total ? (missing ? missing + ' field wajib belum diisi (' + summary.filled + '/' + summary.total + ')' : 'Semua field wajib terisi (' + summary.filled + '/' + summary.total + ')') : 'Tidak ada field wajib di bagian ini';
+    });
+  }
+
   function updateInputWizardBlock(activeId) {
     const form = document.getElementById('dynamic-form-input');
     if (!form || form.classList.contains('hidden')) return;
@@ -4392,8 +4416,16 @@
     // "const hint = document.getElementById('pd3i-input-wizard-hint');"
     // "const next = 'data-input-wizard-next';"
     // "const review = 'Cek Review sebelum simpan';"
+    updateInputCompletionCounters();
     schedulePd3iSubmitReviewRefresh('immediate');
   }
+
+  document.addEventListener('input', function(e) {
+    if (e.target && e.target.closest && e.target.closest('#dynamic-form-input')) updateInputCompletionCounters();
+  });
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.closest && e.target.closest('#dynamic-form-input')) updateInputCompletionCounters();
+  });
 
   document.addEventListener('click', function(e) {
     const tab = e.target && e.target.closest && e.target.closest('[data-input-wizard-block]');
@@ -5321,8 +5353,7 @@
     root.querySelectorAll('input[name], select[name], textarea[name]').forEach(function(el) {
       const fieldKey = _getSemanticFieldKey_(el);
       if (!fieldKey) return;
-      const wrapper = el.closest && el.closest('.field-wrapper');
-      if (wrapper && wrapper.classList.contains('hidden')) return;
+      if (el.closest && el.closest('[hidden], [aria-hidden="true"], .hidden')) return;
       if (el.multiple || (el.dataset && el.dataset.multiSelect === '1')) {
         payload[fieldKey] = Array.from(el.selectedOptions || [])
           .map(function(opt) { return String(opt.value || '').trim(); })
@@ -5335,8 +5366,7 @@
     // Choice button is source of truth. Hidden input can be overwritten by
     // browser autofill/hydration timing; never let stale hidden value win.
     root.querySelectorAll('.pd3i-choice-btn[data-field-id][aria-pressed="true"]').forEach(function(btn) {
-      const wrapper = btn.closest && btn.closest('.field-wrapper');
-      if (wrapper && wrapper.classList.contains('hidden')) return;
+      if (btn.closest && btn.closest('[hidden], [aria-hidden="true"], .hidden')) return;
       const fieldKey = String(btn.getAttribute('data-field-id') || '').trim();
       const choiceValue = String(btn.getAttribute('data-choice-value') || '').trim();
       if (fieldKey && choiceValue) payload[fieldKey] = choiceValue;

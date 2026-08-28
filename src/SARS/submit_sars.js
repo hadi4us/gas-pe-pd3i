@@ -367,7 +367,7 @@ function submitSARS(formData) {
   const namaPetugas   = _sTrim_(session.user.nama || session.user.name || session.user.username || email);
   const noWA          = _sTrim_(session.user.noWhatsapp || session.user.noWA || formData.noWA);
   const unit          = _sTrim_(session.user.unitKerja || session.user.unit || formData.unitPelapor);
-  const jenisFasyankes= _sTrim_(formData.jenisFaskes);
+  let jenisFasyankes = _sTrim_(session.user.jenisFaskes || session.user.jenis || formData.jenisFaskes);
   const clientFacility = _sTrim_(formData.asalFaskes);
   const role = (typeof _normalizePd3iRole_ === 'function')
     ? _normalizePd3iRole_(session.user.role)
@@ -393,6 +393,8 @@ function submitSARS(formData) {
   if (clientFacility && _normKey_(clientFacility) !== sessionKey && _normKey_(clientFacility) !== _normKey_(namaFasyankes)) {
     throw new Error('Fasilitas laporan tidak sesuai dengan akun login.');
   }
+
+  jenisFasyankes = _normalizeSarsFacilityType_(sessionFacility.jenis || jenisFasyankes);
 
   _sRequire_(Number.isFinite(me) && me >= 1 && me <= 53, "Minggu epidemiologis tidak valid.");
   _sRequire_(namaPetugas, "Nama petugas pelapor wajib diisi.");
@@ -443,6 +445,9 @@ function submitSARS(formData) {
 
   const faskesPengampu = _sTrim_(lk.pengampu);
 
+  const sarsSubmitLock = LockService.getScriptLock();
+  sarsSubmitLock.waitLock(30000);
+  try {
   // validasi dobel
   _checkDuplicate_(shData, hmap, me, faskesKey);
 
@@ -454,8 +459,9 @@ function submitSARS(formData) {
   const rowsToAppend = [];
 
   formData.cases.forEach((c) => {
-    const penyakit = _sTrim_(c.jenis);
+    const penyakit = _sTrim_(c.jenis).toUpperCase();
     _sRequire_(penyakit, "Ada item case tanpa 'jenis' (Nama Penyakit).");
+    _sRequire_(['AFP', 'CAMPAK', 'DIFTERI', 'TETANUS NEONATORUM', 'PERTUSIS'].indexOf(penyakit) !== -1, `Nama penyakit tidak valid: ${penyakit}.`);
 
     const isNihil = !!c.nihl;
     const row = new Array(headersLen).fill("");
@@ -477,15 +483,21 @@ function submitSARS(formData) {
 
     // ===== detail kasus =====
     if (!isNihil) {
-      _set_(row, hmap, "Nama Kasus", _sTrim_(c.nama));
-      _set_(row, hmap, "Tgl Lahir", _sTrim_(c.tglLahir));
+      const namaKasus = _sTrim_(c.nama);
+      const tglLahir = _sTrim_(c.tglLahir);
+      const tglMulai = _sTrim_(c.tglMulai);
+      const keadaan = _sTrim_(c.keadaan);
+      _sRequire_(namaKasus && tglMulai && keadaan, `Data kasus ${penyakit} belum lengkap: nama kasus, tanggal mulai, dan keadaan wajib diisi.`);
+      if (tglLahir && tglMulai) _sRequire_(new Date(tglMulai) >= new Date(tglLahir), `Tanggal mulai kasus ${penyakit} tidak boleh lebih awal dari tanggal lahir.`);
+      _set_(row, hmap, "Nama Kasus", namaKasus);
+      _set_(row, hmap, "Tgl Lahir", tglLahir);
       _set_(row, hmap, "Jenis Kelamin", _sTrim_(c.jk));
       _set_(row, hmap, "Nama Ortu", _sTrim_(c.namaOrtu));
       _set_(row, hmap, "Alamat & No Telp", _sTrim_(c.alamat));
-      _set_(row, hmap, "Tanggal Mulai", _sTrim_(c.tglMulai));
+      _set_(row, hmap, "Tanggal Mulai", tglMulai);
       _set_(row, hmap, "Gejala", _sTrim_(c.gejala));
       _set_(row, hmap, "Status Imunisasi", _sTrim_(c.imunisasi));
-      _set_(row, hmap, "Keadaan (H/M)", _sTrim_(c.keadaan));
+      _set_(row, hmap, "Keadaan (H/M)", keadaan);
       _set_(row, hmap, "Spesimen / Penolong", _sTrim_(c.spesimenPenolong));
       _set_(row, hmap, "Diagnosis Medis/Banding", _sTrim_(c.diagnosis));
     }
@@ -544,4 +556,7 @@ function submitSARS(formData) {
     adminTelegramNotifications,
     adminWahaNotification
   };
+  } finally {
+    try { sarsSubmitLock.releaseLock(); } catch (e) {}
+  }
 }

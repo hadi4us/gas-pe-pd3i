@@ -80,64 +80,66 @@
         <div class="disease-section">
           <div class="pd3i-zero-reporting-disease-header" aria-label="AFP">AFP (Lumpuh layuh mendadak, bukan karena trauma, umur &lt;15 th)</div>
           <div id="rows-afp"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai lumpuh</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Polio)</label>      <input type="text" name="imunisasi">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis">    </div>  </div></div></div>
-          <div class="nihil-row">
-            <div class="nihil-container">
+          <div class="nihil-row pd3i-sars-decision-row">
+            <div class="nihil-container pd3i-sars-decision-card">
               <input type="checkbox" id="nihil-afp" onchange="toggleNihil('afp')">
-              <label for="nihil-afp">Tidak ada kasus AFP minggu ini (NIHIL)</label>
+              <label for="nihil-afp"><strong>NIHIL</strong><span>Tidak ada kasus AFP minggu ini</span></label>
             </div>
-            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('afp')">+ Tambah baris kasus</button>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('afp')">Ada kasus / tambah baris</button>
           </div>
         </div>
 
         <div class="disease-section">
           <div class="pd3i-zero-reporting-disease-header" aria-label="CAMPAK">CAMPAK (Semua umur, demam dan rash)</div>
           <div id="rows-mr"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai rash</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (Campak Rubela)</label>      <input type="text" name="imunisasi">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis">    </div>  </div></div></div>
-          <div class="nihil-row">
-            <div class="nihil-container">
+          <div class="nihil-row pd3i-sars-decision-row">
+            <div class="nihil-container pd3i-sars-decision-card">
               <input type="checkbox" id="nihil-mr" onchange="toggleNihil('mr')">
-              <label for="nihil-mr">Tidak ada kasus Campak minggu ini (NIHIL)</label>
+              <label for="nihil-mr"><strong>NIHIL</strong><span>Tidak ada kasus Campak minggu ini</span></label>
             </div>
-            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('mr')">+ Tambah baris kasus</button>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('mr')">Ada kasus / tambah baris</button>
           </div>
         </div>
 
         <div class="disease-section">
           <div class="pd3i-zero-reporting-disease-header" aria-label="DIFTERI">DIFTERI (ISPA, demam tidak tinggi, pseudomembran, stridor)</div>
           <div id="rows-dif"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT/DT/Td)</label>      <input type="text" name="imunisasi">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Spesimen</label><select name="spesimen"><option value="">Pilih</option><option value="YA">YA</option><option value="Tidak">Tidak</option></select></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis">    </div>  </div></div></div>
-          <div class="nihil-row">
-            <div class="nihil-container">
+          <div class="nihil-row pd3i-sars-decision-row">
+            <div class="nihil-container pd3i-sars-decision-card">
               <input type="checkbox" id="nihil-dif" onchange="toggleNihil('dif')">
-              <label for="nihil-dif">Tidak ada kasus Difteri minggu ini (NIHIL)</label>
+              <label for="nihil-dif"><strong>NIHIL</strong><span>Tidak ada kasus Difteri minggu ini</span></label>
             </div>
-            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('dif')">+ Tambah baris kasus</button>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('dif')">Ada kasus / tambah baris</button>
           </div>
         </div>
 
         <div class="disease-section">
           <div class="pd3i-zero-reporting-disease-header" aria-label="TETANUS NEONATORUM">TETANUS NEONATORUM (Bayi 3–28 hari, mulut mencucu, kejang rangsang)</div>
           <div id="rows-tn"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama bayi</label>      <input type="text" name="nama">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama ibu</label>      <input type="text" name="namaOrtu">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat ibu & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (TT Ibu)</label>      <input type="text" name="imunisasi">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong"></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis">    </div>  </div></div></div>
-          <div class="nihil-row">
-            <div class="nihil-container">
+          <div class="nihil-row pd3i-sars-decision-row">
+            <div class="nihil-container pd3i-sars-decision-card">
               <input type="checkbox" id="nihil-tn" onchange="toggleNihil('tn')">
-              <label for="nihil-tn">Tidak ada kasus TN minggu ini (NIHIL)</label>
+              <label for="nihil-tn"><strong>NIHIL</strong><span>Tidak ada kasus TN minggu ini</span></label>
             </div>
-            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('tn')">+ Tambah baris kasus</button>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('tn')">Ada kasus / tambah baris</button>
           </div>
         </div>
 
         <div class="disease-section">
           <div class="pd3i-zero-reporting-disease-header" aria-label="PERTUSIS">PERTUSIS (Batuk terus menerus, apnea, batuk rejan, muntah setelah batuk)</div>
           <div id="rows-pert"><div class="pd3i-zero-reporting-case-row">  <button type="button" class="pd3i-zero-reporting-remove-btn pd3i-btn is-danger" onclick="removeRow(this)">Hapus</button>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama kasus</label>      <input type="text" name="nama">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal lahir</label>      <input type="date" name="tglLahir">    </div>    <div class="pd3i-case-span-1">      <label>Jenis kelamin</label>      <select name="jk">        <option value="">Pilih</option>        <option value="L">Laki-laki</option>        <option value="P">Perempuan</option>      </select>    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Nama orang tua/wali</label>      <input type="text" name="namaOrtu">    </div>    <div class="pd3i-case-span-3">      <label>Alamat & no. telepon</label>      <input type="text" name="alamat" placeholder="Alamat lengkap & nomor telepon">    </div>    <div class="pd3i-case-span-1">      <label>Tanggal mulai sakit</label>      <input type="date" name="tglMulai">    </div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-2">      <label>Gejala yang muncul</label>      <input type="text" name="gejala">    </div>    <div class="pd3i-case-span-2">      <label>Status imunisasi (DPT)</label>      <input type="text" name="imunisasi">    </div>    <div class="pd3i-case-span-1">      <label>Keadaan</label>      <select name="keadaan">        <option value="">Pilih</option>        <option value="H">Hidup</option>        <option value="M">Meninggal</option>      </select>    </div><div class="pd3i-case-span-1"><label>Penolong persalinan</label><input type="text" name="penolong"></div>  </div>  <div class="pd3i-case-grid">    <div class="pd3i-case-span-3">      <label>Diagnosis medis/banding</label>      <input type="text" name="diagnosis">    </div>  </div></div></div>
-          <div class="nihil-row">
-            <div class="nihil-container">
+          <div class="nihil-row pd3i-sars-decision-row">
+            <div class="nihil-container pd3i-sars-decision-card">
               <input type="checkbox" id="nihil-pert" onchange="toggleNihil('pert')">
-              <label for="nihil-pert">Tidak ada kasus Pertusis minggu ini (NIHIL)</label>
+              <label for="nihil-pert"><strong>NIHIL</strong><span>Tidak ada kasus Pertusis minggu ini</span></label>
             </div>
-            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('pert')">+ Tambah baris kasus</button>
+            <button type="button" class="pd3i-zero-reporting-btn-add pd3i-btn is-secondary" onclick="addRow('pert')">Ada kasus / tambah baris</button>
           </div>
         </div>
 
-        <button type="button" class="btn pd3i-btn is-primary" id="submitBtn" disabled onclick="return window.submitZeroReporting(event)"><i class="fas fa-save"></i> Simpan dan kirim laporan</button>
+        <div class="pd3i-zero-reporting-submit-help" id="sars-submit-help" role="status" aria-live="polite">Memuat data faskes login...</div>
+        <button type="button" class="btn pd3i-btn is-primary" id="submitBtn" disabled aria-describedby="sars-submit-help" onclick="return window.submitZeroReporting(event)"><i class="fas fa-save"></i> Simpan dan kirim laporan</button>
+        <button type="button" class="pd3i-btn is-secondary hidden" id="btn-retry-sars-faskes">Coba lagi muat faskes</button>
       </form>
 
   <script>
@@ -162,6 +164,13 @@
 
     let IS_SUBMITTING = false;
     let SARS_FASKES_READY = false;
+
+    const SARS_REQUIRED_LABELS = {
+      mingguEpid: 'Minggu epidemiologis',
+      namaPelapor: 'Nama petugas pelapor',
+      noWA: 'Nomor WhatsApp',
+      unitPelapor: 'Unit surveilans'
+    };
 
     // ========= UTIL =========
     function escapeHtml(s){
@@ -427,6 +436,16 @@
       }
     }
 
+    function setSarsFaskesReadyState_(ready, message, canRetry) {
+      SARS_FASKES_READY = !!ready;
+      const submitBtn = document.getElementById('submitBtn');
+      const help = document.getElementById('sars-submit-help');
+      const retry = document.getElementById('btn-retry-sars-faskes');
+      if (submitBtn && !IS_SUBMITTING) submitBtn.disabled = !SARS_FASKES_READY;
+      if (help) help.textContent = message || (SARS_FASKES_READY ? 'Faskes login siap. Laporan bisa dikirim.' : 'Faskes login belum siap.');
+      if (retry) retry.classList.toggle('hidden', !canRetry);
+    }
+
     const sarsFormElement = document.getElementById('sarsForm');
     if (sarsFormElement) sarsFormElement.noValidate = true;
     // Compatibility marker: onsubmit = async function(e)
@@ -473,7 +492,8 @@
       for (let id of required) {
         const el = document.getElementById(id);
         if (!el || !String(el.value || '').trim()) {
-          showSarsBanner(`Kolom "${id.replace(/([A-Z])/g, ' $1')}" wajib diisi.`, { type: 'error' });
+          showSarsBanner(`Kolom "${SARS_REQUIRED_LABELS[id] || id}" wajib diisi.`, { type: 'error' });
+          if (el && typeof el.focus === 'function') el.focus();
           IS_SUBMITTING = false;
           setSubmittingState(false);
           return;
@@ -579,14 +599,12 @@
       google.script.run
         .withSuccessHandler((res) => {
           clearTimeout(submitTimeout);
-          try {
-            if (res && typeof res === 'object' && res.ok === false) {
-              showSarsBanner((res.message || 'Laporan ditolak oleh sistem.'), { type: 'error' });
-              IS_SUBMITTING = false;
-              setSubmittingState(false);
-              return;
-            }
-          } catch(e){}
+          if (!res || res.ok !== true) {
+            showSarsBanner((res && res.message) || 'Laporan gagal disimpan.', { type: 'error' });
+            IS_SUBMITTING = false;
+            setSubmittingState(false);
+            return;
+          }
 
           showSarsBanner('Laporan Zero Reporting berhasil disimpan dan dikirim.', { type: 'success' });
 
@@ -694,11 +712,16 @@
       restoreSarsSubmitStatus_();
       if (window.__SARS_NATIVE_FORM_READY) return;
       window.__SARS_NATIVE_FORM_READY = true;
+      setSarsFaskesReadyState_(false, 'Memuat data faskes login...', false);
       helpEl().textContent = 'Memuat akun faskes dari MASTER_DATA Zero Reporting...';
 
       const loginBox = document.getElementById('sarsLoginFaskesBox');
       const loginBoxName = document.getElementById('sarsLoginFaskesName');
       if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
+      document.getElementById('btn-retry-sars-faskes')?.addEventListener('click', function() {
+        window.__SARS_NATIVE_FORM_READY = false;
+        initSarsNativeForm();
+      });
       // Workspace auth state may live on window bridge after login restore.
       // Prefer live SESSION_USER, then mirrored session user, then browser cache.
       let sessionUser = {};
@@ -717,9 +740,9 @@
       applyFallbackFaskesFromSession_(sessionUser);
 
       ["afp","mr","dif","tn","pert"].forEach(key => {
-        const firstRow = document.querySelector(`#rows-${key} .case-row`);
+        const firstRow = document.querySelector(`#rows-${key} .pd3i-zero-reporting-case-row`);
         if (firstRow) {
-          const removeBtn = firstRow.querySelector(".btn-remove");
+          const removeBtn = firstRow.querySelector(".pd3i-zero-reporting-remove-btn");
           if (removeBtn) removeBtn.style.display = "none";
         }
       });
@@ -732,28 +755,22 @@
           if (!res || res.status !== 'success') {
             const rawMsg = (res && res.message) ? res.message : 'Akun faskes tidak ditemukan.';
             if (isAdminReporter) {
-              SARS_FASKES_READY = true;
+              setSarsFaskesReadyState_(true, 'Faskes login siap. Laporan bisa dikirim.', false);
               jenisEl().value = 'lain';
               asalFaskesEl().value = String(sessionUser.unitKerja || sessionUser.unit || 'DINAS KESEHATAN');
-              const submitBtn = document.getElementById('submitBtn');
-              if (submitBtn) submitBtn.disabled = false;
               if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
               if (loginBoxName) loginBoxName.textContent = `${asalFaskesEl().value || 'DINAS KESEHATAN'} (ADMIN)`;
               helpEl().textContent = 'Akun admin: identitas laporan memakai unit kerja login.';
               return;
             }
-            SARS_FASKES_READY = false;
+            setSarsFaskesReadyState_(false, rawMsg, true);
             if (loginBoxName) loginBoxName.textContent = '';
             helpEl().textContent = rawMsg;
             if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) submitBtn.disabled = true;
             return;
           }
           const typeMap = { RS:'rs', KLINIK:'klinik', TPMD:'tpmd', PMB:'pmb', LAIN:'lain' };
-          SARS_FASKES_READY = true;
-          const submitBtn = document.getElementById('submitBtn');
-          if (submitBtn) submitBtn.disabled = false;
+          setSarsFaskesReadyState_(true, 'Faskes login siap. Laporan bisa dikirim.', false);
           const jenis = typeMap[String(res.jenis || '').toUpperCase()] || 'lain';
           jenisEl().value = jenis;
           asalFaskesEl().value = String(res.nama || '');
@@ -768,23 +785,19 @@
         .withFailureHandler(err => {
           console.error(err);
           if (isAdminReporter) {
-            SARS_FASKES_READY = true;
+            setSarsFaskesReadyState_(true, 'Faskes login siap. Laporan bisa dikirim.', false);
             jenisEl().value = 'lain';
             asalFaskesEl().value = String(sessionUser.unitKerja || sessionUser.unit || 'DINAS KESEHATAN');
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) submitBtn.disabled = false;
             if (loginBox) loginBox.classList.remove('sars-faskes-status-hidden');
             if (loginBoxName) loginBoxName.textContent = `${asalFaskesEl().value || 'DINAS KESEHATAN'} (ADMIN)`;
             helpEl().textContent = 'Akun admin: identitas laporan memakai unit kerja login.';
             return;
           }
-          SARS_FASKES_READY = false;
+          setSarsFaskesReadyState_(false, 'Gagal memuat akun faskes. Tekan Coba lagi.', true);
           const msg = 'Gagal memuat akun faskes.';
           if (loginBoxName) loginBoxName.textContent = '';
           helpEl().textContent = msg;
           if (loginBox) loginBox.classList.add('sars-faskes-status-hidden');
-          const submitBtn = document.getElementById('submitBtn');
-          if (submitBtn) submitBtn.disabled = true;
         })
         .getSarsFacilityForActiveUser(String(sessionUser.email || sessionUser.gmail || sessionUser.username || ''));
     }

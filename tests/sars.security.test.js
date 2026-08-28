@@ -28,8 +28,10 @@ function makeSubmit(session) {
     _sToInt_: v => Number.isFinite(Number(v)) ? Math.floor(Number(v)) : NaN,
     _getSessionFromToken_: token => token ? session : { ok: false, message: 'Sesi tidak valid.' },
     _normalizePd3iRole_: role => String(role || '').toLowerCase().replace(/[_\s]+/g, '-'),
+    _normalizeSarsFacilityType_: value => String(value || '').trim().toUpperCase(),
     _normKey_: value => String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, ''),
-    getSarsFacilityForActiveUser: () => ({ status: 'success', key: 'FASKES-A', nama: 'Faskes A' })
+    getSarsFacilityForActiveUser: () => ({ status: 'success', key: 'FASKES-A', nama: 'Faskes A', jenis: 'KLINIK' }),
+    LockService: { getScriptLock: () => ({ waitLock: () => {}, releaseLock: () => {} }) }
   };
   const helper = extractFunction(source, '_getSarsSubmitSession_');
   const roles = source.match(/const SARS_SUBMIT_ROLES_ = \[[^;]+\];/)[0];

@@ -944,6 +944,7 @@
         }
 
         if (e.target && ((e.target.closest && e.target.closest("#dynamic-form-input")) || e.target.id === "form-selector" || e.target.id === "search-epid")) {
+          if (typeof applyAllShowIf === 'function') applyAllShowIf();
           saveFormDraft();
         }
         if (e.target && e.target.closest && (e.target.closest("#dynamic-form") || e.target.closest("#dynamic-form-input") || e.target.closest("#dynamic-form-verifikasi") || e.target.closest("#dynamic-form-sampel") || e.target.closest("#dynamic-form-status") || e.target.id === "form-selector")) {
@@ -2230,7 +2231,7 @@
         syncStatusHistoryTimeline();
 
         setPd3iButtonLoading(activeSubmitButton, true, 'Menyimpan...');
-        setWorkflowSubmitFeedback(submitMode, 'Menyimpan verifikasi ke server...', null);
+        setWorkflowSubmitFeedback(submitMode, submitMode === 'input' ? 'Menyimpan input awal ke server...' : 'Menyimpan verifikasi ke server...', null);
 
         const dataObj = { dx: selector.value, __token: SESSION_TOKEN, __workflowStage: normalizeWorkflowStepId(activeStageOnSubmit), __submitMode: submitMode };
         dataObj.__action = getWorkflowSaveActionForMode(submitMode);

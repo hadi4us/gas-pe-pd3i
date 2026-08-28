@@ -74,7 +74,7 @@ test('workflow saves give local feedback, timeout, and modal confirmation for ev
   assert.match(appHtml, /if \(submitMode === 'status'\) return document\.getElementById\('workflow-submit-status-status'\)/);
   assert.match(appHtml, /const WORKFLOW_SAVE_TIMEOUT_MS = 45000/);
   assert.match(appHtml, /function withWorkflowSaveTimeout\(promise, label\)/);
-  assert.match(appHtml, /setWorkflowSubmitFeedback\(submitMode, 'Menyimpan verifikasi ke server\.\.\.', null\)/);
+  assert.match(appHtml, /setWorkflowSubmitFeedback\(submitMode, submitMode === 'input' \? 'Menyimpan input awal ke server\.\.\.' : 'Menyimpan verifikasi ke server\.\.\.', null\)/);
   assert.match(appHtml, /showWorkflowSubmitError\(submitMode, 'Pada tahap verifikasi admin harus memilih status Terverifikasi atau Perlu Revisi\.'\)/);
   assert.match(appHtml, /res = await withWorkflowSaveTimeout\(saveFormViaGsRun\(dataObj\), 'Simpan verifikasi EPID'\)/);
   assert.match(appHtml, /if \(!\/google\\\.script\\\.run tidak tersedia\/i\.test\(gsMessage\)\) \{\s*throw gsErr;\s*\}/);
@@ -746,6 +746,23 @@ test('Input Kasus submit shows inline errors near save button', () => {
   assert.doesNotMatch(appInitHtmlRaw, /Menyiapkan review sebelum simpan/);
 });
 
+test('Input Kasus shows per-section required completion counters', () => {
+  assert.match(appHtml, /function updateInputCompletionCounters\(\)/);
+  assert.match(appHtml, /className = 'pd3i-input-section-completion'/);
+  assert.match(appHtml, /missing \+ ' field wajib belum diisi \(\'/);
+  assert.match(appHtml, /Semua field wajib terisi/);
+  assert.match(appHtml, /closest\('#dynamic-form-input'\)\) updateInputCompletionCounters\(\)/);
+});
+
+test('sidebar nav groups are real accessible disclosure buttons', () => {
+  const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'index.html'), 'utf8');
+  assert.match(indexHtml, /id="pd3i-cases-nav-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="pd3i-cases-nav-children"/);
+  assert.match(indexHtml, /id="pd3i-reporting-nav-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="pd3i-reporting-nav-children"/);
+  assert.match(indexHtml, /id="pd3i-pie-nav-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="pd3i-pie-nav-children"/);
+  assert.match(indexHtml, /id="pd3i-tools-nav-toggle"[^>]*aria-expanded="true"[^>]*aria-controls="pd3i-admin-nav-children"/);
+  assert.match(appHtml, /function syncSidebarNavGroupExpanded\(parentId, childrenId, expanded\)[\s\S]*?parent\.setAttribute\('aria-expanded', expanded \? 'true' : 'false'\)/);
+});
+
 test('OTP login does not stay stuck on mobile when google.script.run stalls', () => {
   assert.match(authHtml, /verifyLoginOtp timeout, trying POST fallback/);
   assert.match(authHtml, /function verifyLoginViaPost\(\) \{[\s\S]*?fetch\(url, \{[\s\S]*?JSON\.stringify\(\{ action: "verifyLoginOtp", email: email, otp: otp \}\)/);
@@ -785,6 +802,26 @@ const utilsHtml = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'ut
   assert.match(appHtml, /aria-label="Geser tabel \$\{field\.label\} ke kanan\/kiri"/);
   assert.match(appHtml, /class="pd3i-table-scroll-hint md:hidden"/);
   assert.match(appHtml, /<table class="pd3i-dynamic-table w-full/);
+});
+
+
+test('Input Kasus payload skips hidden showIf fields and re-evaluates showIf on change', () => {
+  assert.match(appHtml, /function collectCurrentFormPayload\(scope\)[\s\S]*?el\.closest && el\.closest\('\[hidden\], \[aria-hidden="true"\], \.hidden'\)[\s\S]*?return;/);
+  assert.match(appHtml, /pd3i-choice-btn\[data-field-id\]\[aria-pressed="true"\][\s\S]*?btn\.closest && btn\.closest\('\[hidden\], \[aria-hidden="true"\], \.hidden'\)[\s\S]*?return;/);
+  assert.match(appHtml, /document\.addEventListener\("change", function\(e\)[\s\S]*?if \(typeof applyAllShowIf === 'function'\) applyAllShowIf\(\);[\s\S]*?saveFormDraft\(\);/);
+});
+
+test('Zero Reporting success and server validation reject false success and partial non-nihil cases', () => {
+  const workspaceSars = fs.readFileSync(path.join(__dirname, '..', 'src', 'Views', 'workspace_sars.html'), 'utf8');
+  const submitSars = fs.readFileSync(path.join(__dirname, '..', 'src', 'SARS', 'submit_sars.js'), 'utf8');
+  assert.match(workspaceSars, /if \(!res \|\| res\.ok !== true\) \{[\s\S]*?Laporan gagal disimpan/);
+  assert.match(workspaceSars, /querySelector\(`#rows-\$\{key\} \.pd3i-zero-reporting-case-row`\)/);
+  assert.match(workspaceSars, /firstRow\.querySelector\("\.pd3i-zero-reporting-remove-btn"\)/);
+  assert.match(workspaceSars, /class="nihil-row pd3i-sars-decision-row"/);
+  assert.match(workspaceSars, /<strong>NIHIL<\/strong><span>Tidak ada kasus AFP minggu ini<\/span>/);
+  assert.match(workspaceSars, /Ada kasus \/ tambah baris/);
+  assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
+  assert.match(submitSars, /new Date\(tglMulai\) >= new Date\(tglLahir\)/);
 });
 
 test('quality gate includes endpoint security inventory with no review-needed callable functions', () => {
@@ -1107,10 +1144,15 @@ test('SARS submit requires session token and server-owned facility identity', ()
   assert.match(sarsSubmit, /getSarsFacilityForActiveUser\(email\)/);
   assert.match(sarsSubmit, /Fasilitas laporan tidak sesuai dengan akun login/);
   assert.match(sarsSubmit, /const namaFasyankes = _sTrim_\(sessionFacility\.nama\)/);
+  assert.match(sarsSubmit, /let jenisFasyankes = _sTrim_\(session\.user\.jenisFaskes \|\| session\.user\.jenis \|\| formData\.jenisFaskes\)/);
+  assert.match(sarsSubmit, /jenisFasyankes = _normalizeSarsFacilityType_\(sessionFacility\.jenis \|\| jenisFasyankes\)/);
+  assert.match(sarsSubmit, /const sarsSubmitLock = LockService\.getScriptLock\(\);[\s\S]*?sarsSubmitLock\.waitLock\(30000\);[\s\S]*?_checkDuplicate_\(shData, hmap, me, faskesKey\);[\s\S]*?setValues\(rowsToAppend\);[\s\S]*?sarsSubmitLock\.releaseLock\(\)/);
+  assert.match(sarsSubmit, /\['AFP', 'CAMPAK', 'DIFTERI', 'TETANUS NEONATORUM', 'PERTUSIS'\]\.indexOf\(penyakit\) !== -1/);
   assert.match(workspaceSars, /__token:\s*String\(/);
   assert.match(standaloneSars, /__token:\s*String\(/);
   assert.doesNotMatch(sarsSubmit, /const email\s*=\s*_sTrim_\(formData\.email\)/);
   assert.doesNotMatch(sarsSubmit, /const namaFasyankes\s*=\s*_sTrim_\(formData\.asalFaskes\)/);
+  assert.doesNotMatch(sarsSubmit, /const jenisFasyankes\s*=\s*_sTrim_\(formData\.jenisFaskes\)/);
 });
 
 test('MR rejects duplicate campak case when NIK and fever onset date match', () => {
@@ -1125,6 +1167,9 @@ test('MR rejects duplicate campak case when NIK and fever onset date match', () 
 test('input create path is create-only and diagnosis allowlisted', () => {
   assert.match(routesJs, /function createInitialCase\(token, payload\) \{[\s\S]*?\['ID Registrasi Kasus', 'RAW_ROW_NUMBER', 'Nomor EPID', 'recordKey', 'recordId'\]\.forEach[\s\S]*?Input awal harus membuat kasus baru/);
   assert.match(routesJs, /if \(\["MR", "DIF", "PERT", "TN", "AFP"\]\.indexOf\(dx\) === -1\) \{\s*return \{ status: "error", message: "dx tidak valid\." \};\s*\}/);
+  assert.match(routesJs, /function _validateInitialCaseRequiredFields_\(dx, data\)/);
+  assert.match(routesJs, /Field wajib input awal belum lengkap/);
+  assert.match(routesJs, /_validateInitialCaseRequiredFields_\(dx, data\);/);
 });
 
 test('input submit uses one click path only', () => {

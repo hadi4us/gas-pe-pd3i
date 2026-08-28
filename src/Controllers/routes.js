@@ -2666,6 +2666,30 @@ function _sanitizeInitialReportEditPayload_(dx, data, sess) {
   return cleaned;
 }
 
+
+function _validateInitialCaseRequiredFields_(dx, data) {
+  const stage = _normalizeWorkflowStage_(data && data.__workflowStage);
+  const hasExistingKey = !!String((data && (data['ID Registrasi Kasus'] || data.RAW_ROW_NUMBER || data['Nomor EPID'])) || '').trim();
+  if ((stage && stage !== 'section-pelapor') || hasExistingKey) return;
+
+  const required = [
+    'Sumber Laporan', 'Nama unit pelapor', 'Provinsi', 'Kab/Kota', 'Nama Petugas',
+    'No Whatsapp Petugas', 'Email Petugas', 'Tanggal terima laporan', 'Tanggal Pelacakan',
+    'Nama', 'JK', 'Tanggal Lahir', 'Alamat', 'Kecamatan', 'Kelurahan'
+  ];
+  const dxRequired = {
+    MR: ['Demam?', 'Ruam Makulopapular?'],
+    DIF: ['Tanggal mulai sakit'],
+    PERT: ['Tanggal mulai batuk'],
+    TN: ['Nama Ibu', 'Tanggal mulai sakit'],
+    AFP: ['Tgl mulai lumpuh']
+  };
+  const missing = required.concat(dxRequired[dx] || []).filter(function(field) {
+    return !String((data && data[field]) || '').trim();
+  });
+  if (missing.length) throw new Error('Field wajib input awal belum lengkap: ' + missing.join(', ') + '.');
+}
+
 function _applyWorkflowStageAuditFields_(data, sess, workflowStage) {
   data = data || {};
   sess = sess || {};
@@ -3116,6 +3140,7 @@ function saveFormPayload_(data) {
 
   data = _sanitizeInitialReportEditPayload_(dx, data, sess);
   data = _sanitizeDedicatedWorkflowStagePayload_(dx, data, sess);
+  _validateInitialCaseRequiredFields_(dx, data);
   const submissionCacheKey = _buildSubmissionIdempotencyKey_(dx, data, sess);
   const cachedSubmission = _getCachedSubmissionResult_(submissionCacheKey);
   if (cachedSubmission) return cachedSubmission;
