@@ -236,7 +236,34 @@
 
     async function confirmSarsAction(options){
       if (typeof window.pd3iConfirmDialog === 'function') return window.pd3iConfirmDialog(options || {});
-      return Promise.resolve(window.confirm((options && (options.message || options.title)) || 'Lanjutkan?'));
+      const cfg = options || {};
+      return new Promise(resolve => {
+        const existing = document.getElementById('sars-confirm-dialog');
+        if (existing) existing.remove();
+        const wrap = document.createElement('div');
+        wrap.id = 'sars-confirm-dialog';
+        wrap.className = 'sars-confirm-backdrop';
+        wrap.setAttribute('role', 'presentation');
+        wrap.innerHTML = `<div class="sars-confirm-card" role="dialog" aria-modal="true" aria-labelledby="sars-confirm-title" tabindex="-1">
+          <h3 id="sars-confirm-title">${escapeHtml(cfg.title || 'Konfirmasi')}</h3>
+          <p>${escapeHtml(cfg.message || 'Lanjutkan?')}</p>
+          <div class="sars-confirm-actions">
+            <button type="button" class="pd3i-btn is-secondary" data-sars-confirm="cancel">${escapeHtml(cfg.cancelLabel || 'Batal')}</button>
+            <button type="button" class="pd3i-btn ${cfg.variant === 'danger' ? 'is-danger' : 'is-primary'}" data-sars-confirm="ok">${escapeHtml(cfg.confirmLabel || 'Lanjutkan')}</button>
+          </div>
+        </div>`;
+        const close = value => { document.removeEventListener('keydown', onKeydown); wrap.remove(); resolve(value); };
+        const onKeydown = e => { if (e.key === 'Escape') close(false); };
+        wrap.addEventListener('click', e => {
+          if (e.target === wrap) close(false);
+          const action = e.target && e.target.getAttribute && e.target.getAttribute('data-sars-confirm');
+          if (action === 'cancel') close(false);
+          if (action === 'ok') close(true);
+        });
+        document.body.appendChild(wrap);
+        document.addEventListener('keydown', onKeydown);
+        try { wrap.querySelector('.sars-confirm-card').focus(); } catch (e) {}
+      });
     }
 
     function highlight(text, q){

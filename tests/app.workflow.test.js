@@ -839,6 +839,9 @@ test('Zero Reporting success and server validation reject false success and part
   assert.match(styleHtml, /pd3i-sars-decision-card input\[type="checkbox"\][^{]*\{[^}]*width:18px!important[^}]*height:18px!important/);
   assert.match(workspaceSars, /rows\.classList\.add\('hidden'\)/);
   assert.match(workspaceSars, /rows\.classList\.remove\('hidden'\)/);
+  assert.match(workspaceSars, /id = 'sars-confirm-dialog'/);
+  assert.doesNotMatch(workspaceSars, /window\.confirm/);
+  assert.match(styleHtml, /sars-confirm-backdrop/);
   assert.match(submitSars, /_sRequire_\(namaKasus && tglMulai && keadaan, `Data kasus \$\{penyakit\} belum lengkap/);
   assert.match(submitSars, /new Date\(tglMulai\) >= new Date\(tglLahir\)/);
 });
