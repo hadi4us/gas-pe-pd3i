@@ -309,6 +309,22 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 #section-search-shell .pd3i-search-sort-select{justify-self:end;width:100%;margin-left:0}
 @media(max-width:700px){#section-overview,.pd3i-overview-grid,#section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-form-main,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{row-gap:8px;column-gap:18px}#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:16px}#section-search-shell .pd3i-search-filter-grid,#section-search-shell .pd3i-search-actions{grid-template-columns:1fr!important}#section-search-shell #search-filter-epid-wrap{grid-column:auto}#section-search-shell .pd3i-search-sort-select{justify-self:stretch;max-width:none}}
 
+/* Sidebar compact fit: keep full menu visible without desktop scrollbar. */
+@media(min-width:901px){
+  .pd3i-sidebar{height:100dvh;overflow:hidden;padding:12px 10px}
+  .pd3i-sidebar-brand{padding:6px 6px 12px}
+  .pd3i-brand-icon{width:32px;height:32px;border-radius:9px}
+  .pd3i-brand-title{font-size:.9rem;line-height:1.15}
+  .pd3i-sidebar .pd3i-brand-subtitle{font-size:.68rem;line-height:1.25}
+  .pd3i-sidebar-nav{gap:2px}
+  .pd3i-nav-group-label{margin:12px 6px 4px;font-size:.62rem;line-height:1.15}
+  .pd3i-nav-group-label small{margin-top:1px;font-size:.58rem;line-height:1.15}
+  .pd3i-nav-children{gap:2px}
+  .pd3i-nav-link,.pd3i-nav-button{min-height:34px;padding:7px 8px;font-size:.82rem;line-height:1.15;gap:8px}
+  .pd3i-nav-link i,.pd3i-nav-button i{width:16px;text-align:center;font-size:.86rem}
+  .pd3i-sidebar-note{display:none}
+}
+
 /* Daftar Kasus results: card-table layout, not plain text fallback. */
 #section-search-shell .pd3i-search-results-panel{padding:16px;overflow:hidden}
 #section-search-shell .pd3i-search-results-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #e2e8f0}
