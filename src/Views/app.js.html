@@ -505,9 +505,9 @@
     }
 
     if (field.type === "geo_button") {
-      return `<div class="${widthClass} space-y-3" ${fieldWrapperAttrs}>
+      return `<div class="${widthClass} pd3i-field-span-full field-wrapper pd3i-geo-field space-y-3" ${fieldWrapperAttrs}>
         <label class="block mb-2 text-sm font-extrabold text-slate-700 uppercase tracking-tight">${htmlEscape(field.label)}</label>
-        <div class="flex flex-wrap gap-2">
+        <div class="pd3i-geo-actions flex flex-wrap gap-2">
           <button type="button" id="btn-ambil-lokasi"
             class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2.5 rounded-lg font-bold shadow-sm transition flex items-center justify-center gap-2 text-xs w-fit">
             <i class="fas fa-location-crosshairs"></i> Ambil Lokasi
