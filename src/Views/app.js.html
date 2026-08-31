@@ -5514,11 +5514,34 @@
   }
 
 
+  function parseQueueDate_(raw) {
+    if (!raw) return null;
+    if (Object.prototype.toString.call(raw) === '[object Date]' && !Number.isNaN(raw.getTime())) return raw;
+    const text = String(raw).trim();
+    if (/^\d{5}(?:\.\d+)?$/.test(text)) {
+      const serial = Number(text);
+      if (serial > 20000 && serial < 80000) return new Date(Math.round((serial - 25569) * 86400 * 1000));
+    }
+    const date = new Date(raw);
+    return date && !Number.isNaN(date.getTime()) ? date : null;
+  }
+
+  function formatQueueDateText_(raw) {
+    const date = parseQueueDate_(raw);
+    if (!date) return String(raw || '-').slice(0, 24) || '-';
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mi = String(date.getMinutes()).padStart(2, '0');
+    return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + mi;
+  }
+
   function getQueueAgeText(item) {
     const raw = item && (item.updatedAt || item.inputAt || item.timestamp || item.tanggalInput || item.createdAt);
     if (!raw) return '-';
-    const date = new Date(raw);
-    if (!date || Number.isNaN(date.getTime())) return String(raw).slice(0, 24) || '-';
+    const date = parseQueueDate_(raw);
+    if (!date) return String(raw).slice(0, 24) || '-';
     const diffMs = Date.now() - date.getTime();
     if (!Number.isFinite(diffMs) || diffMs < 0) return 'baru';
     const hours = Math.floor(diffMs / 3600000);
@@ -5588,7 +5611,7 @@
       const wilayahText = [item && item.dx, item && item.kecamatan, item && item.kelurahan].filter(Boolean).join(' • ') || '-';
       const faskesText = String(item && (item.asalFaskes || item.namaUnitPelapor || item.faskesPelapor) || '-');
       const recordText = String(item && (item.recordId || item.epid) || '-');
-      const updateText = String(item && (item.updatedAt || item.inputAt || item.timestamp) || '-');
+      const updateText = formatQueueDateText_(item && (item.updatedAt || item.inputAt || item.timestamp));
       const noteText = String(item && item.catatanVerifikasi || '').trim();
       const queueAgeText = getQueueAgeText(item);
       const isRevisionQueue = String(item && item.__queueBucket || '').toLowerCase() === 'revision';

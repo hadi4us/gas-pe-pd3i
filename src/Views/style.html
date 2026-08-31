@@ -309,6 +309,42 @@ input:focus,select:focus,textarea:focus{background:#fff;border-color:#2563eb;box
 #section-search-shell .pd3i-search-sort-select{justify-self:end;width:100%;margin-left:0}
 @media(max-width:700px){#section-overview,.pd3i-overview-grid,#section-dashboard .pd3i-dashboard-shell,#section-dashboard .pd3i-dashboard-content,.pd3i-form-main,.pd3i-zero-reporting-form,.pd3i-settings-layout,.pie-dashboard-grid{row-gap:8px;column-gap:18px}#section-dashboard .pd3i-dashboard-case-kpi-compact,#section-dashboard .pd3i-dashboard-region-two-column,#section-dashboard .pd3i-dashboard-age-two-column,.pd3i-overview-summary-grid,#overview-kpi-grid,#overview-work-summary,.pd3i-search-filter-grid,.pd3i-zero-reporting-grid,.pd3i-case-grid{gap:16px}#section-search-shell .pd3i-search-filter-grid,#section-search-shell .pd3i-search-actions{grid-template-columns:1fr!important}#section-search-shell #search-filter-epid-wrap{grid-column:auto}#section-search-shell .pd3i-search-sort-select{justify-self:stretch;max-width:none}}
 
+/* Verifikasi queue workspace: force styled cards/tables without utility dependency. */
+#workflow-inbox>.pd3i-shell-card{padding:18px;border:1px solid #e2e8f0;border-radius:20px;background:#fff;box-shadow:0 14px 34px rgba(15,23,42,.07)}
+#workflow-inbox .pd3i-workflow-list-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+#workflow-inbox .pd3i-workflow-queue-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 12px}
+#workflow-inbox .pd3i-workflow-queue-summary-card{min-width:0;padding:14px;border:1px solid #dbeafe;border-radius:16px;background:linear-gradient(135deg,#f8fbff,#fff);box-shadow:0 8px 20px rgba(15,23,42,.04)}
+#workflow-inbox .pd3i-workflow-queue-summary-card span{display:block;color:#64748b;font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+#workflow-inbox .pd3i-workflow-queue-summary-card strong{display:block;margin-top:5px;color:#0f172a;font-size:1.25rem;font-weight:950;line-height:1.1}
+#workflow-inbox .pd3i-workflow-queue-summary-card small{display:block;margin-top:4px;color:#64748b;font-size:.76rem;line-height:1.35}
+#workflow-inbox .pd3i-workflow-queue-brief{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+#workflow-inbox .pd3i-workflow-queue-brief>div{min-width:0;padding:12px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
+#workflow-inbox .pd3i-workflow-queue-brief span{display:block;color:#64748b;font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+#workflow-inbox .pd3i-workflow-queue-brief strong{display:block;margin-top:4px;color:#0f172a;font-size:.84rem;line-height:1.35}
+#workflow-inbox .pd3i-queue-card{padding:14px;border:1px solid #e2e8f0;border-radius:16px;background:#fff;box-shadow:0 8px 20px rgba(15,23,42,.05)}
+#workflow-inbox .pd3i-queue-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#workflow-inbox .pd3i-queue-toolbar-title{font-size:.95rem;font-weight:950;color:#0f172a}
+#workflow-inbox .pd3i-queue-toolbar-meta{color:#64748b;font-size:.8rem;font-weight:750}
+#workflow-inbox .pd3i-queue-table{width:100%;border-collapse:separate;border-spacing:0;min-width:840px;font-size:.84rem}
+#workflow-inbox .pd3i-queue-table th{padding:10px 12px;text-align:left;font-size:.72rem;font-weight:950;letter-spacing:.06em;text-transform:uppercase;background:#f8fafc;color:#475569;border-bottom:1px solid #e2e8f0}
+#workflow-inbox .pd3i-queue-table td{padding:12px;border-bottom:1px solid #eef2f7;vertical-align:middle;color:#334155}
+#workflow-inbox .pd3i-queue-table-row:hover td{background:#f8fbff}
+#workflow-inbox .pd3i-queue-cell.is-no{width:54px;text-align:center}
+#workflow-inbox .pd3i-queue-cell-value{line-height:1.35}
+#workflow-inbox .pd3i-queue-row-title{font-weight:900;color:#0f172a;line-height:1.25}
+#workflow-inbox .pd3i-queue-row-subtitle{margin-top:3px;color:#475569;font-size:.8rem;line-height:1.35}
+#workflow-inbox .pd3i-queue-age{color:#64748b}
+#workflow-inbox .pd3i-queue-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-size:.76rem;font-weight:900}
+#workflow-inbox .pd3i-queue-status .dot{width:7px;height:7px;border-radius:999px;background:currentColor}
+#workflow-inbox .pd3i-queue-status.is-success{border-color:#bbf7d0;background:#f0fdf4;color:#047857}
+#workflow-inbox .pd3i-queue-status.is-muted{border-color:#e2e8f0;background:#f8fafc;color:#64748b}
+#workflow-inbox .pd3i-queue-status.is-info{border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8}
+#workflow-inbox .pd3i-queue-next-action{margin-top:6px;color:#334155;font-size:.78rem;font-weight:750;line-height:1.35}
+#workflow-inbox .pd3i-queue-action-btn{margin-top:8px;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;border:1px solid #1d4ed8;border-radius:10px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;font-size:.78rem;font-weight:900;box-shadow:0 8px 18px rgba(37,99,235,.16)}
+#workflow-inbox .pd3i-queue-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;color:#64748b;font-size:.8rem;font-weight:750}
+#workflow-inbox .pd3i-queue-pagination{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:900px){#workflow-inbox .pd3i-workflow-queue-summary,#workflow-inbox .pd3i-workflow-queue-brief{grid-template-columns:1fr}#workflow-inbox .pd3i-queue-footer{display:grid}#workflow-inbox .pd3i-queue-table{min-width:760px}}
+
 /* Sidebar compact fit: keep full menu visible without desktop scrollbar. */
 @media(min-width:901px){
   .pd3i-sidebar{height:100dvh;overflow:hidden;padding:12px 10px}
