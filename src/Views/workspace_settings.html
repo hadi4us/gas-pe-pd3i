@@ -355,6 +355,66 @@
   #settings-panel-users .justify-end button { flex: 1 1 0; }
   #settings-panel-users #user-pagination-info { max-width: 55%; }
 }
+
+/* Administration polish: flatten noisy wrappers, keep functional hooks. */
+#section-settings > .pd3i-card { padding: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+#section-settings .pd3i-local-status-strip,
+#section-settings .pd3i-admin-ops-summary,
+#section-settings .pd3i-admin-guardrail-strip,
+#section-settings .pd3i-admin-audit-brief,
+#section-settings .pd3i-admin-decision-gate { display: none !important; }
+#section-settings .pd3i-card-body { padding: 0 !important; }
+#section-settings .pd3i-settings-panel { padding: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+#section-settings .pd3i-settings-panel > .pd3i-settings-surface,
+#section-settings .pd3i-settings-panel > .pd3i-shell-card { margin: 0 0 12px !important; padding: 14px !important; border: 1px solid var(--pd3i-border) !important; background: #fff !important; }
+#section-settings .pd3i-settings-panel h3 { margin-bottom: 6px !important; font-size: 1rem !important; }
+#section-settings .pd3i-settings-panel p { margin-bottom: 10px !important; }
+#section-settings .pd3i-settings-surface.bg-blue-50,
+#section-settings .pd3i-settings-surface.bg-emerald-50,
+#section-settings .pd3i-settings-surface.bg-slate-50 { background: #fff !important; }
+#section-settings .pd3i-settings-form-surface { padding: 12px !important; background: var(--pd3i-surface-soft) !important; }
+#section-settings .pd3i-settings-panel .grid { gap: 10px !important; }
+#section-settings .pd3i-settings-panel .flex.gap-2 { gap: 8px !important; }
+#section-settings .pd3i-settings-panel input,
+#section-settings .pd3i-settings-panel select,
+#section-settings .pd3i-settings-panel textarea { width: 100%; min-width: 0; }
+#section-settings .pd3i-settings-panel .pd3i-btn { min-height: 38px; }
+#section-settings .account-approval-panel { padding: 14px !important; border: 1px solid var(--pd3i-border) !important; border-radius: var(--radius-card) !important; box-shadow: var(--pd3i-shadow-soft) !important; background: #fff !important; }
+#section-settings .account-approval-stats { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+#section-settings .account-approval-stats > div { border: 1px solid var(--pd3i-border); border-radius: 14px; background: var(--pd3i-surface-soft); }
+#section-settings .account-approval-table,
+#section-settings #table-users { width: 100%; min-width: 0; table-layout: auto; white-space: normal; }
+#section-settings .account-approval-table th,
+#section-settings .account-approval-table td,
+#section-settings #table-users th,
+#section-settings #table-users td { overflow-wrap: anywhere; white-space: normal; }
+#section-settings .account-approval-table td:last-child,
+#section-settings #table-users td:last-child { white-space: nowrap; }
+#section-settings #table-users th:last-child,
+#section-settings #table-users td:last-child { position: static; box-shadow: none; }
+#section-settings .pd3i-admin-users-table-wrap,
+#section-settings .pd3i-approval-table-wrap { border: 1px solid var(--pd3i-border); border-radius: var(--radius-lg); background: #fff; overflow-x: auto !important; }
+#settings-panel-config .pd3i-settings-surface + .pd3i-settings-surface { margin-top: 12px !important; }
+#settings-panel-epid-calendar .pd3i-epi-hero { gap: 12px; }
+#settings-panel-epid-calendar .pd3i-epi-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+#settings-panel-epid-calendar .pd3i-epi-grid { gap: 10px; }
+.account-review-modal { background: rgba(15,23,42,.45); }
+.account-review-dialog, .account-review-detail { border: 1px solid var(--pd3i-border); border-radius: var(--radius-card); background: #fff; box-shadow: var(--pd3i-shadow-soft); }
+@media (max-width: 900px) {
+  #section-settings .account-approval-stats,
+  #settings-panel-epid-calendar .pd3i-epi-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #section-settings .account-approval-table,
+  #section-settings #table-users { min-width: 760px; }
+}
+@media (max-width: 560px) {
+  #section-settings .pd3i-settings-panel > .pd3i-settings-surface,
+  #section-settings .pd3i-settings-panel > .pd3i-shell-card,
+  #section-settings .account-approval-panel { padding: 12px !important; }
+  #section-settings .account-approval-stats,
+  #settings-panel-epid-calendar .pd3i-epi-summary { grid-template-columns: 1fr; }
+  #section-settings .pd3i-settings-panel .pd3i-btn { width: 100%; justify-content: center; }
+}
+
 </style>
 <script>
 window.showSettingsResult = function(x){ const out=document.getElementById('settings-result'); if(out) out.textContent=JSON.stringify(x,null,2); };
