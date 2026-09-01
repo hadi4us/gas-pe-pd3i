@@ -595,6 +595,19 @@ button:disabled,.pd3i-btn:disabled,.pd3i-action-btn:disabled,.pd3i-primary-butto
 #section-pie #pie-dashboard .pie-insight-head span{color:#0f172a;font-size:.92rem;font-weight:950}#section-pie #pie-dashboard .pie-insight-head small{color:#64748b;font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
 #section-pie #pie-dashboard .pie-chip-row{display:flex;gap:8px;flex-wrap:wrap}#section-pie #pie-dashboard .pd3i-status-chip{display:inline-flex;align-items:center;min-height:28px;border-radius:999px;font-weight:850}
 #section-pie #pie-dashboard .pie-mini-bar-track{overflow:hidden;border-radius:999px;background:#e2e8f0}#section-pie #pie-dashboard .pie-mini-bar-fill{border-radius:999px;background:linear-gradient(90deg,#2563eb,#0ea5e9)}
+
+#section-pie #pie-dashboard .pie-mini-bar-row{display:grid;gap:6px;min-width:0}
+#section-pie #pie-dashboard .pie-mini-bar-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;color:#334155;font-size:.84rem;line-height:1.25}
+#section-pie #pie-dashboard .pie-mini-bar-meta span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#334155;font-weight:750}
+#section-pie #pie-dashboard .pie-mini-bar-meta b{color:#0f172a;font-size:.9rem;font-weight:950;font-variant-numeric:tabular-nums}
+#section-pie #pie-dashboard .pie-mini-bar-track{height:5px;overflow:hidden;border-radius:999px;background:#e5e7eb}
+#section-pie #pie-dashboard .pie-mini-bar-fill{height:5px;border-radius:999px;background:linear-gradient(90deg,#2563eb,#0ea5e9)}
+#section-pie #pie-dashboard .pie-quality-wide{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+#section-pie #pie-dashboard .pie-quality-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;min-height:44px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;color:#334155}
+#section-pie #pie-dashboard .pie-quality-metric span{min-width:0;color:#475569;font-size:.82rem;font-weight:750;line-height:1.25}
+#section-pie #pie-dashboard .pie-quality-metric b{color:#0f172a;font-size:1.05rem;font-weight:950;font-variant-numeric:tabular-nums}
+#section-pie #pie-dashboard .pie-empty-state{color:#64748b;font-size:.85rem;font-weight:700}
+
 @media(max-width:760px){#section-pie #pie-dashboard .pie-command-hero{padding:18px}#section-pie #pie-dashboard .pie-command-priority,#section-pie #pie-dashboard .pie-command-review,#section-pie #pie-dashboard .pie-kpi-grid,#section-pie #pie-dashboard .pie-insight-grid{padding-left:14px;padding-right:14px}#section-pie #pie-dashboard .pie-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#section-pie #pie-dashboard .pie-insight-grid{grid-template-columns:1fr}}
 @media(max-width:430px){#section-pie #pie-dashboard .pie-kpi-grid{grid-template-columns:1fr}}
 

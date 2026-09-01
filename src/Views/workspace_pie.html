@@ -484,7 +484,7 @@ window.renderPieGuidedNextActions = function(d){
 };
 
 window.pieCountBy = function(rows, key){ const out={}; (rows||[]).forEach(function(r){ const k=String(r[key]||'-')||'-'; out[k]=(out[k]||0)+1; }); return out; };
-window.renderPieMiniBars = function(elId, counts){ const el=document.getElementById(elId); if(!el) return; const keys=Object.keys(counts||{}).sort(); const max=Math.max.apply(null, keys.map(function(k){return counts[k];}).concat([1])); el.innerHTML=keys.length?keys.map(function(k){ const pct=Math.max(8, Math.round((counts[k]/max)*100)); return '<div><div class="flex justify-between"><span>'+pieHtml(k)+'</span><b>'+pieHtml(counts[k])+'</b></div><div class="pie-mini-bar-track bg-slate-100"><div class="pie-mini-bar-fill bg-blue-500" style="width:'+pct+'%"></div></div></div>'; }).join(''):'-'; };
+window.renderPieMiniBars = function(elId, counts){ const el=document.getElementById(elId); if(!el) return; const keys=Object.keys(counts||{}).sort(); const max=Math.max.apply(null, keys.map(function(k){return Number(counts[k])||0;}).concat([1])); el.innerHTML=keys.length?keys.map(function(k){ const value=Number(counts[k])||0; const pct=Math.max(value?8:0, Math.round((value/max)*100)); return '<div class="pie-mini-bar-row"><div class="pie-mini-bar-meta"><span>'+pieHtml(k)+'</span><b>'+pieHtml(value)+'</b></div><div class="pie-mini-bar-track"><div class="pie-mini-bar-fill" style="width:'+pct+'%"></div></div></div>'; }).join(''):'<div class="pie-empty-state">Belum ada data.</div>'; };
 
 
 
@@ -604,7 +604,7 @@ window.renderPieQuality = function(dq){
     'PPV klasifikasi proxy (%)':dq.ppv_classification_proxy_pct||0,
     'Discarded/arsip':dq.discarded_or_archived_cases||0
   };
-  el.innerHTML=Object.keys(items).map(function(k){return '<div class="flex justify-between gap-2 border-bottom py-1"><span>'+pieHtml(k)+'</span><b>'+pieHtml(items[k])+'</b></div>';}).join('');
+  el.innerHTML=Object.keys(items).map(function(k){return '<div class="pie-quality-metric"><span>'+pieHtml(k)+'</span><b>'+pieHtml(items[k])+'</b></div>';}).join('');
 };
 
 window.renderPieValidationHistory = function(metrics){
