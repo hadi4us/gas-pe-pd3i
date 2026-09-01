@@ -553,22 +553,25 @@ button:disabled,.pd3i-btn:disabled,.pd3i-action-btn:disabled,.pd3i-primary-butto
 #section-pie .pie-kpi-card span{color:#64748b}#section-pie .pie-kpi-card b{color:#0f172a}#section-pie .pie-kpi-card small{color:#64748b;font-size:.78rem}
 #section-pie .pie-insight-card{padding:16px;border-radius:18px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 8px 22px rgba(15,23,42,.05)}
 #section-pie .pie-insight-head span{color:#0f172a;font-weight:900}#section-pie .pie-insight-head small{color:#64748b;font-weight:750}
-#section-pie .pie-ops-subnav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:10px;border:1px solid #e2e8f0;border-radius:18px;background:#f8fafc}
-#section-pie .pie-ops-tab{min-height:38px;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;background:#fff;color:#475569;font-weight:850}
-#section-pie .pie-ops-tab.is-active{border-color:#2563eb;background:#eff6ff;color:#1d4ed8;box-shadow:0 6px 14px rgba(37,99,235,.12)}
-#section-pie .pie-ops-panel{padding:16px;border-radius:18px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 8px 22px rgba(15,23,42,.05)}
-#section-pie .pie-ops-panel h3{margin:0;color:#0f172a;font-size:1rem;font-weight:900}#section-pie .pie-ops-panel p{line-height:1.45}
+#section-pie .pie-ops-subnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:16px;padding:8px;border:1px solid #e2e8f0;border-radius:16px;background:#f8fafc;overflow-x:auto}
+#section-pie .pie-ops-tab{min-height:42px;padding:9px 12px;border:1px solid transparent;border-radius:12px;background:transparent;color:#475569;font-weight:850;line-height:1.2;white-space:nowrap}
+#section-pie .pie-ops-tab.is-active{background:#fff;color:#1d4ed8;border-color:#bfdbfe;box-shadow:0 8px 18px rgba(37,99,235,.12)}
+#section-pie .pie-ops-panel{padding:16px;border-radius:18px;background:#fff;border:1px solid #e2e8f0;box-shadow:0 8px 22px rgba(15,23,42,.05);overflow:hidden}
+#section-pie .pie-ops-panel h3{margin:0 0 4px;color:#0f172a;font-size:1rem;font-weight:900;line-height:1.25;letter-spacing:-.02em}#section-pie .pie-ops-panel p{line-height:1.45;max-width:58rem}
 #section-pie [data-pie-subtab="lab"],#section-pie [data-pie-subtab="operations"]{display:grid;gap:14px;min-width:0}
 #section-pie [data-pie-subtab="lab"] h3,#section-pie [data-pie-subtab="lab"] h4,#section-pie [data-pie-subtab="operations"] h4{margin:0 0 10px;color:#0f172a;font-weight:900}
 #section-pie [data-pie-subtab="lab"]>.grid,#section-pie [data-pie-subtab="lab"] .pd3i-form-grid,#section-pie #pie-ops-panel-pe>.grid,#section-pie #pie-ops-panel-cases .flex.gap-2{gap:12px!important;padding:14px;border:1px solid #e2e8f0;border-radius:16px;background:#f8fafc}
+#section-pie #pie-ops-panel-pe>.grid{align-items:end}
 #section-pie [data-pie-subtab="lab"] .pd3i-form-field,#section-pie #pie-ops-panel-pe .pd3i-form-field{display:grid;gap:6px;margin:0;color:#334155;font-size:.78rem;font-weight:800}
 #section-pie [data-pie-subtab="lab"] .pd3i-shell-input,#section-pie [data-pie-subtab="lab"] .pd3i-shell-select,#section-pie #pie-ops-panel-pe .pd3i-shell-input,#section-pie #pie-ops-panel-pe .pd3i-shell-select,#section-pie #pie-ops-panel-cases .pd3i-shell-input,#section-pie #pie-ops-panel-cases .pd3i-shell-select{min-height:42px;border-radius:12px;background:#fff;font-weight:650}
 #section-pie [data-pie-subtab="lab"] .flex.gap-2,#section-pie [data-pie-subtab="operations"] .flex.gap-2{padding:12px;border:1px solid #dbeafe;border-radius:16px;background:#f8fbff}
+#section-pie .pd3i-data-list,#section-pie #pie-alert-list,#section-pie #pie-task-list,#section-pie #pie-classification-list,#section-pie #pie-pe-list{min-width:0;overflow-wrap:anywhere}
+#section-pie #pie-alert-list,#section-pie #pie-task-list,#section-pie #pie-classification-list,#section-pie #pie-pe-list,#section-pie #pie-case-list{margin-top:12px}
 #section-pie .pd3i-data-list .pie-inner-card,#section-pie #pie-pe-list .pie-inner-card,#section-pie #pie-alert-list .pie-inner-card,#section-pie #pie-task-list .pie-inner-card,#section-pie #pie-classification-list .pie-inner-card{border-radius:16px;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.05)}
 #section-pie #pie-case-list{border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(15,23,42,.05)}
 #section-pie #pie-case-list table{margin:0;min-width:980px}#section-pie #pie-case-list th{background:#f1f5f9;color:#334155;font-size:.76rem;font-weight:900;white-space:nowrap}#section-pie #pie-case-list td{font-size:.82rem;vertical-align:top}
-@media(max-width:900px){#section-pie .pie-command-priority,#section-pie .pie-command-review{grid-template-columns:1fr!important}#section-pie [data-pie-subtab="lab"]>.grid,#section-pie #pie-ops-panel-pe>.grid{grid-template-columns:1fr!important}}
-@media(max-width:640px){#section-pie .pie-ops-subnav{display:grid;grid-template-columns:1fr 1fr}#section-pie .pie-ops-tab{width:100%}#section-pie [data-pie-subtab="lab"] .flex.gap-2,#section-pie [data-pie-subtab="operations"] .flex.gap-2{display:grid!important;grid-template-columns:1fr!important}#section-pie [data-pie-subtab="lab"] .pd3i-btn,#section-pie [data-pie-subtab="operations"] .pd3i-btn{width:100%}}
+@media(max-width:900px){#section-pie .pie-command-priority,#section-pie .pie-command-review{grid-template-columns:1fr!important}#section-pie .pie-ops-subnav{grid-template-columns:repeat(3,minmax(0,1fr))}#section-pie [data-pie-subtab="lab"]>.grid,#section-pie #pie-ops-panel-pe>.grid{grid-template-columns:1fr!important}#section-pie #pie-ops-panel-cases>.flex{display:grid!important;grid-template-columns:1fr;align-items:stretch}#section-pie #pie-ops-panel-cases>.flex>div{display:grid!important;grid-template-columns:1fr}#section-pie .pd3i-pie-case-query,#section-pie .pd3i-pie-case-risk,#section-pie .pd3i-pie-case-class{max-width:none;width:100%}}
+@media(max-width:640px){#section-pie .pie-ops-subnav{grid-template-columns:1fr 1fr}#section-pie .pie-ops-tab{width:100%}#section-pie [data-pie-subtab="lab"] .flex.gap-2,#section-pie [data-pie-subtab="operations"] .flex.gap-2{display:grid!important;grid-template-columns:1fr!important}#section-pie [data-pie-subtab="lab"] .pd3i-btn,#section-pie [data-pie-subtab="operations"] .pd3i-btn{width:100%}}
 
 /* PIE dashboard audit polish: scoped hierarchy, clearer cards, safer mobile rhythm. */
 #section-pie #pie-dashboard{display:grid;gap:0;overflow:hidden}
