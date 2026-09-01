@@ -433,6 +433,10 @@ function submitSARS(formData) {
   const sessionEmail = (() => { try { return Session.getActiveUser().getEmail() || email; } catch (e) { return email; } })();
   const accountLookup = _lookupFaskesByEmail_(masterIndex, sessionEmail);
   let lk = accountLookup || _lookupFaskes_(masterIndex, namaFasyankes);
+  const dinkesLookup = isAdminReporter ? _lookupFaskes_(masterIndex, 'DINAS KESEHATAN') : null;
+  if (dinkesLookup && dinkesLookup.found && (!lk.found || _normKey_(lk.faskesKey) === 'dinkes')) {
+    lk = dinkesLookup;
+  }
   if (sessionFacility.adminFallback && !lk.found) {
     lk = { found: true, faskesKey: sessionKey || 'DINKES', pengampu: 'DINAS KESEHATAN' };
   }
