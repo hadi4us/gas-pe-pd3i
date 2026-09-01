@@ -678,3 +678,29 @@ button:disabled,.pd3i-btn:disabled,.pd3i-action-btn:disabled,.pd3i-primary-butto
 #section-pie .pie-ops-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 #section-pie .pie-ops-actions .pd3i-btn{min-height:34px;padding:6px 10px;font-size:.78rem;border-radius:10px}
 @media(max-width:640px){#section-pie .pie-ops-item{grid-template-columns:1fr;align-items:stretch}#section-pie .pie-ops-actions{justify-content:stretch}#section-pie .pie-ops-actions .pd3i-btn{flex:1}}
+
+/* PIE operations second pass: flatten frames, style PE preview, contain wide case table. */
+#section-pie #pie-ops-panel-pe,#section-pie #pie-ops-panel-cases{border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;margin-top:12px!important}
+#section-pie #pie-ops-panel-pe>h3,#section-pie #pie-ops-panel-cases h3{margin:0 0 4px;color:#0f172a;font-size:.98rem;font-weight:950;letter-spacing:-.02em}
+#section-pie #pie-ops-panel-pe>p{margin:0 0 12px!important;font-size:.82rem;line-height:1.35}
+#section-pie #pie-ops-panel-pe>.grid,#section-pie #pie-ops-panel-cases>.flex{padding:12px;border:1px solid #dbeafe;border-radius:14px;background:#f8fbff;box-shadow:none}
+#section-pie #pie-ops-panel-pe>[data-component="PiePeTemplatePreview"]{margin-top:12px!important;margin-bottom:12px!important;padding:12px!important;border:1px solid #dbeafe!important;border-radius:14px!important;background:#f8fbff!important;box-shadow:none!important}
+#section-pie .pie-pe-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+#section-pie .pie-pe-preview-section{grid-column:1/-1;margin-top:2px;padding:7px 9px;border-radius:10px;background:#e0f2fe;color:#075985;font-size:.72rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase}
+#section-pie .pie-pe-preview-field{display:grid;gap:2px;min-width:0;padding:9px 10px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;box-shadow:0 1px 0 rgba(15,23,42,.03)}
+#section-pie .pie-pe-preview-field.is-wide{grid-column:1/-1}
+#section-pie .pie-pe-preview-field b{color:#0f172a;font-size:.84rem;font-weight:900;line-height:1.2}
+#section-pie .pie-pe-preview-field small{color:#64748b;font-size:.76rem;line-height:1.25}
+#section-pie .pie-case-table-shell{max-width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid #dbe3ec;border-radius:14px;background:#fff;box-shadow:0 1px 0 rgba(15,23,42,.03);-webkit-overflow-scrolling:touch}
+#section-pie .pie-case-table-shell::-webkit-scrollbar{height:10px}
+#section-pie .pie-case-table-shell::-webkit-scrollbar-thumb{border-radius:999px;background:#94a3b8}
+#section-pie .pie-case-table{min-width:1120px;margin:0!important;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:.78rem}
+#section-pie .pie-case-table th,#section-pie .pie-case-table td{padding:8px 10px!important;vertical-align:top;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+#section-pie .pie-case-table th{position:sticky;top:0;z-index:1;background:#f1f5f9;color:#334155;font-size:.72rem;font-weight:950;white-space:nowrap}
+#section-pie .pie-case-table tbody tr:nth-child(even){background:#f8fafc}
+#section-pie .pie-case-table .pie-case-id{width:130px;font-weight:850;color:#0f172a}.pie-case-disease{width:170px}.pie-case-date{width:145px;font-size:.74rem;color:#475569}.pie-case-action-cell{width:260px}
+#section-pie .pie-case-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:240px}
+#section-pie .pie-case-actions .pd3i-btn{min-height:32px;padding:5px 8px;font-size:.72rem;border-radius:9px;white-space:nowrap}
+#section-pie .pie-case-pagination{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;color:#64748b;font-size:.78rem}
+#section-pie .pie-case-pagination>div{display:flex;gap:6px}.pie-case-pagination .pd3i-btn{min-height:32px;padding:5px 10px;font-size:.75rem}
+@media(max-width:760px){#section-pie .pie-pe-preview-grid{grid-template-columns:1fr}#section-pie #pie-ops-panel-pe>.grid,#section-pie #pie-ops-panel-cases>.flex{padding:10px}#section-pie .pie-case-table{min-width:980px}#section-pie .pie-case-pagination{align-items:stretch;flex-direction:column}#section-pie .pie-case-pagination>div{width:100%}#section-pie .pie-case-pagination .pd3i-btn{flex:1}}
