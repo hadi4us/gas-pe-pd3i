@@ -663,3 +663,18 @@ button:disabled,.pd3i-btn:disabled,.pd3i-action-btn:disabled,.pd3i-primary-butto
 #section-input-form-shell #btn-pilih-titik-peta{border-color:#4f46e5;background:linear-gradient(135deg,#6366f1,#4f46e5)}
 
 .sars-confirm-backdrop{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(15,23,42,.45)}.sars-confirm-card{width:min(92vw,440px);padding:18px;border:1px solid #dbeafe;border-radius:18px;background:#fff;box-shadow:0 24px 80px rgba(15,23,42,.22);color:#0f172a}.sars-confirm-card h3{margin:0 0 8px;font-size:1rem;font-weight:900}.sars-confirm-card p{margin:0;color:#334155;line-height:1.45}.sars-confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}@media(max-width:560px){.sars-confirm-actions{display:grid;grid-template-columns:1fr}.sars-confirm-actions button{width:100%}}
+
+/* PIE operations compact list pass: remove nested-card feel, tighten operational rhythm. */
+#section-pie [data-pie-subtab="operations"]>.pie-inner-card{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+#section-pie .pie-ops-subnav{margin-bottom:10px;border-radius:14px;background:#f1f5f9}
+#section-pie .pie-ops-panel{padding:14px 16px 16px;border-radius:14px;box-shadow:none}
+#section-pie .pie-ops-panel h3{font-size:.92rem}#section-pie .pie-ops-panel p{margin-bottom:10px!important;color:#64748b;font-size:.82rem}
+#section-pie #pie-alert-list,#section-pie #pie-task-list,#section-pie #pie-classification-list,#section-pie #pie-pe-list{display:grid;gap:8px;margin-top:8px!important}
+#section-pie .pie-ops-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 12px;border:1px solid #dbe3ec;border-radius:12px;background:#f8fbff}
+#section-pie .pie-ops-item-main{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;align-items:baseline;min-width:0}
+#section-pie .pie-ops-item-main b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0f172a;font-size:.9rem;font-weight:900;letter-spacing:-.01em}
+#section-pie .pie-ops-item-main small{grid-column:2;color:#64748b;font-size:.78rem;line-height:1.25}
+#section-pie .pie-ops-level{display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:.7rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+#section-pie .pie-ops-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#section-pie .pie-ops-actions .pd3i-btn{min-height:34px;padding:6px 10px;font-size:.78rem;border-radius:10px}
+@media(max-width:640px){#section-pie .pie-ops-item{grid-template-columns:1fr;align-items:stretch}#section-pie .pie-ops-actions{justify-content:stretch}#section-pie .pie-ops-actions .pd3i-btn{flex:1}}
