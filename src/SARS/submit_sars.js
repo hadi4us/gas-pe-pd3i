@@ -159,7 +159,7 @@ function _buildMasterIndex_() {
   // Kandidat header REF_FASKES (lebih fleksibel)
   const cFaskesKey = findCol_(["faskes_key", "FaskesKey", "Faskes Key", "FasyankesKey", "KodeFaskes", "Kode Faskes", "FASKESKEY"]);
   const cNama      = findCol_(["nama_faskes", "NamaFaskes", "Nama Faskes", "NamaFasyankes", "Nama Fasyankes", "NAMA"]);
-  const cPengampu  = findCol_(["nama_pengampu", "Pengampu", "FaskesPengampu", "Faskes Pengampu", "PENGAMPU"]);
+  const cPengampu  = findCol_(["nama_pengampu", "Nama Pengampu", "Pengampu", "FaskesPengampu", "Faskes Pengampu", "PENGAMPU"]);
   const cJenis     = findCol_(["Jenis", "JENIS"]);
   const cStatus    = findCol_(["StatusAktif", "Status Aktif", "STATUSAKTIF", "STATUS"]);
 

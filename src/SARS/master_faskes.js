@@ -77,8 +77,8 @@ function _lookupSarsAppUser_(email) {
     const ix = function(names) { for (let i = 0; i < names.length; i++) { const n = String(names[i] || '').trim().toLowerCase(); const j = headers.indexOf(n); if (j >= 0) return j; } return -1; };
     const ie = ix(['email','gmail','emailpetugas','email petugas','username','user']);
     const ik = ix(['kodefaskes','kode faskes','kode pkm','kodepuskesmas','kode puskesmas','faskeskey','faskes_key','faskes key']);
-    const iu = ix(['unitkerja','unit kerja','nama faskes','namafaskes','nama_faskes','faskes','fasyankes']);
-    const inf = ix(['namafaskes','nama faskes','nama_faskes','unit pelapor','unitpelapor']);
+    const iu = ix(['unitkerja','unit kerja','unit_kerja','nama faskes','namafaskes','nama_faskes','faskes','fasyankes']);
+    const inf = ix(['namafaskes','nama faskes','nama_faskes','unit pelapor','unitpelapor','unit_kerja']);
     if (ie < 0) return null;
     const wanted = String(email || '').trim().toLowerCase();
     for (let r = 1; r < values.length; r++) {
