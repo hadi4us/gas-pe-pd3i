@@ -63,3 +63,26 @@ test('submitSARS reaches validated write path with matching session facility', (
   const submit = makeSubmit({ ok: true, user: { role: 'petugas', email: 'user@example.com', nama: 'Session User', unitKerja: 'Session Unit', kodePuskesmas: 'FASKES-A' } });
   assert.throws(() => submit({ ...basePayload, __token: 'token', asalFaskes: 'Faskes A' }), /ReferenceError: _getCfg_|_getCfg_/);
 });
+
+
+test('SARS facility resolver accepts multi-email REF_FASKES cells and REF_USER name fallback', () => {
+  const master = fs.readFileSync(path.join(__dirname, '..', 'src', 'SARS', 'master_faskes.js'), 'utf8');
+  const sandbox = {
+    Session: { getActiveUser: () => ({ getEmail: () => '' }) },
+    SARS_CONFIG: { SHEET_MASTER: 'REF_FASKES' },
+    normalizeFaskesKey_: value => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''),
+    normalizeFaskesTypeKey_: value => String(value || '').trim().toUpperCase(),
+    isSarsReportingFacility_: (type, status) => String(type || '').toUpperCase() !== 'PKM' && String(status || 'AKTIF').toUpperCase() === 'AKTIF',
+    SpreadsheetApp: { getActive: () => ({ getSheetByName: () => ({ getDataRange: () => ({ getValues: () => [
+      ['Gmail', 'UnitKerja', 'Kode Faskes'],
+      ['prima.arin@siloamhospitals.com', 'RS Siloam Hospitals', '']
+    ] }) }) }) },
+    getMasterFaskesRaw_: () => [
+      { nama: 'RS Siloam Hospitals', jenis: 'RS', pengampu: 'Puskesmas X', key: 'SILOAM01', statusAktif: 'AKTIF', email: 'admin@example.com; prima.arin@siloamhospitals.com' }
+    ]
+  };
+  vm.runInNewContext(`${extractFunction(master, '_sarsEmailList_')}; ${extractFunction(master, '_lookupSarsAppUser_')}; ${extractFunction(master, 'getSarsFacilityForActiveUser')}; this.getSarsFacilityForActiveUser = getSarsFacilityForActiveUser;`, sandbox);
+  const result = sandbox.getSarsFacilityForActiveUser('prima.arin@siloamhospitals.com');
+  assert.equal(result.status, 'success');
+  assert.equal(result.key, 'SILOAM01');
+});

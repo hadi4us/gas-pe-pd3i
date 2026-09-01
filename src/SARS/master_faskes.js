@@ -33,7 +33,7 @@ function getSarsFacilityForActiveUser(requestedEmail) {
   let email = "";
   let found = null;
   for (let i = 0; i < emails.length; i++) {
-    found = raw.filter(function(r) { return String(r.email || "").trim().toLowerCase() === emails[i]; })[0] || null;
+    found = raw.filter(function(r) { return _sarsEmailList_(r.email).indexOf(emails[i]) !== -1; })[0] || null;
     if (found) { email = emails[i]; break; }
   }
   // App users may be mapped to REF_FASKES by KodeFaskes, while REF_FASKES
@@ -41,10 +41,13 @@ function getSarsFacilityForActiveUser(requestedEmail) {
   // first, then match its facility code without trusting client-supplied names.
   if (!found) {
     const user = _lookupSarsAppUser_(requested || googleEmail);
-    if (user && user.kodeFaskes) {
-      const code = String(user.kodeFaskes).trim().toLowerCase();
+    if (user) {
+      const code = normalizeFaskesKey_(user.kodeFaskes);
+      const names = [user.namaFaskes, user.unitKerja].map(function(v) { return normalizeFaskesKey_(v); }).filter(Boolean);
       found = raw.filter(function(r) {
-        return String(r.key || '').trim().toLowerCase() === code;
+        const key = normalizeFaskesKey_(r.key);
+        const name = normalizeFaskesKey_(r.nama);
+        return (code && key === code) || names.indexOf(name) !== -1;
       })[0] || null;
       if (found) email = requested || googleEmail;
     }
@@ -72,15 +75,32 @@ function _lookupSarsAppUser_(email) {
     if (values.length < 2) return null;
     const headers = values[0].map(function(h){ return String(h || '').trim().toLowerCase(); });
     const ix = function(names) { for (let i = 0; i < names.length; i++) { const n = String(names[i] || '').trim().toLowerCase(); const j = headers.indexOf(n); if (j >= 0) return j; } return -1; };
-    const ie = ix(['email','gmail','emailpetugas']);
-    const ik = ix(['kodefaskes','kode faskes','kode pkm']);
-    if (ie < 0 || ik < 0) return null;
+    const ie = ix(['email','gmail','emailpetugas','email petugas','username','user']);
+    const ik = ix(['kodefaskes','kode faskes','kode pkm','kodepuskesmas','kode puskesmas','faskeskey','faskes_key','faskes key']);
+    const iu = ix(['unitkerja','unit kerja','nama faskes','namafaskes','nama_faskes','faskes','fasyankes']);
+    const inf = ix(['namafaskes','nama faskes','nama_faskes','unit pelapor','unitpelapor']);
+    if (ie < 0) return null;
     const wanted = String(email || '').trim().toLowerCase();
     for (let r = 1; r < values.length; r++) {
-      if (String(values[r][ie] || '').trim().toLowerCase() === wanted) return { kodeFaskes: String(values[r][ik] || '').trim() };
+      if (_sarsEmailList_(values[r][ie]).indexOf(wanted) !== -1) {
+        return {
+          kodeFaskes: ik >= 0 ? String(values[r][ik] || '').trim() : '',
+          unitKerja: iu >= 0 ? String(values[r][iu] || '').trim() : '',
+          namaFaskes: inf >= 0 ? String(values[r][inf] || '').trim() : ''
+        };
+      }
     }
   } catch (e) {}
   return null;
+}
+
+
+function _sarsEmailList_(value) {
+  return String(value || '')
+    .toLowerCase()
+    .split(/[;,\s]+/)
+    .map(function(v) { return v.trim(); })
+    .filter(function(v) { return v && v.indexOf('@') > 0; });
 }
 
 function getMasterFaskesForClient() {
@@ -167,7 +187,7 @@ function getMasterFaskesRaw_(includeInactive) {
   const iPengampu = pickIndex_(header, ["nama_pengampu", "Pengampu", "FaskesPengampu", "Puskesmas Pengampu", "UPTD Pengampu"]);
   const iKey = pickIndex_(header, ["faskes_key", "FaskesKey", "Faskes Key", "FasyankesKey", "Fasyankes Key", "KodeFaskes", "Kode Faskes", "Key", "Kode"]);
   const iStatus = pickIndex_(header, ["status", "StatusAktif", "Status Aktif", "Aktif", "Status"]);
-  const iEmail = pickIndex_(header, ["email", "Email", "Gmail", "EmailPetugas", "Email Petugas"]);
+  const iEmail = pickIndex_(header, ["email", "Email", "Gmail", "EmailPetugas", "Email Petugas", "Email Faskes", "Email PIC", "EmailPJ", "Email PJ", "Kontak Email"]);
 
   if (iNama < 0) throw new Error('REF_FASKES: kolom "NamaFaskes" tidak ditemukan.');
 
