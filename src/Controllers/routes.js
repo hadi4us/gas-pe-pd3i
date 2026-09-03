@@ -2410,7 +2410,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
-  const userFaskesKey = _normalizeAccessScopeKey_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
+  const userFaskesKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
   let userPengampuKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   // Older REF_USER rows store only PKM code/name. Resolve that identity to
   // canonical REF_PENGAMPU.pengampu_key before checking MR_Raw.
@@ -2452,9 +2452,6 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if (userKodePuskesmas && recordKodePengampu && userKodePuskesmas === recordKodePengampu) return true;
   if (userUnitKerja && recordPuskesmasPengampu && userUnitKerja === recordPuskesmasPengampu) return true;
 
-  const domisili = _getRecordDomisiliForAccess_(dx, data || {});
-  if (!domisili.kecamatan || !domisili.kelurahan) return false;
-
   // Direct match: "Nama unit pelapor" from sheet vs user unitKerja (covers all faskes types)
   const recordUnitPelapor = _normalizeAccessScopeKey_((data && data['Nama unit pelapor']) || '');
   if (userUnitKerja && recordUnitPelapor && userUnitKerja === recordUnitPelapor) return true;
@@ -2462,6 +2459,9 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   // Fallback: match via "Diinput Oleh" or "Input Awal Diisi Oleh" for records without "Nama unit pelapor"
   const recordDiinputOleh = _normalizeAccessScopeKey_((data && (data['Diinput Oleh'] || data['Input Awal Diisi Oleh'])) || '');
   if (userUnitKerja && recordDiinputOleh && userUnitKerja === recordDiinputOleh) return true;
+
+  const domisili = _getRecordDomisiliForAccess_(dx, data || {});
+  if (!domisili.kecamatan || !domisili.kelurahan) return false;
 
   const pengampu = getPengampuByWilayah_(domisili.kecamatan, domisili.kelurahan, domisili.kabKota);
   if (!pengampu || !pengampu.found) return false;
