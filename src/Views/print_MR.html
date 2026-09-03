@@ -292,7 +292,7 @@ var kab  = trim_(pick_(["Kab/Kota unit pelapor","Kab/Kota","Kabupaten/Kota"])) |
 var unitPelapor = trim_(pick_(["Nama unit pelapor","Nama Unit Pelapor","Unit Pelapor","Nama Fasyankes","Nama Rumah Sakit"]));
 
 // Petugas
-var petugasInvestigasi = trim_(pick_(["Petugas","Pelaksana investigasi","Pelaksana Investigasi","Petugas Pelaksana"]));
+var petugasInvestigasi = trim_(pick_(["Nama Petugas","Petugas","Pelaksana investigasi","Pelaksana Investigasi","Petugas Pelaksana"]));
 var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Petugas","No. Kontak"]));
 ?>
 
@@ -449,10 +449,10 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
       &nbsp;&nbsp;
       <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Komp_Malnutrisi","Malnutrisi","malnutrisi"]), "ya")) ?></span> Malnutrisi
       &nbsp;&nbsp;
-      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Komp_Ulkus Mukosa Mulut","Komp_Ulkus mukosa mulut","Ulkus Mukosa Mulut","Ulkus"]), "ya")) ?></span> Ulkus mukosa mulut<br>
+      <span class="cbtxt"><?!= cbTxt_(is_(pick_(["Ulkus mukosa mulut","Komp_Ulkus Mukosa Mulut","Komp_Ulkus mukosa mulut","Ulkus Mukosa Mulut","Ulkus"]), "ya")) ?></span> Ulkus mukosa mulut<br>
 
       <b>Lainnya:</b>
-      <?!= valOrDash_(pick_(["Komp_Lainnya_Sebutkan","Komp_Lainnya","Komplikasi lain - sebutkan","Komplikasi Lainnya","Komplikasi lain"])) ?>
+      <?!= valOrDash_(pick_(["Sebutkan komplikasi lain","Lainnya komplikasi","Komp_Lainnya_Sebutkan","Komp_Lainnya","Komplikasi lain - sebutkan","Komplikasi Lainnya","Komplikasi lain"])) ?>
     </td>
   </tr>
 
@@ -480,7 +480,7 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
   <tr><td class="section sec-yellow" colspan="3">RIWAYAT IMUNISASI</td></tr>
 
   <tr>
-    <td colspan="2"><b>Imunisasi Campak-Rubella Dosis 1</b><br><?!= valOrDash_(pick_(["Imunisasi campak-rubela dosis 1","Imunisasi MR dosis 1","MR Dosis 1"])) ?></td>
+    <td colspan="2"><b>Imunisasi Campak-Rubella Dosis 1</b><br><?!= valOrDash_(pick_(["Riwayat Imunisasi","Imunisasi campak-rubela dosis 1","Imunisasi MR dosis 1","MR Dosis 1"])) ?></td>
     <td><b>Sumber Informasi</b><br><?!= valOrDash_(pick_(["Sumber Informasi (Dosis 1)","Sumber informasi MR dosis 1","Sumber MR dosis 1"])) ?></td>
   </tr>
   <tr>
@@ -509,16 +509,16 @@ var noPetugas = trim_(pick_(["No Whatsapp Petugas","No WA Petugas","No Kontak Pe
     <td colspan="3"><b>Pemberian vitamin A?</b><br><?!= valOrDash_(pick_(["Pemberian vitamin A?","Pemberian Vitamin A","Vitamin A","VitaminA"])) ?></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Ada anggota keluarga/sekitar sakit yang sama?</b><br><?!= valOrDash_(pick_(["Ada kasus sekitar?","Ada kasus serupa?","Ada kasus serupa","Kasus serupa"])) ?></td>
+    <td colspan="2"><b>Ada anggota keluarga/sekitar sakit yang sama?</b><br><?!= valOrDash_(pick_(["Ada kasus serupa di lingkungan","Ada kasus sekitar?","Ada kasus serupa?","Ada kasus serupa","Kasus serupa"])) ?></td>
     <td><b>Jumlah</b><br><?!= valOrDash_(pick_(["Jumlah kasus sekitar","Jumlah kasus serupa","Jumlah kasus"])) ?></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Berpergian 1 bulan terakhir?</b><br><?!= valOrDash_(pick_(["Berpergian 1 bulan terakhir?","Bepergian 1 bulan terakhir?","Bepergian 1 bulan terakhir","Riwayat bepergian"])) ?></td>
+    <td colspan="2"><b>Berpergian 1 bulan terakhir?</b><br><?!= valOrDash_(pick_(["Riwayat perjalanan 7-21 hari","Berpergian 1 bulan terakhir?","Bepergian 1 bulan terakhir?","Bepergian 1 bulan terakhir","Riwayat bepergian"])) ?></td>
     <td><b>Tujuan perjalanan</b><br><?!= valOrDash_(pick_(["Tujuan perjalanan","Lokasi bepergian","Lokasi perjalanan"])) ?></td>
   </tr>
   <tr>
     <td><b>Tanggal pergi</b><br><?!= fmtDateSmart_(pick_(["Tanggal pergi","Tgl pergi"])) ?></td>
-    <td colspan="2"><b>Tanggal pulang</b><br><?!= fmtDateSmart_(pick_(["Tanggal pulang","Tanggal kembali","Tgl kembali"])) ?></td>
+    <td colspan="2"><b>Tanggal pulang</b><br><?!= fmtDateSmart_(pick_(["Tanggal pulang perjalanan","Tanggal pulang","Tanggal kembali","Tgl kembali"])) ?></td>
   </tr>
 
   <tr><td class="section sec-blue" colspan="3">INFORMASI SPESIMEN</td></tr>

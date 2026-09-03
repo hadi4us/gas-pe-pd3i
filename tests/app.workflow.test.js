@@ -46,6 +46,16 @@ test('credential UI uses email OTP login like e-PWS Imunisasi', () => {
   assert.match(authHtml, /Password baru minimal 6 karakter\./);
 });
 
+test('login Telegram OTP channel choice uses styled confirm modal', () => {
+  assert.match(authHtml, /id = 'login-telegram-choice-popup'/);
+  assert.match(authHtml, /wrap\.className = 'pd3i-confirm-backdrop'/);
+  assert.match(authHtml, /class="pd3i-confirm-card account-request-result-card"/);
+  assert.match(authHtml, /data-login-telegram-choice="email"/);
+  assert.match(authHtml, /data-login-telegram-choice="telegram"/);
+  assert.match(styleHtml, /\.pd3i-confirm-backdrop\{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center/);
+  assert.match(styleHtml, /#login-telegram-choice-popup \.account-request-telegram-explain/);
+});
+
 test('verification success modal replaces original action buttons to avoid resetForNewEntry listener', () => {
   assert.match(appHtml, /function replaceVerificationSuccessButton\(button, label, modal, action\)/);
   assert.match(appHtml, /const clone = button\.cloneNode\(true\);/);
@@ -109,6 +119,36 @@ test('print endpoint routes each diagnosis to its own PDF template', () => {
     assert.match(printJs, new RegExp(dx + ': "Views/print_' + dx + '"'));
   });
   assert.match(printJs, /return templateByDx\[dx\] \|\| "Views\/print_MR"/);
+});
+
+test('PDF print templates prefer canonical input field ids before legacy aliases', () => {
+  const expected = {
+    'src/Views/print_MR.html': [
+      'Nama Petugas',
+      'Ulkus mukosa mulut',
+      'Sebutkan komplikasi lain',
+      'Ada kasus serupa di lingkungan',
+      'Riwayat perjalanan 7-21 hari',
+      'Tanggal pulang perjalanan'
+    ],
+    'src/Views/print_PERT.html': [
+      'Tanggal mulai batuk',
+      'Tanggal mulai apnea',
+      'Whoop',
+      'Gejala lain pertusis',
+      'Ada klaster/kejadian serupa',
+      'Jumlah kasus sekitar PERT',
+      'Perjalanan 1 bulan PERT',
+      'Nama Petugas'
+    ],
+    'src/Views/print_DIF.html': ['No. kontak orang tua/wali'],
+    'src/Views/print_TN.html': ['Nama Petugas'],
+    'src/Views/print_AFP.html': ['Nama Petugas']
+  };
+  Object.entries(expected).forEach(([file, keys]) => {
+    const html = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+    keys.forEach((key) => assert.ok(html.includes(key), `${file} should read ${key}`));
+  });
 });
 
 test('dynamic table serialization sanitizes nested string cells before JSON storage', () => {

@@ -53,9 +53,9 @@ function imunSource_(labels, legacyKeys){var r=findImun_(labels); return s(r['Su
 <tr><td><b>Kelurahan</b><br><?!= s(pick_(['Kelurahan'])) ?></td><td><b>Kecamatan</b><br><?!= s(pick_(['Kecamatan'])) ?></td><td><b>RT/RW</b><br><?!= s(pick_(['RT'])) ?> / <?!= s(pick_(['RW'])) ?></td></tr>
 <tr><td><b>Nama Orangtua/Wali</b><br><?!= s(pick_(['Nama Orang Tua/Wali','Nama orang tua/wali'])) ?></td><td colspan="2"><b>No. Kontak Orangtua/Wali</b><br><?!= s(pick_(['No Telp/WA Orang Tua/Wali','No. kontak orang tua/wali'])) ?></td></tr>
 <tr><td class="section" colspan="3">Informasi Klinis</td></tr>
-<tr><td><b>Batuk terus menerus</b><br><?!= yn(pick_(['Batuk terus menerus?','Batuk terus menerus'])) ?></td><td colspan="2"><b>Tanggal Mulai Batuk</b><br><?!= d(pick_(['Tanggal Mulai Batuk'])) ?></td></tr>
-<tr><td><b>Apnea</b><br><?!= yn(pick_(['Apnea?','Apnea'])) ?></td><td colspan="2"><b>Tanggal Mulai Apnea</b><br><?!= d(pick_(['Tanggal Mulai Apnea'])) ?></td></tr>
-<tr><td colspan="3"><b>Gejala lain</b><br>Batuk rejan: <?!= yn(pick_(['Batuk rejan'])) ?>; Muntah setelah batuk: <?!= yn(pick_(['Muntah setelah batuk'])) ?>; Lainnya: <?!= s(pick_(['Gejala lain PERT','Lainnya gejala'])) ?></td></tr>
+<tr><td><b>Batuk terus menerus</b><br><?!= yn(pick_(['Batuk terus menerus?','Batuk terus menerus'])) ?></td><td colspan="2"><b>Tanggal Mulai Batuk</b><br><?!= d(pick_(['Tanggal mulai batuk','Tanggal Mulai Batuk'])) ?></td></tr>
+<tr><td><b>Apnea</b><br><?!= yn(pick_(['Apnea?','Apnea'])) ?></td><td colspan="2"><b>Tanggal Mulai Apnea</b><br><?!= d(pick_(['Tanggal mulai apnea','Tanggal Mulai Apnea'])) ?></td></tr>
+<tr><td colspan="3"><b>Gejala lain</b><br>Batuk rejan: <?!= yn(pick_(['Whoop','Batuk rejan'])) ?>; Muntah setelah batuk: <?!= yn(pick_(['Muntah setelah batuk'])) ?>; Lainnya: <?!= s(pick_(['Gejala lain pertusis','Gejala lain PERT','Lainnya gejala'])) ?></td></tr>
 <tr><td class="section" colspan="3">Riwayat Pengobatan</td></tr>
 <tr><td><b>Dirawat di RS?</b><br><?!= yn(pick_(['Rawat inap?'])) ?></td><td><b>Nama Rumah Sakit</b><br><?!= s(pick_(['Nama Rumah Sakit'])) ?></td><td><b>Nomor Rekam Medik</b><br><?!= s(pick_(['Nomor Rekam Medik'])) ?></td></tr>
 <tr><td><b>Tanggal Masuk Rawat Inap</b><br><?!= d(pick_(['Tanggal Masuk Rawat Inap'])) ?></td><td colspan="2"><b>Tanggal Keluar</b><br><?!= d(pick_(['Tanggal Pulang','Tanggal Keluar'])) ?></td></tr>
@@ -67,13 +67,13 @@ function imunSource_(labels, legacyKeys){var r=findImun_(labels); return s(r['Su
 <tr><td colspan="2"><b>Pernah imunisasi saat ORI?</b><br><?!= yn(pick_(['Pernah menerima DPT-HB-HiB saat ORI?'])) ?></td><td><b>Sumber Informasi</b><br><?!= s(pick_(['Sumber ORI'])) ?></td></tr>
 <tr><td colspan="3"><b>Tanggal Vaksinasi DPT-HB-HiB terakhir</b><br><?!= d(pick_(['Tanggal vaksinasi DPT terakhir'])) || imunDate_(['DPT-HB-HIB 4','DPT-HB-HiB 4','DPT-HB-HIB 3','DPT-HB-HiB 3','DPT-HB-HIB 2','DPT-HB-HiB 2','DPT-HB-HIB 1','DPT-HB-HiB 1'], []) ?></td></tr>
 <tr><td class="section" colspan="3">Informasi Epidemiologis</td></tr>
-<tr><td colspan="2"><b>Ada kasus serupa di keluarga/sekitar?</b><br><?!= yn(pick_(['Ada kasus serupa?','Ada kasus sekitar?'])) ?></td><td><b>Jumlah</b><br><?!= s(pick_(['Jumlah kasus sekitar'])) ?></td></tr>
-<tr><td><b>Bepergian 1 bulan terakhir?</b><br><?!= yn(pick_(['Bepergian 1 bulan terakhir?'])) ?></td><td><b>Lokasi</b><br><?!= s(pick_(['Lokasi perjalanan PERT','Tujuan perjalanan'])) ?></td><td><b>Tanggal pergi / kembali</b><br><?!= d(pick_(['Tanggal pergi PERT','Tanggal pergi'])) ?> / <?!= d(pick_(['Tanggal kembali PERT','Tanggal kembali'])) ?></td></tr>
+<tr><td colspan="2"><b>Ada kasus serupa di keluarga/sekitar?</b><br><?!= yn(pick_(['Ada klaster/kejadian serupa','Ada kasus serupa?','Ada kasus sekitar?'])) ?></td><td><b>Jumlah</b><br><?!= s(pick_(['Jumlah kasus sekitar PERT','Jumlah kasus sekitar'])) ?></td></tr>
+<tr><td><b>Bepergian 1 bulan terakhir?</b><br><?!= yn(pick_(['Perjalanan 1 bulan PERT','Bepergian 1 bulan terakhir?'])) ?></td><td><b>Lokasi</b><br><?!= s(pick_(['Lokasi perjalanan PERT','Tujuan perjalanan'])) ?></td><td><b>Tanggal pergi / kembali</b><br><?!= d(pick_(['Tanggal pergi PERT','Tanggal pergi'])) ?> / <?!= d(pick_(['Tanggal kembali PERT','Tanggal kembali'])) ?></td></tr>
 <tr><td class="section" colspan="3">Informasi Spesimen</td></tr>
 <tr><td><b>Spesimen diambil?</b><br><?!= yn(pick_(['Spesimen pertusis diambil?','Spesimen diambil?'])) ?></td><td><b>Jenis Spesimen</b><br><?!= s(pick_(['Jenis spesimen pertusis','Jenis Spesimen'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil spesimen pertusis','Tanggal ambil spesimen'])) ?> / <?!= d(pick_(['Tanggal kirim spesimen pertusis','Tanggal pengiriman spesimen'])) ?></td></tr>
 <tr><td><b>Spesimen lain diambil?</b><br><?!= yn(pick_(['Spesimen lain pertusis diambil?'])) ?></td><td><b>Jenis Sampel Lain</b><br><?!= s(pick_(['Jenis spesimen lain pertusis','Jenis Sampel Lain'])) ?></td><td><b>Tgl ambil / kirim</b><br><?!= d(pick_(['Tanggal ambil spesimen lain pertusis','Tanggal ambil spesimen lain'])) ?> / <?!= d(pick_(['Tanggal kirim spesimen lain pertusis','Tanggal pengiriman spesimen lain ke lab'])) ?></td></tr>
 <tr><td colspan="3"><b>Keadaan saat ini</b><br><?!= s(pick_(['Status akhir PERT','Keadaan saat ini'])) ?></td></tr>
-<tr><td colspan="3"><b>Pelaksana investigasi</b><br><?!= s(pick_(['Petugas','Pelaksana investigasi'])) ?> &nbsp;&nbsp; <b>No Kontak:</b> <?!= s(pick_(['No Whatsapp Petugas','No. Kontak'])) ?></td></tr>
+<tr><td colspan="3"><b>Pelaksana investigasi</b><br><?!= s(pick_(['Nama Petugas','Petugas','Pelaksana investigasi'])) ?> &nbsp;&nbsp; <b>No Kontak:</b> <?!= s(pick_(['No Whatsapp Petugas','No. Kontak'])) ?></td></tr>
 <tr><td class="section" colspan="3">Kontak Erat</td></tr>
 <? if(contactRows.length){ ?>
 <tr><th>No</th><th>Nama/Umur/Alamat/Hubungan</th><th>Status Imunisasi / Kondisi / Keterangan</th></tr>
