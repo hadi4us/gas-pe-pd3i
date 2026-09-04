@@ -369,139 +369,139 @@
     {
       "name": "pieEvaluateScreeningPayload",
       "file": "src/PIE/service.js",
-      "line": 703,
+      "line": 705,
       "guard": "token"
     },
     {
       "name": "pieCreateEncounter",
       "file": "src/PIE/service.js",
-      "line": 373,
+      "line": 375,
       "guard": "token"
     },
     {
       "name": "pieGetOperationalDashboard",
       "file": "src/PIE/service.js",
-      "line": 444,
+      "line": 446,
       "guard": "token"
     },
     {
       "name": "pieCompleteActionTask",
       "file": "src/PIE/service.js",
-      "line": 552,
+      "line": 554,
       "guard": "token"
     },
     {
       "name": "pieSetCaseClassification",
       "file": "src/PIE/service.js",
-      "line": 577,
+      "line": 579,
       "guard": "token"
     },
     {
       "name": "pieCreatePeFollowUp",
       "file": "src/PIE/service.js",
-      "line": 172,
+      "line": 173,
       "guard": "token"
     },
     {
       "name": "pieGetPeForm",
       "file": "src/PIE/service.js",
-      "line": 195,
+      "line": 196,
       "guard": "token"
     },
     {
       "name": "pieSavePeInvestigation",
       "file": "src/PIE/service.js",
-      "line": 206,
+      "line": 207,
       "guard": "token"
     },
     {
       "name": "pieCreateSpecimen",
       "file": "src/PIE/service.js",
-      "line": 239,
+      "line": 241,
       "guard": "token"
     },
     {
       "name": "pieSaveLabResult",
       "file": "src/PIE/service.js",
-      "line": 250,
+      "line": 252,
       "guard": "token"
     },
     {
       "name": "pieAddOneHealthSignal",
       "file": "src/PIE/service.js",
-      "line": 261,
+      "line": 263,
       "guard": "token"
     },
     {
       "name": "pieAddClusterLink",
       "file": "src/PIE/service.js",
-      "line": 271,
+      "line": 273,
       "guard": "token"
     },
     {
       "name": "pieArchiveCase",
       "file": "src/PIE/service.js",
-      "line": 281,
+      "line": 283,
       "guard": "token"
     },
     {
       "name": "pieAddKbRuleDraft",
       "file": "src/PIE/service.js",
-      "line": 296,
+      "line": 298,
       "guard": "token"
     },
     {
       "name": "pieApproveKbRule",
       "file": "src/PIE/service.js",
-      "line": 308,
+      "line": 310,
       "guard": "token"
     },
     {
       "name": "pieCalculateValidationMetrics",
       "file": "src/PIE/service.js",
-      "line": 318,
+      "line": 320,
       "guard": "token"
     },
     {
       "name": "pieTestKbRule",
       "file": "src/PIE/service.js",
-      "line": 356,
+      "line": 358,
       "guard": "token"
     },
     {
       "name": "pieAcknowledgeAlert",
       "file": "src/PIE/service.js",
-      "line": 592,
+      "line": 594,
       "guard": "token"
     },
     {
       "name": "pieResolveAlert",
       "file": "src/PIE/service.js",
-      "line": 602,
+      "line": 604,
       "guard": "token"
     },
     {
       "name": "pieGetNotificationConfigStatus",
       "file": "src/PIE/service.js",
-      "line": 694,
+      "line": 696,
       "guard": "admin"
     },
     {
       "name": "pieSetupTelegramConfig",
       "file": "src/PIE/service.js",
-      "line": 612,
+      "line": 614,
       "guard": "admin"
     },
     {
       "name": "pieSendTestNotification",
       "file": "src/PIE/service.js",
-      "line": 636,
+      "line": 638,
       "guard": "admin"
     },
     {
       "name": "pieGetPd3iNotificationConfigStatus",
       "file": "src/PIE/service.js",
-      "line": 645,
+      "line": 647,
       "guard": "admin"
     }
   ],

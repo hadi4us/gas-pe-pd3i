@@ -164,7 +164,8 @@ function piePeTemplateForDisease_(diseaseCode) {
     RABIES_EXPOSURE: 'PE_GHPR_RABIES_EXPOSURE',
     LEPTOSPIROSIS: 'PE_LEPTOSPIROSIS',
     NIPAH_OR_RABIES_LIKE: 'PE_EMERGING_ZOONOSIS_NEUROLOGIC',
-    SEVERE_UNEXPLAINED_CLUSTER: 'PE_KLB_CLUSTER_INVESTIGATION'
+    SEVERE_UNEXPLAINED_CLUSTER: 'PE_KLB_CLUSTER_INVESTIGATION',
+    MPOX_SUSPECT: 'PE_MPOX_INVESTIGATION'
   };
   return map[String(diseaseCode || '').toUpperCase()] || 'PE_PIE_GENERIC_INVESTIGATION';
 }
@@ -230,6 +231,7 @@ function pieValidatePeInvestigation_(templateCode, investigation) {
   else if (t.indexOf('RABIES') !== -1) { req('template_fields.rabies_wound', 'Kategori luka/gigitan'); req('template_fields.rabies_pep', 'PEP/VAR/SAR'); req('template_fields.rabies_animal', 'Status hewan penggigit'); }
   else if (t.indexOf('LEPTOSPIROSIS') !== -1) { req('template_fields.lepto_water', 'Paparan air/tikus'); req('template_fields.lepto_organ', 'Tanda berat leptospirosis'); }
   else if (t.indexOf('NEUROLOGIC') !== -1 || t.indexOf('ZOONOSIS') !== -1) { req('template_fields.neuro', 'Gejala neurologis utama'); req('template_fields.animal', 'Riwayat hewan/produk hewan'); }
+  else if (t.indexOf('MPOX') !== -1) { req('template_fields.mpox_case_info', 'Informasi kasus Mpox'); req('template_fields.mpox_clinical', 'Informasi klinis dan lesi Mpox'); req('template_fields.mpox_exposure', 'Riwayat paparan 21 hari Mpox'); req('template_fields.mpox_specimen', 'Pemeriksaan penunjang Mpox'); }
   else if (t.indexOf('CLUSTER') !== -1 || t.indexOf('KLB') !== -1) { req('template_fields.cluster_line', 'Line list/tautan klaster'); req('template_fields.cluster_hypothesis', 'Hipotesis awal KLB'); }
   if (!v('specimen_plan')) warnings.push('Rencana spesimen belum diisi.');
   if (!v('chronology.contact')) warnings.push('Riwayat kontak erat belum diisi.');

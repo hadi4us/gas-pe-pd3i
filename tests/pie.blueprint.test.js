@@ -66,3 +66,13 @@ test('SARING-PIE SOP matches current menu split, setup location, and production 
   assert.match(sop, /All CSV exports work/);
   assert.match(sop, /versioned Apps Script deployment/);
 });
+
+
+test('Mpox PE template maps manual form sections into PIE follow-up', () => {
+  const service = pieServiceJs;
+  const ui = workspacePieHtml;
+  assert.match(service, /MPOX_SUSPECT:\s*'PE_MPOX_INVESTIGATION'/);
+  ['mpox_case_info','mpox_clinical','mpox_exposure','mpox_specimen'].forEach((field) => assert.match(service, new RegExp(field)));
+  ['pie-pe-mpox-case','pie-pe-mpox-clinical','pie-pe-mpox-exposure','pie-pe-mpox-specimen'].forEach((id) => assert.match(ui, new RegExp(id)));
+  assert.match(ui, /cairan lesi, keropeng\/krusta, serum, swab anogenital, swab tonsil\/orofaring, swab rektal/);
+});
