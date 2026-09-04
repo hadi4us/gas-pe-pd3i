@@ -769,7 +769,9 @@ function getWorkflowFilterOptions(token) {
 
   const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
   const scopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
-  const userKodePuskesmas = _normalizeAccessScopeKey_((sess.user && sess.user.kodePuskesmas) || '');
+  const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskesKey || sess.user.faskes_key)) || '';
+  const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
+  const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
   const normalizePuskesmasScopeName = function(value) {
     return _normalizeAccessScopeKey_(value)
@@ -819,12 +821,15 @@ function getWorkflowFilterOptions(token) {
     const idxPengampu = _headerIndexCI_(headers, ['Pengampu', 'nama_pengampu']);
     const isRowInUserScope = function(row) {
       if (canSeeAllReferenceWilayah) return true;
-      const rowKode = idxKodePuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxKodePuskesmas]) : '';
+      const rowKodeRaw = idxKodePuskesmas !== -1 ? row[idxKodePuskesmas] : '';
+      const rowKode = _normalizeAccessScopeKey_(rowKodeRaw);
+      const rowKodeId = _normalizeAccessScopeId_(rowKodeRaw);
       const rowNama = idxNamaPuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxNamaPuskesmas]) : '';
       const rowPengampu = idxPengampu !== -1 ? _normalizeAccessScopeKey_(row[idxPengampu]) : '';
       const rowNamaAlias = normalizePuskesmasScopeName(rowNama);
       const rowPengampuAlias = normalizePuskesmasScopeName(rowPengampu);
       const puskesmasMatch = (userKodePuskesmas && rowKode && userKodePuskesmas === rowKode)
+        || (userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId)
         || (userUnitKerja && rowNama && userUnitKerja === rowNama)
         || (userUnitKerja && rowPengampu && userUnitKerja === rowPengampu)
         || (userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias)

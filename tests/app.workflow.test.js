@@ -294,7 +294,10 @@ test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variab
   assert.match(routesJs, /const canSeeAllReferenceWilayah = _isAdminRole_\(role\) \|\| scopeLevel === 'dinkes'/);
   assert.match(routesJs, /const isRowInUserScope = function\(row\)/);
   assert.match(routesJs, /if \(!isRowInUserScope\(row\)\) return;/);
+  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskesKey \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+  assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
   assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
+  assert.match(routesJs, /userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId/);
   assert.match(routesJs, /userUnitKerja && rowNama && userUnitKerja === rowNama/);
   assert.match(routesJs, /replace\(\/\\b\(PKM\|PUSKESMAS\)\\b\/g, ''\)/);
   assert.match(routesJs, /userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias/);
