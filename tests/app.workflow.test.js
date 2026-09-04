@@ -560,9 +560,11 @@ test('all choice-button fields submit selected button value, not stale hidden in
   assert.match(configMr, /id: "Ruam Makulopapular\?"[\s\S]*?type: "choice_buttons"/);
 });
 
-test('MR showIf date evidence overrides stale Tidak choice values server-side', () => {
+test('MR showIf date evidence overrides stale Tidak choice values server-side without inventing Tidak on partial saves', () => {
   assert.match(dataJs, /if \(dx === "MR" && demamDateValue\) \{[\s\S]*?data\["Demam\?"\] = "Ya"/);
   assert.match(dataJs, /if \(dx === "MR" && ruamDateValue\) \{[\s\S]*?data\["Ruam Makulopapular\?"\] = "Ya"/);
+  assert.doesNotMatch(dataJs, /data\["Demam\?"\] = demamDateValue \? "Ya" : "Tidak"/);
+  assert.doesNotMatch(dataJs, /data\["Ruam Makulopapular\?"\] = ruamDateValue \? "Ya" : "Tidak"/);
 });
 
 test('verification workspace keeps address and GPS context fields editable for admin correction', () => {
