@@ -360,8 +360,8 @@ test('Daftar Kasus row action opens edit workspace and does not render workflow 
   assert.match(appHtmlRaw, /if \(workspace === 'search'\) return 'Edit kasus'/);
 });
 
-test('Daftar Kasus and edit workspace clear workflow inbox before explicit search', () => {
-  assert.match(appHtmlRaw, /if \(normalized === 'search'\) \{[\s\S]*?clearWorkflowInboxUi\(\);\s*\} else \{\s*clearWorkflowInboxUi\(\);\s*\}/);
+test('Daftar Kasus opens with live list while edit workspace clears stale workflow inbox', () => {
+  assert.match(appHtmlRaw, /clearWorkflowInboxUi\(\);\s*restoreWorkflowSearchFiltersForWorkspace\(normalized\);\s*if \(normalized === 'search' && typeof runWorkflowSearchPage === 'function'\) \{\s*runWorkflowSearchPage\(1\);\s*\}/);
   assert.match(appHtmlRaw, /if \(\['search', 'verifikasi', 'sampel', 'status'\]\.includes\(workspace\)\) \{[\s\S]*?renderPd3iSkeleton\(\{ title: 'Memuat daftar kerja…'/);
 });
 

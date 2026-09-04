@@ -4170,14 +4170,11 @@
       updateFormStepperState('section-pelapor');
       applySidebarWorkspaceLayout(normalized);
       applySearchShellCopyForWorkspace(normalized);
-      if (normalized === 'search') {
-        // Do not load the full case list on workspace open. Search workspace
-        // waits for explicit "Terapkan filter" / Cari action.
-        clearWorkflowInboxUi();
-      } else {
-        clearWorkflowInboxUi();
-      }
+      clearWorkflowInboxUi();
       restoreWorkflowSearchFiltersForWorkspace(normalized);
+      if (normalized === 'search' && typeof runWorkflowSearchPage === 'function') {
+        runWorkflowSearchPage(1);
+      }
       // Lazy-load filter options on first open of search workspace only
       if (!window.__FILTERS_LOADED) {
         window.__FILTERS_LOADED = true;
