@@ -451,6 +451,13 @@ test('rejected cases stay visible and readable to both original inputer and mapp
   assert.match(routesJs, /_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
+test('Daftar Kasus puskesmas scope accepts faskesKey as pengampu code fallback', () => {
+  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess && sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskesKey \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+  assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
+  assert.match(routesJs, /userKodePuskesmasId && code === userKodePuskesmasId/);
+  assert.match(routesJs, /userKodePuskesmasId === _normalizeAccessScopeId_\(pengampu\.kodePuskesmas \|\| ''\)/);
+});
+
 test('Daftar Kasus direct search can show pending records created by the logged-in petugas without widening all-status reads', () => {
   assert.match(routesJs, /\['Diinput Oleh'\]/);
   assert.match(routesJs, /\['Input Awal Diisi Oleh'\]/);

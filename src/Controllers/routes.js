@@ -2408,7 +2408,9 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if ((verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') && _isSessionOriginalInputer_(sess, data || {})) return true;
   if (verificationStatus === 'PENDING' && _isSessionOriginalInputerUsername_(sess, data || {})) return true;
 
-  const userKodePuskesmas = _normalizeAccessScopeKey_((sess && sess.user && sess.user.kodePuskesmas) || '');
+  const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskesKey || sess.user.faskes_key)) || '';
+  const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
+  const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
   const userFaskesKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
   let userPengampuKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
@@ -2427,7 +2429,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
         for (let r = 1; r < vals.length; r++) {
           const code = ic === -1 ? '' : _normalizeAccessScopeId_(vals[r][ic]);
           const name = iname === -1 ? '' : _normalizeAccessScopeKey_(vals[r][iname]);
-          if ((userKodePuskesmas && code === userKodePuskesmas) || (userUnitKerja && name === userUnitKerja)) {
+          if ((userKodePuskesmasId && code === userKodePuskesmasId) || (userUnitKerja && name === userUnitKerja)) {
             userPengampuKey = ik === -1 ? '' : _normalizeAccessScopeId_(vals[r][ik]);
             if (userPengampuKey) break;
           }
@@ -2450,6 +2452,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   const recordKodePengampu = _normalizeAccessScopeKey_((data && data['KodeFaskes Pengampu']) || '');
   const recordPuskesmasPengampu = _normalizeAccessScopeKey_((data && data['Puskesmas Pengampu']) || '');
   if (userKodePuskesmas && recordKodePengampu && userKodePuskesmas === recordKodePengampu) return true;
+  if (userKodePuskesmasId && _normalizeAccessScopeId_(recordKodePengampu) && userKodePuskesmasId === _normalizeAccessScopeId_(recordKodePengampu)) return true;
   if (userUnitKerja && recordPuskesmasPengampu && userUnitKerja === recordPuskesmasPengampu) return true;
 
   // Direct match: "Nama unit pelapor" from sheet vs user unitKerja (covers all faskes types)
@@ -2468,7 +2471,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
 
   const mappedKodePuskesmas = _normalizeAccessScopeKey_(pengampu.kodePuskesmas || '');
   const mappedNamaPuskesmas = _normalizeAccessScopeKey_(pengampu.namaPuskesmas || '');
-  const kodeMatch = userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas;
+  const kodeMatch = (userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas) || (userKodePuskesmasId && _normalizeAccessScopeId_(pengampu.kodePuskesmas || '') && userKodePuskesmasId === _normalizeAccessScopeId_(pengampu.kodePuskesmas || ''));
   const unitMatch = userUnitKerja && mappedNamaPuskesmas && userUnitKerja === mappedNamaPuskesmas;
   return !!(kodeMatch || unitMatch);
 }
@@ -2512,7 +2515,7 @@ function _enforceWorkflowStageContextAccess_(sess, normalizedStage, dx, data) {
       throw new Error("Kode/unit puskesmas akun ini belum diatur di REF_USER.");
     }
 
-    const kodeMatch = userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas;
+    const kodeMatch = (userKodePuskesmas && mappedKodePuskesmas && userKodePuskesmas === mappedKodePuskesmas) || (userKodePuskesmasId && _normalizeAccessScopeId_(pengampu.kodePuskesmas || '') && userKodePuskesmasId === _normalizeAccessScopeId_(pengampu.kodePuskesmas || ''));
     const unitMatch = userUnitKerja && mappedNamaPuskesmas && userUnitKerja === mappedNamaPuskesmas;
     if (!kodeMatch && !unitMatch) {
       throw new Error("Petugas hanya boleh input hasil pemeriksaan untuk pasien yang diampu puskesmas sesuai domisili (Kab/Kota + Kecamatan + Kelurahan). Mapped: " + (pengampu.namaPuskesmas || pengampu.kodePuskesmas || '-') + "; User: " + ((sess.user && (sess.user.unitKerja || sess.user.kodePuskesmas)) || '-'));
