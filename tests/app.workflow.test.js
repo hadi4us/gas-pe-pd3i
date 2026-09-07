@@ -1296,3 +1296,11 @@ test('deployment automation only targets canonical dev deployment from release w
   assert.match(deployScript, /timeoutMs = Number\(process\.env\.PD3I_CLASP_TIMEOUT_MS \|\| 120000\)/);
   assert.equal(deployScript.includes("scriptId: '1laS5GQZob0FQWsLdOGXdx6ea6iyxC7uHeaDE_wVl5rDV8fNQs-3jHUVu'"), false);
 });
+
+
+test('workflow filter options match PKM scope using NamaFaskes when UnitKerja is empty', () => {
+  assert.match(routesJs, /const userNamaFaskes = _normalizeAccessScopeKey_\(\(sess\.user && sess\.user\.namaFaskes\) \|\| ''\)/);
+  assert.match(routesJs, /const userFaskesAlias = normalizePuskesmasScopeName\(userNamaFaskes\)/);
+  assert.match(routesJs, /\|\| \(userNamaFaskes && rowNama && userNamaFaskes === rowNama\)/);
+  assert.match(routesJs, /\|\| \(userFaskesAlias && rowPengampuAlias && userFaskesAlias === rowPengampuAlias\)/);
+});

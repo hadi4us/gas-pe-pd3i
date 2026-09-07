@@ -773,6 +773,7 @@ function getWorkflowFilterOptions(token) {
   const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
   const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
+  const userNamaFaskes = _normalizeAccessScopeKey_((sess.user && sess.user.namaFaskes) || '');
   const normalizePuskesmasScopeName = function(value) {
     return _normalizeAccessScopeKey_(value)
       .replace(/^UPTD\s+/, '')
@@ -781,6 +782,7 @@ function getWorkflowFilterOptions(token) {
       .trim();
   };
   const userUnitAlias = normalizePuskesmasScopeName(userUnitKerja);
+  const userFaskesAlias = normalizePuskesmasScopeName(userNamaFaskes);
   const canSeeAllReferenceWilayah = _isAdminRole_(role) || scopeLevel === 'dinkes';
 
   const kecamatanMap = {};
@@ -832,8 +834,12 @@ function getWorkflowFilterOptions(token) {
         || (userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId)
         || (userUnitKerja && rowNama && userUnitKerja === rowNama)
         || (userUnitKerja && rowPengampu && userUnitKerja === rowPengampu)
+        || (userNamaFaskes && rowNama && userNamaFaskes === rowNama)
+        || (userNamaFaskes && rowPengampu && userNamaFaskes === rowPengampu)
         || (userUnitAlias && rowNamaAlias && userUnitAlias === rowNamaAlias)
-        || (userUnitAlias && rowPengampuAlias && userUnitAlias === rowPengampuAlias);
+        || (userUnitAlias && rowPengampuAlias && userUnitAlias === rowPengampuAlias)
+        || (userFaskesAlias && rowNamaAlias && userFaskesAlias === rowNamaAlias)
+        || (userFaskesAlias && rowPengampuAlias && userFaskesAlias === rowPengampuAlias);
       if (puskesmasMatch) return true;
       // Fallback: faskes non-puskesmas — include all REF_PENGAMPU rows so filter dropdowns are populated.
       // Actual record visibility is enforced by _canSessionReadRecordByScope_() via "Nama unit pelapor" match.
