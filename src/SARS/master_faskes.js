@@ -14,7 +14,7 @@
  * Catatan:
  * - Jenis di REF_FASKES disarankan: RS/KLINIK/TPMD/PMB/LAIN (bebas case)
  * - Nama kolom fleksibel (lihat pickIndex_)
- * - Key stabil: pakai kolom FaskesKey bila ada, kalau tidak dibuat otomatis
+ * - Key stabil: pakai kolom faskes_key bila ada, kalau tidak dibuat otomatis
  ******************************************************/
 
 function getSarsFacilityForActiveUser(requestedEmail) {
@@ -42,11 +42,11 @@ function getSarsFacilityForActiveUser(requestedEmail) {
   if (!found) {
     const user = _lookupSarsAppUser_(requested || googleEmail);
     if (user) {
-      const code = normalizeFaskesKey_(user.kodeFaskes);
-      const names = [user.namaFaskes, user.unitKerja].map(function(v) { return normalizeFaskesKey_(v); }).filter(Boolean);
+      const code = normalizefaskes_key_(user.kodeFaskes);
+      const names = [user.namaFaskes, user.unitKerja].map(function(v) { return normalizefaskes_key_(v); }).filter(Boolean);
       found = raw.filter(function(r) {
-        const key = normalizeFaskesKey_(r.key);
-        const name = normalizeFaskesKey_(r.nama);
+        const key = normalizefaskes_key_(r.key);
+        const name = normalizefaskes_key_(r.nama);
         return (code && key === code) || names.indexOf(name) !== -1;
       })[0] || null;
       if (found) email = requested || googleEmail;
@@ -114,9 +114,9 @@ function getMasterFaskesForClient() {
     lain: [],
     all: [],
     // opsional bila nanti diperlukan client/dashboard
-    pengampuByKey: {}, // {FaskesKey: "Pengampu"}
-    nameByKey: {},     // {FaskesKey: "Nama Faskes"}
-    typeByKey: {},     // {FaskesKey: "RS|KLINIK|TPMD|PMB|LAIN"}
+    pengampuByKey: {}, // {faskes_key: "Pengampu"}
+    nameByKey: {},     // {faskes_key: "Nama Faskes"}
+    typeByKey: {},     // {faskes_key: "RS|KLINIK|TPMD|PMB|LAIN"}
     meta: { total: 0, byType: {}, updatedAt: new Date().toISOString() }
   };
 
@@ -124,7 +124,7 @@ function getMasterFaskesForClient() {
     const name = String(r.nama || "").trim();
     if (!name) return;
 
-    const key = String(r.key || "").trim() || normalizeFaskesKey_(name);
+    const key = String(r.key || "").trim() || normalizefaskes_key_(name);
     const typeKey = normalizeFaskesTypeKey_(r.jenis); // RS/KLINIK/TPMD/PMB/LAIN (default LAIN)
     const pengampu = String(r.pengampu || "").trim();
 
@@ -162,7 +162,7 @@ function getMasterFaskesForClient() {
  * - NamaFaskes / Nama Faskes
  * - Jenis
  * - Pengampu
- * - FaskesKey (opsional tapi disarankan)
+ * - faskes_key (opsional tapi disarankan)
  */
 function getMasterFaskesRaw_(includeInactive) {
   // Pastikan config tersedia
@@ -185,7 +185,7 @@ function getMasterFaskesRaw_(includeInactive) {
   const iNama = pickIndex_(header, ["nama_faskes", "Nama Faskes", "NamaFaskes", "Nama Fasyankes", "NamaFasyankes", "Nama"]);
   const iJenis = pickIndex_(header, ["jenis", "Jenis", "Jenis Faskes", "JenisFaskes", "Tipe", "Type"]);
   const iPengampu = pickIndex_(header, ["nama_pengampu", "Pengampu", "FaskesPengampu", "Puskesmas Pengampu", "UPTD Pengampu"]);
-  const iKey = pickIndex_(header, ["faskes_key", "FaskesKey", "Faskes Key", "FasyankesKey", "Fasyankes Key", "KodeFaskes", "Kode Faskes", "Key", "Kode"]);
+  const iKey = pickIndex_(header, ["faskes_key", "faskes_key", "FasyankesKey", "Fasyankes Key", "KodeFaskes", "Kode Faskes", "Key", "Kode"]);
   const iStatus = pickIndex_(header, ["status", "StatusAktif", "Status Aktif", "Aktif", "Status"]);
   const iEmail = pickIndex_(header, ["email", "Email", "Gmail", "EmailPetugas", "Email Petugas", "Email Faskes", "Email PIC", "EmailPJ", "Email PJ", "Kontak Email"]);
 
@@ -204,7 +204,7 @@ function getMasterFaskesRaw_(includeInactive) {
     if (!includeInactive && !isSarsReportingFacility_(typeKey, statusAktif)) continue;
 
     const pengampu = (iPengampu >= 0) ? String(row[iPengampu] || "").trim() : "";
-    const key = (iKey >= 0) ? String(row[iKey] || "").trim() : normalizeFaskesKey_(nama);
+    const key = (iKey >= 0) ? String(row[iKey] || "").trim() : normalizefaskes_key_(nama);
 
     const email = (iEmail >= 0) ? String(row[iEmail] || "").trim() : "";
     out.push({ nama, jenis, pengampu, key, statusAktif, email });
@@ -274,8 +274,8 @@ function uniqSort_(arr) {
   return out;
 }
 
-/** Key stabil untuk matching dashboard bila master belum punya FaskesKey */
-function normalizeFaskesKey_(name) {
+/** Key stabil untuk matching dashboard bila master belum punya faskes_key */
+function normalizefaskes_key_(name) {
   return String(name || "")
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "");

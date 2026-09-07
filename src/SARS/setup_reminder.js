@@ -22,7 +22,7 @@
  * PRASYARAT:
  * - config.gs menyediakan: openSarsSpreadsheet(), getSarsTimezone(), getSitesFormUrl()
  * - epi_week.gs menyediakan: getEpidWeekForReporting() dan getEpidWeek(date)
- * - SARS minimal punya: Waktu Submit, ME, (FaskesKey disarankan), Nama Fasyankes (fallback)
+ * - SARS minimal punya: Waktu Submit, ME, (faskes_key disarankan), Nama Fasyankes (fallback)
  * - REF_FASKES minimal punya: NamaFaskes, Email, KodePuskesmas, StatusAktif opsional
  ************************************/
 
@@ -338,7 +338,7 @@ function REMINDER_getRecipientsBelumLapor_(targetWeek, targetEpiYear) {
 
   const dh = (dataVals[0] || []).map(x => String(x || "").trim());
   const diWeek  = findHeader_(dh, ["ME","Minggu Epid","MingguEpid","EW"]);
-  const diKey   = findHeader_(dh, ["faskes_key","FaskesKey","Faskes Key","KodeFaskes","Key"]);
+  const diKey   = findHeader_(dh, ["faskes_key","faskes_key","faskes_key","KodeFaskes","Key"]);
   const diNama  = findHeader_(dh, ["nama_faskes","Nama Fasyankes","NamaFasyankes","Asal Faskes","AsalFaskes","Nama Faskes","NamaFaskes"]);
   const diWaktu = findHeader_(dh, ["Waktu Submit","WaktuSubmit","Timestamp"]);
 

@@ -294,7 +294,7 @@ test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variab
   assert.match(routesJs, /const canSeeAllReferenceWilayah = _isAdminRole_\(role\) \|\| scopeLevel === 'dinkes'/);
   assert.match(routesJs, /const isRowInUserScope = function\(row\)/);
   assert.match(routesJs, /if \(!isRowInUserScope\(row\)\) return;/);
-  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskesKey \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskes_key \|\| sess\.user\.faskes_key\)\) \|\| '';/);
   assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
   assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
   assert.match(routesJs, /userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId/);
@@ -454,8 +454,8 @@ test('rejected cases stay visible and readable to both original inputer and mapp
   assert.match(routesJs, /_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
-test('Daftar Kasus puskesmas scope accepts faskesKey as pengampu code fallback', () => {
-  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess && sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskesKey \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+test('Daftar Kasus puskesmas scope accepts faskes_key as pengampu code fallback', () => {
+  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess && sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskes_key \|\| sess\.user\.faskes_key\)\) \|\| '';/);
   assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
   assert.match(routesJs, /userKodePuskesmasId && code === userKodePuskesmasId/);
   assert.match(routesJs, /userKodePuskesmasId === _normalizeAccessScopeId_\(pengampu\.kodePuskesmas \|\| ''\)/);
@@ -1228,7 +1228,7 @@ test('SARS submit requires session token and server-owned facility identity', ()
   assert.match(sarsSubmit, /const namaFasyankes = _sTrim_\(sessionFacility\.nama\)/);
   assert.match(sarsSubmit, /let jenisFasyankes = _sTrim_\(session\.user\.jenisFaskes \|\| session\.user\.jenis \|\| formData\.jenisFaskes\)/);
   assert.match(sarsSubmit, /jenisFasyankes = _normalizeSarsFacilityType_\(sessionFacility\.jenis \|\| jenisFasyankes\)/);
-  assert.match(sarsSubmit, /const sarsSubmitLock = LockService\.getScriptLock\(\);[\s\S]*?sarsSubmitLock\.waitLock\(30000\);[\s\S]*?_checkDuplicate_\(shData, hmap, me, faskesKey\);[\s\S]*?setValues\(rowsToAppend\);[\s\S]*?sarsSubmitLock\.releaseLock\(\)/);
+  assert.match(sarsSubmit, /const sarsSubmitLock = LockService\.getScriptLock\(\);[\s\S]*?sarsSubmitLock\.waitLock\(30000\);[\s\S]*?_checkDuplicate_\(shData, hmap, me, faskes_key\);[\s\S]*?setValues\(rowsToAppend\);[\s\S]*?sarsSubmitLock\.releaseLock\(\)/);
   assert.match(sarsSubmit, /\['AFP', 'CAMPAK', 'DIFTERI', 'TETANUS NEONATORUM', 'PERTUSIS'\]\.indexOf\(penyakit\) !== -1/);
   assert.match(workspaceSars, /__token:\s*String\(/);
   assert.match(standaloneSars, /__token:\s*String\(/);

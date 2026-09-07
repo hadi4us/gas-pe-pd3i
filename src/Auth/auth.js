@@ -88,7 +88,7 @@ function _extractUserScopeInfoFromRow_(row, headers) {
 
   const ixUnit = idx(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
   const ixFaskes = idx(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-  const ixKode = idx(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+  const ixKode = idx(["faskes_key", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
   const ixScope = idx(["scope_level", "ScopeLevel", "Scope Level"]);
   const ixWa = idx(["No Whatsapp", "No WhatsApp", "Whatsapp", "WhatsApp", "NoWA", "No WA", "WA"]);
 
@@ -96,7 +96,7 @@ function _extractUserScopeInfoFromRow_(row, headers) {
     unitKerja: ixUnit !== -1 ? String(row[ixUnit] || "").trim() : "",
     namaFaskes: ixFaskes !== -1 ? String(row[ixFaskes] || "").trim() : "",
     kodePuskesmas: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
-    faskesKey: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
+    faskes_key: ixKode !== -1 ? String(row[ixKode] || "").trim() : "",
     pengampuKey: (function(){ var ix = idx(["pengampu_key", "PengampuKey", "KodeFaskes Pengampu"]); return ix !== -1 ? String(row[ix] || "").trim() : ""; })(),
     scopeLevel: ixScope !== -1 ? String(row[ixScope] || "").trim().toLowerCase() : "",
     noWhatsapp: ixWa !== -1 ? String(row[ixWa] || "").trim() : ""
@@ -233,7 +233,7 @@ function _findUserByEmail_(email) {
       unitKerja: scopeInfo.unitKerja,
       namaFaskes: scopeInfo.namaFaskes,
       kodePuskesmas: scopeInfo.kodePuskesmas,
-      faskesKey: scopeInfo.faskesKey,
+      faskes_key: scopeInfo.faskes_key,
       pengampuKey: scopeInfo.pengampuKey,
       scopeLevel: scopeInfo.scopeLevel,
       noWhatsapp: scopeInfo.noWhatsapp,
@@ -398,7 +398,7 @@ function authLogin(username, pin) {
         unitKerja: scopeInfo.unitKerja,
         namaFaskes: scopeInfo.namaFaskes,
         kodePuskesmas: scopeInfo.kodePuskesmas,
-        faskesKey: scopeInfo.faskesKey,
+        faskes_key: scopeInfo.faskes_key,
         pengampuKey: scopeInfo.pengampuKey,
         scopeLevel: scopeInfo.scopeLevel
       };
@@ -507,7 +507,7 @@ function _refreshAuthUserFromRefUser_(cachedUser) {
     if (!((wantedEmail && rowEmail === wantedEmail) || (wantedUser && rowUser.toLowerCase() === wantedUser))) continue;
     if (ixAktif !== -1) { const aktif = String(row[ixAktif] || "").trim().toUpperCase(); if (aktif && !["YA", "AKTIF", "TRUE"].includes(aktif)) return null; }
     const scope = _extractUserScopeInfoFromRow_(row, headers);
-    return { username: rowUser || cachedUser.username, email: rowEmail || cachedUser.email || "", nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : rowUser) || rowUser, role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "", unitKerja: scope.unitKerja, namaFaskes: scope.namaFaskes, kodePuskesmas: scope.kodePuskesmas, faskesKey: scope.faskesKey, pengampuKey: scope.pengampuKey, scopeLevel: scope.scopeLevel, noWhatsapp: scope.noWhatsapp };
+    return { username: rowUser || cachedUser.username, email: rowEmail || cachedUser.email || "", nama: (ixNama !== -1 ? String(row[ixNama] || "").trim() : rowUser) || rowUser, role: ixRole !== -1 ? String(row[ixRole] || "").trim().toLowerCase() : "", unitKerja: scope.unitKerja, namaFaskes: scope.namaFaskes, kodePuskesmas: scope.kodePuskesmas, faskes_key: scope.faskes_key, pengampuKey: scope.pengampuKey, scopeLevel: scope.scopeLevel, noWhatsapp: scope.noWhatsapp };
   }
   return null;
 }
@@ -633,7 +633,7 @@ function manageGetUsers(token) {
     const ixRole = headerIndex(["role", "Role"]);
     const ixUnit = headerIndex(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
     const ixFaskes = headerIndex(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-    const ixKode = headerIndex(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+    const ixKode = headerIndex(["faskes_key", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
     const ixScope = headerIndex(["scope_level", "ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
     const ixPin = headerIndex(["PIN", "Pin", "pin"]);
@@ -703,7 +703,7 @@ function manageSaveUser(token, userPayload) {
     const ixRole = headerIndex(["role", "Role"]);
     const ixUnit = headerIndex(["unit_kerja", "UnitKerja", "Unit Kerja", "Nama Puskesmas", "Puskesmas"]);
     const ixFaskes = headerIndex(["nama_faskes", "NamaFaskes", "Nama Faskes", "Nama Fasyankes", "Faskes"]);
-    const ixKode = headerIndex(["faskes_key", "FaskesKey", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
+    const ixKode = headerIndex(["faskes_key", "KodeFaskes", "Kode Faskes", "Kode PKM"]);
     const ixScope = headerIndex(["scope_level", "ScopeLevel", "Scope Level"]);
     const ixAktif = headerIndex(["status", "Aktif", "StatusAktif"]);
     const ixCatatan = headerIndex(["Catatan"]);

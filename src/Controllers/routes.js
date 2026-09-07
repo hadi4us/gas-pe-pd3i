@@ -689,7 +689,7 @@ function getFaskesFromSheet(token, forceReload) {
 
   const idxJenis = findIdx(['Jenis', 'JenisFaskes', 'Jenis Faskes', 'Jenis Fasyankes', 'Jenis Pelapor', 'Jenis Sumber Laporan', 'Sumber Laporan', 'Jenis Unit', 'Tipe', 'Tipe Faskes', 'Tipe Fasyankes', 'Kategori', 'Kelompok']);
   const idxNama = findIdx(['nama_faskes', 'NamaFaskes', 'Nama Faskes', 'NamaFasyankes', 'Nama Fasyankes', 'Nama unit pelapor', 'Nama Unit', 'Nama Rumah Sakit', 'Nama']);
-  const idxKey = findIdx(['faskes_key', 'FaskesKey', 'KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
+  const idxKey = findIdx(['faskes_key', 'KodeFaskes', 'Key', 'Kode', 'Kode Faskes', 'Kode Fasyankes', 'ID']);
   const idxAktif = findIdx(['StatusAktif', 'Status Aktif', 'Aktif', 'IsActive', 'Active', 'Status']);
 
   return rows
@@ -769,7 +769,7 @@ function getWorkflowFilterOptions(token) {
 
   const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
   const scopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
-  const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskesKey || sess.user.faskes_key)) || '';
+  const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user.faskes_key)) || '';
   const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
   const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
@@ -887,7 +887,7 @@ const SEARCH_PROJECTION_CANDIDATE_GROUPS_ = [
   ['Sampel Diambil?', 'Apakah spesimen darah diambil', 'Apakah spesimen lain diambil'],
   ['Interpretasi Hasil', 'Interpretasi Sampel', 'Hasil Pemeriksaan', 'Hasil Lab'],
   ['Deleted At'],
-  ['faskes_key', 'FaskesKey', 'KodeFaskes'],
+  ['faskes_key', 'KodeFaskes'],
   ['Diinput Oleh'],
   ['Input Awal Diisi Oleh'],
   ['Timestamp'],
@@ -1001,8 +1001,8 @@ function searchRecords(dx, filters, token) {
   let page = Math.max(1, parseInt(filters.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 10));
   const results = [];
-  const audit = { dxSheets: [], rowsRead: 0, scopeAllowed: 0, deleted: 0, filterRejected: 0, userFaskesKey: '', userPengampuKey: '', userScopeLevel: '' };
-  audit.userFaskesKey = _normalizeAccessScopeId_((sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
+  const audit = { dxSheets: [], rowsRead: 0, scopeAllowed: 0, deleted: 0, filterRejected: 0, userfaskes_key: '', userPengampuKey: '', userScopeLevel: '' };
+  audit.user_faskes_key = _normalizeAccessScopeId_((sess.user && (sess.user.faskes_key || sess.user.faskes_key)) || '');
   audit.userPengampuKey = _normalizeAccessScopeId_((sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   audit.userScopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim();
 
@@ -2419,11 +2419,11 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if ((verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') && _isSessionOriginalInputer_(sess, data || {})) return true;
   if (verificationStatus === 'PENDING' && _isSessionOriginalInputerUsername_(sess, data || {})) return true;
 
-  const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskesKey || sess.user.faskes_key)) || '';
+  const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user.faskes_key)) || '';
   const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
   const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
-  const userFaskesKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskesKey || sess.user.faskes_key)) || '');
+  const user_faskes_key = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskes_key || sess.user.faskes_key)) || '');
   let userPengampuKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   // Older REF_USER rows store only PKM code/name. Resolve that identity to
   // canonical REF_PENGAMPU.pengampu_key before checking MR_Raw.
@@ -2448,11 +2448,11 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
       }
     } catch (e) {}
   }
-  if (!userKodePuskesmas && !userUnitKerja && !userFaskesKey && !userPengampuKey) return false;
+  if (!userKodePuskesmas && !userUnitKerja && !user_faskes_key && !userPengampuKey) return false;
 
   // Reporting facility scope is separate from supervising PKM scope.
-  const recordFaskesKey = _normalizeAccessScopeId_((data && (data['faskes_key'] || data['FaskesKey'] || data['Faskes Pelapor'])) || '');
-  if (userFaskesKey && recordFaskesKey && userFaskesKey === recordFaskesKey) return true;
+  const record_faskes_key = _normalizeAccessScopeId_((data && (data['faskes_key'] || data['Faskes Pelapor'])) || '');
+  if (user_faskes_key && record_faskes_key && user_faskes_key === record_faskes_key) return true;
 
   // Pengampu scope: canonical key in REF_PENGAMPU/REF_USER must match
   // report row pengampu_key. Do this before domisili fallback; old records

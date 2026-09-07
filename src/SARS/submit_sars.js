@@ -2,10 +2,10 @@
  * submit_sars.gs — Simpan data Zero Reporting ke SARS
  * FIX:
  * - Lookup REF_FASKES robust:
- *   cocokkan NamaFaskes &/atau FaskesKey dengan normalisasi
- * - Jika master tidak ketemu: tetap simpan pakai FaskesKey turunan
+ *   cocokkan NamaFaskes &/atau faskes_key dengan normalisasi
+ * - Jika master tidak ketemu: tetap simpan pakai faskes_key turunan
  * - Tulis ke SARS berdasarkan HEADER (anti geser kolom)
- * - Validasi anti dobel: ME + FaskesKey
+ * - Validasi anti dobel: ME + faskes_key
  * - Header SARS disesuaikan dengan yang Anda kirim:
  *   "Tgl Lahir", "Spesimen / Penolong", dst.
  ******************************************************/
@@ -142,7 +142,7 @@ function _buildMasterIndex_() {
   const sh = _getSheet_(ss, cfg.SHEET_MASTER || "REF_FASKES");
 
   const values = sh.getDataRange().getValues();
-  if (values.length < 2) return { byNameKey: {}, byFaskesKey: {} };
+  if (values.length < 2) return { byNameKey: {}, by_faskes_key: {} };
 
   // Normalisasi header: trim + hilangkan spasi ganda
   const headRaw = values[0].map(h => _sTrim_(h).replace(/\s+/g, " "));
@@ -157,7 +157,7 @@ function _buildMasterIndex_() {
   }
 
   // Kandidat header REF_FASKES (lebih fleksibel)
-  const cFaskesKey = findCol_(["faskes_key", "FaskesKey", "Faskes Key", "FasyankesKey", "KodeFaskes", "Kode Faskes", "FASKESKEY"]);
+  const cfaskes_key = findCol_(["faskes_key", "faskes_key", "FasyankesKey", "KodeFaskes", "Kode Faskes", "faskes_key"]);
   const cNama      = findCol_(["nama_faskes", "NamaFaskes", "Nama Faskes", "NamaFasyankes", "Nama Fasyankes", "NAMA"]);
   const cPengampu  = findCol_(["nama_pengampu", "Nama Pengampu", "Pengampu", "FaskesPengampu", "Faskes Pengampu", "PENGAMPU"]);
   const cJenis     = findCol_(["Jenis", "JENIS"]);
@@ -165,14 +165,14 @@ function _buildMasterIndex_() {
 
   const cEmail     = findCol_(["Email", "Email Faskes", "Email Petugas"]);
   const byNameKey = {};
-  const byFaskesKey = {};
+  const by_faskes_key = {};
   const byEmail = {};
 
   for (let r = 1; r < values.length; r++) {
     const row = values[r];
 
     const nama   = cNama >= 0 ? _sTrim_(row[cNama]) : "";
-    const fk     = cFaskesKey >= 0 ? _sTrim_(row[cFaskesKey]) : "";
+    const fk     = cfaskes_key >= 0 ? _sTrim_(row[cfaskes_key]) : "";
     const peng   = cPengampu >= 0 ? _sTrim_(row[cPengampu]) : "";
     const jenis  = cJenis >= 0 ? _sTrim_(row[cJenis]) : "";
     const status = cStatus >= 0 ? _sTrim_(row[cStatus]) : "";
@@ -184,25 +184,25 @@ function _buildMasterIndex_() {
     const nkNama = _normKey_(nama);
     const nkFK   = _normKey_(fk);
 
-    const entry = { faskesKey: fk, pengampu: peng, jenis: typeKey, statusAktif: status, nama };
+    const entry = { faskes_key: fk, pengampu: peng, jenis: typeKey, statusAktif: status, nama };
     if (nkNama) {
-      byNameKey[nkNama] = { faskesKey: fk, pengampu: peng, jenis: typeKey, statusAktif: status };
+      byNameKey[nkNama] = { faskes_key: fk, pengampu: peng, jenis: typeKey, statusAktif: status };
     }
     if (nkFK) {
-      byFaskesKey[nkFK] = { faskesKey: fk, pengampu: peng, jenis: typeKey, nama, statusAktif: status };
+      by_faskes_key[nkFK] = { faskes_key: fk, pengampu: peng, jenis: typeKey, nama, statusAktif: status };
     }
     if (email) byEmail[email] = entry;
   }
 
-  return { byNameKey, byFaskesKey, byEmail };
+  return { byNameKey, by_faskes_key, byEmail };
 }
 
 /**
  * Lookup faskes:
  * prioritas:
  * 1) match NamaFasyankes (dinormalisasi) ke byNameKey
- * 2) match hasil turunan key ke byFaskesKey
- * 3) fallback: faskesKey turunan dari nama (agar tetap bisa simpan & validasi dobel jalan)
+ * 2) match hasil turunan key ke by_faskes_key
+ * 3) fallback: faskes_key turunan dari nama (agar tetap bisa simpan & validasi dobel jalan)
  */
 function _lookupFaskes_(masterIndex, namaFasyankes) {
   const nk = _normKey_(namaFasyankes);
@@ -210,23 +210,23 @@ function _lookupFaskes_(masterIndex, namaFasyankes) {
   if (nk && masterIndex.byNameKey[nk]) {
     return {
       found: true,
-      faskesKey: _sTrim_(masterIndex.byNameKey[nk].faskesKey),
+      faskes_key: _sTrim_(masterIndex.byNameKey[nk].faskes_key),
       pengampu: _sTrim_(masterIndex.byNameKey[nk].pengampu)
     };
   }
 
-  if (nk && masterIndex.byFaskesKey[nk]) {
+  if (nk && masterIndex.by_faskes_key[nk]) {
     return {
       found: true,
-      faskesKey: _sTrim_(masterIndex.byFaskesKey[nk].faskesKey),
-      pengampu: _sTrim_(masterIndex.byFaskesKey[nk].pengampu)
+      faskes_key: _sTrim_(masterIndex.by_faskes_key[nk].faskes_key),
+      pengampu: _sTrim_(masterIndex.by_faskes_key[nk].pengampu)
     };
   }
 
   // fallback: tetap simpan pakai key turunan
   return {
     found: false,
-    faskesKey: nk,      // ini cocok dengan pola MASTER Anda (contoh RSUD...)
+    faskes_key: nk,      // ini cocok dengan pola MASTER Anda (contoh RSUD...)
     pengampu: ""
   };
 }
@@ -237,7 +237,7 @@ function _lookupFaskesByEmail_(masterIndex, email) {
   if (!found) return null;
   return {
     found: true,
-    faskesKey: _sTrim_(found.faskesKey) || _normKey_(found.nama),
+    faskes_key: _sTrim_(found.faskes_key) || _normKey_(found.nama),
     pengampu: _sTrim_(found.pengampu),
     nama: _sTrim_(found.nama),
     jenis: _sTrim_(found.jenis)
@@ -325,21 +325,21 @@ function _computeDeadlineAndOnTime_(me, submittedAt) {
   return { deadline, onTime };
 }
 
-/** ========= VALIDASI DOUBEL: ME + FaskesKey ========= */
-function _checkDuplicate_(sheet, hmap, me, faskesKey) {
+/** ========= VALIDASI DOUBEL: ME + faskes_key ========= */
+function _checkDuplicate_(sheet, hmap, me, faskes_key) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return;
 
   const colME = hmap["ME"];
   const colKey = hmap["KodeFaskes"] !== undefined
     ? hmap["KodeFaskes"]
-    : (hmap["FaskesKey"] !== undefined ? hmap["FaskesKey"] : hmap["Faskes Key"]);
+    : (hmap["faskes_key"] !== undefined ? hmap["faskes_key"] : hmap["faskes_key"]);
   if (colME === undefined || colKey === undefined) return;
 
   const meVals  = sheet.getRange(2, colME + 1, lastRow - 1, 1).getValues();
   const keyVals = sheet.getRange(2, colKey + 1, lastRow - 1, 1).getValues();
 
-  const targetKey = _normKey_(faskesKey);
+  const targetKey = _normKey_(faskes_key);
   for (let i = 0; i < meVals.length; i++) {
     const m = _sToInt_(meVals[i][0]);
     const k = _normKey_(keyVals[i][0]);
@@ -422,8 +422,8 @@ function submitSARS(formData) {
   _sRequire_(_hasHeader_(hmap, ["Nama Fasyankes", "nama_faskes"]), `Header nama fasyankes tidak ditemukan di sheet ${shData.getName()}.`);
   _sRequire_(_hasHeader_(hmap, ["Nama Petugas", "nama_petugas"]), `Header nama petugas tidak ditemukan di sheet ${shData.getName()}.`);
   _sRequire_(
-    hmap["KodeFaskes"] !== undefined || hmap["FaskesKey"] !== undefined || hmap["Faskes Key"] !== undefined || hmap["faskes_key"] !== undefined,
-    `Header "KodeFaskes" tidak ditemukan di sheet ${shData.getName()}. Gunakan "KodeFaskes" atau "FaskesKey".`
+    hmap["KodeFaskes"] !== undefined || hmap["faskes_key"] !== undefined || hmap["faskes_key"] !== undefined || hmap["faskes_key"] !== undefined,
+    `Header "KodeFaskes" tidak ditemukan di sheet ${shData.getName()}. Gunakan "KodeFaskes" atau "faskes_key".`
   );
   _sRequire_(hmap["KodeFaskes Pengampu"] !== undefined || hmap["FaskesPengampu"] !== undefined || hmap["nama_pengampu"] !== undefined,
     `Header "KodeFaskes Pengampu" tidak ditemukan di sheet ${shData.getName()}.`);
@@ -434,16 +434,16 @@ function submitSARS(formData) {
   const accountLookup = _lookupFaskesByEmail_(masterIndex, sessionEmail);
   let lk = accountLookup || _lookupFaskes_(masterIndex, namaFasyankes);
   const dinkesLookup = isAdminReporter ? _lookupFaskes_(masterIndex, 'DINAS KESEHATAN') : null;
-  if (dinkesLookup && dinkesLookup.found && (!lk.found || _normKey_(lk.faskesKey) === 'dinkes')) {
+  if (dinkesLookup && dinkesLookup.found && (!lk.found || _normKey_(lk.faskes_key) === 'dinkes')) {
     lk = dinkesLookup;
   }
   if (sessionFacility.adminFallback && !lk.found) {
-    lk = { found: true, faskesKey: sessionKey || 'DINKES', pengampu: 'DINAS KESEHATAN' };
+    lk = { found: true, faskes_key: sessionKey || 'DINKES', pengampu: 'DINAS KESEHATAN' };
   }
 
-  // faskesKey harus ada minimal turunan
-  const faskesKey = _sTrim_(lk.faskesKey);
-  _sRequire_(faskesKey, `FaskesKey tidak bisa dibuat dari NamaFasyankes: "${namaFasyankes}".`);
+  // faskes_key harus ada minimal turunan
+  const faskes_key = _sTrim_(lk.faskes_key);
+  _sRequire_(faskes_key, `faskes_key tidak bisa dibuat dari NamaFasyankes: "${namaFasyankes}".`);
 
   _sRequire_(lk.found, `Akun/fasilitas kesehatan tidak terdaftar sebagai wajib lapor aktif di REF_FASKES: "${namaFasyankes}".`);
 
@@ -453,7 +453,7 @@ function submitSARS(formData) {
   sarsSubmitLock.waitLock(30000);
   try {
   // validasi dobel
-  _checkDuplicate_(shData, hmap, me, faskesKey);
+  _checkDuplicate_(shData, hmap, me, faskes_key);
 
   // deadline & ontime
   const submittedAt = new Date();
@@ -512,7 +512,7 @@ function submitSARS(formData) {
 
     // ===== master derived =====
     _setAny_(row, hmap, ["KodeFaskes Pengampu", "FaskesPengampu", "nama_pengampu"], faskesPengampu);
-    _setAny_(row, hmap, ["KodeFaskes", "FaskesKey", "Faskes Key", "faskes_key"], faskesKey);
+    _setAny_(row, hmap, ["KodeFaskes", "faskes_key", "faskes_key"], faskes_key);
 
     rowsToAppend.push(row);
   });
@@ -530,7 +530,7 @@ function submitSARS(formData) {
   let adminTelegramNotifications = [];
   let adminWahaNotification = { sent: false, reason: 'SKIPPED' };
   const zeroNotificationDetails = {
-      caseCode: 'SARS-ME' + me + '-' + faskesKey + '-' + firstWriteRow,
+      caseCode: 'SARS-ME' + me + '-' + faskes_key + '-' + firstWriteRow,
       action: 'Review input zero reporting baru',
       workspace: 'zero-reporting',
       namaFasyankes: namaFasyankes,
@@ -553,7 +553,7 @@ function submitSARS(formData) {
     firstWriteRow,
     me,
     namaFasyankes,
-    faskesKey,
+    faskes_key,
     faskesPengampu,
     masterFound: lk.found,
     onTime: !!onTime,

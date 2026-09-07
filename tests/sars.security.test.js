@@ -70,7 +70,7 @@ test('SARS facility resolver accepts multi-email REF_FASKES cells and REF_USER n
   const sandbox = {
     Session: { getActiveUser: () => ({ getEmail: () => '' }) },
     SARS_CONFIG: { SHEET_MASTER: 'REF_FASKES' },
-    normalizeFaskesKey_: value => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''),
+    normalize_faskes_key_: value => String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''),
     normalizeFaskesTypeKey_: value => String(value || '').trim().toUpperCase(),
     isSarsReportingFacility_: (type, status) => String(type || '').toUpperCase() !== 'PKM' && String(status || 'AKTIF').toUpperCase() === 'AKTIF',
     SpreadsheetApp: { getActive: () => ({ getSheetByName: () => ({ getDataRange: () => ({ getValues: () => [

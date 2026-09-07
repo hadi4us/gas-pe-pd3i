@@ -2327,7 +2327,7 @@
         }
 
         const unitSelect = findScopedFieldControl("Nama unit pelapor", activeFormElement);
-        dataObj["FaskesKey"] =
+        dataObj["faskes_key"] =
           unitSelect?.options[unitSelect.selectedIndex]?.getAttribute("data-key")
           || (dataObj["Nama unit pelapor"] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 

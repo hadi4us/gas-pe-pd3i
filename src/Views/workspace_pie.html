@@ -413,13 +413,13 @@ window.handlePieOpsTabKeydown = function(e){
 };
 document.addEventListener('keydown', window.handlePieOpsTabKeydown);
 
-window.getPieUserFaskesKey = function(){
+window.getPieUser_faskes_key = function(){
   const u=window.__PD3I_SESSION_USER||{};
-  return String(u.kodePuskesmas||u.kode_puskesmas||u.faskes_key||u.faskesKey||u.unitKerja||u.unit_kerja||'').trim();
+  return String(u.kodePuskesmas||u.kode_puskesmas||u.faskes_key||u.faskes_key||u.unitKerja||u.unit_kerja||'').trim();
 };
 window.applyPieUserDefaults = function(){
   const f=document.getElementById('pie-faskes'); if(!f) return;
-  const key=window.getPieUserFaskesKey();
+  const key=window.getPieUser_faskes_key();
   const hint=document.getElementById('pie-faskes-hint');
   if(key){ f.value=key; f.readOnly=true; f.classList.add('bg-slate-100'); if(hint) hint.textContent='Otomatis dari akun login.'; }
   else { f.readOnly=false; f.classList.remove('bg-slate-100'); if(hint) hint.textContent='Data faskes belum ada di akun login; isi manual sementara.'; }
