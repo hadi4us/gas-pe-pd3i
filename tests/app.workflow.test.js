@@ -294,7 +294,7 @@ test('Daftar Kasus replaces duplicate search/edit menu and supports multi-variab
   assert.match(routesJs, /const canSeeAllReferenceWilayah = _isAdminRole_\(role\) \|\| scopeLevel === 'dinkes'/);
   assert.match(routesJs, /const isRowInUserScope = function\(row\)/);
   assert.match(routesJs, /if \(!isRowInUserScope\(row\)\) return;/);
-  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskes_key \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+  assert.ok(routesJs.includes("const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '';"));
   assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
   assert.match(routesJs, /userKodePuskesmas && rowKode && userKodePuskesmas === rowKode/);
   assert.match(routesJs, /userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId/);
@@ -454,8 +454,8 @@ test('rejected cases stay visible and readable to both original inputer and mapp
   assert.match(routesJs, /_isSessionOriginalInputer_\(sess, data \|\| \{\}\)\) return true;/);
 });
 
-test('Daftar Kasus puskesmas scope accepts faskes_key as pengampu code fallback', () => {
-  assert.match(routesJs, /const userKodePuskesmasRaw = \(sess && sess\.user && \(sess\.user\.kodePuskesmas \|\| sess\.user\.faskes_key \|\| sess\.user\.faskes_key\)\) \|\| '';/);
+test('Daftar Kasus puskesmas scope accepts faskes_key plus legacy session key as pengampu code fallback', () => {
+  assert.ok(routesJs.includes("const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '';"));
   assert.match(routesJs, /const userKodePuskesmasId = _normalizeAccessScopeId_\(userKodePuskesmasRaw\);/);
   assert.match(routesJs, /userKodePuskesmasId && code === userKodePuskesmasId/);
   assert.match(routesJs, /userKodePuskesmasId === _normalizeAccessScopeId_\(pengampu\.kodePuskesmas \|\| ''\)/);

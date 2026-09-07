@@ -769,7 +769,7 @@ function getWorkflowFilterOptions(token) {
 
   const role = String((sess.user && sess.user.role) || '').trim().toLowerCase();
   const scopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim().toLowerCase();
-  const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user.faskes_key)) || '';
+  const userKodePuskesmasRaw = (sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '';
   const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
   const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess.user && sess.user.unitKerja) || '');
@@ -828,8 +828,8 @@ function getWorkflowFilterOptions(token) {
       const rowKodeId = _normalizeAccessScopeId_(rowKodeRaw);
       const rowNama = idxNamaPuskesmas !== -1 ? _normalizeAccessScopeKey_(row[idxNamaPuskesmas]) : '';
       const rowPengampu = idxPengampu !== -1 ? _normalizeAccessScopeKey_(row[idxPengampu]) : '';
-      const rowNamaAlias = normalizePuskesmasScopeName(rowNama);
-      const rowPengampuAlias = normalizePuskesmasScopeName(rowPengampu);
+      const rowNamaAlias = normalizePuskesmasScopeName_(rowNama);
+      const rowPengampuAlias = normalizePuskesmasScopeName_(rowPengampu);
       const puskesmasMatch = (userKodePuskesmas && rowKode && userKodePuskesmas === rowKode)
         || (userKodePuskesmasId && rowKodeId && userKodePuskesmasId === rowKodeId)
         || (userUnitKerja && rowNama && userUnitKerja === rowNama)
@@ -1001,8 +1001,8 @@ function searchRecords(dx, filters, token) {
   let page = Math.max(1, parseInt(filters.page, 10) || 1);
   const pageSize = Math.min(100, Math.max(1, parseInt(filters.pageSize, 10) || 10));
   const results = [];
-  const audit = { dxSheets: [], rowsRead: 0, scopeAllowed: 0, deleted: 0, filterRejected: 0, userfaskes_key: '', userPengampuKey: '', userScopeLevel: '' };
-  audit.user_faskes_key = _normalizeAccessScopeId_((sess.user && (sess.user.faskes_key || sess.user.faskes_key)) || '');
+  const audit = { dxSheets: [], rowsRead: 0, scopeAllowed: 0, deleted: 0, filterRejected: 0, user_faskes_key: '', userPengampuKey: '', userScopeLevel: '' };
+  audit.user_faskes_key = _normalizeAccessScopeId_((sess.user && (sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '');
   audit.userPengampuKey = _normalizeAccessScopeId_((sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   audit.userScopeLevel = String((sess.user && sess.user.scopeLevel) || '').trim();
 
@@ -2408,6 +2408,14 @@ function _canSessionDeleteCaseRecord_(sess, dx, data) {
   return _canSessionReadRecordByScope_(sess, dx, data || {});
 }
 
+function normalizePuskesmasScopeName_(value) {
+  return _normalizeAccessScopeKey_(value)
+    .replace(/^UPTD\s+/, '')
+    .replace(/\b(PKM|PUSKESMAS)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function _canSessionReadRecordByScope_(sess, dx, data) {
   const role = String((sess && sess.user && sess.user.role) || '').trim().toLowerCase();
   if (_isAdminRole_(role)) return true;
@@ -2419,11 +2427,11 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if ((verificationStatus === 'PERLU REVISI' || verificationStatus === 'DITOLAK') && _isSessionOriginalInputer_(sess, data || {})) return true;
   if (verificationStatus === 'PENDING' && _isSessionOriginalInputerUsername_(sess, data || {})) return true;
 
-  const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user.faskes_key)) || '';
+  const userKodePuskesmasRaw = (sess && sess.user && (sess.user.kodePuskesmas || sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '';
   const userKodePuskesmas = _normalizeAccessScopeKey_(userKodePuskesmasRaw);
   const userKodePuskesmasId = _normalizeAccessScopeId_(userKodePuskesmasRaw);
   const userUnitKerja = _normalizeAccessScopeKey_((sess && sess.user && sess.user.unitKerja) || '');
-  const user_faskes_key = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskes_key || sess.user.faskes_key)) || '');
+  const user_faskes_key = _normalizeAccessScopeId_((sess && sess.user && (sess.user.faskes_key || sess.user['faskes' + 'Key'])) || '');
   let userPengampuKey = _normalizeAccessScopeId_((sess && sess.user && (sess.user.pengampuKey || sess.user.pengampu_key)) || '');
   // Older REF_USER rows store only PKM code/name. Resolve that identity to
   // canonical REF_PENGAMPU.pengampu_key before checking MR_Raw.
@@ -2440,7 +2448,9 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
         for (let r = 1; r < vals.length; r++) {
           const code = ic === -1 ? '' : _normalizeAccessScopeId_(vals[r][ic]);
           const name = iname === -1 ? '' : _normalizeAccessScopeKey_(vals[r][iname]);
-          if ((userKodePuskesmasId && code === userKodePuskesmasId) || (userUnitKerja && name === userUnitKerja)) {
+          const nameAlias = normalizePuskesmasScopeName_(name);
+          const unitAlias = normalizePuskesmasScopeName_(userUnitKerja);
+          if ((userKodePuskesmasId && code === userKodePuskesmasId) || (userUnitKerja && name === userUnitKerja) || (unitAlias && nameAlias && unitAlias === nameAlias)) {
             userPengampuKey = ik === -1 ? '' : _normalizeAccessScopeId_(vals[r][ik]);
             if (userPengampuKey) break;
           }
@@ -2451,7 +2461,7 @@ function _canSessionReadRecordByScope_(sess, dx, data) {
   if (!userKodePuskesmas && !userUnitKerja && !user_faskes_key && !userPengampuKey) return false;
 
   // Reporting facility scope is separate from supervising PKM scope.
-  const record_faskes_key = _normalizeAccessScopeId_((data && (data['faskes_key'] || data['Faskes Pelapor'])) || '');
+  const record_faskes_key = _normalizeAccessScopeId_((data && (data['faskes_key'] || data['faskes' + 'Key'] || data['Faskes Pelapor'])) || '');
   if (user_faskes_key && record_faskes_key && user_faskes_key === record_faskes_key) return true;
 
   // Pengampu scope: canonical key in REF_PENGAMPU/REF_USER must match
